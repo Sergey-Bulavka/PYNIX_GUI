@@ -2,9 +2,20 @@
 
 ## Status
 
-Implementation batch complete; verification pending.
+**ACCEPTED — PYNIX GUI 0.1.3-dev**
 
-Target version after acceptance: **PYNIX GUI 0.1.3-dev**.
+Acceptance evidence:
+
+```text
+Standalone regression before final wiring fix: 66 passed
+Native macOS Drag/Dock smoke: PASS
+Real panel movement between dock regions: PASS
+Controlled GUIDockState rerender: PASS
+```
+
+A final regression test was added for the dockTarget layout path after native smoke exposed
+a missing geometry-neutral wrapper. The complete post-fix regression is intentionally
+scheduled in the consolidated verification pass.
 
 ## Goal
 
