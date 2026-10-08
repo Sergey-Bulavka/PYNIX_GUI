@@ -474,11 +474,16 @@ class MacOSGUIBackend(MacOSHostBackend):
             transform = appkit.NSAffineTransform.transform()
             transform.scaleXBy_yBy_(sx, sy)
             transform.concat()
-            self._draw_canvas_commands(appkit, scene.commands, theme)
+            self._draw_canvas_commands(
+                appkit,
+                scene.commands,
+                theme,
+                native._pynix_window,
+            )
         finally:
             appkit.NSGraphicsContext.restoreGraphicsState()
 
-    def _draw_canvas_commands(self, appkit, commands, theme):
+    def _draw_canvas_commands(self, appkit, commands, theme, window):
         for command in commands:
             if command.kind == "transform":
                 dx, dy, sx, sy, rotation = command.values
@@ -490,7 +495,12 @@ class MacOSGUIBackend(MacOSHostBackend):
                     if rotation:
                         transform.rotateByDegrees_(rotation)
                     transform.concat()
-                    self._draw_canvas_commands(appkit, command.children, theme)
+                    self._draw_canvas_commands(
+                        appkit,
+                        command.children,
+                        theme,
+                        window,
+                    )
                 finally:
                     appkit.NSGraphicsContext.restoreGraphicsState()
                 continue
@@ -503,7 +513,12 @@ class MacOSGUIBackend(MacOSHostBackend):
                         appkit.NSMakeRect(x, y, width, height)
                     )
                     clip_path.addClip()
-                    self._draw_canvas_commands(appkit, command.children, theme)
+                    self._draw_canvas_commands(
+                        appkit,
+                        command.children,
+                        theme,
+                        window,
+                    )
                 finally:
                     appkit.NSGraphicsContext.restoreGraphicsState()
                 continue
@@ -577,8 +592,17 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             if command.kind == "image":
                 x, y, width, height = command.values
+                logical_path = self._resolve_image_resource(
+                    window,
+                    command.resource,
+                )
+                resource_path = (
+                    logical_path
+                    if logical_path is not None
+                    else command.resource
+                )
                 image = appkit.NSImage.alloc().initWithContentsOfFile_(
-                    command.resource
+                    resource_path
                 )
                 if image is not None:
                     image.drawInRect_(
@@ -733,6 +757,12 @@ class MacOSGUIBackend(MacOSHostBackend):
         if catalog is None:
             return None
         return catalog.vector_scene(name)
+
+    def _resolve_vector_svg(self, window, name):
+        catalog = self._resource_catalog(window)
+        if catalog is None:
+            return None
+        return catalog.vector_svg_path(name)
 
     def _bridge_for_window(self, window):
         bridge = self._bridges_by_window.get(window)
@@ -2018,18 +2048,40 @@ class MacOSGUIBackend(MacOSHostBackend):
                 bridge._window,
                 view.resource,
             )
-            if scene is None:
-                native = (
-                    appkit.NSImageView.alloc()
-                    .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
-                )
-            else:
+            svg_path = self._resolve_vector_svg(
+                bridge._window,
+                view.resource,
+            )
+            if scene is not None:
                 native = self._new_canvas_scene_view(
                     appkit,
                     bridge._window,
                     scene,
                     theme,
                 )
+            else:
+                native = (
+                    appkit.NSImageView.alloc()
+                    .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+                )
+                if svg_path is not None:
+                    try:
+                        svg_image = (
+                            appkit.NSImage.alloc()
+                            .initWithContentsOfFile_(svg_path)
+                        )
+                        if svg_image is not None:
+                            native.setImage_(svg_image)
+                    except Exception:
+                        pass
+                if hasattr(native, "setImageScaling_"):
+                    native.setImageScaling_(
+                        getattr(
+                            appkit,
+                            "NSImageScaleProportionallyUpOrDown",
+                            3,
+                        )
+                    )
 
         elif view.kind in {"icon", "image"}:
             native = (
