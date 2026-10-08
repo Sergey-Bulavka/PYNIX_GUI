@@ -117,6 +117,9 @@ __all__ = [
     "toolbar",
     "validate_view",
     "vertical_split",
+    "GUIRuntime",
+    "GUIRuntimeState",
+    "GUIWindow",
     "BUTTON_VISUALS",
     "COLOR_ROLES",
     "CONTROL_METRICS",
@@ -141,3 +144,5 @@ __all__ = [
     "rgb",
     "surface_color_role",
 ]
+
+from .runtime import GUIRuntime, GUIRuntimeState, GUIWindow
