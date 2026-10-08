@@ -48,6 +48,57 @@ class _PythonGUIEventBridge:
 
 
 _OBJC_GUI_EVENT_BRIDGE_TYPE = None
+_OBJC_GUI_NAV_BUTTON_TYPE = None
+
+
+def _objc_gui_navigation_button_type():
+    global _OBJC_GUI_NAV_BUTTON_TYPE
+
+    if _OBJC_GUI_NAV_BUTTON_TYPE is not None:
+        return _OBJC_GUI_NAV_BUTTON_TYPE
+
+    import AppKit
+
+    class PynixGUINavigationButton(AppKit.NSButton):
+        def keyDown_(self, event):
+            try:
+                characters = str(event.charactersIgnoringModifiers() or "")
+            except Exception:
+                characters = ""
+
+            mapping = {
+                "\uf700": "up",
+                "\uf701": "down",
+                "\uf702": "left",
+                "\uf703": "right",
+            }
+            key = mapping.get(characters)
+            if key is None:
+                try:
+                    key_code = int(event.keyCode())
+                except Exception:
+                    key_code = -1
+                key = {
+                    126: "up",
+                    125: "down",
+                    123: "left",
+                    124: "right",
+                }.get(key_code)
+
+            if key is not None:
+                self._pynix_backend._queue_structured_key(
+                    self._pynix_window,
+                    self,
+                    key,
+                )
+                return
+
+            super().keyDown_(event)
+
+    _OBJC_GUI_NAV_BUTTON_TYPE = PynixGUINavigationButton
+    return _OBJC_GUI_NAV_BUTTON_TYPE
+
+
 
 
 def _objc_gui_event_bridge_type():
@@ -125,6 +176,30 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_bars_by_window = {}
         self._gui_dialogs_by_window = {}
         self._gui_dialog_buttons_by_window = {}
+
+    def _navigation_button(self, appkit, window, title, bridge):
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            button_type = _objc_gui_navigation_button_type()
+            button = button_type.buttonWithTitle_target_action_(
+                title,
+                bridge,
+                "controlChanged:",
+            )
+            button._pynix_backend = self
+            button._pynix_window = window
+        else:
+            button = appkit.NSButton.buttonWithTitle_target_action_(
+                title,
+                bridge,
+                "controlChanged:",
+            )
+
+        if hasattr(button, "setRefusesFirstResponder_"):
+            try:
+                button.setRefusesFirstResponder_(False)
+            except Exception:
+                pass
+        return button
 
     def _bridge_for_window(self, window):
         bridge = self._bridges_by_window.get(window)
@@ -966,10 +1041,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                     disclosure.setTag_(depth)
                 row.addSubview_(disclosure)
 
-                label = appkit.NSButton.buttonWithTitle_target_action_(
+                label = self._navigation_button(
+                    appkit,
+                    bridge._window,
                     node_value.label,
                     bridge,
-                    "controlChanged:",
                 )
                 if hasattr(label, "setBordered_"):
                     label.setBordered_(node_value.node_id == view.selected_id)
@@ -1056,10 +1132,11 @@ class MacOSGUIBackend(MacOSHostBackend):
             for row_value in rows:
                 row = self._new_container(appkit)
                 for column_value, cell in zip(columns, row_value.cells):
-                    cell_button = appkit.NSButton.buttonWithTitle_target_action_(
+                    cell_button = self._navigation_button(
+                        appkit,
+                        bridge._window,
                         cell,
                         bridge,
-                        "controlChanged:",
                     )
                     if hasattr(cell_button, "setBordered_"):
                         cell_button.setBordered_(
@@ -1456,6 +1533,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                 checked=bool(sender.state()),
             )
         elif kind == "treeRow":
+            if hasattr(window, "makeFirstResponder_"):
+                try:
+                    window.makeFirstResponder_(sender)
+                except Exception:
+                    pass
             event = GUIEvent(
                 "SELECTION",
                 target=target,
@@ -1469,6 +1551,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                 checked=not bool(meta[3]),
             )
         elif kind == "tableRow":
+            if hasattr(window, "makeFirstResponder_"):
+                try:
+                    window.makeFirstResponder_(sender)
+                except Exception:
+                    pass
             event = GUIEvent(
                 "SELECTION",
                 target=target,
@@ -1478,6 +1565,166 @@ class MacOSGUIBackend(MacOSHostBackend):
             return
 
         self._event_queue(window).append(event)
+
+    def _structured_view(self, window, target, kind):
+        root = self._gui_views_by_window.get(window)
+
+        def visit(node):
+            if node.kind == kind and node.target == target:
+                return node
+            for child in node.children:
+                found = visit(child)
+                if found is not None:
+                    return found
+            return None
+
+        return None if root is None else visit(root)
+
+    @staticmethod
+    def _visible_tree(nodes, expanded_ids):
+        expanded = set(expanded_ids)
+        result = []
+        parents = {}
+
+        def visit(values, parent=None):
+            for node in values:
+                result.append(node.node_id)
+                parents[node.node_id] = parent
+                if node.node_id in expanded:
+                    visit(node.children, node.node_id)
+
+        visit(nodes)
+        return tuple(result), parents
+
+    @staticmethod
+    def _tree_node_by_id(nodes, node_id):
+        for node in nodes:
+            if node.node_id == node_id:
+                return node
+            found = MacOSGUIBackend._tree_node_by_id(node.children, node_id)
+            if found is not None:
+                return found
+        return None
+
+    def _queue_structured_key(self, window, sender, key):
+        meta = self._control_meta(window, sender)
+        if meta is None:
+            return
+
+        kind, target = meta[:2]
+
+        if kind == "treeRow":
+            current_id = meta[2]
+            view = self._structured_view(window, target, "tree")
+            if view is None:
+                return
+
+            visible, parents = self._visible_tree(
+                view.data,
+                view.expanded_ids,
+            )
+            if current_id not in visible:
+                return
+
+            index = visible.index(current_id)
+
+            if key == "up" and index > 0:
+                self._event_queue(window).append(
+                    GUIEvent(
+                        "SELECTION",
+                        target=target,
+                        item_id=visible[index - 1],
+                    )
+                )
+                return
+
+            if key == "down" and index + 1 < len(visible):
+                self._event_queue(window).append(
+                    GUIEvent(
+                        "SELECTION",
+                        target=target,
+                        item_id=visible[index + 1],
+                    )
+                )
+                return
+
+            node = self._tree_node_by_id(view.data, current_id)
+            if node is None:
+                return
+
+            expanded = current_id in set(view.expanded_ids)
+
+            if key == "left":
+                if node.children and expanded:
+                    self._event_queue(window).append(
+                        GUIEvent(
+                            "EXPANSION",
+                            target=target,
+                            item_id=current_id,
+                            checked=False,
+                        )
+                    )
+                    return
+
+                parent_id = parents.get(current_id)
+                if parent_id is not None:
+                    self._event_queue(window).append(
+                        GUIEvent(
+                            "SELECTION",
+                            target=target,
+                            item_id=parent_id,
+                        )
+                    )
+                return
+
+            if key == "right":
+                if node.children and not expanded:
+                    self._event_queue(window).append(
+                        GUIEvent(
+                            "EXPANSION",
+                            target=target,
+                            item_id=current_id,
+                            checked=True,
+                        )
+                    )
+                    return
+
+                if node.children and expanded:
+                    self._event_queue(window).append(
+                        GUIEvent(
+                            "SELECTION",
+                            target=target,
+                            item_id=node.children[0].node_id,
+                        )
+                    )
+                return
+
+        if kind == "tableRow":
+            current_id = meta[2]
+            view = self._structured_view(window, target, "table")
+            if view is None:
+                return
+
+            _columns, rows = view.data
+            identities = tuple(row.row_id for row in rows)
+            if current_id not in identities:
+                return
+
+            index = identities.index(current_id)
+            if key == "up" and index > 0:
+                next_id = identities[index - 1]
+            elif key == "down" and index + 1 < len(identities):
+                next_id = identities[index + 1]
+            else:
+                return
+
+            self._event_queue(window).append(
+                GUIEvent(
+                    "SELECTION",
+                    target=target,
+                    item_id=next_id,
+                )
+            )
 
     def _queue_text_change(self, window, sender):
         meta = self._control_meta(window, sender)
