@@ -26,3 +26,7 @@ classifiers = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+
+[tool.setuptools.package-data]
+pynix_gui = ["py.typed"]
