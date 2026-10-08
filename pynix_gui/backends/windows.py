@@ -170,6 +170,8 @@ class WindowsGUIBackend:
 
     def render(self, window, view):
         qt, app = self._app()
+        previous_focus_target = self._focused_control_target(window, app)
+        explicit_focus_target = self._explicit_focus_target(view)
         old = window.centralWidget()
         if old is not None:
             old.setParent(None)
@@ -194,6 +196,22 @@ class WindowsGUIBackend:
         root.show()
         app.processEvents()
 
+        focus_target = (
+            explicit_focus_target
+            if explicit_focus_target is not None
+            else previous_focus_target
+        )
+        if focus_target is not None:
+            control = controls.get(focus_target)
+            if control is not None:
+                try:
+                    control.setFocus(qt.QtCore.Qt.OtherFocusReason)
+                except Exception:
+                    try:
+                        control.setFocus()
+                    except Exception:
+                        pass
+
     def _font(self, qt, role):
         size, weight = TYPOGRAPHY.get(role, TYPOGRAPHY["body"])
         font = qt.QtGui.QFont()
@@ -213,6 +231,47 @@ class WindowsGUIBackend:
 
     def _generic(self, qt, parent):
         return qt.QtWidgets.QWidget(parent)
+
+    def _focused_control_target(self, window, app):
+        focused = app.focusWidget()
+        if focused is None:
+            return None
+
+        for target, control in self._controls.get(window, {}).items():
+            if focused is control:
+                return target
+            try:
+                if control.isAncestorOf(focused):
+                    return target
+            except Exception:
+                pass
+        return None
+
+    @staticmethod
+    def _explicit_focus_target(view):
+        def interactive_targets(node):
+            targets = []
+            if node.kind in {
+                "button", "textField", "textArea", "checkBox", "radioButton",
+                "comboBox", "slider", "list", "tree", "table", "richEditor",
+                "collapsible",
+            } and node.target is not None:
+                targets.append(node.target)
+            for child in node.children:
+                targets.extend(interactive_targets(child))
+            return targets
+
+        def visit(node):
+            if node.kind == "focused" and node.focused:
+                targets = interactive_targets(node.children[0])
+                return targets[0] if len(targets) == 1 else None
+            for child in node.children:
+                found = visit(child)
+                if found is not None:
+                    return found
+            return None
+
+        return visit(view)
 
     def _build(self, qt, window, view, parent, nodes, controls, theme, path):
         theme = self._theme_of(qt, view, theme)
