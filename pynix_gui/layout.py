@@ -149,6 +149,13 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
+    if kind == "richEditor":
+        return GUIConstraints(
+            GUISize(240.0, 160.0),
+            GUISize(640.0, 420.0),
+            GUISize(INF, INF),
+        )
+
     if kind in {"checkBox", "radioButton"}:
         width = max(80.0, len(view.text) * 8.0 + 28.0)
         return GUIConstraints(
@@ -680,6 +687,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         "button",
         "textField",
         "textArea",
+        "richEditor",
         "checkBox",
         "radioButton",
         "comboBox",
