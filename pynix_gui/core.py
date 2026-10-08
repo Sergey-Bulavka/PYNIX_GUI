@@ -67,6 +67,7 @@ class GUIView:
     accepted_kinds: tuple[str, ...] = ()
     accepted_operations: tuple[str, ...] = ()
     dock_state: object | None = None
+    dock_region: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -661,6 +662,23 @@ def drop_target(
     )
 
 
+def dock_target(view: GUIView, workspace_target: str, region: str) -> GUIView:
+    if not isinstance(view, GUIView):
+        raise GUIError("PYNIX-GUI-010", "GUI dock target content must be GUIView.")
+    if not _is_non_empty_string(workspace_target):
+        raise GUIError("PYNIX-GUI-010", "GUI dock workspace target must be a non-empty String.")
+    if region not in {"left", "right", "bottom", "center"}:
+        raise GUIError("PYNIX-GUI-010", "GUI dock target region is invalid.")
+    return GUIView(
+        "dockTarget",
+        children=(view,),
+        drop_target_id=workspace_target,
+        accepted_kinds=("pynix/dock-panel",),
+        accepted_operations=("move",),
+        dock_region=region,
+    )
+
+
 def dock_workspace(target: str, panels, state) -> GUIView:
     from .interaction import active_dock_panels, validate_dock_workspace
 
@@ -749,7 +767,7 @@ def validate_view(view: GUIView) -> None:
             "fill", "minSize", "preferredSize", "maxSize", "align", "padding",
             "scroll", "panel", "group", "toolbar", "statusBar", "enabled",
             "focused", "theme", "contextMenu", "tooltip", "collapsible",
-            "draggable", "dropTarget",
+            "draggable", "dropTarget", "dockTarget",
         }:
             valid = len(node.children) == 1
         elif kind in {"row", "column", "stack", "grid", "tabs", "dockWorkspace"}:
@@ -927,6 +945,16 @@ def validate_view(view: GUIView) -> None:
                 for operation in node.accepted_operations
             ):
                 raise GUIError("PYNIX-GUI-010", "GUI drop target operation is invalid.")
+
+        if kind == "dockTarget":
+            if not _is_non_empty_string(node.drop_target_id):
+                raise GUIError("PYNIX-GUI-010", "GUI dock target workspace id is invalid.")
+            if node.dock_region not in {"left", "right", "bottom", "center"}:
+                raise GUIError("PYNIX-GUI-010", "GUI dock target region is invalid.")
+            if node.accepted_kinds != ("pynix/dock-panel",):
+                raise GUIError("PYNIX-GUI-010", "GUI dock target kind is invalid.")
+            if node.accepted_operations != ("move",):
+                raise GUIError("PYNIX-GUI-010", "GUI dock target operation is invalid.")
 
         if kind == "dockWorkspace":
             from .interaction import validate_dock_workspace
