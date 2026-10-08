@@ -2,8 +2,9 @@
 
 Commercial-grade desktop GUI toolkit for the PYNIX programming language.
 
-> **Status:** standalone product development; foundation and ADV-01..ADV-03 accepted,
-> ADV-04/ADV-05 and Windows parity are implemented with consolidated verification pending.
+> **Status:** implementation-complete candidate. Foundation and ADV-01..ADV-03 are accepted;
+> ADV-04/ADV-05, resources, macOS product polish and Windows parity are implemented with
+> consolidated verification pending. No further public capability is planned before that gate.
 >
 > Component version: **0.1.3-dev**
 
@@ -71,3 +72,21 @@ after their consolidated verification gates pass.
 ## License
 
 Apache-2.0.
+
+
+## Verification
+
+Prepared runners:
+
+```bash
+bash scripts/verify_macos.sh tests
+bash scripts/verify_macos.sh smokes
+```
+
+Windows:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1 -Mode All
+```
+
+See `docs/VERIFICATION_PLAN.md` and `docs/PRODUCT_COMPLETION_GATE.md`.
