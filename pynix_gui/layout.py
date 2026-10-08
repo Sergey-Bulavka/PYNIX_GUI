@@ -211,6 +211,15 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
+    if kind == "canvas":
+        scene = view.canvas_scene
+        preferred = GUISize(float(scene.width), float(scene.height))
+        return GUIConstraints(
+            GUISize(80.0, 60.0),
+            preferred,
+            GUISize(INF, INF),
+        )
+
     if kind in {
         "fill", "align", "enabled", "focused", "theme",
         "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
@@ -679,6 +688,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         "list",
         "tree",
         "table",
+        "canvas",
         "icon",
         "image",
     }:
