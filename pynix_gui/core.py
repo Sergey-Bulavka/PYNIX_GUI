@@ -51,6 +51,7 @@ class GUIView:
     minimum_number: float | None = None
     maximum_number: float | None = None
     checked: bool | None = None
+    item_id: str | None = None
     enabled: bool | None = None
     focused: bool | None = None
     resource: str | None = None
@@ -58,6 +59,9 @@ class GUIView:
     theme: str | None = None
     menu: object | None = None
     tooltip_text: str | None = None
+    data: object | None = None
+    expanded_ids: tuple[str, ...] = ()
+    selected_id: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,7 +76,7 @@ class GUIEvent:
     def __post_init__(self):
         payload_count = sum(
             value is not None
-            for value in (self.text, self.index, self.number, self.checked)
+            for value in (self.text, self.index, self.number, self.checked, self.item_id)
         )
 
         valid = (
@@ -95,8 +99,21 @@ class GUIEvent:
             or (
                 self.kind == "SELECTION"
                 and _is_non_empty_string(self.target)
-                and type(self.index) is int
                 and payload_count == 1
+                and (
+                    type(self.index) is int
+                    or _is_non_empty_string(self.item_id)
+                )
+            )
+            or (
+                self.kind == "EXPANSION"
+                and _is_non_empty_string(self.target)
+                and _is_non_empty_string(self.item_id)
+                and type(self.checked) is bool
+                and self.text is None
+                and self.index is None
+                and self.number is None
+                and payload_count == 2
             )
         )
 
@@ -502,6 +519,40 @@ def list_view(target: str, items, selected: int) -> GUIView:
     return GUIView("list", target=_target(target), items=values, selected=selected)
 
 
+
+
+def tree(target: str, nodes, expanded_ids=(), selected_id=None) -> GUIView:
+    from .structured import validate_tree_state
+
+    node_values, expanded_values, selected_value = validate_tree_state(
+        nodes,
+        expanded_ids,
+        selected_id,
+    )
+    return GUIView(
+        "tree",
+        target=_target(target),
+        data=node_values,
+        expanded_ids=expanded_values,
+        selected_id=selected_value,
+    )
+
+
+def table(target: str, columns, rows, selected_id=None) -> GUIView:
+    from .structured import validate_table_state
+
+    column_values, row_values, selected_value = validate_table_state(
+        columns,
+        rows,
+        selected_id,
+    )
+    return GUIView(
+        "table",
+        target=_target(target),
+        data=(column_values, row_values),
+        selected_id=selected_value,
+    )
+
 def icon(name: str, size=ICON_METRICS["iconStandard"]) -> GUIView:
     if not _is_non_empty_string(name):
         raise GUIError("PYNIX-GUI-006", "GUI icon name must be a non-empty String.")
@@ -561,7 +612,7 @@ def validate_view(view: GUIView) -> None:
         if kind in {
             "empty", "spacer", "separator", "text", "button", "textField",
             "textArea", "checkBox", "radioButton", "comboBox", "slider",
-            "progressBar", "list", "icon", "image",
+            "progressBar", "list", "tree", "table", "icon", "image",
         }:
             valid = node.children == ()
         elif kind in {
@@ -703,6 +754,29 @@ def validate_view(view: GUIView) -> None:
         if kind == "collapsible":
             if type(node.text) is not str or type(node.checked) is not bool:
                 raise GUIError("PYNIX-GUI-008", "GUI collapsible contract is invalid.")
+
+        if kind == "tree":
+            from .structured import validate_tree_state
+
+            validate_tree_state(
+                node.data,
+                node.expanded_ids,
+                node.selected_id,
+            )
+
+        if kind == "table":
+            from .structured import validate_table_state
+
+            if (
+                type(node.data) is not tuple
+                or len(node.data) != 2
+            ):
+                raise GUIError("PYNIX-GUI-009", "GUI table data is invalid.")
+            validate_table_state(
+                node.data[0],
+                node.data[1],
+                node.selected_id,
+            )
 
         if kind in {"horizontalSplit", "verticalSplit"}:
             unmanaged = node.split_id is None and node.split_position is None
