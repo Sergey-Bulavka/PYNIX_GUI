@@ -2,7 +2,11 @@
 
 ## Status
 
-Implementation batch in progress; verification deferred to the consolidated test pass.
+**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+
+Controlled text/selection state, semantic spans, native macOS NSTextView realization,
+Windows QPlainTextEdit realization and focused regression coverage are staged. Acceptance
+and the 0.1.5-dev bump require the consolidated verification pass.
 
 Target version after acceptance: **PYNIX GUI 0.1.5-dev**.
 
