@@ -306,6 +306,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         "_gui_menu_bars_by_window",
         "_gui_dialogs_by_window",
         "_gui_dialog_buttons_by_window",
+        "_gui_resources_by_window",
     )
 
     def __init__(self, *, platform_name=None, appkit=None):
@@ -323,6 +324,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_bars_by_window = {}
         self._gui_dialogs_by_window = {}
         self._gui_dialog_buttons_by_window = {}
+        self._gui_resources_by_window = {}
 
     def _navigation_button(self, appkit, window, title, bridge):
         if self.platform_name == "darwin" and self._appkit_override is None:
@@ -350,7 +352,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                 pass
         return button
 
-    def _new_canvas_view(self, appkit, window, view, theme):
+    def _new_canvas_scene_view(self, appkit, window, scene, theme):
         if self.platform_name == "darwin" and self._appkit_override is None:
             canvas_type = _objc_gui_canvas_type()
             native = (
@@ -359,13 +361,21 @@ class MacOSGUIBackend(MacOSHostBackend):
             )
             native._pynix_backend = self
             native._pynix_window = window
-            native._pynix_scene = view.canvas_scene
+            native._pynix_scene = scene
             native._pynix_theme = theme
             if hasattr(native, "setWantsLayer_"):
                 native.setWantsLayer_(True)
             return native
 
         return self._new_container(appkit)
+
+    def _new_canvas_view(self, appkit, window, view, theme):
+        return self._new_canvas_scene_view(
+            appkit,
+            window,
+            view.canvas_scene,
+            theme,
+        )
 
     @staticmethod
     def _canvas_scale(scene, width, height):
@@ -695,6 +705,28 @@ class MacOSGUIBackend(MacOSHostBackend):
                 )
             )
         return True
+
+    def set_resources(self, window, catalog):
+        from ..resources import GUIResourceCatalog
+
+        if not isinstance(catalog, GUIResourceCatalog):
+            raise TypeError("catalog must be GUIResourceCatalog")
+        self._gui_resources_by_window[window] = catalog
+
+    def _resource_catalog(self, window):
+        return self._gui_resources_by_window.get(window)
+
+    def _resolve_image_resource(self, window, name):
+        catalog = self._resource_catalog(window)
+        if catalog is None:
+            return None
+        return catalog.image_path(name)
+
+    def _resolve_vector_resource(self, window, name):
+        catalog = self._resource_catalog(window)
+        if catalog is None:
+            return None
+        return catalog.vector_scene(name)
 
     def _bridge_for_window(self, window):
         bridge = self._bridges_by_window.get(window)
@@ -1840,6 +1872,24 @@ class MacOSGUIBackend(MacOSHostBackend):
                 except Exception:
                     pass
 
+        elif view.kind == "vectorIcon":
+            scene = self._resolve_vector_resource(
+                bridge._window,
+                view.resource,
+            )
+            if scene is None:
+                native = (
+                    appkit.NSImageView.alloc()
+                    .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+                )
+            else:
+                native = self._new_canvas_scene_view(
+                    appkit,
+                    bridge._window,
+                    scene,
+                    theme,
+                )
+
         elif view.kind in {"icon", "image"}:
             native = (
                 appkit.NSImageView.alloc()
@@ -1847,7 +1897,11 @@ class MacOSGUIBackend(MacOSHostBackend):
             )
             image = None
             if view.kind == "icon":
-                symbol = getattr(appkit.NSImage, "imageWithSystemSymbolName_accessibilityDescription_", None)
+                symbol = getattr(
+                    appkit.NSImage,
+                    "imageWithSystemSymbolName_accessibilityDescription_",
+                    None,
+                )
                 if symbol is not None:
                     try:
                         image = symbol(view.resource, view.resource)
@@ -1856,11 +1910,23 @@ class MacOSGUIBackend(MacOSHostBackend):
                 if image is None and hasattr(appkit.NSImage, "imageNamed_"):
                     image = appkit.NSImage.imageNamed_(view.resource)
             else:
-                if hasattr(appkit.NSImage, "imageNamed_"):
+                logical_path = self._resolve_image_resource(
+                    bridge._window,
+                    view.resource,
+                )
+                resource_path = (
+                    logical_path
+                    if logical_path is not None
+                    else view.resource
+                )
+                if logical_path is None and hasattr(appkit.NSImage, "imageNamed_"):
                     image = appkit.NSImage.imageNamed_(view.resource)
                 if image is None:
                     try:
-                        image = appkit.NSImage.alloc().initWithContentsOfFile_(view.resource)
+                        image = (
+                            appkit.NSImage.alloc()
+                            .initWithContentsOfFile_(resource_path)
+                        )
                     except Exception:
                         image = None
             if image is not None:
@@ -1877,7 +1943,13 @@ class MacOSGUIBackend(MacOSHostBackend):
                 except Exception:
                     pass
             if hasattr(native, "setImageScaling_"):
-                native.setImageScaling_(getattr(appkit, "NSImageScaleProportionallyUpOrDown", 3))
+                native.setImageScaling_(
+                    getattr(
+                        appkit,
+                        "NSImageScaleProportionallyUpOrDown",
+                        3,
+                    )
+                )
 
         elif view.kind == "contextMenu":
             native = self._new_container(appkit)
@@ -2908,4 +2980,5 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_bars_by_window.pop(window, None)
         self._gui_dialogs_by_window.pop(window, None)
         self._gui_dialog_buttons_by_window.pop(window, None)
+        self._gui_resources_by_window.pop(window, None)
         return result
