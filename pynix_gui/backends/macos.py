@@ -921,6 +921,184 @@ class MacOSGUIBackend(MacOSHostBackend):
             controls[view.target] = native
             control_meta[native] = ("list", view.target)
 
+        elif view.kind == "tree":
+            native = (
+                appkit.NSScrollView.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            document = self._new_container(appkit)
+            expanded = set(view.expanded_ids)
+            visible = []
+
+            def append_visible(nodes, depth=0):
+                for node_value in nodes:
+                    visible.append((node_value, depth))
+                    if node_value.node_id in expanded:
+                        append_visible(node_value.children, depth + 1)
+
+            append_visible(view.data)
+            row_height = 30.0
+            document.setFrame_(
+                appkit.NSMakeRect(
+                    0,
+                    0,
+                    0,
+                    max(row_height, row_height * len(visible)),
+                )
+            )
+
+            for node_value, depth in visible:
+                row = self._new_container(appkit)
+                disclosure = appkit.NSButton.buttonWithTitle_target_action_(
+                    (
+                        "▾"
+                        if node_value.children and node_value.node_id in expanded
+                        else "▸"
+                        if node_value.children
+                        else ""
+                    ),
+                    bridge,
+                    "controlChanged:",
+                )
+                if hasattr(disclosure, "setBordered_"):
+                    disclosure.setBordered_(False)
+                if hasattr(disclosure, "setTag_"):
+                    disclosure.setTag_(depth)
+                row.addSubview_(disclosure)
+
+                label = appkit.NSButton.buttonWithTitle_target_action_(
+                    node_value.label,
+                    bridge,
+                    "controlChanged:",
+                )
+                if hasattr(label, "setBordered_"):
+                    label.setBordered_(node_value.node_id == view.selected_id)
+                if node_value.node_id == view.selected_id and hasattr(
+                    label,
+                    "setBezelColor_",
+                ):
+                    try:
+                        label.setBezelColor_(
+                            self._native_color(
+                                appkit,
+                                "surfaceSelected",
+                                theme,
+                            )
+                        )
+                    except Exception:
+                        pass
+                if hasattr(label, "setAlignment_"):
+                    label.setAlignment_(getattr(appkit, "NSTextAlignmentLeft", 0))
+                row.addSubview_(label)
+
+                control_meta[label] = (
+                    "treeRow",
+                    view.target,
+                    node_value.node_id,
+                )
+                if node_value.children:
+                    control_meta[disclosure] = (
+                        "treeDisclosure",
+                        view.target,
+                        node_value.node_id,
+                        node_value.node_id in expanded,
+                    )
+                document.addSubview_(row)
+
+            if hasattr(native, "setDocumentView_"):
+                native.setDocumentView_(document)
+            else:
+                native.addSubview_(document)
+            if hasattr(native, "setHasVerticalScroller_"):
+                native.setHasVerticalScroller_(True)
+            if hasattr(native, "setAutohidesScrollers_"):
+                native.setAutohidesScrollers_(True)
+
+            controls[view.target] = native
+            control_meta[native] = ("tree", view.target)
+
+        elif view.kind == "table":
+            native = (
+                appkit.NSScrollView.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            document = self._new_container(appkit)
+            columns, rows = view.data
+            row_height = 30.0
+            header_height = 32.0
+            document.setFrame_(
+                appkit.NSMakeRect(
+                    0,
+                    0,
+                    0,
+                    header_height + row_height * len(rows),
+                )
+            )
+
+            header = self._new_container(appkit)
+            for column_value in columns:
+                label = appkit.NSTextField.labelWithString_(column_value.title)
+                if hasattr(label, "setFont_"):
+                    label.setFont_(self._font_for_role(appkit, "label"))
+                if hasattr(label, "setTextColor_"):
+                    label.setTextColor_(
+                        self._native_color(appkit, "textSecondary", theme)
+                    )
+                header.addSubview_(label)
+            document.addSubview_(header)
+
+            for row_value in rows:
+                row = self._new_container(appkit)
+                for cell in row_value.cells:
+                    cell_button = appkit.NSButton.buttonWithTitle_target_action_(
+                        cell,
+                        bridge,
+                        "controlChanged:",
+                    )
+                    if hasattr(cell_button, "setBordered_"):
+                        cell_button.setBordered_(
+                            row_value.row_id == view.selected_id
+                        )
+                    if row_value.row_id == view.selected_id and hasattr(
+                        cell_button,
+                        "setBezelColor_",
+                    ):
+                        try:
+                            cell_button.setBezelColor_(
+                                self._native_color(
+                                    appkit,
+                                    "surfaceSelected",
+                                    theme,
+                                )
+                            )
+                        except Exception:
+                            pass
+                    if hasattr(cell_button, "setAlignment_"):
+                        cell_button.setAlignment_(
+                            getattr(appkit, "NSTextAlignmentLeft", 0)
+                        )
+                    row.addSubview_(cell_button)
+                    control_meta[cell_button] = (
+                        "tableRow",
+                        view.target,
+                        row_value.row_id,
+                    )
+                document.addSubview_(row)
+
+            if hasattr(native, "setDocumentView_"):
+                native.setDocumentView_(document)
+            else:
+                native.addSubview_(document)
+            if hasattr(native, "setHasVerticalScroller_"):
+                native.setHasVerticalScroller_(True)
+            if hasattr(native, "setHasHorizontalScroller_"):
+                native.setHasHorizontalScroller_(True)
+            if hasattr(native, "setAutohidesScrollers_"):
+                native.setAutohidesScrollers_(True)
+
+            controls[view.target] = native
+            control_meta[native] = ("table", view.target)
+
         elif view.kind == "slider":
             native = (
                 appkit.NSSlider.alloc()
@@ -1271,6 +1449,25 @@ class MacOSGUIBackend(MacOSHostBackend):
                 target=target,
                 checked=bool(sender.state()),
             )
+        elif kind == "treeRow":
+            event = GUIEvent(
+                "SELECTION",
+                target=target,
+                item_id=meta[2],
+            )
+        elif kind == "treeDisclosure":
+            event = GUIEvent(
+                "EXPANSION",
+                target=target,
+                item_id=meta[2],
+                checked=not bool(meta[3]),
+            )
+        elif kind == "tableRow":
+            event = GUIEvent(
+                "SELECTION",
+                target=target,
+                item_id=meta[2],
+            )
         else:
             return
 
@@ -1517,6 +1714,149 @@ class MacOSGUIBackend(MacOSHostBackend):
                         32.0,
                     )
                 )
+
+        if node.view.kind == "tree":
+            try:
+                document = native.documentView()
+                rows = tuple(document.subviews())
+            except Exception:
+                document = None
+                rows = ()
+
+            if document is not None:
+                row_height = 30.0
+                content_width = max(0.0, rect.width - 14.0)
+                content_height = max(rect.height, row_height * len(rows))
+                document.setFrame_(
+                    appkit.NSMakeRect(0, 0, content_width, content_height)
+                )
+                for index, row in enumerate(rows):
+                    row_y = content_height - (index + 1) * row_height
+                    row.setFrame_(
+                        appkit.NSMakeRect(
+                            0,
+                            row_y,
+                            content_width,
+                            row_height,
+                        )
+                    )
+                    try:
+                        children = tuple(row.subviews())
+                    except Exception:
+                        children = ()
+                    if len(children) >= 2:
+                        disclosure, label = children[:2]
+                        try:
+                            depth = int(disclosure.tag())
+                        except Exception:
+                            depth = 0
+                        indent = 12.0 + depth * 18.0
+                        disclosure.setFrame_(
+                            appkit.NSMakeRect(
+                                indent,
+                                0,
+                                24.0,
+                                row_height,
+                            )
+                        )
+                        label.setFrame_(
+                            appkit.NSMakeRect(
+                                indent + 24.0,
+                                0,
+                                max(0.0, content_width - indent - 24.0),
+                                row_height,
+                            )
+                        )
+
+        if node.view.kind == "table":
+            try:
+                document = native.documentView()
+                rows = tuple(document.subviews())
+            except Exception:
+                document = None
+                rows = ()
+
+            if document is not None:
+                columns, table_rows = node.view.data
+                header_height = 32.0
+                row_height = 30.0
+                available_width = max(0.0, rect.width - 14.0)
+                specified = [
+                    float(column.width)
+                    if column.width is not None
+                    else None
+                    for column in columns
+                ]
+                fixed = sum(value for value in specified if value is not None)
+                flexible_count = sum(value is None for value in specified)
+                flexible_width = (
+                    max(120.0, (available_width - fixed) / flexible_count)
+                    if flexible_count
+                    else 0.0
+                )
+                widths = [
+                    flexible_width if value is None else value
+                    for value in specified
+                ]
+                content_width = max(available_width, sum(widths))
+                content_height = max(
+                    rect.height,
+                    header_height + row_height * len(table_rows),
+                )
+                document.setFrame_(
+                    appkit.NSMakeRect(0, 0, content_width, content_height)
+                )
+
+                if rows:
+                    header = rows[0]
+                    header.setFrame_(
+                        appkit.NSMakeRect(
+                            0,
+                            content_height - header_height,
+                            content_width,
+                            header_height,
+                        )
+                    )
+                    try:
+                        header_cells = tuple(header.subviews())
+                    except Exception:
+                        header_cells = ()
+                    cursor = 0.0
+                    for cell, width in zip(header_cells, widths):
+                        cell.setFrame_(
+                            appkit.NSMakeRect(cursor + 8.0, 0, max(0.0, width - 16.0), header_height)
+                        )
+                        cursor += width
+
+                for row_index, row in enumerate(rows[1:]):
+                    row_y = (
+                        content_height
+                        - header_height
+                        - (row_index + 1) * row_height
+                    )
+                    row.setFrame_(
+                        appkit.NSMakeRect(
+                            0,
+                            row_y,
+                            content_width,
+                            row_height,
+                        )
+                    )
+                    try:
+                        cells = tuple(row.subviews())
+                    except Exception:
+                        cells = ()
+                    cursor = 0.0
+                    for cell, width in zip(cells, widths):
+                        cell.setFrame_(
+                            appkit.NSMakeRect(
+                                cursor,
+                                0,
+                                width,
+                                row_height,
+                            )
+                        )
+                        cursor += width
 
         if node.view.kind == "tabs":
             labels = tab_labels.get(path, ())
