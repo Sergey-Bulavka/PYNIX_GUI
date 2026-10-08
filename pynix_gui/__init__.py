@@ -40,6 +40,7 @@ from .core import (
     preferred_size,
     progress_bar,
     radio_button,
+    rich_editor,
     row,
     scroll,
     separator,
@@ -114,6 +115,11 @@ from .structured import (
     table_row,
     tree_node,
 )
+from .editor import (
+    EDITOR_ROLES,
+    GUITextSpan,
+    text_span,
+)
 from .interaction import (
     GUIDockPanel,
     GUIDockPlacement,
@@ -147,6 +153,7 @@ __all__ = [
     "GUIMenuBar",
     "GUIMenuItem",
     "GUIShortcut",
+    "GUITextSpan",
     "GUIDockPanel",
     "GUIDockPlacement",
     "GUIDockState",
@@ -194,6 +201,7 @@ __all__ = [
     "preferred_size",
     "progress_bar",
     "radio_button",
+    "rich_editor",
     "row",
     "scroll",
     "separator",
@@ -229,6 +237,8 @@ __all__ = [
     "validate_menu_targets",
     "table_column",
     "table_row",
+    "text_span",
+    "EDITOR_ROLES",
     "tree_node",
     "BUTTON_VISUALS",
     "COLOR_ROLES",
