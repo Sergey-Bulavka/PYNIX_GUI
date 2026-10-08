@@ -51,7 +51,6 @@ class GUIView:
     minimum_number: float | None = None
     maximum_number: float | None = None
     checked: bool | None = None
-    item_id: str | None = None
     enabled: bool | None = None
     focused: bool | None = None
     resource: str | None = None
@@ -72,6 +71,7 @@ class GUIEvent:
     index: int | None = None
     number: float | None = None
     checked: bool | None = None
+    item_id: str | None = None
 
     def __post_init__(self):
         payload_count = sum(
@@ -137,6 +137,8 @@ _FOCUSABLE_KINDS = {
     "comboBox",
     "slider",
     "list",
+    "tree",
+    "table",
     "collapsible",
 }
 
