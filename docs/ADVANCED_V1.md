@@ -145,6 +145,7 @@ the otherwise disciplined GUI API if introduced without concrete pressure.
 ```text
 GUI-ADV-01 — Commands and transient UI   ACCEPTED in 0.1.1-dev
 GUI-ADV-02 — Tree and Table              ACCEPTED in 0.1.2-dev
+GUI-ADV-03 — Drag Drop and Docking        IMPLEMENTED, verification pending
 ```
 
 Planned capability set:
