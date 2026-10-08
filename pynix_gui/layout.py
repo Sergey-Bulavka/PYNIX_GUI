@@ -213,7 +213,7 @@ def measure(view) -> GUIConstraints:
 
     if kind in {
         "fill", "align", "enabled", "focused", "theme",
-        "contextMenu", "tooltip", "draggable", "dropTarget",
+        "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
     }:
         return measure(view.children[0])
 
