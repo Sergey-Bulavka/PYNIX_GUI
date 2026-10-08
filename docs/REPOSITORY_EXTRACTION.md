@@ -162,3 +162,34 @@ PYNIX GUI standalone macOS smoke: PASS
 No PYNIX compiler repository or legacy Desktop backend was required in that runtime path.
 
 **Stage 3 status: ACCEPTED.**
+
+
+### Stage 4 acceptance
+
+The PYNIX language repository now delegates canonical GUI ownership to PYNIX_GUI while
+retaining only language-specific compatibility adapters.
+
+Accepted evidence:
+
+```text
+GUI/Desktop ownership regression: 186 passed
+Full PYNIX regression:           3912 passed, 43 skipped, 1 warning
+Real PYNIX source → standalone PYNIX_GUI → AppKit smoke: passed
+```
+
+Canonical ownership is now enforced by explicit cross-repository ownership tests for
+`GUIView`, layout types/functions, design tokens, and the macOS backend.
+
+**Stage 4 status: ACCEPTED.**
+
+### Stage 5 acceptance
+
+Toolkit tests now live in PYNIX_GUI while PYNIX retains integration, compiler typing,
+binding, documentation-contract, and version-skew coverage.
+
+Both repositories can be tested independently.
+
+**Stage 5 status: ACCEPTED.**
+
+Extraction stages 1 through 5 are complete. All new advanced GUI implementation work now
+belongs in PYNIX_GUI.
