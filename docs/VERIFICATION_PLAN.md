@@ -46,6 +46,7 @@ python examples/adv_02_tree_table_smoke.py
 python examples/adv_03_drag_dock_smoke.py
 python examples/adv_04_canvas_smoke.py
 python examples/adv_05_editor_smoke.py
+python examples/resources_smoke.py
 python examples/showcase.py
 ```
 
@@ -71,6 +72,20 @@ python examples/showcase.py
 - selection events do not trap or jump caret;
 - text edits emit CHANGE;
 - closing exits cleanly.
+
+### Resource checks
+
+- logical vector resource resolves by catalog name;
+- vector icon renders at requested size;
+- no native image object is passed by application code;
+- missing-resource behavior is noted for follow-up rather than crashing the process.
+
+### ADV-01 regression polish checks
+
+- a standard macOS application menu exists automatically;
+- File/View application menus remain present;
+- controls embedded inside dialog content emit normal GUIEvent values;
+- dialog controls remain interactive after the main window rerenders while a sheet is open.
 
 ### Showcase checks
 
@@ -141,3 +156,36 @@ Only after green evidence:
 8. bump to 0.2.0-dev;
 9. synchronize README, roadmap and completion gate;
 10. then begin PYNIX language-surface integration/finalization and later IDE work.
+
+
+## Phase H — PYNIX language integration
+
+After standalone PYNIX_GUI is green, verify the language adapter and static surface:
+
+```bash
+cd /Users/morphey/PycharmProjects/PYNIX
+git pull --ff-only
+source .venv/bin/activate
+python -m pip install -e ../PYNIX_GUI
+python -m pytest   tests/test_gui_core.py   tests/test_gui_controls.py   tests/test_gui_layout.py   tests/test_gui_surfaces.py   tests/test_gui_design.py   tests/test_gui_runtime_adapter.py   tests/test_gui_package_ownership.py   tests/test_gui_advanced_product.py   -q
+```
+
+Then run the full PYNIX regression:
+
+```bash
+python -m pytest -q
+```
+
+The prior accepted baseline was 3912 passed, 43 skipped, with one unrelated duplicate-zip
+warning. The new exact count is authoritative; zero failures are required.
+
+Finally run the real PYNIX-language native smoke:
+
+```bash
+PYTHONPATH=/Users/morphey/PycharmProjects/PYNIX \
+/Users/morphey/PycharmProjects/PYNIX/.venv/bin/python \
+-m compiler examples/gui_advanced_product_smoke.pnx
+```
+
+Verify that MenuBar, Tree, Table, Rich Editor, Canvas and Dialog are reached through PYNIX
+source rather than direct Python standalone calls.
