@@ -69,6 +69,10 @@ class GUIView:
     dock_state: object | None = None
     dock_region: str | None = None
     canvas_scene: object | None = None
+    selection_start: int | None = None
+    selection_end: int | None = None
+    spans: tuple = ()
+    read_only: bool | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -85,6 +89,8 @@ class GUIEvent:
     payload_value: str | None = None
     operation: str | None = None
     region: str | None = None
+    selection_start: int | None = None
+    selection_end: int | None = None
 
     def __post_init__(self):
         payload_count = sum(
@@ -100,6 +106,8 @@ class GUIEvent:
                 self.payload_value,
                 self.operation,
                 self.region,
+                self.selection_start,
+                self.selection_end,
             )
         )
 
@@ -174,6 +182,24 @@ class GUIEvent:
                 and self.operation is None
                 and payload_count == 2
             )
+            or (
+                self.kind == "EDITOR_SELECTION"
+                and _is_non_empty_string(self.target)
+                and type(self.selection_start) is int
+                and type(self.selection_end) is int
+                and 0 <= self.selection_start <= self.selection_end
+                and self.text is None
+                and self.index is None
+                and self.number is None
+                and self.checked is None
+                and self.item_id is None
+                and self.source_id is None
+                and self.payload_kind is None
+                and self.payload_value is None
+                and self.operation is None
+                and self.region is None
+                and payload_count == 2
+            )
         )
 
         if not valid:
@@ -199,6 +225,7 @@ _FOCUSABLE_KINDS = {
     "tree",
     "table",
     "collapsible",
+    "richEditor",
 }
 
 
@@ -702,6 +729,39 @@ def dock_workspace(target: str, panels, state) -> GUIView:
     )
 
 
+def rich_editor(
+    target: str,
+    text: str,
+    selection_start: int,
+    selection_end: int,
+    spans=(),
+    *,
+    read_only=False,
+) -> GUIView:
+    from .editor import validate_editor_state
+
+    if not _is_non_empty_string(target):
+        raise GUIError("PYNIX-GUI-012", "GUI rich editor target must be a non-empty String.")
+    if type(read_only) is not bool:
+        raise GUIError("PYNIX-GUI-012", "GUI rich editor readOnly must be Bool.")
+
+    text_value, start_value, end_value, span_values = validate_editor_state(
+        text,
+        selection_start,
+        selection_end,
+        spans,
+    )
+    return GUIView(
+        "richEditor",
+        target=target,
+        value=text_value,
+        selection_start=start_value,
+        selection_end=end_value,
+        spans=span_values,
+        read_only=read_only,
+    )
+
+
 def canvas(target: str, scene) -> GUIView:
     from .canvas import GUICanvasScene
 
@@ -775,7 +835,7 @@ def validate_view(view: GUIView) -> None:
         if kind in {
             "empty", "spacer", "separator", "text", "button", "textField",
             "textArea", "checkBox", "radioButton", "comboBox", "slider",
-            "progressBar", "list", "tree", "table", "canvas", "icon", "image",
+            "progressBar", "list", "tree", "table", "richEditor", "canvas", "icon", "image",
         }:
             valid = node.children == ()
         elif kind in {
@@ -940,6 +1000,20 @@ def validate_view(view: GUIView) -> None:
                 node.data[0],
                 node.data[1],
                 node.selected_id,
+            )
+
+        if kind == "richEditor":
+            from .editor import validate_editor_state
+
+            if not _is_non_empty_string(node.target):
+                raise GUIError("PYNIX-GUI-012", "GUI rich editor target is invalid.")
+            if type(node.read_only) is not bool:
+                raise GUIError("PYNIX-GUI-012", "GUI rich editor readOnly is invalid.")
+            validate_editor_state(
+                node.value,
+                node.selection_start,
+                node.selection_end,
+                node.spans,
             )
 
         if kind == "canvas":
