@@ -211,7 +211,10 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
-    if kind in {"fill", "align", "enabled", "focused", "theme", "contextMenu", "tooltip"}:
+    if kind in {
+        "fill", "align", "enabled", "focused", "theme",
+        "contextMenu", "tooltip", "draggable", "dropTarget",
+    }:
         return measure(view.children[0])
 
     if kind == "collapsible":
@@ -230,6 +233,59 @@ def measure(view) -> GUIConstraints:
             COLLAPSIBLE_HEADER_HEIGHT + COLLAPSIBLE_CONTENT_GAP + child.preferred.height,
         )
         return GUIConstraints(minimum, preferred, GUISize(INF, INF))
+
+    if kind == "dockWorkspace":
+        from .interaction import active_dock_panels
+
+        panels = tuple(view.data)
+        state = view.dock_state
+        active = active_dock_panels(panels, state)
+
+        measured = {
+            region: (
+                None
+                if panel is None
+                else measure(panel.content)
+            )
+            for region, panel in active.items()
+        }
+
+        left = measured["left"]
+        right = measured["right"]
+        bottom = measured["bottom"]
+        center = measured["center"]
+
+        minimum_width = (
+            (left.minimum.width if left else 0.0)
+            + (right.minimum.width if right else 0.0)
+            + (center.minimum.width if center else 0.0)
+        )
+        minimum_height = max(
+            (left.minimum.height if left else 0.0),
+            (right.minimum.height if right else 0.0),
+            (
+                (center.minimum.height if center else 0.0)
+                + (bottom.minimum.height if bottom else 0.0)
+            ),
+        )
+
+        preferred_width = max(
+            minimum_width,
+            float(state.left_width)
+            + float(state.right_width)
+            + (center.preferred.width if center else 320.0),
+        )
+        preferred_height = max(
+            minimum_height,
+            (center.preferred.height if center else 240.0)
+            + float(state.bottom_height),
+        )
+
+        return GUIConstraints(
+            GUISize(minimum_width, minimum_height),
+            GUISize(preferred_width, preferred_height),
+            GUISize(INF, INF),
+        )
 
     if kind == "scroll":
         child = measure(view.children[0])
@@ -630,7 +686,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
 
     if kind in {
         "fill", "minSize", "preferredSize", "enabled", "focused", "theme",
-        "contextMenu", "tooltip",
+        "contextMenu", "tooltip", "draggable", "dropTarget",
     }:
         child = _layout(view.children[0], rect, split_positions)
         return GUILayoutNode(view, rect, (child,))
@@ -672,6 +728,73 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         )
         child = _layout(view.children[0], child_rect, split_positions)
         return GUILayoutNode(view, rect, (child,))
+
+    if kind == "dockWorkspace":
+        from .interaction import active_dock_panels
+
+        panels = tuple(view.data)
+        state = view.dock_state
+        active = active_dock_panels(panels, state)
+
+        left_width = (
+            min(float(state.left_width), max(0.0, rect.width * 0.45))
+            if active["left"] is not None
+            else 0.0
+        )
+        right_width = (
+            min(
+                float(state.right_width),
+                max(0.0, rect.width * 0.45),
+                max(0.0, rect.width - left_width),
+            )
+            if active["right"] is not None
+            else 0.0
+        )
+        center_width = max(0.0, rect.width - left_width - right_width)
+
+        bottom_height = (
+            min(float(state.bottom_height), max(0.0, rect.height * 0.45))
+            if active["bottom"] is not None
+            else 0.0
+        )
+        center_height = max(0.0, rect.height - bottom_height)
+
+        region_rects = {
+            "left": GUIRect(rect.x, rect.y, left_width, rect.height),
+            "right": GUIRect(
+                rect.x + rect.width - right_width,
+                rect.y,
+                right_width,
+                rect.height,
+            ),
+            "bottom": GUIRect(
+                rect.x + left_width,
+                rect.y + center_height,
+                center_width,
+                bottom_height,
+            ),
+            "center": GUIRect(
+                rect.x + left_width,
+                rect.y,
+                center_width,
+                center_height,
+            ),
+        }
+
+        nodes = []
+        for region in ("left", "right", "bottom", "center"):
+            panel = active[region]
+            if panel is None:
+                continue
+            nodes.append(
+                _layout(
+                    panel.content,
+                    region_rects[region],
+                    split_positions,
+                )
+            )
+
+        return GUILayoutNode(view, rect, tuple(nodes))
 
     if kind == "align":
         child_constraints = measure(view.children[0])
