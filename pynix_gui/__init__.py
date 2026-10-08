@@ -57,6 +57,7 @@ from .core import (
     toolbar,
     validate_view,
     vertical_split,
+    vector_icon,
 )
 from .canvas import (
     GUICanvasCommand,
@@ -106,6 +107,14 @@ from .design import (
     palette,
     rgb,
     surface_color_role,
+)
+from .resources import (
+    GUIImageResource,
+    GUIResourceCatalog,
+    GUIVectorResource,
+    image_resource,
+    resource_catalog,
+    vector_resource,
 )
 from .structured import (
     GUITableColumn,
@@ -161,6 +170,9 @@ __all__ = [
     "GUITableColumn",
     "GUITableRow",
     "GUITreeNode",
+    "GUIImageResource",
+    "GUIResourceCatalog",
+    "GUIVectorResource",
     "align",
     "button",
     "canvas",
@@ -191,6 +203,7 @@ __all__ = [
     "horizontal_split",
     "icon",
     "image",
+    "image_resource",
     "list_view",
     "table",
     "tree",
@@ -218,6 +231,7 @@ __all__ = [
     "toolbar",
     "validate_view",
     "vertical_split",
+    "vector_icon",
     "GUIRuntime",
     "GUIRuntimeState",
     "GUIWindow",
@@ -240,6 +254,8 @@ __all__ = [
     "text_span",
     "EDITOR_ROLES",
     "tree_node",
+    "resource_catalog",
+    "vector_resource",
     "BUTTON_VISUALS",
     "COLOR_ROLES",
     "CONTROL_METRICS",
