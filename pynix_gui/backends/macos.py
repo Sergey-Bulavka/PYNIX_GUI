@@ -306,6 +306,9 @@ class MacOSGUIBackend(MacOSHostBackend):
         "_gui_menu_bars_by_window",
         "_gui_dialogs_by_window",
         "_gui_dialog_buttons_by_window",
+        "_gui_dialog_controls_by_window",
+        "_gui_dialog_tab_buttons_by_window",
+        "_gui_dialog_views_by_window",
         "_gui_resources_by_window",
     )
 
@@ -324,6 +327,9 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_bars_by_window = {}
         self._gui_dialogs_by_window = {}
         self._gui_dialog_buttons_by_window = {}
+        self._gui_dialog_controls_by_window = {}
+        self._gui_dialog_tab_buttons_by_window = {}
+        self._gui_dialog_views_by_window = {}
         self._gui_resources_by_window = {}
 
     def _navigation_button(self, appkit, window, title, bridge):
@@ -867,6 +873,15 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_targets_by_window.pop(window, None)
         return None
 
+    def _merge_dialog_event_maps(self, window):
+        control_meta = self._gui_control_meta_by_window.setdefault(window, {})
+        tab_buttons = self._gui_tab_buttons_by_window.setdefault(window, {})
+
+        for mapping in self._gui_dialog_controls_by_window.get(window, {}).values():
+            control_meta.update(mapping)
+        for mapping in self._gui_dialog_tab_buttons_by_window.get(window, {}).values():
+            tab_buttons.update(mapping)
+
     def present_dialog(self, window, dialog):
         if not isinstance(dialog, GUIDialog):
             raise TypeError("dialog must be GUIDialog")
@@ -935,6 +950,17 @@ class MacOSGUIBackend(MacOSHostBackend):
             path=(),
         )
         content_holder.addSubview_(native_content)
+
+        self._gui_dialog_controls_by_window.setdefault(window, {})[
+            dialog.dialog_id
+        ] = control_meta
+        self._gui_dialog_tab_buttons_by_window.setdefault(window, {})[
+            dialog.dialog_id
+        ] = tab_buttons
+        self._gui_dialog_views_by_window.setdefault(window, {})[
+            dialog.dialog_id
+        ] = dialog.content
+        self._merge_dialog_event_maps(window)
 
         calculated = layout(
             dialog.content,
@@ -1024,6 +1050,23 @@ class MacOSGUIBackend(MacOSHostBackend):
             if meta[0] == dialog_id:
                 buttons.pop(button, None)
 
+        local_controls = self._gui_dialog_controls_by_window.get(window, {}).pop(
+            dialog_id,
+            {},
+        )
+        global_controls = self._gui_control_meta_by_window.get(window, {})
+        for native in local_controls:
+            global_controls.pop(native, None)
+
+        local_tabs = self._gui_dialog_tab_buttons_by_window.get(window, {}).pop(
+            dialog_id,
+            {},
+        )
+        global_tabs = self._gui_tab_buttons_by_window.get(window, {})
+        for native in local_tabs:
+            global_tabs.pop(native, None)
+
+        self._gui_dialog_views_by_window.get(window, {}).pop(dialog_id, None)
         return None
 
     def render(self, window, view):
@@ -1066,6 +1109,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_controls_by_window[window] = controls
         self._gui_control_meta_by_window[window] = control_meta
         self._gui_tab_buttons_by_window[window] = tab_buttons
+        self._merge_dialog_event_maps(window)
 
         window.setContentView_(native_root)
         self._relayout(window)
@@ -2313,7 +2357,15 @@ class MacOSGUIBackend(MacOSHostBackend):
                     return found
             return None
 
-        return None if root is None else visit(root)
+        found = None if root is None else visit(root)
+        if found is not None:
+            return found
+
+        for dialog_view in self._gui_dialog_views_by_window.get(window, {}).values():
+            found = visit(dialog_view)
+            if found is not None:
+                return found
+        return None
 
     @staticmethod
     def _visible_tree(nodes, expanded_ids):
@@ -3001,5 +3053,8 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_bars_by_window.pop(window, None)
         self._gui_dialogs_by_window.pop(window, None)
         self._gui_dialog_buttons_by_window.pop(window, None)
+        self._gui_dialog_controls_by_window.pop(window, None)
+        self._gui_dialog_tab_buttons_by_window.pop(window, None)
+        self._gui_dialog_views_by_window.pop(window, None)
         self._gui_resources_by_window.pop(window, None)
         return result
