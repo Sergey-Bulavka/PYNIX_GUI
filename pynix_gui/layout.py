@@ -686,7 +686,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
 
     if kind in {
         "fill", "minSize", "preferredSize", "enabled", "focused", "theme",
-        "contextMenu", "tooltip", "draggable", "dropTarget",
+        "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
     }:
         child = _layout(view.children[0], rect, split_positions)
         return GUILayoutNode(view, rect, (child,))
