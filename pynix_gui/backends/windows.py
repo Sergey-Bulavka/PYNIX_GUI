@@ -11,6 +11,7 @@ import sys
 import time
 
 from ..core import GUIEvent
+from ..canvas import hit_test_scene
 from ..design import DARK, LIGHT, TYPOGRAPHY
 from ..layout import layout
 
@@ -803,18 +804,7 @@ class WindowsGUIBackend:
 
     @staticmethod
     def _canvas_hit_qt(scene, x, y, width, height):
-        if width <= 0 or height <= 0:
-            return None
-        lx = x * scene.width / width
-        ly = y * scene.height / height
-        for command in reversed(scene.commands):
-            if command.hit_target is None:
-                continue
-            if command.kind in {"rect", "ellipse", "image"}:
-                rx, ry, rw, rh = command.values[:4]
-                if rx <= lx <= rx + rw and ry <= ly <= ry + rh:
-                    return command.hit_target
-        return None
+        return hit_test_scene(scene, x, y, width, height)
 
     def _svg_widget(self, qt, path, parent):
         class SVGWidget(qt.QtWidgets.QWidget):
