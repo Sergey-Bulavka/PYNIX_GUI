@@ -2,9 +2,10 @@
 
 Commercial-grade desktop GUI toolkit for the PYNIX programming language.
 
-> **Status:** active extraction and independent product development.
+> **Status:** standalone product development; foundation and ADV-01..ADV-03 accepted,
+> ADV-04/ADV-05 and Windows parity are implemented with consolidated verification pending.
 >
-> Component version: **0.1.0-dev**
+> Component version: **0.1.3-dev**
 
 PYNIX GUI is a first-class product of the PYNIX ecosystem. It owns the platform-independent
 GUI model, deterministic layout engine, PYNIX Standard design system, advanced desktop
@@ -53,9 +54,9 @@ Advanced desktop capabilities are built on top of that foundation:
 
 ## Platform direction
 
-- macOS / AppKit — current reference backend
-- Windows — required parity target
-- Linux — planned after Windows parity
+- macOS / AppKit — reference backend
+- Windows / Qt (PySide6) — parity backend implemented, native verification pending
+- Linux — core/layout regression target; native backend planned after Windows parity acceptance
 
 ## Repository extraction
 
@@ -63,8 +64,9 @@ The accepted GUI implementation is being migrated from
 `Sergey-Bulavka/PYNIX` without a rewrite. During extraction both repositories retain
 compatibility coverage until PYNIX can consume this package through a narrow adapter.
 
-The component version remains **0.1.0-dev**; repository separation does not reset history or
-milestone status.
+The component version is **0.1.3-dev**. ADV-04 Canvas 2D, ADV-05 Rich Editor, logical
+resources and Windows parity code are staged beyond that accepted version and advance only
+after their consolidated verification gates pass.
 
 ## License
 
