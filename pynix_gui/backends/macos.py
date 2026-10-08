@@ -38,6 +38,9 @@ class _PythonGUIEventBridge:
     def textDidChange_(self, notification):
         self._backend._queue_text_change(self._window, notification.object())
 
+    def textViewDidChangeSelection_(self, notification):
+        self._backend._queue_editor_selection(self._window, notification.object())
+
     def tabPressed_(self, sender):
         self._backend._queue_tab_selection(self._window, sender)
 
@@ -269,6 +272,9 @@ def _objc_gui_event_bridge_type():
 
         def textDidChange_(self, notification):
             self._backend._queue_text_change(self._window, notification.object())
+
+        def textViewDidChangeSelection_(self, notification):
+            self._backend._queue_editor_selection(self._window, notification.object())
 
         def tabPressed_(self, sender):
             self._backend._queue_tab_selection(self._window, sender)
@@ -1367,6 +1373,117 @@ class MacOSGUIBackend(MacOSHostBackend):
             controls[view.target] = text_view
             control_meta[text_view] = ("textArea", view.target)
 
+        elif view.kind == "richEditor":
+            native = (
+                appkit.NSScrollView.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            text_view = (
+                appkit.NSTextView.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            text_view.setString_(view.value)
+            if hasattr(text_view, "setEditable_"):
+                text_view.setEditable_(not view.read_only)
+            if hasattr(text_view, "setRichText_"):
+                text_view.setRichText_(False)
+            if hasattr(text_view, "setUsesFindPanel_"):
+                text_view.setUsesFindPanel_(True)
+            if hasattr(text_view, "setAllowsUndo_"):
+                text_view.setAllowsUndo_(True)
+            if hasattr(text_view, "setBackgroundColor_"):
+                text_view.setBackgroundColor_(
+                    self._native_color(appkit, "surfaceSunken", theme)
+                )
+            if hasattr(text_view, "setTextColor_"):
+                text_view.setTextColor_(
+                    self._native_color(appkit, "textPrimary", theme)
+                )
+            if hasattr(text_view, "setFont_"):
+                text_view.setFont_(self._font_for_role(appkit, "code"))
+            if hasattr(text_view, "setDelegate_"):
+                text_view.setDelegate_(bridge)
+
+            storage = text_view.textStorage() if hasattr(text_view, "textStorage") else None
+            if storage is not None:
+                full_range = appkit.NSMakeRange(0, len(view.value))
+                base_attributes = {
+                    appkit.NSForegroundColorAttributeName: self._native_color(
+                        appkit,
+                        "textPrimary",
+                        theme,
+                    ),
+                    appkit.NSFontAttributeName: self._font_for_role(
+                        appkit,
+                        "code",
+                    ),
+                }
+                try:
+                    storage.setAttributes_range_(base_attributes, full_range)
+                except Exception:
+                    pass
+
+                editor_colors = {
+                    "plain": "textPrimary",
+                    "keyword": "accent",
+                    "type": "info",
+                    "string": "success",
+                    "number": "warning",
+                    "comment": "textMuted",
+                    "function": "accent",
+                    "property": "textSecondary",
+                    "constant": "warning",
+                    "warning": "warning",
+                    "error": "error",
+                    "muted": "textMuted",
+                    "strong": "textPrimary",
+                }
+                for span in view.spans:
+                    attrs = {
+                        appkit.NSForegroundColorAttributeName: self._native_color(
+                            appkit,
+                            editor_colors[span.role],
+                            theme,
+                        )
+                    }
+                    if span.role == "strong":
+                        attrs[appkit.NSFontAttributeName] = self._font_for_role(
+                            appkit,
+                            "bodyStrong",
+                        )
+                    try:
+                        storage.addAttributes_range_(
+                            attrs,
+                            appkit.NSMakeRange(
+                                span.start,
+                                span.end - span.start,
+                            ),
+                        )
+                    except Exception:
+                        pass
+
+            if hasattr(text_view, "setSelectedRange_"):
+                try:
+                    text_view.setSelectedRange_(
+                        appkit.NSMakeRange(
+                            view.selection_start,
+                            view.selection_end - view.selection_start,
+                        )
+                    )
+                except Exception:
+                    pass
+
+            native.setDocumentView_(text_view)
+            if hasattr(native, "setHasVerticalScroller_"):
+                native.setHasVerticalScroller_(True)
+            if hasattr(native, "setHasHorizontalScroller_"):
+                native.setHasHorizontalScroller_(True)
+            if hasattr(native, "setAutohidesScrollers_"):
+                native.setAutohidesScrollers_(True)
+
+            controls[view.target] = text_view
+            control_meta[text_view] = ("richEditor", view.target)
+
         elif view.kind in {"checkBox", "radioButton"}:
             native = appkit.NSButton.buttonWithTitle_target_action_(
                 view.text,
@@ -2275,12 +2392,33 @@ class MacOSGUIBackend(MacOSHostBackend):
         kind, target = meta
         if kind == "textField":
             value = str(sender.stringValue())
-        elif kind == "textArea":
+        elif kind in {"textArea", "richEditor"}:
             value = str(sender.string()).replace("\r\n", "\n").replace("\r", "\n")
         else:
             return
         self._event_queue(window).append(
             GUIEvent("CHANGE", target=target, text=value)
+        )
+
+    def _queue_editor_selection(self, window, sender):
+        meta = self._control_meta(window, sender)
+        if meta is None or meta[0] != "richEditor":
+            return
+
+        try:
+            selected = sender.selectedRange()
+            start = int(selected.location)
+            end = start + int(selected.length)
+        except Exception:
+            return
+
+        self._event_queue(window).append(
+            GUIEvent(
+                "EDITOR_SELECTION",
+                target=meta[1],
+                selection_start=start,
+                selection_end=end,
+            )
         )
 
     def _queue_tab_selection(self, window, sender):
