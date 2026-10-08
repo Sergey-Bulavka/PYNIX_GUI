@@ -8,6 +8,7 @@ import warnings
 
 from ._macos_host import MacOSHostBackend
 from ..core import GUIEvent
+from ..commands import GUIDialog, GUIMenu, GUIMenuBar
 from ..design import DARK, LIGHT, RADII, TYPOGRAPHY, button_visual, rgb, surface_color_role
 from ..layout import layout
 
@@ -38,6 +39,12 @@ class _PythonGUIEventBridge:
 
     def tabPressed_(self, sender):
         self._backend._queue_tab_selection(self._window, sender)
+
+    def menuItemActivated_(self, sender):
+        self._backend._queue_menu_activation(self._window, sender)
+
+    def dialogAction_(self, sender):
+        self._backend._queue_dialog_action(self._window, sender)
 
 
 _OBJC_GUI_EVENT_BRIDGE_TYPE = None
@@ -74,6 +81,12 @@ def _objc_gui_event_bridge_type():
         def tabPressed_(self, sender):
             self._backend._queue_tab_selection(self._window, sender)
 
+        def menuItemActivated_(self, sender):
+            self._backend._queue_menu_activation(self._window, sender)
+
+        def dialogAction_(self, sender):
+            self._backend._queue_dialog_action(self._window, sender)
+
     _OBJC_GUI_EVENT_BRIDGE_TYPE = PynixGUIEventBridge
     return _OBJC_GUI_EVENT_BRIDGE_TYPE
 
@@ -91,6 +104,10 @@ class MacOSGUIBackend(MacOSHostBackend):
         "_gui_controls_by_window",
         "_gui_control_meta_by_window",
         "_gui_tab_buttons_by_window",
+        "_gui_menu_targets_by_window",
+        "_gui_menu_bars_by_window",
+        "_gui_dialogs_by_window",
+        "_gui_dialog_buttons_by_window",
     )
 
     def __init__(self, *, platform_name=None, appkit=None):
@@ -104,6 +121,10 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_controls_by_window = {}
         self._gui_control_meta_by_window = {}
         self._gui_tab_buttons_by_window = {}
+        self._gui_menu_targets_by_window = {}
+        self._gui_menu_bars_by_window = {}
+        self._gui_dialogs_by_window = {}
+        self._gui_dialog_buttons_by_window = {}
 
     def _bridge_for_window(self, window):
         bridge = self._bridges_by_window.get(window)
