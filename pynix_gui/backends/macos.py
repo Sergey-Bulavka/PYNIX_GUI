@@ -1047,9 +1047,15 @@ class MacOSGUIBackend(MacOSHostBackend):
                 header.addSubview_(label)
             document.addSubview_(header)
 
+            alignment_values = {
+                "start": getattr(appkit, "NSTextAlignmentLeft", 0),
+                "center": getattr(appkit, "NSTextAlignmentCenter", 2),
+                "end": getattr(appkit, "NSTextAlignmentRight", 1),
+            }
+
             for row_value in rows:
                 row = self._new_container(appkit)
-                for cell in row_value.cells:
+                for column_value, cell in zip(columns, row_value.cells):
                     cell_button = appkit.NSButton.buttonWithTitle_target_action_(
                         cell,
                         bridge,
@@ -1075,7 +1081,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                             pass
                     if hasattr(cell_button, "setAlignment_"):
                         cell_button.setAlignment_(
-                            getattr(appkit, "NSTextAlignmentLeft", 0)
+                            alignment_values[column_value.alignment]
                         )
                     row.addSubview_(cell_button)
                     control_meta[cell_button] = (
