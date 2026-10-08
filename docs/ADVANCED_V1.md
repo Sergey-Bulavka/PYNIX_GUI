@@ -140,12 +140,11 @@ deferred capabilities:
 The reason is not technical inability. Their public contracts are expensive and can distort
 the otherwise disciplined GUI API if introduced without concrete pressure.
 
-## First milestone
-
-The first implementation milestone is:
+## Milestone status
 
 ```text
-GUI-ADV-01 — Menus and transient UI
+GUI-ADV-01 — Commands and transient UI   ACCEPTED in 0.1.1-dev
+GUI-ADV-02 — Tree and Table              IMPLEMENTED, verification pending
 ```
 
 Planned capability set:
