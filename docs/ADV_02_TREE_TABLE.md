@@ -2,9 +2,19 @@
 
 ## Status
 
-Implementation batch complete; verification pending.
+**ACCEPTED — PYNIX GUI 0.1.2-dev**
 
-Target version after acceptance: **PYNIX GUI 0.1.2-dev**.
+Acceptance evidence:
+
+```text
+Standalone regression: 54 passed
+Native macOS Tree/Table smoke: PASS
+Keyboard navigation: PASS
+Controlled focus persistence across rerender: PASS
+```
+
+Verified stable identity selection, controlled tree expansion, table selection, scrolling,
+semantic column sizing/alignment, keyboard navigation and focus restoration after rerender.
 
 ## Goal
 
