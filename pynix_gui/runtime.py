@@ -168,6 +168,12 @@ class GUIRuntime:
         self.backend = backend
         self.state = state if state is not None else GUIRuntimeState()
 
+    @classmethod
+    def default(cls, state: GUIRuntimeState | None = None):
+        from .backends import default_backend
+
+        return cls(default_backend(), state)
+
     def is_available(self) -> bool:
         if self.backend is None:
             return False
