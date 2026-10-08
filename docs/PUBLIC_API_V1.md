@@ -214,6 +214,7 @@ selection, scrolling and keyboard behavior.
 ```python
 image_resource(name, path)
 vector_resource(name, scene)
+svg_resource(name, path)
 resource_catalog(resources)
 GUIWindow.set_resources(catalog)
 ```
