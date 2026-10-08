@@ -48,7 +48,18 @@ def main():
     runtime = GUIRuntime(MacOSGUIBackend())
 
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable on this host.")
+        try:
+            import AppKit  # noqa: F401
+        except Exception as error:
+            raise SystemExit(
+                "PYNIX GUI macOS backend is unavailable because AppKit/PyObjC "
+                f"could not be imported: {error}"
+            ) from error
+
+        raise SystemExit(
+            "PYNIX GUI macOS backend is unavailable. "
+            "AppKit is installed, but the host/runtime availability check failed."
+        )
 
     window = runtime.open("PYNIX GUI — Standalone Smoke", 720, 420)
     window.render(build_root())
