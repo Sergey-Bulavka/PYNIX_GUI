@@ -143,3 +143,40 @@ def test_adv04_canvas_diagnostics_reject_zero_scale():
         canvas_transform([], scale_x=0)
 
     assert failure.value.code == "PYNIX-GUI-011"
+
+
+
+def test_adv04_canvas_rotated_transform_hit_testing():
+    from pynix_gui.backends import MacOSGUIBackend
+
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+    value = canvas_scene(
+        200,
+        200,
+        [
+            canvas_transform(
+                [canvas_rect(0, 0, 40, 20, hit_target="rotated")],
+                translate_x=100,
+                translate_y=100,
+                rotate=90,
+            )
+        ],
+    )
+
+    assert backend._canvas_hit_target(value, 90, 120, 200, 200) == "rotated"
+    assert backend._canvas_hit_target(value, 130, 120, 200, 200) is None
+
+
+def test_adv04_canvas_ellipse_hit_test_uses_ellipse_not_bounding_box():
+    from pynix_gui.canvas import hit_test_scene
+
+    value = canvas_scene(
+        100,
+        100,
+        [
+            canvas_ellipse(10, 10, 80, 80, hit_target="circle"),
+        ],
+    )
+
+    assert hit_test_scene(value, 50, 50, 100, 100) == "circle"
+    assert hit_test_scene(value, 12, 12, 100, 100) is None
