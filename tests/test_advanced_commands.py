@@ -194,3 +194,37 @@ def test_adv01_runtime_delegates_dialog_present_and_dismiss():
 
     assert backend.calls[0][0] == "present_dialog"
     assert backend.calls[1] == ("dismiss_dialog", window._handle, "sample")
+
+
+
+def test_adv01_dialog_event_maps_survive_main_render_replacement():
+    from pynix_gui.backends import MacOSGUIBackend
+
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+    window = object()
+    dialog_control = object()
+    dialog_tab = object()
+
+    backend._gui_control_meta_by_window[window] = {}
+    backend._gui_tab_buttons_by_window[window] = {}
+    backend._gui_dialog_controls_by_window[window] = {
+        "settings": {
+            dialog_control: ("textField", "dialog-name"),
+        }
+    }
+    backend._gui_dialog_tab_buttons_by_window[window] = {
+        "settings": {
+            dialog_tab: ("dialog-tabs", 1),
+        }
+    }
+
+    backend._merge_dialog_event_maps(window)
+
+    assert backend._gui_control_meta_by_window[window][dialog_control] == (
+        "textField",
+        "dialog-name",
+    )
+    assert backend._gui_tab_buttons_by_window[window][dialog_tab] == (
+        "dialog-tabs",
+        1,
+    )
