@@ -12,6 +12,9 @@ license = {text = "Apache-2.0"}
 authors = [
     {name = "Sergii V. Bulavka"}
 ]
+dependencies = [
+    "pyobjc-framework-Cocoa>=11.0; sys_platform == 'darwin'",
+]
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
     "License :: OSI Approved :: Apache Software License",
