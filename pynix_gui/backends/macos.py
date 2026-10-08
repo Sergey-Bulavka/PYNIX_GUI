@@ -1399,6 +1399,9 @@ class MacOSGUIBackend(MacOSHostBackend):
                 text_view.setFont_(self._font_for_role(appkit, "body"))
             if hasattr(text_view, "setDelegate_"):
                 text_view.setDelegate_(bridge)
+            if hasattr(text_view, "setDelegate_"):
+                text_view.setDelegate_(bridge)
+
             native.setDocumentView_(text_view)
             if hasattr(native, "setHasVerticalScroller_"):
                 native.setHasVerticalScroller_(True)
@@ -1433,8 +1436,6 @@ class MacOSGUIBackend(MacOSHostBackend):
                 )
             if hasattr(text_view, "setFont_"):
                 text_view.setFont_(self._font_for_role(appkit, "code"))
-            if hasattr(text_view, "setDelegate_"):
-                text_view.setDelegate_(bridge)
 
             storage = text_view.textStorage() if hasattr(text_view, "textStorage") else None
             if storage is not None:
@@ -1504,6 +1505,9 @@ class MacOSGUIBackend(MacOSHostBackend):
                     )
                 except Exception:
                     pass
+
+            if hasattr(text_view, "setDelegate_"):
+                text_view.setDelegate_(bridge)
 
             native.setDocumentView_(text_view)
             if hasattr(native, "setHasVerticalScroller_"):
@@ -2468,6 +2472,23 @@ class MacOSGUIBackend(MacOSHostBackend):
             value = str(sender.string()).replace("\r\n", "\n").replace("\r", "\n")
         else:
             return
+
+        if kind == "richEditor":
+            try:
+                selected = sender.selectedRange()
+                start = int(selected.location)
+                end = start + int(selected.length)
+                self._event_queue(window).append(
+                    GUIEvent(
+                        "EDITOR_SELECTION",
+                        target=target,
+                        selection_start=start,
+                        selection_end=end,
+                    )
+                )
+            except Exception:
+                pass
+
         self._event_queue(window).append(
             GUIEvent("CHANGE", target=target, text=value)
         )
