@@ -3,6 +3,7 @@
 
 """macOS host realization for the PYNIX GUI layout engine."""
 
+import json
 import sys
 import warnings
 
@@ -49,6 +50,9 @@ class _PythonGUIEventBridge:
 
 _OBJC_GUI_EVENT_BRIDGE_TYPE = None
 _OBJC_GUI_NAV_BUTTON_TYPE = None
+_OBJC_GUI_DRAG_SOURCE_TYPE = None
+_OBJC_GUI_DROP_TARGET_TYPE = None
+_DRAG_PASTEBOARD_TYPE = "org.pynix.gui.drag-payload"
 
 
 def _objc_gui_navigation_button_type():
@@ -103,6 +107,99 @@ def _objc_gui_navigation_button_type():
     return _OBJC_GUI_NAV_BUTTON_TYPE
 
 
+
+
+def _objc_gui_drag_source_type():
+    global _OBJC_GUI_DRAG_SOURCE_TYPE
+
+    if _OBJC_GUI_DRAG_SOURCE_TYPE is not None:
+        return _OBJC_GUI_DRAG_SOURCE_TYPE
+
+    import AppKit
+
+    class PynixGUIDragSourceView(AppKit.NSView):
+        def mouseDragged_(self, event):
+            payload = self._pynix_payload
+            data = json.dumps(
+                {
+                    "source_id": self._pynix_source_id,
+                    "kind": payload.kind,
+                    "value": payload.value,
+                    "operations": list(payload.operations),
+                },
+                separators=(",", ":"),
+            )
+
+            pasteboard_item = AppKit.NSPasteboardItem.alloc().init()
+            pasteboard_item.setString_forType_(data, _DRAG_PASTEBOARD_TYPE)
+
+            dragging_item = (
+                AppKit.NSDraggingItem.alloc()
+                .initWithPasteboardWriter_(pasteboard_item)
+            )
+            dragging_item.setDraggingFrame_contents_(
+                self.bounds(),
+                None,
+            )
+
+            self.beginDraggingSessionWithItems_event_source_(
+                [dragging_item],
+                event,
+                self,
+            )
+
+        def draggingSession_sourceOperationMaskForDraggingContext_(
+            self,
+            session,
+            context,
+        ):
+            mask = 0
+            if "copy" in self._pynix_payload.operations:
+                mask |= getattr(AppKit, "NSDragOperationCopy", 1)
+            if "move" in self._pynix_payload.operations:
+                mask |= getattr(AppKit, "NSDragOperationMove", 16)
+            return mask
+
+    _OBJC_GUI_DRAG_SOURCE_TYPE = PynixGUIDragSourceView
+    return _OBJC_GUI_DRAG_SOURCE_TYPE
+
+
+def _objc_gui_drop_target_type():
+    global _OBJC_GUI_DROP_TARGET_TYPE
+
+    if _OBJC_GUI_DROP_TARGET_TYPE is not None:
+        return _OBJC_GUI_DROP_TARGET_TYPE
+
+    import AppKit
+
+    class PynixGUIDropTargetView(AppKit.NSView):
+        def draggingEntered_(self, info):
+            return self._pynix_backend._drop_operation_for_info(
+                self,
+                info,
+            )
+
+        def draggingUpdated_(self, info):
+            return self._pynix_backend._drop_operation_for_info(
+                self,
+                info,
+            )
+
+        def prepareForDragOperation_(self, info):
+            return (
+                self._pynix_backend._drop_operation_for_info(self, info)
+                != getattr(AppKit, "NSDragOperationNone", 0)
+            )
+
+        def performDragOperation_(self, info):
+            return self._pynix_backend._queue_drop_from_info(
+                self._pynix_window,
+                self,
+                info,
+            )
+
+    _OBJC_GUI_DROP_TARGET_TYPE = PynixGUIDropTargetView
+    return _OBJC_GUI_DROP_TARGET_TYPE
 
 
 def _objc_gui_event_bridge_type():
@@ -206,6 +303,118 @@ class MacOSGUIBackend(MacOSHostBackend):
             except Exception:
                 pass
         return button
+
+    def _new_drag_source_view(self, appkit, window, view):
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            source_type = _objc_gui_drag_source_type()
+            native = (
+                source_type.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            native._pynix_payload = view.drag_payload
+            native._pynix_source_id = view.drag_source_id
+            return native
+
+        return self._new_container(appkit)
+
+    def _new_drop_target_view(self, appkit, window, view):
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            target_type = _objc_gui_drop_target_type()
+            native = (
+                target_type.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            native._pynix_backend = self
+            native._pynix_window = window
+            native._pynix_target_id = view.drop_target_id
+            native._pynix_accepted_kinds = tuple(view.accepted_kinds)
+            native._pynix_accepted_operations = tuple(
+                view.accepted_operations
+            )
+            native.registerForDraggedTypes_([_DRAG_PASTEBOARD_TYPE])
+            return native
+
+        return self._new_container(appkit)
+
+    @staticmethod
+    def _decode_drag_info(info):
+        try:
+            pasteboard = info.draggingPasteboard()
+            raw = pasteboard.stringForType_(_DRAG_PASTEBOARD_TYPE)
+            if raw is None:
+                return None
+            decoded = json.loads(str(raw))
+        except Exception:
+            return None
+
+        if not isinstance(decoded, dict):
+            return None
+        required = {"source_id", "kind", "value", "operations"}
+        if set(decoded) != required:
+            return None
+        if any(
+            type(decoded[name]) is not str or decoded[name] == ""
+            for name in ("source_id", "kind", "value")
+        ):
+            return None
+        if (
+            type(decoded["operations"]) is not list
+            or not decoded["operations"]
+            or any(
+                operation not in {"copy", "move"}
+                for operation in decoded["operations"]
+            )
+        ):
+            return None
+        return decoded
+
+    def _drop_operation_for_info(self, native, info):
+        appkit = self._load_appkit()
+        if appkit is None:
+            return 0
+
+        decoded = self._decode_drag_info(info)
+        if decoded is None:
+            return getattr(appkit, "NSDragOperationNone", 0)
+
+        if decoded["kind"] not in native._pynix_accepted_kinds:
+            return getattr(appkit, "NSDragOperationNone", 0)
+
+        source_operations = tuple(decoded["operations"])
+        accepted = native._pynix_accepted_operations
+
+        if "move" in source_operations and "move" in accepted:
+            return getattr(appkit, "NSDragOperationMove", 16)
+        if "copy" in source_operations and "copy" in accepted:
+            return getattr(appkit, "NSDragOperationCopy", 1)
+        return getattr(appkit, "NSDragOperationNone", 0)
+
+    def _queue_drop_from_info(self, window, native, info):
+        appkit = self._load_appkit()
+        decoded = self._decode_drag_info(info)
+        if decoded is None or appkit is None:
+            return False
+
+        operation_mask = self._drop_operation_for_info(native, info)
+        if operation_mask == getattr(appkit, "NSDragOperationNone", 0):
+            return False
+
+        operation = (
+            "move"
+            if operation_mask == getattr(appkit, "NSDragOperationMove", 16)
+            else "copy"
+        )
+        self._event_queue(window).append(
+            GUIEvent(
+                "DROP",
+                target=native._pynix_target_id,
+                source_id=decoded["source_id"],
+                payload_kind=decoded["kind"],
+                payload_value=decoded["value"],
+                operation=operation,
+            )
+        )
+        return True
 
     def _bridge_for_window(self, window):
         bridge = self._bridges_by_window.get(window)
@@ -1358,6 +1567,48 @@ class MacOSGUIBackend(MacOSHostBackend):
                     path=path + (0,),
                 )
                 native.addSubview_(child)
+
+        elif view.kind == "draggable":
+            native = self._new_drag_source_view(
+                appkit,
+                bridge._window,
+                view,
+            )
+            child = self._build_native_tree(
+                appkit,
+                view.children[0],
+                native_nodes,
+                split_views,
+                tab_labels,
+                controls,
+                control_meta,
+                tab_buttons,
+                bridge,
+                theme,
+                path=path + (0,),
+            )
+            native.addSubview_(child)
+
+        elif view.kind == "dropTarget":
+            native = self._new_drop_target_view(
+                appkit,
+                bridge._window,
+                view,
+            )
+            child = self._build_native_tree(
+                appkit,
+                view.children[0],
+                native_nodes,
+                split_views,
+                tab_labels,
+                controls,
+                control_meta,
+                tab_buttons,
+                bridge,
+                theme,
+                path=path + (0,),
+            )
+            native.addSubview_(child)
 
         elif view.kind in {"enabled", "focused"}:
             native = self._new_container(appkit)
