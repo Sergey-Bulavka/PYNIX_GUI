@@ -279,3 +279,16 @@ def test_adv03_workspace_can_be_nested_in_normal_gui_composition():
     ], 12)
 
     validate_view(root)
+
+
+
+def test_adv03_dock_target_layout_is_geometry_neutral():
+    content = text("Bottom", "body")
+    target = dock_target(content, "workspace", "bottom")
+
+    calculated = layout(target, 320, 80)
+
+    assert calculated.rect.width == 320
+    assert calculated.rect.height == 80
+    assert len(calculated.children) == 1
+    assert calculated.children[0].rect == calculated.rect
