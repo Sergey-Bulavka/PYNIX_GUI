@@ -10,7 +10,7 @@ from ._macos_host import MacOSHostBackend
 from ..core import GUIEvent
 from ..commands import GUIDialog, GUIMenu, GUIMenuBar
 from ..design import DARK, LIGHT, RADII, TYPOGRAPHY, button_visual, rgb, surface_color_role
-from ..layout import layout
+from ..layout import layout, measure
 
 
 class _PythonGUIEventBridge:
@@ -141,6 +141,288 @@ class MacOSGUIBackend(MacOSHostBackend):
 
         self._bridges_by_window[window] = bridge
         return bridge
+
+    @staticmethod
+    def _shortcut_mask(appkit, shortcut):
+        if shortcut is None:
+            return 0
+
+        flags = 0
+        mapping = {
+            "primary": getattr(appkit, "NSEventModifierFlagCommand", 1 << 20),
+            "shift": getattr(appkit, "NSEventModifierFlagShift", 1 << 17),
+            "alt": getattr(appkit, "NSEventModifierFlagOption", 1 << 19),
+            "control": getattr(appkit, "NSEventModifierFlagControl", 1 << 18),
+        }
+        for modifier in shortcut.modifiers:
+            flags |= mapping[modifier]
+        return flags
+
+    def _build_native_menu(self, appkit, window, menu_value, bridge):
+        native_menu = appkit.NSMenu.alloc().initWithTitle_(menu_value.title)
+
+        for item in menu_value.items:
+            if item.kind == "separator":
+                native_item = appkit.NSMenuItem.separatorItem()
+                native_menu.addItem_(native_item)
+                continue
+
+            if item.kind == "submenu":
+                native_item = (
+                    appkit.NSMenuItem.alloc()
+                    .initWithTitle_action_keyEquivalent_(item.label, None, "")
+                )
+                native_item.setEnabled_(item.enabled)
+                child = self._build_native_menu(
+                    appkit,
+                    window,
+                    item.submenu,
+                    bridge,
+                )
+                native_item.setSubmenu_(child)
+                native_menu.addItem_(native_item)
+                continue
+
+            key = "" if item.shortcut is None else item.shortcut.key.lower()
+            native_item = (
+                appkit.NSMenuItem.alloc()
+                .initWithTitle_action_keyEquivalent_(
+                    item.label,
+                    "menuItemActivated:",
+                    key,
+                )
+            )
+            native_item.setTarget_(bridge)
+            native_item.setEnabled_(item.enabled)
+
+            if hasattr(native_item, "setState_"):
+                native_item.setState_(
+                    getattr(appkit, "NSControlStateValueOn", 1)
+                    if item.checked
+                    else getattr(appkit, "NSControlStateValueOff", 0)
+                )
+
+            if item.shortcut is not None and hasattr(
+                native_item,
+                "setKeyEquivalentModifierMask_",
+            ):
+                native_item.setKeyEquivalentModifierMask_(
+                    self._shortcut_mask(appkit, item.shortcut)
+                )
+
+            self._gui_menu_targets_by_window.setdefault(window, {})[
+                native_item
+            ] = item.target
+            native_menu.addItem_(native_item)
+
+        return native_menu
+
+    def set_menu_bar(self, window, menu_bar):
+        if not isinstance(menu_bar, GUIMenuBar):
+            raise TypeError("menu_bar must be GUIMenuBar")
+
+        appkit = self._load_appkit()
+        if appkit is None:
+            raise OSError("Cocoa GUI backend is unavailable.")
+
+        bridge = self._bridge_for_window(window)
+        self._gui_menu_targets_by_window[window] = {}
+
+        root = appkit.NSMenu.alloc().initWithTitle_("")
+        for menu_value in menu_bar.menus:
+            top = (
+                appkit.NSMenuItem.alloc()
+                .initWithTitle_action_keyEquivalent_(
+                    menu_value.title,
+                    None,
+                    "",
+                )
+            )
+            submenu_native = self._build_native_menu(
+                appkit,
+                window,
+                menu_value,
+                bridge,
+            )
+            top.setSubmenu_(submenu_native)
+            root.addItem_(top)
+
+        application = appkit.NSApplication.sharedApplication()
+        application.setMainMenu_(root)
+        self._gui_menu_bars_by_window[window] = root
+        return None
+
+    def clear_menu_bar(self, window):
+        appkit = self._load_appkit()
+        if appkit is None:
+            raise OSError("Cocoa GUI backend is unavailable.")
+
+        application = appkit.NSApplication.sharedApplication()
+        if hasattr(application, "setMainMenu_"):
+            application.setMainMenu_(None)
+
+        self._gui_menu_bars_by_window.pop(window, None)
+        self._gui_menu_targets_by_window.pop(window, None)
+        return None
+
+    def present_dialog(self, window, dialog):
+        if not isinstance(dialog, GUIDialog):
+            raise TypeError("dialog must be GUIDialog")
+
+        appkit = self._load_appkit()
+        if appkit is None:
+            raise OSError("Cocoa GUI backend is unavailable.")
+
+        dialogs = self._gui_dialogs_by_window.setdefault(window, {})
+        if dialog.dialog_id in dialogs:
+            raise ValueError(f"GUI dialog '{dialog.dialog_id}' is already active.")
+
+        preferred = measure(dialog.content).preferred
+        width = max(420.0, min(760.0, preferred.width + 40.0))
+        content_height = max(120.0, min(520.0, preferred.height))
+        height = content_height + 100.0
+
+        style = getattr(appkit, "NSWindowStyleMaskTitled", 1)
+        panel_type = getattr(appkit, "NSPanel", appkit.NSWindow)
+        panel = (
+            panel_type.alloc()
+            .initWithContentRect_styleMask_backing_defer_(
+                appkit.NSMakeRect(0, 0, width, height),
+                style,
+                appkit.NSBackingStoreBuffered,
+                False,
+            )
+        )
+        if panel is None:
+            raise OSError("Cocoa failed to create a GUI dialog.")
+
+        panel.setTitle_(dialog.title)
+
+        host = self._new_container(appkit)
+        host.setFrame_(appkit.NSMakeRect(0, 0, width, height))
+
+        content_holder = self._new_container(appkit)
+        content_holder.setFrame_(
+            appkit.NSMakeRect(
+                20.0,
+                70.0,
+                width - 40.0,
+                content_height,
+            )
+        )
+        host.addSubview_(content_holder)
+
+        bridge = self._bridge_for_window(window)
+        native_nodes = {}
+        split_views = {}
+        tab_labels = {}
+        controls = {}
+        control_meta = {}
+        tab_buttons = {}
+        native_content = self._build_native_tree(
+            appkit,
+            dialog.content,
+            native_nodes,
+            split_views,
+            tab_labels,
+            controls,
+            control_meta,
+            tab_buttons,
+            bridge,
+            "system",
+            path=(),
+        )
+        content_holder.addSubview_(native_content)
+
+        calculated = layout(
+            dialog.content,
+            width - 40.0,
+            content_height,
+        )
+        self._apply_layout(
+            window,
+            calculated,
+            native_nodes,
+            tab_labels,
+            parent_rect=None,
+            root_height=content_height,
+            path=(),
+        )
+
+        buttons = self._gui_dialog_buttons_by_window.setdefault(window, {})
+        button_width = 110.0
+        button_height = 32.0
+        gap = 8.0
+        total_width = (
+            button_width * len(dialog.actions)
+            + gap * max(0, len(dialog.actions) - 1)
+        )
+        x = max(20.0, width - 20.0 - total_width)
+
+        for action in dialog.actions:
+            button = appkit.NSButton.buttonWithTitle_target_action_(
+                action.label,
+                bridge,
+                "dialogAction:",
+            )
+            button.setFrame_(
+                appkit.NSMakeRect(
+                    x,
+                    20.0,
+                    button_width,
+                    button_height,
+                )
+            )
+            if hasattr(button, "setEnabled_"):
+                button.setEnabled_(action.enabled)
+            if action.default and hasattr(button, "setKeyEquivalent_"):
+                button.setKeyEquivalent_("\r")
+            host.addSubview_(button)
+            buttons[button] = (
+                dialog.dialog_id,
+                action.target,
+                panel,
+            )
+            x += button_width + gap
+
+        panel.setContentView_(host)
+        dialogs[dialog.dialog_id] = panel
+
+        if hasattr(window, "beginSheet_completionHandler_"):
+            window.beginSheet_completionHandler_(panel, None)
+        elif hasattr(panel, "makeKeyAndOrderFront_"):
+            panel.makeKeyAndOrderFront_(None)
+
+        return None
+
+    def dismiss_dialog(self, window, dialog_id):
+        dialogs = self._gui_dialogs_by_window.get(window, {})
+        panel = dialogs.pop(dialog_id, None)
+        if panel is None:
+            return None
+
+        if hasattr(window, "endSheet_"):
+            try:
+                window.endSheet_(panel)
+            except Exception:
+                pass
+        if hasattr(panel, "orderOut_"):
+            try:
+                panel.orderOut_(None)
+            except Exception:
+                pass
+        elif hasattr(panel, "close"):
+            try:
+                panel.close()
+            except Exception:
+                pass
+
+        buttons = self._gui_dialog_buttons_by_window.get(window, {})
+        for button, meta in tuple(buttons.items()):
+            if meta[0] == dialog_id:
+                buttons.pop(button, None)
+
+        return None
 
     def render(self, window, view):
         appkit = self._load_appkit()
