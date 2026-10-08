@@ -98,7 +98,20 @@ Do not expose NSPasteboard, NSDraggingInfo, Win32 OLE, or toolkit-specific MIME 
 Docking public semantics must describe logical regions and persisted layout state rather
 than raw child windows.
 
-### 4. Rich editor/content
+### 4. Canvas 2D
+
+Canvas 2D is a required commercial desktop capability and is distinct from GPU/3D work.
+
+Target semantics include:
+
+- lines, rectangles, ellipses and paths;
+- text and image drawing;
+- clipping and transforms;
+- scale-aware rendering;
+- semantic hit targets;
+- deterministic retained drawing commands.
+
+### 5. Rich editor/content
 
 A richer editor control is allowed only after general requirements are documented.
 
@@ -117,7 +130,7 @@ The following remain behind independent Design Gates even though they were liste
 deferred capabilities:
 
 - animation framework;
-- GPU/custom canvas;
+- GPU-accelerated canvas backend/API;
 - 3D;
 - browser/web view;
 - arbitrary CSS;
@@ -145,6 +158,8 @@ ContextMenu
 Dialog
 Tooltip
 Collapsible
+Advanced Toolbar command semantics
+Structured StatusBar semantics
 ```
 
 It must reuse:
