@@ -9,6 +9,7 @@ from dataclasses import dataclass
 
 from .core import GUIError, GUIEvent, GUIView, validate_view
 from .commands import GUIDialog, GUIMenuBar
+from .resources import GUIResourceCatalog
 
 
 @dataclass(slots=True)
@@ -123,6 +124,20 @@ class GUIWindow:
             raise
         except Exception as error:
             raise GUIError("PYNIX-GUI-003", "GUI dialog dismissal failed.") from error
+
+    def set_resources(self, catalog: GUIResourceCatalog) -> None:
+        self._require_open()
+        if not isinstance(catalog, GUIResourceCatalog):
+            raise GUIError("PYNIX-GUI-013", "GUI resource catalog is invalid.")
+        try:
+            self._backend_method("set_resources")(self._handle, catalog)
+        except GUIError:
+            raise
+        except Exception as error:
+            raise GUIError(
+                "PYNIX-GUI-003",
+                "GUI resource catalog installation failed.",
+            ) from error
 
     def close(self) -> None:
         if self._closed:
