@@ -784,6 +784,14 @@ def icon(name: str, size=ICON_METRICS["iconStandard"]) -> GUIView:
     return GUIView("icon", resource=name, icon_size=size)
 
 
+def vector_icon(name: str, size=ICON_METRICS["iconStandard"]) -> GUIView:
+    if not _is_non_empty_string(name):
+        raise GUIError("PYNIX-GUI-013", "GUI vector icon name must be a non-empty String.")
+    if type(size) is not int or size <= 0:
+        raise GUIError("PYNIX-GUI-013", "GUI vector icon size must be a positive Int.")
+    return GUIView("vectorIcon", resource=name, icon_size=size)
+
+
 def image(resource: str) -> GUIView:
     if not _is_non_empty_string(resource):
         raise GUIError(
@@ -835,7 +843,7 @@ def validate_view(view: GUIView) -> None:
         if kind in {
             "empty", "spacer", "separator", "text", "button", "textField",
             "textArea", "checkBox", "radioButton", "comboBox", "slider",
-            "progressBar", "list", "tree", "table", "richEditor", "canvas", "icon", "image",
+            "progressBar", "list", "tree", "table", "richEditor", "canvas", "icon", "vectorIcon", "image",
         }:
             valid = node.children == ()
         elif kind in {
