@@ -56,6 +56,8 @@ class GUIView:
     resource: str | None = None
     icon_size: int | None = None
     theme: str | None = None
+    menu: object | None = None
+    tooltip_text: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -118,6 +120,7 @@ _FOCUSABLE_KINDS = {
     "comboBox",
     "slider",
     "list",
+    "collapsible",
 }
 
 
@@ -365,6 +368,37 @@ def scroll(view: GUIView) -> GUIView:
     return GUIView("scroll", children=(view,), role="surfaceSunken")
 
 
+def context_menu(view: GUIView, menu_value) -> GUIView:
+    from .commands import GUIMenu, validate_menu_targets
+
+    if not isinstance(menu_value, GUIMenu):
+        raise GUIError("PYNIX-GUI-008", "GUI context menu requires a GUIMenu.")
+    validate_menu_targets(menu_value)
+    return GUIView("contextMenu", children=(view,), menu=menu_value)
+
+
+def tooltip(view: GUIView, value: str) -> GUIView:
+    if not _is_non_empty_string(value):
+        raise GUIError("PYNIX-GUI-008", "GUI tooltip text must be a non-empty String.")
+    return GUIView("tooltip", children=(view,), tooltip_text=value)
+
+
+def collapsible(target: str, label: str, expanded: bool, content: GUIView) -> GUIView:
+    if type(label) is not str:
+        raise GUIError("PYNIX-GUI-008", "GUI collapsible label must be String.")
+    if type(expanded) is not bool:
+        raise GUIError("PYNIX-GUI-008", "GUI collapsible expanded state must be Bool.")
+    if not isinstance(content, GUIView):
+        raise GUIError("PYNIX-GUI-008", "GUI collapsible content must be GUIView.")
+    return GUIView(
+        "collapsible",
+        children=(content,),
+        target=_target(target, "GUI collapsible target"),
+        text=label,
+        checked=expanded,
+    )
+
+
 def text(value: str, role="body") -> GUIView:
     if type(value) is not str:
         raise GUIError("PYNIX-GUI-006", "GUI text value must be String.")
@@ -533,7 +567,7 @@ def validate_view(view: GUIView) -> None:
         elif kind in {
             "fill", "minSize", "preferredSize", "maxSize", "align", "padding",
             "scroll", "panel", "group", "toolbar", "statusBar", "enabled",
-            "focused", "theme",
+            "focused", "theme", "contextMenu", "tooltip", "collapsible",
         }:
             valid = len(node.children) == 1
         elif kind in {"row", "column", "stack", "grid", "tabs"}:
@@ -654,6 +688,21 @@ def validate_view(view: GUIView) -> None:
                     "PYNIX-GUI-007",
                     "GUI theme must be system, light, or dark.",
                 )
+
+        if kind == "contextMenu":
+            from .commands import GUIMenu, validate_menu_targets
+
+            if not isinstance(node.menu, GUIMenu):
+                raise GUIError("PYNIX-GUI-008", "GUI context menu requires a GUIMenu.")
+            validate_menu_targets(node.menu)
+
+        if kind == "tooltip":
+            if not _is_non_empty_string(node.tooltip_text):
+                raise GUIError("PYNIX-GUI-008", "GUI tooltip text must be a non-empty String.")
+
+        if kind == "collapsible":
+            if type(node.text) is not str or type(node.checked) is not bool:
+                raise GUIError("PYNIX-GUI-008", "GUI collapsible contract is invalid.")
 
         if kind in {"horizontalSplit", "verticalSplit"}:
             unmanaged = node.split_id is None and node.split_position is None
