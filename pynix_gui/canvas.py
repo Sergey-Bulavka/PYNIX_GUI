@@ -264,3 +264,215 @@ def canvas_transform(commands, *, translate_x=0, translate_y=0, scale_x=1, scale
         ),
         children=tuple(commands),
     )
+
+
+
+def _matrix_multiply(first, second):
+    a1, b1, c1, d1, e1, f1 = first
+    a2, b2, c2, d2, e2, f2 = second
+    return (
+        a1 * a2 + c1 * b2,
+        b1 * a2 + d1 * b2,
+        a1 * c2 + c1 * d2,
+        b1 * c2 + d1 * d2,
+        a1 * e2 + c1 * f2 + e1,
+        b1 * e2 + d1 * f2 + f1,
+    )
+
+
+def _matrix_inverse(value):
+    a, b, c, d, e, f = value
+    determinant = a * d - b * c
+    if abs(determinant) < 1e-12:
+        return None
+    inv = 1.0 / determinant
+    return (
+        d * inv,
+        -b * inv,
+        -c * inv,
+        a * inv,
+        (c * f - d * e) * inv,
+        (b * e - a * f) * inv,
+    )
+
+
+def _transform_point(matrix, x, y):
+    a, b, c, d, e, f = matrix
+    return (
+        a * x + c * y + e,
+        b * x + d * y + f,
+    )
+
+
+def _command_transform(command):
+    import math
+
+    tx, ty, sx, sy, rotation = command.values
+    angle = math.radians(rotation)
+    cos_value = math.cos(angle)
+    sin_value = math.sin(angle)
+
+    translate = (1.0, 0.0, 0.0, 1.0, tx, ty)
+    scale = (sx, 0.0, 0.0, sy, 0.0, 0.0)
+    rotate = (
+        cos_value,
+        sin_value,
+        -sin_value,
+        cos_value,
+        0.0,
+        0.0,
+    )
+    return _matrix_multiply(
+        translate,
+        _matrix_multiply(scale, rotate),
+    )
+
+
+def _distance_to_segment(px, py, x1, y1, x2, y2):
+    dx = x2 - x1
+    dy = y2 - y1
+    length_squared = dx * dx + dy * dy
+    if length_squared <= 1e-12:
+        return ((px - x1) ** 2 + (py - y1) ** 2) ** 0.5
+    t = ((px - x1) * dx + (py - y1) * dy) / length_squared
+    t = max(0.0, min(1.0, t))
+    cx = x1 + t * dx
+    cy = y1 + t * dy
+    return ((px - cx) ** 2 + (py - cy) ** 2) ** 0.5
+
+
+def _point_in_polygon(x, y, points):
+    inside = False
+    count = len(points)
+    if count < 3:
+        return False
+    previous = points[-1]
+    for current in points:
+        x1, y1 = previous
+        x2, y2 = current
+        intersects = (
+            (y1 > y) != (y2 > y)
+            and x
+            < (x2 - x1) * (y - y1) / ((y2 - y1) or 1e-12) + x1
+        )
+        if intersects:
+            inside = not inside
+        previous = current
+    return inside
+
+
+def _command_contains(command, x, y):
+    if command.kind in {"rect", "image"}:
+        rx, ry, width, height = command.values[:4]
+        return rx <= x <= rx + width and ry <= y <= ry + height
+
+    if command.kind == "ellipse":
+        rx, ry, width, height = command.values
+        cx = rx + width / 2.0
+        cy = ry + height / 2.0
+        nx = (x - cx) / (width / 2.0)
+        ny = (y - cy) / (height / 2.0)
+        return nx * nx + ny * ny <= 1.0
+
+    if command.kind == "text":
+        tx, ty, value = command.values
+        approximate_width = max(12.0, len(value) * 8.0)
+        approximate_height = 20.0
+        return (
+            tx <= x <= tx + approximate_width
+            and ty - approximate_height <= y <= ty + 4.0
+        )
+
+    if command.kind == "line":
+        x1, y1, x2, y2 = command.values
+        tolerance = max(4.0, float(command.line_width) * 2.0)
+        return _distance_to_segment(x, y, x1, y1, x2, y2) <= tolerance
+
+    if command.kind == "path":
+        closed = bool(command.values[0])
+        values = command.values[1:]
+        points = [
+            (values[index], values[index + 1])
+            for index in range(0, len(values), 2)
+        ]
+        if closed and _point_in_polygon(x, y, points):
+            return True
+        tolerance = max(4.0, float(command.line_width) * 2.0)
+        for first, second in zip(points, points[1:]):
+            if _distance_to_segment(
+                x,
+                y,
+                first[0],
+                first[1],
+                second[0],
+                second[1],
+            ) <= tolerance:
+                return True
+        if closed and len(points) > 2:
+            first = points[-1]
+            second = points[0]
+            return _distance_to_segment(
+                x,
+                y,
+                first[0],
+                first[1],
+                second[0],
+                second[1],
+            ) <= tolerance
+        return False
+
+    return False
+
+
+def hit_test_scene(scene, x, y, host_width, host_height):
+    """Return the topmost semantic hit target at host-logical coordinates."""
+    if not isinstance(scene, GUICanvasScene):
+        raise GUIError("PYNIX-GUI-011", "GUI canvas hit test requires a scene.")
+    if host_width <= 0 or host_height <= 0:
+        return None
+
+    logical_x = float(x) * scene.width / float(host_width)
+    logical_y = float(y) * scene.height / float(host_height)
+    identity = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
+
+    def visit(commands, matrix):
+        inverse = _matrix_inverse(matrix)
+        if inverse is None:
+            return None
+        local_x, local_y = _transform_point(
+            inverse,
+            logical_x,
+            logical_y,
+        )
+
+        for command in reversed(commands):
+            if command.kind == "transform":
+                child_matrix = _matrix_multiply(
+                    matrix,
+                    _command_transform(command),
+                )
+                found = visit(command.children, child_matrix)
+                if found is not None:
+                    return found
+                continue
+
+            if command.kind == "clip":
+                cx, cy, width, height = command.values
+                if (
+                    cx <= local_x <= cx + width
+                    and cy <= local_y <= cy + height
+                ):
+                    found = visit(command.children, matrix)
+                    if found is not None:
+                        return found
+                continue
+
+            if (
+                command.hit_target is not None
+                and _command_contains(command, local_x, local_y)
+            ):
+                return command.hit_target
+
+        return None
+
+    return visit(scene.commands, identity)
