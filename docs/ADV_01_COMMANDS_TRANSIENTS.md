@@ -2,7 +2,16 @@
 
 ## Status
 
-Implementation contract.
+**ACCEPTED — PYNIX GUI 0.1.1-dev**
+
+Acceptance evidence:
+
+```text
+Standalone regression: 39 passed
+Native macOS smoke: PASS
+```
+
+Verified native menu activation, semantic shortcuts, modal dialog actions, controlled collapsible CHANGE events, context-menu activation, and clean CLOSE lifecycle.
 
 This milestone extends the accepted five-layer GUI foundation without creating a parallel
 event, styling, layout, or native-handle model.
