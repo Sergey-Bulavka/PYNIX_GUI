@@ -118,6 +118,9 @@ def _objc_gui_drag_source_type():
     import AppKit
 
     class PynixGUIDragSourceView(AppKit.NSView):
+        def hitTest_(self, point):
+            return self
+
         def mouseDragged_(self, event):
             payload = self._pynix_payload
             data = json.dumps(
