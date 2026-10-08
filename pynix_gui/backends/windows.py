@@ -37,13 +37,18 @@ class WindowsGUIBackend:
         if self.platform_name != "win32":
             return None
         try:
-            from PySide6 import QtCore, QtGui, QtWidgets
+            from PySide6 import QtCore, QtGui, QtSvg, QtWidgets
         except Exception:
             return None
         return type(
             "QtBundle",
             (),
-            {"QtCore": QtCore, "QtGui": QtGui, "QtWidgets": QtWidgets},
+            {
+                "QtCore": QtCore,
+                "QtGui": QtGui,
+                "QtSvg": QtSvg,
+                "QtWidgets": QtWidgets,
+            },
         )
 
     def is_available(self):
@@ -395,11 +400,23 @@ class WindowsGUIBackend:
         elif kind == "vectorIcon":
             catalog = self._resources.get(window)
             scene = None if catalog is None else catalog.vector_scene(view.resource)
-            native = (
-                self._canvas_widget(qt, window, scene, theme, parent)
-                if scene is not None
-                else W.QLabel(parent)
+            svg_path = (
+                None
+                if catalog is None
+                else catalog.vector_svg_path(view.resource)
             )
+            if scene is not None:
+                native = self._canvas_widget(
+                    qt,
+                    window,
+                    scene,
+                    theme,
+                    parent,
+                )
+            elif svg_path is not None:
+                native = self._svg_widget(qt, svg_path, parent)
+            else:
+                native = W.QLabel(parent)
         elif kind in {"icon", "image"}:
             native = W.QLabel(parent)
             native.setAlignment(qt.QtCore.Qt.AlignCenter)
@@ -670,7 +687,13 @@ class WindowsGUIBackend:
                     sx = self.width() / scene.width
                     sy = self.height() / scene.height
                     painter.scale(sx, sy)
-                    backend._paint_canvas_qt(qt, painter, scene.commands, theme)
+                    backend._paint_canvas_qt(
+                        qt,
+                        painter,
+                        scene.commands,
+                        theme,
+                        window,
+                    )
                 finally:
                     painter.end()
 
@@ -691,7 +714,7 @@ class WindowsGUIBackend:
 
         return CanvasWidget(parent)
 
-    def _paint_canvas_qt(self, qt, painter, commands, theme):
+    def _paint_canvas_qt(self, qt, painter, commands, theme, window):
         palette = self._palette_for(theme)
         for command in commands:
             if command.kind == "transform":
@@ -700,14 +723,26 @@ class WindowsGUIBackend:
                 painter.translate(dx, dy)
                 painter.scale(sx, sy)
                 painter.rotate(rotation)
-                self._paint_canvas_qt(qt, painter, command.children, theme)
+                self._paint_canvas_qt(
+                    qt,
+                    painter,
+                    command.children,
+                    theme,
+                    window,
+                )
                 painter.restore()
                 continue
             if command.kind == "clip":
                 painter.save()
                 x, y, width, height = command.values
                 painter.setClipRect(qt.QtCore.QRectF(x, y, width, height))
-                self._paint_canvas_qt(qt, painter, command.children, theme)
+                self._paint_canvas_qt(
+                    qt,
+                    painter,
+                    command.children,
+                    theme,
+                    window,
+                )
                 painter.restore()
                 continue
 
@@ -752,7 +787,18 @@ class WindowsGUIBackend:
                 painter.drawText(qt.QtCore.QPointF(x, y), value)
             elif command.kind == "image":
                 x, y, width, height = command.values
-                pixmap = qt.QtGui.QPixmap(command.resource)
+                catalog = self._resources.get(window)
+                logical_path = (
+                    None
+                    if catalog is None
+                    else catalog.image_path(command.resource)
+                )
+                resource_path = (
+                    logical_path
+                    if logical_path is not None
+                    else command.resource
+                )
+                pixmap = qt.QtGui.QPixmap(resource_path)
                 painter.drawPixmap(qt.QtCore.QRectF(x, y, width, height), pixmap, pixmap.rect())
 
     @staticmethod
@@ -769,6 +815,24 @@ class WindowsGUIBackend:
                 if rx <= lx <= rx + rw and ry <= ly <= ry + rh:
                     return command.hit_target
         return None
+
+    def _svg_widget(self, qt, path, parent):
+        class SVGWidget(qt.QtWidgets.QWidget):
+            def __init__(self, parent=None):
+                super().__init__(parent)
+                self.renderer = qt.QtSvg.QSvgRenderer(path, self)
+
+            def paintEvent(self, event):
+                painter = qt.QtGui.QPainter(self)
+                try:
+                    self.renderer.render(
+                        painter,
+                        qt.QtCore.QRectF(self.rect()),
+                    )
+                finally:
+                    painter.end()
+
+        return SVGWidget(parent)
 
     def _drag_widget(self, qt, window, view, parent):
         backend = self
