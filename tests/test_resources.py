@@ -11,6 +11,7 @@ from pynix_gui import (
     canvas_scene,
     image_resource,
     resource_catalog,
+    svg_resource,
     vector_icon,
     vector_resource,
 )
@@ -89,3 +90,14 @@ def test_window_resource_catalog_delegates_to_backend():
     window.set_resources(catalog)
 
     assert backend.catalog is catalog
+
+
+
+def test_resources_catalog_resolves_svg_path():
+    catalog = resource_catalog([
+        svg_resource("toolbar.open", "assets/open.svg"),
+    ])
+
+    assert catalog.vector_scene("toolbar.open") is None
+    assert catalog.vector_svg_path("toolbar.open") == "assets/open.svg"
+    assert catalog.contains("toolbar.open") is True
