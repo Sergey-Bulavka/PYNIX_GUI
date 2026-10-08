@@ -837,6 +837,99 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_menu_targets_by_window[window] = {}
 
         root = appkit.NSMenu.alloc().initWithTitle_("")
+
+        # macOS applications conventionally own an application menu. It is a
+        # backend responsibility rather than public PYNIX command ceremony.
+        try:
+            import Foundation
+            app_name = str(
+                Foundation.NSProcessInfo.processInfo().processName()
+            )
+        except Exception:
+            app_name = "PYNIX"
+
+        app_item = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(app_name, None, "")
+        )
+        app_menu = appkit.NSMenu.alloc().initWithTitle_(app_name)
+
+        about_item = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(
+                f"About {app_name}",
+                "orderFrontStandardAboutPanel:",
+                "",
+            )
+        )
+        app_menu.addItem_(about_item)
+        app_menu.addItem_(appkit.NSMenuItem.separatorItem())
+
+        services_item = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_("Services", None, "")
+        )
+        services_menu = appkit.NSMenu.alloc().initWithTitle_("Services")
+        services_item.setSubmenu_(services_menu)
+        app_menu.addItem_(services_item)
+        try:
+            appkit.NSApplication.sharedApplication().setServicesMenu_(
+                services_menu
+            )
+        except Exception:
+            pass
+
+        app_menu.addItem_(appkit.NSMenuItem.separatorItem())
+
+        hide_item = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(
+                f"Hide {app_name}",
+                "hide:",
+                "h",
+            )
+        )
+        app_menu.addItem_(hide_item)
+
+        hide_others = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(
+                "Hide Others",
+                "hideOtherApplications:",
+                "h",
+            )
+        )
+        if hasattr(hide_others, "setKeyEquivalentModifierMask_"):
+            hide_others.setKeyEquivalentModifierMask_(
+                getattr(appkit, "NSEventModifierFlagCommand", 1 << 20)
+                | getattr(appkit, "NSEventModifierFlagOption", 1 << 19)
+            )
+        app_menu.addItem_(hide_others)
+
+        show_all = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(
+                "Show All",
+                "unhideAllApplications:",
+                "",
+            )
+        )
+        app_menu.addItem_(show_all)
+        app_menu.addItem_(appkit.NSMenuItem.separatorItem())
+
+        quit_item = (
+            appkit.NSMenuItem.alloc()
+            .initWithTitle_action_keyEquivalent_(
+                f"Quit {app_name}",
+                "terminate:",
+                "q",
+            )
+        )
+        app_menu.addItem_(quit_item)
+
+        app_item.setSubmenu_(app_menu)
+        root.addItem_(app_item)
+
         for menu_value in menu_bar.menus:
             top = (
                 appkit.NSMenuItem.alloc()
