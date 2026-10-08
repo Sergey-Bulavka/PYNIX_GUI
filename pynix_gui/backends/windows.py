@@ -143,11 +143,24 @@ class WindowsGUIBackend:
             }}
         """
 
-    @staticmethod
-    def _theme_of(view, inherited="light"):
-        if view.kind == "theme":
-            return "dark" if view.theme == "dark" else "light"
-        return inherited
+    def _theme_of(self, qt, view, inherited="light"):
+        if view.kind != "theme":
+            return inherited
+        if view.theme in {"light", "dark"}:
+            return view.theme
+
+        try:
+            color = qt.QtWidgets.QApplication.palette().color(
+                qt.QtGui.QPalette.Window
+            )
+            luminance = (
+                0.2126 * color.red()
+                + 0.7152 * color.green()
+                + 0.0722 * color.blue()
+            )
+            return "dark" if luminance < 128 else "light"
+        except Exception:
+            return inherited
 
     def render(self, window, view):
         qt, app = self._app()
@@ -196,7 +209,7 @@ class WindowsGUIBackend:
         return qt.QtWidgets.QWidget(parent)
 
     def _build(self, qt, window, view, parent, nodes, controls, theme, path):
-        theme = self._theme_of(view, theme)
+        theme = self._theme_of(qt, view, theme)
         kind = view.kind
         W = qt.QtWidgets
 
@@ -939,6 +952,19 @@ class WindowsGUIBackend:
         self._dialogs.setdefault(window, {})[dialog.dialog_id] = native
         native.setModal(True)
         native.show()
+        app.processEvents()
+
+        try:
+            calculated = layout(
+                dialog.content,
+                max(1, content.width()),
+                max(1, content.height()),
+            )
+            self._apply_geometry(calculated, nodes, None, ())
+        except Exception:
+            native.close()
+            self._dialogs.get(window, {}).pop(dialog.dialog_id, None)
+            raise
 
     def _dialog_action(self, window, dialog_id, target):
         self.dismiss_dialog(window, dialog_id)
