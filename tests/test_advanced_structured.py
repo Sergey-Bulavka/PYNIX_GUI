@@ -299,3 +299,72 @@ def test_adv02_table_keyboard_navigation_uses_row_identity():
         target="files",
         item_id="r2",
     )
+
+
+
+def test_adv02_structured_focus_is_restored_to_selected_identity():
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+
+    class FakeWindow:
+        def __init__(self):
+            self.current = None
+            self.restored = None
+
+        def firstResponder(self):
+            return self.current
+
+        def makeFirstResponder_(self, responder):
+            self.restored = responder
+            self.current = responder
+            return True
+
+    window = FakeWindow()
+    old_sender = object()
+    new_sender = object()
+
+    backend._gui_control_meta_by_window[window] = {
+        old_sender: ("treeRow", "project", "main"),
+    }
+    window.current = old_sender
+
+    previous = backend._capture_structured_focus(window)
+    assert previous == ("treeRow", "project", "main")
+
+    view = tree(
+        "project",
+        sample_tree(),
+        expanded_ids=["src", "ui"],
+        selected_id="window",
+    )
+    backend._gui_views_by_window[window] = view
+    backend._gui_control_meta_by_window[window] = {
+        new_sender: ("treeRow", "project", "window"),
+    }
+
+    backend._restore_structured_focus(window, view, previous)
+
+    assert window.restored is new_sender
+
+
+def test_adv02_tree_disclosure_focus_restores_to_selected_tree_row():
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+
+    class FakeWindow:
+        def __init__(self, responder):
+            self.current = responder
+
+        def firstResponder(self):
+            return self.current
+
+    disclosure = object()
+    window = FakeWindow(disclosure)
+
+    backend._gui_control_meta_by_window[window] = {
+        disclosure: ("treeDisclosure", "project", "src", True),
+    }
+
+    assert backend._capture_structured_focus(window) == (
+        "treeRow",
+        "project",
+        "src",
+    )
