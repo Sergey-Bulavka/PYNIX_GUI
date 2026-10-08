@@ -185,6 +185,20 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
+    if kind == "tree":
+        return GUIConstraints(
+            GUISize(180.0, 120.0),
+            GUISize(280.0, 260.0),
+            GUISize(INF, INF),
+        )
+
+    if kind == "table":
+        return GUIConstraints(
+            GUISize(260.0, 140.0),
+            GUISize(520.0, 280.0),
+            GUISize(INF, INF),
+        )
+
     if kind == "icon":
         size = float(view.icon_size)
         exact = GUISize(size, size)
@@ -607,6 +621,8 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         "slider",
         "progressBar",
         "list",
+        "tree",
+        "table",
         "icon",
         "image",
     }:
