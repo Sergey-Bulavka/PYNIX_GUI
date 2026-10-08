@@ -2,7 +2,11 @@
 
 ## Status
 
-Implementation-complete candidate; consolidated verification pending.
+**IMPLEMENTATION COMPLETE CANDIDATE — consolidated verification pending.**
+
+No new public capability is planned before the verification pass. Remaining work is
+evidence: standalone regression, native macOS acceptance, visual Light/Dark acceptance,
+real Windows parity acceptance, CI, and PYNIX language integration regression.
 
 The toolkit must not be called commercially complete until every required gate below is green.
 
@@ -21,8 +25,8 @@ The toolkit must not be called commercially complete until every required gate b
 
 - ADV-04 retained Canvas 2D
 - ADV-05 Rich Editor
-- logical resource catalog and vector resources
-- Windows Qt/PySide6 backend
+- logical image/retained-vector/SVG resource catalog
+- Windows Qt/PySide6 parity backend
 - cross-platform Showcase
 - three-OS CI regression matrix
 
