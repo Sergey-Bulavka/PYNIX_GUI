@@ -198,3 +198,104 @@ def test_adv02_macos_backend_normalizes_table_row_selection():
     event = backend._event_queue(window).popleft()
 
     assert event == GUIEvent("SELECTION", target="files", item_id="r2")
+
+
+def test_adv02_tree_keyboard_navigation_emits_logical_events():
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+    window = object()
+    sender = object()
+    view = tree(
+        "project",
+        sample_tree(),
+        expanded_ids=["src", "ui"],
+        selected_id="main",
+    )
+
+    backend._gui_views_by_window[window] = view
+    backend._gui_control_meta_by_window[window] = {
+        sender: ("treeRow", "project", "main"),
+    }
+
+    backend._queue_structured_key(window, sender, "down")
+    down = backend._event_queue(window).popleft()
+    assert down == GUIEvent("SELECTION", target="project", item_id="ui")
+
+    backend._gui_control_meta_by_window[window][sender] = (
+        "treeRow",
+        "project",
+        "src",
+    )
+    backend._queue_structured_key(window, sender, "left")
+    left = backend._event_queue(window).popleft()
+    assert left == GUIEvent(
+        "EXPANSION",
+        target="project",
+        item_id="src",
+        checked=False,
+    )
+
+
+def test_adv02_tree_keyboard_right_expands_or_enters_first_child():
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+    window = object()
+    sender = object()
+
+    collapsed = tree(
+        "project",
+        sample_tree(),
+        expanded_ids=[],
+        selected_id="src",
+    )
+    backend._gui_views_by_window[window] = collapsed
+    backend._gui_control_meta_by_window[window] = {
+        sender: ("treeRow", "project", "src"),
+    }
+    backend._queue_structured_key(window, sender, "right")
+    expand = backend._event_queue(window).popleft()
+    assert expand == GUIEvent(
+        "EXPANSION",
+        target="project",
+        item_id="src",
+        checked=True,
+    )
+
+    expanded = tree(
+        "project",
+        sample_tree(),
+        expanded_ids=["src"],
+        selected_id="src",
+    )
+    backend._gui_views_by_window[window] = expanded
+    backend._queue_structured_key(window, sender, "right")
+    enter = backend._event_queue(window).popleft()
+    assert enter == GUIEvent(
+        "SELECTION",
+        target="project",
+        item_id="main",
+    )
+
+
+def test_adv02_table_keyboard_navigation_uses_row_identity():
+    backend = MacOSGUIBackend(platform_name="test", appkit=object())
+    window = object()
+    sender = object()
+    view = table(
+        "files",
+        sample_columns(),
+        sample_rows(),
+        selected_id="r1",
+    )
+
+    backend._gui_views_by_window[window] = view
+    backend._gui_control_meta_by_window[window] = {
+        sender: ("tableRow", "files", "r1"),
+    }
+
+    backend._queue_structured_key(window, sender, "down")
+    event = backend._event_queue(window).popleft()
+
+    assert event == GUIEvent(
+        "SELECTION",
+        target="files",
+        item_id="r2",
+    )
