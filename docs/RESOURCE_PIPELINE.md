@@ -2,7 +2,10 @@
 
 ## Status
 
-Implementation batch in progress; verification pending.
+**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+
+Logical image resources, retained vector resources, SVG resources, vector icons,
+Canvas-image resolution and per-window resource catalogs are staged on macOS and Windows.
 
 ## Goal
 
