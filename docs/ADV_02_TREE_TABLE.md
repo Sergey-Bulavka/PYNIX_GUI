@@ -2,7 +2,9 @@
 
 ## Status
 
-Implementation contract.
+Implementation batch complete; verification pending.
+
+Target version after acceptance: **PYNIX GUI 0.1.2-dev**.
 
 ## Goal
 
