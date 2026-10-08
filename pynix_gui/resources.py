@@ -31,12 +31,18 @@ class GUIImageResource:
 @dataclass(frozen=True, slots=True)
 class GUIVectorResource:
     name: str
-    scene: GUICanvasScene
+    scene: GUICanvasScene | None = None
+    svg_path: str | None = None
 
     def __post_init__(self):
         _name(self.name, "GUI vector resource name")
-        if not isinstance(self.scene, GUICanvasScene):
-            raise GUIError("PYNIX-GUI-013", "GUI vector resource scene is invalid.")
+        has_scene = isinstance(self.scene, GUICanvasScene)
+        has_svg = type(self.svg_path) is str and self.svg_path != ""
+        if has_scene == has_svg:
+            raise GUIError(
+                "PYNIX-GUI-013",
+                "GUI vector resource requires exactly one retained scene or SVG path.",
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,8 +78,18 @@ class GUIResourceCatalog:
                 return resource.scene
         return None
 
+    def vector_svg_path(self, name: str):
+        for resource in self.vectors:
+            if resource.name == name:
+                return resource.svg_path
+        return None
+
     def contains(self, name: str) -> bool:
-        return self.image_path(name) is not None or self.vector_scene(name) is not None
+        return (
+            self.image_path(name) is not None
+            or self.vector_scene(name) is not None
+            or self.vector_svg_path(name) is not None
+        )
 
 
 def image_resource(name: str, path: str) -> GUIImageResource:
@@ -81,7 +97,14 @@ def image_resource(name: str, path: str) -> GUIImageResource:
 
 
 def vector_resource(name: str, scene: GUICanvasScene) -> GUIVectorResource:
-    return GUIVectorResource(name, scene)
+    return GUIVectorResource(name, scene=scene)
+
+
+def svg_resource(name: str, path: str) -> GUIVectorResource:
+    return GUIVectorResource(
+        _name(name, "GUI SVG resource name"),
+        svg_path=_name(path, "GUI SVG resource path"),
+    )
 
 
 def resource_catalog(resources) -> GUIResourceCatalog:
