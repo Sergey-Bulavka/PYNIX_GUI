@@ -61,6 +61,12 @@ class GUIView:
     data: object | None = None
     expanded_ids: tuple[str, ...] = ()
     selected_id: str | None = None
+    drag_payload: object | None = None
+    drag_source_id: str | None = None
+    drop_target_id: str | None = None
+    accepted_kinds: tuple[str, ...] = ()
+    accepted_operations: tuple[str, ...] = ()
+    dock_state: object | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -72,11 +78,27 @@ class GUIEvent:
     number: float | None = None
     checked: bool | None = None
     item_id: str | None = None
+    source_id: str | None = None
+    payload_kind: str | None = None
+    payload_value: str | None = None
+    operation: str | None = None
+    region: str | None = None
 
     def __post_init__(self):
         payload_count = sum(
             value is not None
-            for value in (self.text, self.index, self.number, self.checked, self.item_id)
+            for value in (
+                self.text,
+                self.index,
+                self.number,
+                self.checked,
+                self.item_id,
+                self.source_id,
+                self.payload_kind,
+                self.payload_value,
+                self.operation,
+                self.region,
+            )
         )
 
         valid = (
@@ -113,6 +135,41 @@ class GUIEvent:
                 and self.text is None
                 and self.index is None
                 and self.number is None
+                and self.source_id is None
+                and self.payload_kind is None
+                and self.payload_value is None
+                and self.operation is None
+                and self.region is None
+                and payload_count == 2
+            )
+            or (
+                self.kind == "DROP"
+                and _is_non_empty_string(self.target)
+                and _is_non_empty_string(self.source_id)
+                and _is_non_empty_string(self.payload_kind)
+                and _is_non_empty_string(self.payload_value)
+                and self.operation in {"copy", "move"}
+                and self.text is None
+                and self.index is None
+                and self.number is None
+                and self.checked is None
+                and self.item_id is None
+                and self.region is None
+                and payload_count == 4
+            )
+            or (
+                self.kind == "DOCK"
+                and _is_non_empty_string(self.target)
+                and _is_non_empty_string(self.item_id)
+                and self.region in {"left", "right", "bottom", "center"}
+                and self.text is None
+                and self.index is None
+                and self.number is None
+                and self.checked is None
+                and self.source_id is None
+                and self.payload_kind is None
+                and self.payload_value is None
+                and self.operation is None
                 and payload_count == 2
             )
         )
@@ -555,6 +612,77 @@ def table(target: str, columns, rows, selected_id=None) -> GUIView:
         selected_id=selected_value,
     )
 
+def draggable(view: GUIView, source_id: str, payload) -> GUIView:
+    from .interaction import GUIDragPayload
+
+    if not isinstance(view, GUIView):
+        raise GUIError("PYNIX-GUI-010", "GUI draggable content must be GUIView.")
+    if not _is_non_empty_string(source_id):
+        raise GUIError("PYNIX-GUI-010", "GUI drag source id must be a non-empty String.")
+    if not isinstance(payload, GUIDragPayload):
+        raise GUIError("PYNIX-GUI-010", "GUI drag payload is invalid.")
+    return GUIView(
+        "draggable",
+        children=(view,),
+        drag_source_id=source_id,
+        drag_payload=payload,
+    )
+
+
+def drop_target(
+    view: GUIView,
+    target_id: str,
+    accepted_kinds,
+    accepted_operations=("copy", "move"),
+) -> GUIView:
+    if not isinstance(view, GUIView):
+        raise GUIError("PYNIX-GUI-010", "GUI drop target content must be GUIView.")
+    if not _is_non_empty_string(target_id):
+        raise GUIError("PYNIX-GUI-010", "GUI drop target id must be a non-empty String.")
+
+    kinds = _strings(accepted_kinds, "GUI drop target accepted kinds")
+    operations = _strings(
+        accepted_operations,
+        "GUI drop target accepted operations",
+    )
+    if not kinds:
+        raise GUIError("PYNIX-GUI-010", "GUI drop target requires at least one payload kind.")
+    if any(operation not in {"copy", "move"} for operation in operations):
+        raise GUIError("PYNIX-GUI-010", "GUI drop target operation is invalid.")
+    if len(set(kinds)) != len(kinds) or len(set(operations)) != len(operations):
+        raise GUIError("PYNIX-GUI-010", "GUI drop target values must be unique.")
+
+    return GUIView(
+        "dropTarget",
+        children=(view,),
+        drop_target_id=target_id,
+        accepted_kinds=kinds,
+        accepted_operations=operations,
+    )
+
+
+def dock_workspace(target: str, panels, state) -> GUIView:
+    from .interaction import active_dock_panels, validate_dock_workspace
+
+    if not _is_non_empty_string(target):
+        raise GUIError("PYNIX-GUI-010", "GUI dock workspace target must be a non-empty String.")
+
+    panel_values, state_value = validate_dock_workspace(panels, state)
+    active = active_dock_panels(panel_values, state_value)
+    children = tuple(
+        active[region].content
+        for region in ("left", "right", "bottom", "center")
+        if active[region] is not None
+    )
+    return GUIView(
+        "dockWorkspace",
+        children=children,
+        target=target,
+        data=panel_values,
+        dock_state=state_value,
+    )
+
+
 def icon(name: str, size=ICON_METRICS["iconStandard"]) -> GUIView:
     if not _is_non_empty_string(name):
         raise GUIError("PYNIX-GUI-006", "GUI icon name must be a non-empty String.")
@@ -621,9 +749,10 @@ def validate_view(view: GUIView) -> None:
             "fill", "minSize", "preferredSize", "maxSize", "align", "padding",
             "scroll", "panel", "group", "toolbar", "statusBar", "enabled",
             "focused", "theme", "contextMenu", "tooltip", "collapsible",
+            "draggable", "dropTarget",
         }:
             valid = len(node.children) == 1
-        elif kind in {"row", "column", "stack", "grid", "tabs"}:
+        elif kind in {"row", "column", "stack", "grid", "tabs", "dockWorkspace"}:
             valid = type(node.children) is tuple
         elif kind in {"horizontalSplit", "verticalSplit"}:
             valid = len(node.children) == 2
@@ -779,6 +908,30 @@ def validate_view(view: GUIView) -> None:
                 node.data[1],
                 node.selected_id,
             )
+
+        if kind == "draggable":
+            from .interaction import GUIDragPayload
+
+            if not _is_non_empty_string(node.drag_source_id):
+                raise GUIError("PYNIX-GUI-010", "GUI drag source id is invalid.")
+            if not isinstance(node.drag_payload, GUIDragPayload):
+                raise GUIError("PYNIX-GUI-010", "GUI drag payload is invalid.")
+
+        if kind == "dropTarget":
+            if not _is_non_empty_string(node.drop_target_id):
+                raise GUIError("PYNIX-GUI-010", "GUI drop target id is invalid.")
+            if not node.accepted_kinds:
+                raise GUIError("PYNIX-GUI-010", "GUI drop target kinds are invalid.")
+            if any(
+                operation not in {"copy", "move"}
+                for operation in node.accepted_operations
+            ):
+                raise GUIError("PYNIX-GUI-010", "GUI drop target operation is invalid.")
+
+        if kind == "dockWorkspace":
+            from .interaction import validate_dock_workspace
+
+            validate_dock_workspace(node.data, node.dock_state)
 
         if kind in {"horizontalSplit", "verticalSplit"}:
             unmanaged = node.split_id is None and node.split_position is None
