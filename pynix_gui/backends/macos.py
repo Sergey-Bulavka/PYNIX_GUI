@@ -58,8 +58,12 @@ def _objc_gui_navigation_button_type():
         return _OBJC_GUI_NAV_BUTTON_TYPE
 
     import AppKit
+    import objc
 
     class PynixGUINavigationButton(AppKit.NSButton):
+        def acceptsFirstResponder(self):
+            return True
+
         def keyDown_(self, event):
             try:
                 characters = str(event.charactersIgnoringModifiers() or "")
@@ -93,7 +97,7 @@ def _objc_gui_navigation_button_type():
                 )
                 return
 
-            super().keyDown_(event)
+            objc.super(PynixGUINavigationButton, self).keyDown_(event)
 
     _OBJC_GUI_NAV_BUTTON_TYPE = PynixGUINavigationButton
     return _OBJC_GUI_NAV_BUTTON_TYPE
@@ -180,11 +184,13 @@ class MacOSGUIBackend(MacOSHostBackend):
     def _navigation_button(self, appkit, window, title, bridge):
         if self.platform_name == "darwin" and self._appkit_override is None:
             button_type = _objc_gui_navigation_button_type()
-            button = button_type.buttonWithTitle_target_action_(
-                title,
-                bridge,
-                "controlChanged:",
+            button = (
+                button_type.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
             )
+            button.setTitle_(title)
+            button.setTarget_(bridge)
+            button.setAction_("controlChanged:")
             button._pynix_backend = self
             button._pynix_window = window
         else:
@@ -504,6 +510,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         if appkit is None:
             raise OSError("Cocoa GUI backend is unavailable.")
 
+        structured_focus = self._capture_structured_focus(window)
         self._capture_split_positions(window)
 
         bridge = self._bridge_for_window(window)
@@ -542,6 +549,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         window.setContentView_(native_root)
         self._relayout(window)
         self._apply_control_state(window, view)
+        self._restore_structured_focus(window, view, structured_focus)
         return None
 
     def _new_container(self, appkit):
@@ -1784,6 +1792,56 @@ class MacOSGUIBackend(MacOSHostBackend):
                 children = ()
             for child in children or ():
                 MacOSGUIBackend._set_enabled_recursive(child, enabled)
+
+    def _capture_structured_focus(self, window):
+        try:
+            responder = window.firstResponder()
+        except Exception:
+            responder = None
+
+        meta = self._gui_control_meta_by_window.get(window, {}).get(responder)
+        if meta is None:
+            return None
+
+        kind = meta[0]
+        if kind in {"treeRow", "tableRow"}:
+            return (kind, meta[1], meta[2])
+        if kind == "treeDisclosure":
+            return ("treeRow", meta[1], meta[2])
+        return None
+
+    def _restore_structured_focus(self, window, view, previous):
+        if previous is None:
+            return
+
+        previous_kind, target, _previous_item_id = previous
+        desired_kind = "treeRow" if previous_kind == "treeRow" else "tableRow"
+
+        structured_view = self._structured_view(
+            window,
+            target,
+            "tree" if desired_kind == "treeRow" else "table",
+        )
+        if structured_view is None:
+            return
+
+        selected_id = structured_view.selected_id
+        if selected_id is None:
+            return
+
+        control_meta = self._gui_control_meta_by_window.get(window, {})
+        for native, meta in control_meta.items():
+            if (
+                len(meta) >= 3
+                and meta[0] == desired_kind
+                and meta[1] == target
+                and meta[2] == selected_id
+            ):
+                try:
+                    window.makeFirstResponder_(native)
+                except Exception:
+                    pass
+                return
 
     def _apply_control_state(self, window, view):
         controls = self._gui_controls_by_window.get(window, {})
