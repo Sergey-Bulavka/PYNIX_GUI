@@ -155,10 +155,23 @@ def test_adv05_backend_normalizes_rich_editor_text_change():
         sender: ("richEditor", "source"),
     }
 
-    backend._queue_text_change(window, sender)
-    event = backend._event_queue(window).popleft()
+    sender.selectedRange = lambda: type(
+        "Range",
+        (),
+        {"location": 5, "length": 0},
+    )()
 
-    assert event == GUIEvent(
+    backend._queue_text_change(window, sender)
+    selection = backend._event_queue(window).popleft()
+    change = backend._event_queue(window).popleft()
+
+    assert selection == GUIEvent(
+        "EDITOR_SELECTION",
+        target="source",
+        selection_start=5,
+        selection_end=5,
+    )
+    assert change == GUIEvent(
         "CHANGE",
         target="source",
         text="line1\nline2",
