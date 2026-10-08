@@ -459,12 +459,51 @@ class WindowsGUIBackend:
                 qt, window, view.children[0], native, nodes, controls,
                 theme, path + (0,),
             )
+        elif kind == "scroll":
+            native = W.QScrollArea(parent)
+            native.setWidgetResizable(False)
+            child = self._build(
+                qt, window, view.children[0], None, nodes, controls,
+                theme, path + (0,),
+            )
+            native.setWidget(child)
+
+        elif kind in {"horizontalSplit", "verticalSplit"}:
+            orientation = (
+                qt.QtCore.Qt.Horizontal
+                if kind == "horizontalSplit"
+                else qt.QtCore.Qt.Vertical
+            )
+            native = W.QSplitter(orientation, parent)
+            for index, child_view in enumerate(view.children):
+                child = self._build(
+                    qt, window, child_view, native, nodes, controls,
+                    theme, path + (index,),
+                )
+                native.addWidget(child)
+            if view.split_position is not None:
+                native.setSizes([
+                    int(view.split_position),
+                    max(1, 1000 - int(view.split_position)),
+                ])
+
+        elif kind == "contextMenu":
+            native = self._generic(qt, parent)
+            child = self._build(
+                qt, window, view.children[0], native, nodes, controls,
+                theme, path + (0,),
+            )
+            native.setContextMenuPolicy(qt.QtCore.Qt.CustomContextMenu)
+            native.customContextMenuRequested.connect(
+                lambda point, menu_value=view.menu, host=native:
+                    self._show_context_menu(qt, window, host, point, menu_value)
+            )
+
         elif kind in {
             "empty", "spacer", "separator", "row", "column", "grid", "stack",
             "fill", "minSize", "preferredSize", "maxSize", "align", "padding",
-            "scroll", "panel", "group", "toolbar", "statusBar", "enabled",
-            "focused", "theme", "contextMenu", "dockWorkspace",
-            "horizontalSplit", "verticalSplit",
+            "panel", "group", "toolbar", "statusBar", "enabled",
+            "focused", "theme", "dockWorkspace",
         }:
             native = self._generic(qt, parent)
             for index, child_view in enumerate(view.children):
@@ -814,44 +853,51 @@ class WindowsGUIBackend:
 
         return DropWidget(parent)
 
+    def _populate_menu(self, qt, window, native_menu, menu_value):
+        for item in menu_value.items:
+            if item.kind == "separator":
+                native_menu.addSeparator()
+                continue
+            if item.kind == "submenu":
+                child = native_menu.addMenu(item.label)
+                child.setEnabled(item.enabled)
+                self._populate_menu(qt, window, child, item.submenu)
+                continue
+
+            action = native_menu.addAction(item.label)
+            action.setEnabled(item.enabled)
+            action.setCheckable(item.checked)
+            action.setChecked(item.checked)
+            if item.shortcut is not None:
+                modifiers = {
+                    "primary": "Ctrl",
+                    "shift": "Shift",
+                    "alt": "Alt",
+                    "control": "Ctrl",
+                }
+                parts = [modifiers[v] for v in item.shortcut.modifiers]
+                parts.append(item.shortcut.key)
+                action.setShortcut(qt.QtGui.QKeySequence("+".join(parts)))
+            action.triggered.connect(
+                lambda checked=False, target=item.target:
+                    self._queue(window).append(
+                        GUIEvent("ACTIVATE", target=target)
+                    )
+            )
+
+    def _show_context_menu(self, qt, window, host, point, menu_value):
+        menu = qt.QtWidgets.QMenu(host)
+        self._populate_menu(qt, window, menu, menu_value)
+        menu.exec(host.mapToGlobal(point))
+
     def set_menu_bar(self, window, menu_bar):
         qt, app = self._app()
         native = window.menuBar()
         native.clear()
 
-        def add_menu(parent, menu_value):
-            menu = parent.addMenu(menu_value.title)
-            for item in menu_value.items:
-                if item.kind == "separator":
-                    menu.addSeparator()
-                    continue
-                if item.kind == "submenu":
-                    add_menu(menu, item.submenu)
-                    continue
-                action = menu.addAction(item.label)
-                action.setEnabled(item.enabled)
-                action.setCheckable(item.checked)
-                action.setChecked(item.checked)
-                if item.shortcut is not None:
-                    modifiers = {
-                        "primary": "Ctrl",
-                        "shift": "Shift",
-                        "alt": "Alt",
-                        "control": "Ctrl",
-                    }
-                    parts = [modifiers[v] for v in item.shortcut.modifiers]
-                    parts.append(item.shortcut.key)
-                    action.setShortcut(qt.QtGui.QKeySequence("+".join(parts)))
-                action.triggered.connect(
-                    lambda checked=False, target=item.target:
-                        self._queue(window).append(
-                            GUIEvent("ACTIVATE", target=target)
-                        )
-                )
-            return menu
-
         for menu_value in menu_bar.menus:
-            add_menu(native, menu_value)
+            menu = native.addMenu(menu_value.title)
+            self._populate_menu(qt, window, menu, menu_value)
         self._menu_bars[window] = native
 
     def clear_menu_bar(self, window):
