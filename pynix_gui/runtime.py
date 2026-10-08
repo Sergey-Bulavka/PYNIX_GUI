@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .core import GUIError, GUIEvent, GUIView, validate_view
+from .commands import GUIDialog, GUIMenuBar
 
 
 @dataclass(slots=True)
@@ -70,6 +71,58 @@ class GUIWindow:
             "PYNIX-GUI-004",
             "GUI backend produced an invalid logical event.",
         )
+
+    def _backend_method(self, name: str):
+        method = getattr(self._backend, name, None)
+        if method is None:
+            raise GUIError(
+                "PYNIX-GUI-001",
+                f"Required GUI capability '{name}' is unavailable.",
+            )
+        return method
+
+    def set_menu_bar(self, menu_bar: GUIMenuBar) -> None:
+        self._require_open()
+        if not isinstance(menu_bar, GUIMenuBar):
+            raise GUIError("PYNIX-GUI-008", "GUI menu bar value is invalid.")
+        try:
+            self._backend_method("set_menu_bar")(self._handle, menu_bar)
+        except GUIError:
+            raise
+        except Exception as error:
+            raise GUIError("PYNIX-GUI-003", "GUI menu bar installation failed.") from error
+
+    def clear_menu_bar(self) -> None:
+        self._require_open()
+        try:
+            self._backend_method("clear_menu_bar")(self._handle)
+        except GUIError:
+            raise
+        except Exception as error:
+            raise GUIError("PYNIX-GUI-003", "GUI menu bar removal failed.") from error
+
+    def present_dialog(self, dialog: GUIDialog) -> None:
+        self._require_open()
+        if not isinstance(dialog, GUIDialog):
+            raise GUIError("PYNIX-GUI-008", "GUI dialog value is invalid.")
+        validate_view(dialog.content)
+        try:
+            self._backend_method("present_dialog")(self._handle, dialog)
+        except GUIError:
+            raise
+        except Exception as error:
+            raise GUIError("PYNIX-GUI-003", "GUI dialog presentation failed.") from error
+
+    def dismiss_dialog(self, dialog_id: str) -> None:
+        self._require_open()
+        if type(dialog_id) is not str or dialog_id == "":
+            raise GUIError("PYNIX-GUI-008", "GUI dialog id must be a non-empty String.")
+        try:
+            self._backend_method("dismiss_dialog")(self._handle, dialog_id)
+        except GUIError:
+            raise
+        except Exception as error:
+            raise GUIError("PYNIX-GUI-003", "GUI dialog dismissal failed.") from error
 
     def close(self) -> None:
         if self._closed:
