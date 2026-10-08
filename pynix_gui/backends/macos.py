@@ -52,6 +52,7 @@ _OBJC_GUI_EVENT_BRIDGE_TYPE = None
 _OBJC_GUI_NAV_BUTTON_TYPE = None
 _OBJC_GUI_DRAG_SOURCE_TYPE = None
 _OBJC_GUI_DROP_TARGET_TYPE = None
+_OBJC_GUI_CANVAS_TYPE = None
 _DRAG_PASTEBOARD_TYPE = "org.pynix.gui.drag-payload"
 
 
@@ -205,6 +206,42 @@ def _objc_gui_drop_target_type():
     return _OBJC_GUI_DROP_TARGET_TYPE
 
 
+def _objc_gui_canvas_type():
+    global _OBJC_GUI_CANVAS_TYPE
+
+    if _OBJC_GUI_CANVAS_TYPE is not None:
+        return _OBJC_GUI_CANVAS_TYPE
+
+    import AppKit
+
+    class PynixGUICanvasView(AppKit.NSView):
+        def isFlipped(self):
+            return True
+
+        def drawRect_(self, dirty_rect):
+            self._pynix_backend._draw_canvas_native(self)
+
+        def mouseDown_(self, event):
+            try:
+                point = self.convertPoint_fromView_(event.locationInWindow(), None)
+            except Exception:
+                return
+            target = self._pynix_backend._canvas_hit_target(
+                self._pynix_scene,
+                float(point.x),
+                float(point.y),
+                float(self.bounds().size.width),
+                float(self.bounds().size.height),
+            )
+            if target is not None:
+                self._pynix_backend._event_queue(
+                    self._pynix_window
+                ).append(GUIEvent("ACTIVATE", target=target))
+
+    _OBJC_GUI_CANVAS_TYPE = PynixGUICanvasView
+    return _OBJC_GUI_CANVAS_TYPE
+
+
 def _objc_gui_event_bridge_type():
     global _OBJC_GUI_EVENT_BRIDGE_TYPE
 
@@ -306,6 +343,225 @@ class MacOSGUIBackend(MacOSHostBackend):
             except Exception:
                 pass
         return button
+
+    def _new_canvas_view(self, appkit, window, view, theme):
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            canvas_type = _objc_gui_canvas_type()
+            native = (
+                canvas_type.alloc()
+                .initWithFrame_(appkit.NSMakeRect(0, 0, 0, 0))
+            )
+            native._pynix_backend = self
+            native._pynix_window = window
+            native._pynix_scene = view.canvas_scene
+            native._pynix_theme = theme
+            if hasattr(native, "setWantsLayer_"):
+                native.setWantsLayer_(True)
+            return native
+
+        return self._new_container(appkit)
+
+    @staticmethod
+    def _canvas_scale(scene, width, height):
+        return (
+            width / float(scene.width),
+            height / float(scene.height),
+        )
+
+    @staticmethod
+    def _canvas_point_in_rect(x, y, values):
+        rx, ry, rw, rh = values[:4]
+        return rx <= x <= rx + rw and ry <= y <= ry + rh
+
+    def _canvas_hit_target(self, scene, x, y, width, height):
+        sx, sy = self._canvas_scale(scene, width, height)
+        if sx == 0 or sy == 0:
+            return None
+        lx = x / sx
+        ly = y / sy
+
+        def visit(commands, tx=0.0, ty=0.0, sxv=1.0, syv=1.0):
+            for command in reversed(commands):
+                if command.kind == "transform":
+                    dx, dy, csx, csy, _rotation = command.values
+                    found = visit(
+                        command.children,
+                        tx + dx,
+                        ty + dy,
+                        sxv * csx,
+                        syv * csy,
+                    )
+                    if found is not None:
+                        return found
+                    continue
+
+                if command.kind == "clip":
+                    cx, cy, cw, ch = command.values
+                    local_x = (lx - tx) / sxv
+                    local_y = (ly - ty) / syv
+                    if cx <= local_x <= cx + cw and cy <= local_y <= cy + ch:
+                        found = visit(command.children, tx, ty, sxv, syv)
+                        if found is not None:
+                            return found
+                    continue
+
+                if command.hit_target is None:
+                    continue
+
+                local_x = (lx - tx) / sxv
+                local_y = (ly - ty) / syv
+
+                if command.kind in {"rect", "ellipse", "image"}:
+                    if self._canvas_point_in_rect(local_x, local_y, command.values):
+                        return command.hit_target
+                elif command.kind == "text":
+                    cx, cy, value = command.values
+                    approx_width = max(12.0, len(value) * 8.0)
+                    if cx <= local_x <= cx + approx_width and cy - 16 <= local_y <= cy + 4:
+                        return command.hit_target
+                elif command.kind in {"line", "path"}:
+                    values = command.values[1:] if command.kind == "path" else command.values
+                    coords = tuple(float(v) for v in values)
+                    xs = coords[0::2]
+                    ys = coords[1::2]
+                    if xs and ys:
+                        pad = max(4.0, float(command.line_width) * 2.0)
+                        if (
+                            min(xs) - pad <= local_x <= max(xs) + pad
+                            and min(ys) - pad <= local_y <= max(ys) + pad
+                        ):
+                            return command.hit_target
+            return None
+
+        return visit(scene.commands)
+
+    def _draw_canvas_native(self, native):
+        appkit = self._load_appkit()
+        if appkit is None:
+            return
+
+        scene = native._pynix_scene
+        theme = native._pynix_theme
+        bounds = native.bounds()
+        width = float(bounds.size.width)
+        height = float(bounds.size.height)
+        sx, sy = self._canvas_scale(scene, width, height)
+
+        appkit.NSGraphicsContext.saveGraphicsState()
+        try:
+            transform = appkit.NSAffineTransform.transform()
+            transform.scaleXBy_yBy_(sx, sy)
+            transform.concat()
+            self._draw_canvas_commands(appkit, scene.commands, theme)
+        finally:
+            appkit.NSGraphicsContext.restoreGraphicsState()
+
+    def _draw_canvas_commands(self, appkit, commands, theme):
+        for command in commands:
+            if command.kind == "transform":
+                dx, dy, sx, sy, rotation = command.values
+                appkit.NSGraphicsContext.saveGraphicsState()
+                try:
+                    transform = appkit.NSAffineTransform.transform()
+                    transform.translateXBy_yBy_(dx, dy)
+                    transform.scaleXBy_yBy_(sx, sy)
+                    if rotation:
+                        transform.rotateByDegrees_(rotation)
+                    transform.concat()
+                    self._draw_canvas_commands(appkit, command.children, theme)
+                finally:
+                    appkit.NSGraphicsContext.restoreGraphicsState()
+                continue
+
+            if command.kind == "clip":
+                x, y, width, height = command.values
+                appkit.NSGraphicsContext.saveGraphicsState()
+                try:
+                    clip_path = appkit.NSBezierPath.bezierPathWithRect_(
+                        appkit.NSMakeRect(x, y, width, height)
+                    )
+                    clip_path.addClip()
+                    self._draw_canvas_commands(appkit, command.children, theme)
+                finally:
+                    appkit.NSGraphicsContext.restoreGraphicsState()
+                continue
+
+            stroke = (
+                None
+                if command.stroke_role is None
+                else self._native_color(appkit, command.stroke_role, theme)
+            )
+            fill = (
+                None
+                if command.fill_role is None
+                else self._native_color(appkit, command.fill_role, theme)
+            )
+
+            path = None
+            if command.kind == "line":
+                x1, y1, x2, y2 = command.values
+                path = appkit.NSBezierPath.bezierPath()
+                path.moveToPoint_(appkit.NSMakePoint(x1, y1))
+                path.lineToPoint_(appkit.NSMakePoint(x2, y2))
+            elif command.kind == "rect":
+                x, y, width, height = command.values
+                path = appkit.NSBezierPath.bezierPathWithRect_(
+                    appkit.NSMakeRect(x, y, width, height)
+                )
+            elif command.kind == "ellipse":
+                x, y, width, height = command.values
+                path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
+                    appkit.NSMakeRect(x, y, width, height)
+                )
+            elif command.kind == "path":
+                closed = bool(command.values[0])
+                values = command.values[1:]
+                path = appkit.NSBezierPath.bezierPath()
+                path.moveToPoint_(appkit.NSMakePoint(values[0], values[1]))
+                for index in range(2, len(values), 2):
+                    path.lineToPoint_(
+                        appkit.NSMakePoint(values[index], values[index + 1])
+                    )
+                if closed:
+                    path.closePath()
+
+            if path is not None:
+                path.setLineWidth_(float(command.line_width))
+                if fill is not None:
+                    fill.setFill()
+                    path.fill()
+                if stroke is not None:
+                    stroke.setStroke()
+                    path.stroke()
+                continue
+
+            if command.kind == "text":
+                x, y, value = command.values
+                color = (
+                    fill
+                    if fill is not None
+                    else self._native_color(appkit, "textPrimary", theme)
+                )
+                font = self._font_for_role(appkit, command.text_role or "body")
+                attributes = {
+                    appkit.NSForegroundColorAttributeName: color,
+                    appkit.NSFontAttributeName: font,
+                }
+                appkit.NSString.stringWithString_(value).drawAtPoint_withAttributes_(
+                    appkit.NSMakePoint(x, y),
+                    attributes,
+                )
+                continue
+
+            if command.kind == "image":
+                x, y, width, height = command.values
+                image = appkit.NSImage.alloc().initWithContentsOfFile_(
+                    command.resource
+                )
+                if image is not None:
+                    image.drawInRect_(
+                        appkit.NSMakeRect(x, y, width, height)
+                    )
 
     def _new_drag_source_view(self, appkit, window, view):
         if self.platform_name == "darwin" and self._appkit_override is None:
@@ -1327,6 +1583,15 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             controls[view.target] = native
             control_meta[native] = ("tree", view.target)
+
+        elif view.kind == "canvas":
+            native = self._new_canvas_view(
+                appkit,
+                bridge._window,
+                view,
+                theme,
+            )
+            controls[view.target] = native
 
         elif view.kind == "table":
             native = (
