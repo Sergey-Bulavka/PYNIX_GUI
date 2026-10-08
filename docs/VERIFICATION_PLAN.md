@@ -14,10 +14,16 @@ python -m pip install -e .
 python -m pytest -q
 ```
 
-Expected collection is approximately 96 tests after the current batch. The exact collected
-count is authoritative; zero failures are required.
+The staged suite is expected to be roughly 104 tests after the current batch. The exact
+collected count is authoritative; zero failures are required.
 
 If collection fails, fix import/syntax/contract issues before any native smoke.
+
+Convenience runner:
+
+```bash
+bash scripts/verify_macos.sh tests
+```
 
 ## Phase B — focused regressions
 
@@ -38,7 +44,7 @@ python -m pytest tests/test_advanced_drag_dock.py -q
 
 ## Phase C — macOS native acceptance
 
-Run one at a time:
+Run one at a time, or use `bash scripts/verify_macos.sh smokes`.
 
 ```bash
 python examples/adv_01_commands_smoke.py
@@ -116,7 +122,7 @@ Verify:
 
 ## Phase E — Windows parity
 
-On the Windows machine:
+On the Windows machine, the same smoke set is required through the Windows backend.
 
 ```powershell
 cd <PYNIX_GUI checkout>
@@ -125,6 +131,12 @@ py -m venv .venv
 .venv\Scripts\python -m pip install -e .
 .venv\Scripts\python -m pytest -q
 .venv\Scripts\python examples\showcase.py
+```
+
+Or use the prepared runner:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1 -Mode All
 ```
 
 Verify the Windows checklist in docs/WINDOWS_BACKEND.md.
