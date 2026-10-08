@@ -50,6 +50,8 @@ BAR_PADDING_X = float(SPACING["space2"])
 BAR_PADDING_Y = float(SPACING["space1"])
 SEPARATOR_THICKNESS = 1.0
 TAB_STRIP_HEIGHT = 32.0
+COLLAPSIBLE_HEADER_HEIGHT = float(CONTROL_METRICS["standardControl"])
+COLLAPSIBLE_CONTENT_GAP = float(SPACING["space2"])
 
 
 
@@ -195,8 +197,25 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
-    if kind in {"fill", "align", "enabled", "focused", "theme"}:
+    if kind in {"fill", "align", "enabled", "focused", "theme", "contextMenu", "tooltip"}:
         return measure(view.children[0])
+
+    if kind == "collapsible":
+        label_width = max(96.0, len(view.text or "") * 8.0 + 32.0)
+        header = GUISize(label_width, COLLAPSIBLE_HEADER_HEIGHT)
+        if not view.checked:
+            return GUIConstraints(header, header, GUISize(INF, COLLAPSIBLE_HEADER_HEIGHT))
+
+        child = measure(view.children[0])
+        minimum = GUISize(
+            max(header.width, child.minimum.width),
+            COLLAPSIBLE_HEADER_HEIGHT + COLLAPSIBLE_CONTENT_GAP + child.minimum.height,
+        )
+        preferred = GUISize(
+            max(header.width, child.preferred.width),
+            COLLAPSIBLE_HEADER_HEIGHT + COLLAPSIBLE_CONTENT_GAP + child.preferred.height,
+        )
+        return GUIConstraints(minimum, preferred, GUISize(INF, INF))
 
     if kind == "scroll":
         child = measure(view.children[0])
@@ -593,8 +612,27 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
     }:
         return GUILayoutNode(view, rect)
 
-    if kind in {"fill", "minSize", "preferredSize", "enabled", "focused", "theme"}:
+    if kind in {
+        "fill", "minSize", "preferredSize", "enabled", "focused", "theme",
+        "contextMenu", "tooltip",
+    }:
         child = _layout(view.children[0], rect, split_positions)
+        return GUILayoutNode(view, rect, (child,))
+
+    if kind == "collapsible":
+        if not view.checked:
+            return GUILayoutNode(view, rect)
+
+        child_rect = GUIRect(
+            rect.x,
+            rect.y + COLLAPSIBLE_HEADER_HEIGHT + COLLAPSIBLE_CONTENT_GAP,
+            rect.width,
+            max(
+                0.0,
+                rect.height - COLLAPSIBLE_HEADER_HEIGHT - COLLAPSIBLE_CONTENT_GAP,
+            ),
+        )
+        child = _layout(view.children[0], child_rect, split_positions)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "maxSize":
