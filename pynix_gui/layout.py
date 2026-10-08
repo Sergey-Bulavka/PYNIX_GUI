@@ -206,7 +206,7 @@ def measure(view) -> GUIConstraints:
             GUISize(INF, INF),
         )
 
-    if kind == "icon":
+    if kind in {"icon", "vectorIcon"}:
         size = float(view.icon_size)
         exact = GUISize(size, size)
         return GUIConstraints(exact, exact, exact)
@@ -698,6 +698,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         "table",
         "canvas",
         "icon",
+        "vectorIcon",
         "image",
     }:
         return GUILayoutNode(view, rect)
