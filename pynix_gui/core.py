@@ -68,6 +68,7 @@ class GUIView:
     accepted_operations: tuple[str, ...] = ()
     dock_state: object | None = None
     dock_region: str | None = None
+    canvas_scene: object | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -701,6 +702,20 @@ def dock_workspace(target: str, panels, state) -> GUIView:
     )
 
 
+def canvas(target: str, scene) -> GUIView:
+    from .canvas import GUICanvasScene
+
+    if not _is_non_empty_string(target):
+        raise GUIError("PYNIX-GUI-011", "GUI canvas target must be a non-empty String.")
+    if not isinstance(scene, GUICanvasScene):
+        raise GUIError("PYNIX-GUI-011", "GUI canvas scene is invalid.")
+    return GUIView(
+        "canvas",
+        target=target,
+        canvas_scene=scene,
+    )
+
+
 def icon(name: str, size=ICON_METRICS["iconStandard"]) -> GUIView:
     if not _is_non_empty_string(name):
         raise GUIError("PYNIX-GUI-006", "GUI icon name must be a non-empty String.")
@@ -760,7 +775,7 @@ def validate_view(view: GUIView) -> None:
         if kind in {
             "empty", "spacer", "separator", "text", "button", "textField",
             "textArea", "checkBox", "radioButton", "comboBox", "slider",
-            "progressBar", "list", "tree", "table", "icon", "image",
+            "progressBar", "list", "tree", "table", "canvas", "icon", "image",
         }:
             valid = node.children == ()
         elif kind in {
@@ -926,6 +941,14 @@ def validate_view(view: GUIView) -> None:
                 node.data[1],
                 node.selected_id,
             )
+
+        if kind == "canvas":
+            from .canvas import GUICanvasScene
+
+            if not _is_non_empty_string(node.target):
+                raise GUIError("PYNIX-GUI-011", "GUI canvas target is invalid.")
+            if not isinstance(node.canvas_scene, GUICanvasScene):
+                raise GUIError("PYNIX-GUI-011", "GUI canvas scene is invalid.")
 
         if kind == "draggable":
             from .interaction import GUIDragPayload
