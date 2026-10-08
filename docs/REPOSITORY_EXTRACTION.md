@@ -119,3 +119,46 @@ Extraction is complete when:
 - GUI runtime can be developed/tested independently;
 - no AppKit/Windows backend code remains owned by the PYNIX compiler package;
 - advanced GUI milestones can proceed without unrelated compiler commits.
+
+
+## Accepted extraction evidence
+
+### Stage 2 acceptance
+
+Standalone package verification:
+
+```text
+24 passed
+```
+
+Confirmed independent ownership of Core, Layout, Design System, and backend-neutral Runtime.
+
+### Stage 3 acceptance
+
+Standalone macOS backend verification:
+
+```text
+29 passed
+```
+
+Real-host smoke on macOS passed using the standalone environment and declared Cocoa
+dependency:
+
+```text
+PYNIX_GUI
+→ GUIRuntime
+→ MacOSGUIBackend
+→ MacOSHostBackend
+→ AppKit
+```
+
+Observed native normalized events included TextField `CHANGE` events followed by logical
+`CLOSE`, and the smoke completed with:
+
+```text
+PYNIX GUI standalone macOS smoke: PASS
+```
+
+No PYNIX compiler repository or legacy Desktop backend was required in that runtime path.
+
+**Stage 3 status: ACCEPTED.**
