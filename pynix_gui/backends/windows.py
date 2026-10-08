@@ -31,6 +31,7 @@ class WindowsGUIBackend:
         self._resources = {}
         self._dialogs = {}
         self._menu_bars = {}
+        self._split_positions = {}
 
     def _load_qt(self):
         if self._qt_override is not None:
@@ -114,6 +115,7 @@ class WindowsGUIBackend:
         self._resources.pop(window, None)
         self._dialogs.pop(window, None)
         self._menu_bars.pop(window, None)
+        self._split_positions.pop(window, None)
 
     def set_resources(self, window, catalog):
         self._resources[window] = catalog
@@ -142,6 +144,33 @@ class WindowsGUIBackend:
                 border-radius: 5px;
             }}
             QPushButton:hover {{ background: {p["surfaceHover"]}; }}
+            QPushButton[pynixRole="primary"] {{
+                background: {p["accent"]};
+                color: {p["textOnAccent"]};
+                border-color: {p["accent"]};
+            }}
+            QPushButton[pynixRole="danger"] {{
+                color: {p["error"]};
+                border-color: {p["error"]};
+            }}
+            QWidget[pynixSurface="panel"],
+            QWidget[pynixSurface="workspace"],
+            QWidget[pynixSurface="toolPanel"] {{
+                background: {p["surface"]};
+                border: 1px solid {p["border"]};
+            }}
+            QWidget[pynixSurface="sidebar"],
+            QWidget[pynixSurface="toolbar"],
+            QWidget[pynixSurface="statusBar"] {{
+                background: {p["surfaceRaised"]};
+                border: 1px solid {p["border"]};
+            }}
+            QWidget[pynixSurface="group"],
+            QWidget[pynixSurface="settings"],
+            QWidget[pynixSurface="section"] {{
+                background: {p["surfaceSunken"]};
+                border: 1px solid {p["border"]};
+            }}
             QToolTip {{
                 color: {p["textPrimary"]};
                 background: {p["surfaceRaised"]};
@@ -283,6 +312,7 @@ class WindowsGUIBackend:
             native.setFont(self._font(qt, view.role))
         elif kind == "button":
             native = W.QPushButton(view.text, parent)
+            native.setProperty("pynixRole", view.role)
             native.clicked.connect(
                 lambda _checked=False, target=view.target:
                     self._queue(window).append(GUIEvent("ACTIVATE", target=target))
@@ -571,11 +601,24 @@ class WindowsGUIBackend:
                     theme, path + (index,),
                 )
                 native.addWidget(child)
-            if view.split_position is not None:
+
+            if view.split_id is not None:
+                positions = self._split_positions.setdefault(window, {})
+                position = positions.setdefault(
+                    view.split_id,
+                    float(view.split_position),
+                )
                 native.setSizes([
-                    int(view.split_position),
-                    max(1, 1000 - int(view.split_position)),
+                    max(1, int(round(position))),
+                    max(1, 1000 - int(round(position))),
                 ])
+                native.splitterMoved.connect(
+                    lambda position, index, split_id=view.split_id:
+                        self._split_positions.setdefault(window, {}).__setitem__(
+                            split_id,
+                            float(position),
+                        )
+                )
 
         elif kind == "contextMenu":
             native = self._generic(qt, parent)
@@ -605,6 +648,12 @@ class WindowsGUIBackend:
                 native.setEnabled(bool(view.enabled))
             if kind in {"panel", "group", "toolbar", "statusBar"}:
                 native.setAutoFillBackground(True)
+                if kind == "panel":
+                    native.setProperty("pynixSurface", view.role or "panel")
+                elif kind == "group":
+                    native.setProperty("pynixSurface", view.role or "group")
+                else:
+                    native.setProperty("pynixSurface", kind)
         else:
             native = self._generic(qt, parent)
 
@@ -626,6 +675,23 @@ class WindowsGUIBackend:
             max(0, int(round(rect.width))),
             max(0, int(round(rect.height))),
         )
+        if node.view.kind == "collapsible":
+            try:
+                for child_widget in native.children():
+                    if (
+                        hasattr(child_widget, "isCheckable")
+                        and child_widget.isCheckable()
+                        and hasattr(child_widget, "setArrowType")
+                    ):
+                        child_widget.setGeometry(
+                            0,
+                            0,
+                            max(0, int(round(rect.width))),
+                            32,
+                        )
+                        break
+            except Exception:
+                pass
         for index, child in enumerate(node.children):
             self._apply_geometry(
                 child,
@@ -1033,6 +1099,12 @@ class WindowsGUIBackend:
 
     def present_dialog(self, window, dialog):
         qt, app = self._app()
+        dialogs = self._dialogs.setdefault(window, {})
+        if dialog.dialog_id in dialogs:
+            raise ValueError(
+                f"GUI dialog '{dialog.dialog_id}' is already active."
+            )
+
         native = qt.QtWidgets.QDialog(window)
         native.setWindowTitle(dialog.title)
         native.resize(560, 360)
@@ -1062,7 +1134,7 @@ class WindowsGUIBackend:
             )
         layout_box.addWidget(buttons)
 
-        self._dialogs.setdefault(window, {})[dialog.dialog_id] = native
+        dialogs[dialog.dialog_id] = native
         native.setModal(True)
         native.show()
         app.processEvents()
