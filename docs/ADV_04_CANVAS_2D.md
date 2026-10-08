@@ -2,7 +2,11 @@
 
 ## Status
 
-Implementation batch in progress; verification deferred to the consolidated test pass.
+**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+
+The retained scene model, semantic hit testing, macOS rendering, Windows rendering,
+logical image-resource resolution and focused regression coverage are staged. Acceptance
+and the 0.1.4-dev bump require the consolidated verification pass.
 
 Target version after acceptance: **PYNIX GUI 0.1.4-dev**.
 
