@@ -10,6 +10,7 @@ import warnings
 from ._macos_host import MacOSHostBackend
 from ..core import GUIEvent
 from ..commands import GUIDialog, GUIMenu, GUIMenuBar
+from ..canvas import hit_test_scene
 from ..design import DARK, LIGHT, RADII, TYPOGRAPHY, button_visual, rgb, surface_color_role
 from ..layout import layout, measure
 
@@ -396,66 +397,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         return rx <= x <= rx + rw and ry <= y <= ry + rh
 
     def _canvas_hit_target(self, scene, x, y, width, height):
-        sx, sy = self._canvas_scale(scene, width, height)
-        if sx == 0 or sy == 0:
-            return None
-        lx = x / sx
-        ly = y / sy
-
-        def visit(commands, tx=0.0, ty=0.0, sxv=1.0, syv=1.0):
-            for command in reversed(commands):
-                if command.kind == "transform":
-                    dx, dy, csx, csy, _rotation = command.values
-                    found = visit(
-                        command.children,
-                        tx + dx,
-                        ty + dy,
-                        sxv * csx,
-                        syv * csy,
-                    )
-                    if found is not None:
-                        return found
-                    continue
-
-                if command.kind == "clip":
-                    cx, cy, cw, ch = command.values
-                    local_x = (lx - tx) / sxv
-                    local_y = (ly - ty) / syv
-                    if cx <= local_x <= cx + cw and cy <= local_y <= cy + ch:
-                        found = visit(command.children, tx, ty, sxv, syv)
-                        if found is not None:
-                            return found
-                    continue
-
-                if command.hit_target is None:
-                    continue
-
-                local_x = (lx - tx) / sxv
-                local_y = (ly - ty) / syv
-
-                if command.kind in {"rect", "ellipse", "image"}:
-                    if self._canvas_point_in_rect(local_x, local_y, command.values):
-                        return command.hit_target
-                elif command.kind == "text":
-                    cx, cy, value = command.values
-                    approx_width = max(12.0, len(value) * 8.0)
-                    if cx <= local_x <= cx + approx_width and cy - 16 <= local_y <= cy + 4:
-                        return command.hit_target
-                elif command.kind in {"line", "path"}:
-                    values = command.values[1:] if command.kind == "path" else command.values
-                    coords = tuple(float(v) for v in values)
-                    xs = coords[0::2]
-                    ys = coords[1::2]
-                    if xs and ys:
-                        pad = max(4.0, float(command.line_width) * 2.0)
-                        if (
-                            min(xs) - pad <= local_x <= max(xs) + pad
-                            and min(ys) - pad <= local_y <= max(ys) + pad
-                        ):
-                            return command.hit_target
-            return None
-
-        return visit(scene.commands)
+        return hit_test_scene(scene, x, y, width, height)
 
     def _draw_canvas_native(self, native):
         appkit = self._load_appkit()
