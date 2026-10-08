@@ -1001,6 +1001,95 @@ class MacOSGUIBackend(MacOSHostBackend):
             if hasattr(native, "setImageScaling_"):
                 native.setImageScaling_(getattr(appkit, "NSImageScaleProportionallyUpOrDown", 3))
 
+        elif view.kind == "contextMenu":
+            native = self._new_container(appkit)
+            child = self._build_native_tree(
+                appkit,
+                view.children[0],
+                native_nodes,
+                split_views,
+                tab_labels,
+                controls,
+                control_meta,
+                tab_buttons,
+                bridge,
+                theme,
+                path=path + (0,),
+            )
+            native.addSubview_(child)
+            context = self._build_native_menu(
+                appkit,
+                bridge._window,
+                view.menu,
+                bridge,
+            )
+            target_native = child if hasattr(child, "setMenu_") else native
+            if hasattr(target_native, "setMenu_"):
+                target_native.setMenu_(context)
+
+        elif view.kind == "tooltip":
+            native = self._new_container(appkit)
+            child = self._build_native_tree(
+                appkit,
+                view.children[0],
+                native_nodes,
+                split_views,
+                tab_labels,
+                controls,
+                control_meta,
+                tab_buttons,
+                bridge,
+                theme,
+                path=path + (0,),
+            )
+            native.addSubview_(child)
+            target_native = child if hasattr(child, "setToolTip_") else native
+            if hasattr(target_native, "setToolTip_"):
+                target_native.setToolTip_(view.tooltip_text)
+
+        elif view.kind == "collapsible":
+            native = self._new_container(appkit)
+            header = appkit.NSButton.buttonWithTitle_target_action_(
+                view.text,
+                bridge,
+                "controlChanged:",
+            )
+            if hasattr(header, "setButtonType_"):
+                header.setButtonType_(
+                    getattr(appkit, "NSButtonTypeOnOff", 6)
+                )
+            if hasattr(header, "setState_"):
+                header.setState_(
+                    getattr(appkit, "NSControlStateValueOn", 1)
+                    if view.checked
+                    else getattr(appkit, "NSControlStateValueOff", 0)
+                )
+            if hasattr(header, "setBordered_"):
+                header.setBordered_(False)
+            if hasattr(header, "setAlignment_"):
+                header.setAlignment_(getattr(appkit, "NSTextAlignmentLeft", 0))
+            if hasattr(header, "setFont_"):
+                header.setFont_(self._font_for_role(appkit, "label"))
+            native.addSubview_(header)
+            controls[view.target] = header
+            control_meta[header] = ("collapsible", view.target)
+
+            if view.checked:
+                child = self._build_native_tree(
+                    appkit,
+                    view.children[0],
+                    native_nodes,
+                    split_views,
+                    tab_labels,
+                    controls,
+                    control_meta,
+                    tab_buttons,
+                    bridge,
+                    theme,
+                    path=path + (0,),
+                )
+                native.addSubview_(child)
+
         elif view.kind in {"enabled", "focused"}:
             native = self._new_container(appkit)
             child = self._build_native_tree(
@@ -1176,6 +1265,12 @@ class MacOSGUIBackend(MacOSHostBackend):
                 target=target,
                 number=float(sender.doubleValue()),
             )
+        elif kind == "collapsible":
+            event = GUIEvent(
+                "CHANGE",
+                target=target,
+                checked=bool(sender.state()),
+            )
         else:
             return
 
@@ -1203,6 +1298,24 @@ class MacOSGUIBackend(MacOSHostBackend):
         target, index = meta
         self._event_queue(window).append(
             GUIEvent("SELECTION", target=target, index=index)
+        )
+
+    def _queue_menu_activation(self, window, sender):
+        target = self._gui_menu_targets_by_window.get(window, {}).get(sender)
+        if target is None:
+            return
+        self._event_queue(window).append(
+            GUIEvent("ACTIVATE", target=target)
+        )
+
+    def _queue_dialog_action(self, window, sender):
+        meta = self._gui_dialog_buttons_by_window.get(window, {}).get(sender)
+        if meta is None:
+            return
+        dialog_id, target, _panel = meta
+        self.dismiss_dialog(window, dialog_id)
+        self._event_queue(window).append(
+            GUIEvent("ACTIVATE", target=target)
         )
 
     @staticmethod
@@ -1389,6 +1502,22 @@ class MacOSGUIBackend(MacOSHostBackend):
                         )
                     )
 
+        if node.view.kind == "collapsible":
+            try:
+                subviews = tuple(native.subviews())
+            except Exception:
+                subviews = ()
+            if subviews:
+                header = subviews[0]
+                header.setFrame_(
+                    appkit.NSMakeRect(
+                        0.0,
+                        max(0.0, rect.height - 32.0),
+                        rect.width,
+                        32.0,
+                    )
+                )
+
         if node.view.kind == "tabs":
             labels = tab_labels.get(path, ())
             if labels:
@@ -1437,6 +1566,11 @@ class MacOSGUIBackend(MacOSHostBackend):
             )
 
     def close(self, window):
+        for dialog_id in tuple(
+            self._gui_dialogs_by_window.get(window, {})
+        ):
+            self.dismiss_dialog(window, dialog_id)
+
         result = super().close(window)
         self._gui_views_by_window.pop(window, None)
         self._gui_native_roots_by_window.pop(window, None)
@@ -1447,4 +1581,8 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_controls_by_window.pop(window, None)
         self._gui_control_meta_by_window.pop(window, None)
         self._gui_tab_buttons_by_window.pop(window, None)
+        self._gui_menu_targets_by_window.pop(window, None)
+        self._gui_menu_bars_by_window.pop(window, None)
+        self._gui_dialogs_by_window.pop(window, None)
+        self._gui_dialog_buttons_by_window.pop(window, None)
         return result
