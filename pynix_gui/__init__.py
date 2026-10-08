@@ -114,6 +114,7 @@ from .resources import (
     GUIVectorResource,
     image_resource,
     resource_catalog,
+    svg_resource,
     vector_resource,
 )
 from .structured import (
@@ -255,6 +256,7 @@ __all__ = [
     "EDITOR_ROLES",
     "tree_node",
     "resource_catalog",
+    "svg_resource",
     "vector_resource",
     "BUTTON_VISUALS",
     "COLOR_ROLES",
