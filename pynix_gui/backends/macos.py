@@ -331,6 +331,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             native._pynix_accepted_operations = tuple(
                 view.accepted_operations
             )
+            native._pynix_dock_region = view.dock_region
             native.registerForDraggedTypes_([_DRAG_PASTEBOARD_TYPE])
             return native
 
@@ -404,16 +405,30 @@ class MacOSGUIBackend(MacOSHostBackend):
             if operation_mask == getattr(appkit, "NSDragOperationMove", 16)
             else "copy"
         )
-        self._event_queue(window).append(
-            GUIEvent(
-                "DROP",
-                target=native._pynix_target_id,
-                source_id=decoded["source_id"],
-                payload_kind=decoded["kind"],
-                payload_value=decoded["value"],
-                operation=operation,
+        if (
+            getattr(native, "_pynix_dock_region", None) is not None
+            and decoded["kind"] == "pynix/dock-panel"
+            and operation == "move"
+        ):
+            self._event_queue(window).append(
+                GUIEvent(
+                    "DOCK",
+                    target=native._pynix_target_id,
+                    item_id=decoded["value"],
+                    region=native._pynix_dock_region,
+                )
             )
-        )
+        else:
+            self._event_queue(window).append(
+                GUIEvent(
+                    "DROP",
+                    target=native._pynix_target_id,
+                    source_id=decoded["source_id"],
+                    payload_kind=decoded["kind"],
+                    payload_value=decoded["value"],
+                    operation=operation,
+                )
+            )
         return True
 
     def _bridge_for_window(self, window):
@@ -1589,7 +1604,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             )
             native.addSubview_(child)
 
-        elif view.kind == "dropTarget":
+        elif view.kind in {"dropTarget", "dockTarget"}:
             native = self._new_drop_target_view(
                 appkit,
                 bridge._window,
