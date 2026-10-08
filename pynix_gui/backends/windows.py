@@ -226,9 +226,7 @@ class WindowsGUIBackend:
             native.setPlainText(view.value)
             native.textChanged.connect(
                 lambda target=view.target, widget=native:
-                    self._queue(window).append(
-                        GUIEvent("CHANGE", target=target, text=widget.toPlainText())
-                    )
+                    self._queue_rich_editor_change(window, target, widget)
             )
             controls[view.target] = native
         elif kind == "richEditor":
@@ -506,6 +504,26 @@ class WindowsGUIBackend:
                 rect,
                 path + (index,),
             )
+
+    def _queue_rich_editor_change(self, window, target, widget):
+        cursor = widget.textCursor()
+        start = min(cursor.anchor(), cursor.position())
+        end = max(cursor.anchor(), cursor.position())
+        self._queue(window).append(
+            GUIEvent(
+                "EDITOR_SELECTION",
+                target=target,
+                selection_start=int(start),
+                selection_end=int(end),
+            )
+        )
+        self._queue(window).append(
+            GUIEvent(
+                "CHANGE",
+                target=target,
+                text=widget.toPlainText(),
+            )
+        )
 
     def _queue_editor_selection(self, window, target, widget):
         cursor = widget.textCursor()
