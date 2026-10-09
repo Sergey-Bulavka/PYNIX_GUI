@@ -19,6 +19,7 @@ from pynix_gui import (
     dock_placement,
     dock_state,
     dock_workspace,
+    fill,
     group,
     menu,
     menu_bar,
@@ -199,7 +200,7 @@ def build(source, selection_start, selection_end, tree_selected, table_selected)
                     text("PYNIX Standard", "label"),
                 ], 8)
             ),
-            padding(workspace, 12),
+            fill(padding(workspace, 12)),
             status_bar(
                 row([
                     text("PYNIX GUI 0.1.x", "caption"),
