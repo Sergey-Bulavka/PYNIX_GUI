@@ -386,6 +386,12 @@ class WindowsGUIBackend:
             native = W.QLabel(view.text, parent)
             native.setFont(self._font(qt, view.role))
             native.setProperty("pynixTextRole", view.role)
+            if view.overflow == "ellipsis":
+                native.setProperty("pynixFullText", view.text)
+                native.setProperty("pynixElide", True)
+            elif view.overflow == "clip":
+                native.setProperty("pynixFullText", view.text)
+                native.setProperty("pynixClip", True)
         elif kind == "button":
             native = W.QPushButton(view.text, parent)
             native.setProperty("pynixRole", view.role)
