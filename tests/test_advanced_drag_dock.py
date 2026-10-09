@@ -17,6 +17,7 @@ from pynix_gui import (
     drag_payload,
     draggable,
     drop_target,
+    empty,
     group,
     min_size,
     text,
@@ -301,22 +302,22 @@ def test_adv03_dock_requested_sizes_are_clamped_to_panel_minimums():
         dock_panel(
             "left",
             "Left",
-            min_size(text("Left", "body"), 180, 120),
+            min_size(empty(), 180, 120),
         ),
         dock_panel(
             "right",
             "Right",
-            min_size(text("Right", "body"), 300, 140),
+            min_size(empty(), 300, 140),
         ),
         dock_panel(
             "bottom",
             "Bottom",
-            min_size(text("Bottom", "body"), 200, 170),
+            min_size(empty(), 200, 170),
         ),
         dock_panel(
             "center",
             "Center",
-            min_size(text("Center", "body"), 260, 220),
+            min_size(empty(), 260, 220),
         ),
     ]
     custom_state = dock_state(
@@ -351,17 +352,17 @@ def test_adv03_dock_requested_sizes_shrink_surplus_without_breaking_minimums():
         dock_panel(
             "left",
             "Left",
-            min_size(text("Left", "body"), 180, 120),
+            min_size(empty(), 180, 120),
         ),
         dock_panel(
             "right",
             "Right",
-            min_size(text("Right", "body"), 220, 120),
+            min_size(empty(), 220, 120),
         ),
         dock_panel(
             "center",
             "Center",
-            min_size(text("Center", "body"), 300, 200),
+            min_size(empty(), 300, 200),
         ),
     ]
     custom_state = dock_state(
