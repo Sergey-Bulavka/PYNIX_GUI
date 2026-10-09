@@ -198,7 +198,7 @@ def test_macos_resize_does_not_hide_unrelated_layout_errors(monkeypatch):
     backend._gui_native_roots_by_window[window] = object()
     backend._gui_split_views_by_window[window] = {}
     backend._gui_split_positions_by_window[window] = {}
-    backend._content_extent = lambda _: (500.0, 80.0)
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (500.0, 80.0))
     def fail(*args, **kwargs):
         raise ValueError("invalid font configuration")
     monkeypatch.setattr(macos_module, "layout", fail)
