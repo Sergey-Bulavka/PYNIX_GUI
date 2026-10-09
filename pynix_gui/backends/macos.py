@@ -10,7 +10,7 @@ import warnings
 from ._macos_host import MacOSHostBackend
 from ..core import GUIEvent
 from ..commands import GUIDialog, GUIMenu, GUIMenuBar
-from ..canvas import hit_test_scene
+from ..canvas import canvas_viewport, hit_test_scene
 from ..design import DARK, LIGHT, RADII, TYPOGRAPHY, button_visual, rgb, surface_color_role
 from ..layout import layout, measure
 
@@ -386,10 +386,8 @@ class MacOSGUIBackend(MacOSHostBackend):
 
     @staticmethod
     def _canvas_scale(scene, width, height):
-        return (
-            width / float(scene.width),
-            height / float(scene.height),
-        )
+        scale, _offset_x, _offset_y = canvas_viewport(scene, width, height)
+        return (scale, scale)
 
     @staticmethod
     def _canvas_point_in_rect(x, y, values):
@@ -409,12 +407,13 @@ class MacOSGUIBackend(MacOSHostBackend):
         bounds = native.bounds()
         width = float(bounds.size.width)
         height = float(bounds.size.height)
-        sx, sy = self._canvas_scale(scene, width, height)
+        scale, offset_x, offset_y = canvas_viewport(scene, width, height)
 
         appkit.NSGraphicsContext.saveGraphicsState()
         try:
             transform = appkit.NSAffineTransform.transform()
-            transform.scaleXBy_yBy_(sx, sy)
+            transform.translateXBy_yBy_(offset_x, offset_y)
+            transform.scaleXBy_yBy_(scale, scale)
             transform.concat()
             self._draw_canvas_commands(
                 appkit,
