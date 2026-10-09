@@ -317,6 +317,20 @@ class WindowsGUIBackend:
             font.setWeight(qt.QtGui.QFont.Medium)
         return font
 
+    def measure_wrapped_text(self, role, value, width):
+        """Qt-backed exact candidate widths for height-for-width planning."""
+        from ..wrap_engine import wrap_text
+
+        qt, _app = self._app()
+        metrics = qt.QtGui.QFontMetricsF(self._font(qt, role))
+        return wrap_text(
+            value, width,
+            measure_width=lambda candidate: float(
+                metrics.horizontalAdvance(candidate)
+            ),
+            line_height=float(metrics.lineSpacing()),
+        )
+
     def text_metrics_snapshot(self, view):
         """Measure text leaves using the active Qt font configuration."""
         from ..text_metrics import snapshot_text_metrics
