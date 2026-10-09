@@ -467,7 +467,7 @@ def forms_page(state):
                     ], 12),
                     "Dense property presentation for inspectors and settings.",
                 ),
-                420,
+                540,
                 900,
             ),
         ], 16),
