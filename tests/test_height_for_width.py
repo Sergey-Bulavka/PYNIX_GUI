@@ -23,7 +23,7 @@ def measure_lines(role, value, width):
 
 def test_row_height_uses_allocated_child_width():
     tree = row([wrapped("ABCDEFGHIJKLMNOP"), text("OK")], 8)
-    narrow = height_for_width(tree, 140, measure_wrapped=measure_lines)
+    narrow = height_for_width(tree, 100, measure_wrapped=measure_lines)
     wide = height_for_width(tree, 300, measure_wrapped=measure_lines)
     assert narrow > wide
     assert narrow >= 40
@@ -38,8 +38,8 @@ def test_column_height_sums_wrapped_children():
 
 
 def test_grid_uses_tallest_cell_per_row():
-    tree = grid([wrapped("ABCDEFGHIJKLMNO"), text("OK"),
-                 text("OK"), wrapped("ABCDEFGHIJKLMNO")], 2, 8, 8)
+    tree = grid(2, [wrapped("ABCDEFGHIJKLMNO"), text("OK"),
+                    text("OK"), wrapped("ABCDEFGHIJKLMNO")], 8, 8)
     height = height_for_width(tree, 180, measure_wrapped=measure_lines)
     assert height >= 48
 
