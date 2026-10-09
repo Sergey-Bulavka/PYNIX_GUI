@@ -519,8 +519,8 @@ def text(value: str, role="body", *, overflow="natural") -> GUIView:
         raise GUIError("PYNIX-GUI-006", "GUI text value must be String.")
     if role not in _TEXT_ROLES:
         raise GUIError("PYNIX-GUI-006", "GUI text role is invalid.")
-    if overflow not in ("natural", "ellipsis", "clip"):
-        raise GUIError("PYNIX-GUI-006", "GUI text overflow must be natural, ellipsis or clip.")
+    if overflow not in ("natural", "ellipsis", "clip", "wrap"):
+        raise GUIError("PYNIX-GUI-006", "GUI text overflow must be natural, ellipsis, clip or wrap.")
     return GUIView("text", text=value, role=role, overflow=overflow)
 
 
