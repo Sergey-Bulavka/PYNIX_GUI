@@ -121,3 +121,13 @@ def test_property_row_reserves_space_for_native_label_glyphs():
     constraints = measure(item)
     result = layout(item, constraints.minimum.width, constraints.minimum.height)
     assert result.children[0].rect.width >= measure(left_column).minimum.width
+
+
+def test_property_row_commands_reserves_measured_macos_glyph_width():
+    # AppKit measured 71.5pt for "Commands" at 13pt semibold.
+    # The property-row text allocation must leave at least that much
+    # space inside its padded column at the default scale.
+    from pynix_gui.layout import measure
+    value = property_row("Commands", "Menus · Dialogs · Shortcuts")
+    column = value.children[0]
+    assert measure(column).minimum.width >= 71.5 + 2
