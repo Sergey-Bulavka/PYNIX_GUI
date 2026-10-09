@@ -59,9 +59,9 @@ def card(
     if footer is not None:
         _view(footer, "GUI card footer")
 
-    parts = [text(title, "titleSmall")]
+    parts = [text(title, "titleSmall", overflow="wrap")]
     if subtitle:
-        parts.append(text(subtitle, "caption"))
+        parts.append(text(subtitle, "caption", overflow="wrap"))
     parts.append(content)
     if footer is not None:
         parts.append(footer)
@@ -78,8 +78,8 @@ def hero(
     action_views = _views(actions, "GUI hero actions")
     body = [
         text("PYNIX GUI", "overline"),
-        text(title, "display"),
-        text(subtitle, "body"),
+        text(title, "display", overflow="wrap"),
+        text(subtitle, "body", overflow="wrap"),
     ]
     if action_views:
         body.append(row(action_views, 8))
@@ -97,7 +97,7 @@ def metric_card(
     if badge_view is not None:
         _view(badge_view, "GUI metric card badge")
 
-    top = [text(label, "caption"), fill(empty())]
+    top = [text(label, "caption", overflow="wrap"), fill(empty())]
     if badge_view is not None:
         top.append(badge_view)
 
@@ -106,7 +106,7 @@ def metric_card(
         text(value, "metric"),
     ]
     if detail:
-        body.append(text(detail, "caption"))
+        body.append(text(detail, "caption", overflow="wrap"))
     return panel(column(body, 8), "card")
 
 
@@ -126,7 +126,7 @@ def badge(label: str, tone: str = "neutral") -> GUIView:
     role = _BADGE_ROLES.get(tone)
     if role is None:
         raise GUIError("PYNIX-GUI-014", "GUI badge tone is invalid.")
-    return group(padding(text(label, "caption"), 8, 3), role)
+    return group(padding(text(label, "caption", overflow="wrap"), 8, 3), role)
 
 
 def alert(title: str, message: str, tone: str = "info") -> GUIView:
@@ -139,8 +139,8 @@ def alert(title: str, message: str, tone: str = "info") -> GUIView:
         raise GUIError("PYNIX-GUI-014", "GUI alert tone is invalid.")
     return group(
         column([
-            text(title, "bodyStrong"),
-            text(message, "body"),
+            text(title, "bodyStrong", overflow="wrap"),
+            text(message, "body", overflow="wrap"),
         ], 4),
         role,
     )
@@ -172,7 +172,7 @@ def navigation_sidebar(
         _view(footer, "GUI navigation footer")
 
     body = [
-        text(title, "heading"),
+        text(title, "heading", overflow="wrap"),
         column(item_views, 4),
         fill(empty()),
     ]
@@ -192,9 +192,9 @@ def section_header(
     if action is not None:
         _view(action, "GUI section action")
 
-    heading = [text(title, "heading")]
+    heading = [text(title, "heading", overflow="wrap")]
     if subtitle:
-        heading.append(text(subtitle, "body"))
+        heading.append(text(subtitle, "body", overflow="wrap"))
     parts = [column(heading, 4), fill(empty())]
     if action is not None:
         parts.append(action)
@@ -211,7 +211,7 @@ def form_row(
     _view(control, "GUI form row control")
     _optional_text(helper, "GUI form row helper")
 
-    parts = [text(label, "label"), control]
+    parts = [text(label, "label", overflow="wrap"), control]
     if helper:
         parts.append(text(helper, "caption"))
     return column(parts, 6)
@@ -242,13 +242,13 @@ def property_row(
     # Reserve native glyph overhang inside the property label column.
     # The backend-independent text estimator is deliberately approximate;
     # a local inset protects the complete label without changing other layouts.
-    left = [padding(text(label, "bodyStrong"), 10, 0)]
+    left = [padding(text(label, "bodyStrong", overflow="wrap"), 10, 0)]
     if detail:
-        left.append(text(detail, "caption"))
+        left.append(text(detail, "caption", overflow="wrap"))
     return row([
         column(left, 2),
         fill(empty()),
-        text(value, "bodyStrong"),
+        text(value, "bodyStrong", overflow="wrap"),
     ], 12)
 
 
@@ -263,8 +263,8 @@ def empty_state(
         _view(action, "GUI empty state action")
 
     parts = [
-        text(title, "title"),
-        text(message, "body"),
+        text(title, "title", overflow="wrap"),
+        text(message, "body", overflow="wrap"),
     ]
     if action is not None:
         parts.append(action)
