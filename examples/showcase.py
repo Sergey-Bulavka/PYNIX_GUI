@@ -66,7 +66,10 @@ NAVIGATION = (
     ("editor", "Rich Editor"),
     ("canvas", "Canvas 2D"),
     ("forms", "Forms"),
-    ("examples", "App Example"),
+    ("dashboard", "Dashboard App"),
+    ("ide", "IDE App"),
+    ("settings", "Settings App"),
+    ("files", "File Manager"),
 )
 
 TREE = [
@@ -222,7 +225,7 @@ def overview_page():
             "PYNIX GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
             [
                 button("open-dialog", "Explore PYNIX GUI", "primary"),
-                button("nav-examples", "See app example"),
+                button("nav-dashboard", "See app examples"),
             ],
         ),
         grid(3, metrics, 16, 16),
@@ -476,7 +479,7 @@ def forms_page(state):
     ], 18)
 
 
-def examples_page():
+def dashboard_page():
     project_rows = [
         table_row("alpha", ["Alpha Workspace", "Dashboard", "Healthy"]),
         table_row("beta", ["Beta Console", "Operations", "Healthy"]),
@@ -539,6 +542,190 @@ def examples_page():
     ], 18)
 
 
+def ide_app_page(state):
+    return column([
+        section_header(
+            "IDE application",
+            "A complete developer workspace assembled from Tree, Rich Editor, Table and commands.",
+            badge("Reference UI", "success"),
+        ),
+        hero(
+            "PYNIX Studio",
+            "Project navigation, source editing and diagnostics in one semantic desktop workspace.",
+            [
+                button("ide-run", "Run", "primary"),
+                button("open-dialog", "Command palette"),
+            ],
+        ),
+        row([
+            max_size(card(
+                "Explorer",
+                min_size(
+                    tree(
+                        "ide-tree",
+                        TREE,
+                        expanded_ids=["src", "ui"],
+                        selected_id=state["tree_selected"],
+                    ),
+                    260,
+                    500,
+                ),
+                "Keyboard-navigable project structure.",
+            ), 320, 900),
+            fill(card(
+                "main.pnx",
+                min_size(
+                    rich_editor(
+                        "ide-editor",
+                        state["source"],
+                        state["selection_start"],
+                        state["selection_end"],
+                        source_spans(state["source"]),
+                    ),
+                    600,
+                    500,
+                ),
+                "Native editing behavior behind a controlled semantic value.",
+            )),
+        ], 16),
+        card(
+            "Problems",
+            min_size(
+                table(
+                    "ide-problems",
+                    [
+                        table_column("severity", "Severity", 120),
+                        table_column("message", "Message", 460),
+                        table_column("file", "File", 180),
+                    ],
+                    [
+                        table_row("p1", ["Info", "Workspace is ready", "main.pnx"]),
+                        table_row("p2", ["Hint", "Commercial Product Pass active", "gallery.pnx"]),
+                    ],
+                    selected_id="p1",
+                ),
+                700,
+                170,
+            ),
+            "Diagnostics and tooling output fit the same table contract.",
+        ),
+    ], 18)
+
+
+def settings_app_page(state):
+    return column([
+        section_header(
+            "Settings application",
+            "A polished preferences surface using forms, property rows, alerts and semantic status.",
+            badge("Reference UI", "success"),
+        ),
+        hero(
+            "Workspace Settings",
+            "Manage appearance, identity and synchronization without hand-built platform layout.",
+            [button("settings-save", "Save changes", "primary")],
+        ),
+        row([
+            fill(form_section(
+                "General",
+                [
+                    form_row(
+                        "Display name",
+                        text_field("settings-name", state["name"], "Display name"),
+                    ),
+                    form_row(
+                        "Appearance",
+                        combo_box("settings-theme", ["System", "Light", "Dark"], state["appearance"]),
+                    ),
+                    form_row(
+                        "Search preferences",
+                        search_field("settings-search", state["search"], "Search settings"),
+                    ),
+                    form_row(
+                        "Telemetry",
+                        check_box("settings-telemetry", "Share anonymous diagnostics", state["checked"]),
+                    ),
+                ],
+                "Core workspace preferences.",
+            )),
+            max_size(card(
+                "Account",
+                column([
+                    property_row("Plan", "Developer"),
+                    property_row("Sync", "Connected"),
+                    property_row("Region", "EU Central"),
+                    alert(
+                        "Protected",
+                        "Application-facing code never receives native backend handles.",
+                        "info",
+                    ),
+                ], 12),
+                "Semantic application state.",
+            ), 400, 900),
+        ], 16),
+    ], 18)
+
+
+def file_manager_page(state):
+    file_rows = [
+        table_row("f-main", ["main.pnx", "PYNIX", "4 KB"]),
+        table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"]),
+        table_row("f-readme", ["README.md", "Markdown", "6 KB"]),
+        table_row("f-assets", ["assets", "Folder", "—"]),
+    ]
+    return column([
+        section_header(
+            "File manager",
+            "Navigation, search, structured data and actions composed into a familiar desktop workflow.",
+            badge("Reference UI", "success"),
+        ),
+        row([
+            search_field("files-search", state["search"], "Search files"),
+            fill(text("Project / src", "caption")),
+            button("file-new", "New", "primary"),
+            button("file-more", "More"),
+        ], 10),
+        row([
+            max_size(card(
+                "Folders",
+                min_size(
+                    tree(
+                        "files-tree",
+                        TREE,
+                        expanded_ids=["src", "ui"],
+                        selected_id=state["tree_selected"],
+                    ),
+                    260,
+                    480,
+                ),
+                "Stable hierarchical identities.",
+            ), 320, 900),
+            fill(card(
+                "Files",
+                min_size(
+                    table(
+                        "files-table",
+                        [
+                            table_column("name", "Name", 300),
+                            table_column("kind", "Kind", 180),
+                            table_column("size", "Size", 120),
+                        ],
+                        file_rows,
+                        selected_id="f-main",
+                    ),
+                    700,
+                    480,
+                ),
+                "Rows, columns and selection stay semantic across native backends.",
+            )),
+        ], 16),
+        row([
+            badge("4 items", "neutral"),
+            badge("Synced", "success"),
+            fill(text("PYNIX project", "caption")),
+        ], 8),
+    ], 18)
+
+
 def page_view(page, state):
     if page == "controls":
         return controls_page(state)
@@ -550,8 +737,14 @@ def page_view(page, state):
         return canvas_page()
     if page == "forms":
         return forms_page(state)
-    if page == "examples":
-        return examples_page()
+    if page == "dashboard":
+        return dashboard_page()
+    if page == "ide":
+        return ide_app_page(state)
+    if page == "settings":
+        return settings_app_page(state)
+    if page == "files":
+        return file_manager_page(state)
     return overview_page()
 
 
@@ -672,27 +865,35 @@ def main():
                 )
             )
             continue
-        elif event.kind == "CHANGE" and event.target == "gallery-search":
+        elif event.kind == "CHANGE" and event.target in {
+            "gallery-search", "profile-search", "settings-search", "files-search",
+        }:
             state["search"] = event.text
-        elif event.kind == "CHANGE" and event.target in {"display-name", "profile-name"}:
+        elif event.kind == "CHANGE" and event.target in {
+            "display-name", "profile-name", "settings-name",
+        }:
             state["name"] = event.text
         elif event.kind == "CHANGE" and event.target == "notes":
             state["notes"] = event.text
-        elif event.kind == "CHANGE" and event.target == "telemetry":
+        elif event.kind == "CHANGE" and event.target in {"telemetry", "settings-telemetry"}:
             state["checked"] = event.checked
         elif event.kind == "CHANGE" and event.target == "scale":
             state["scale"] = event.number
-        elif event.kind == "SELECTION" and event.target in {"appearance", "profile-theme"}:
+        elif event.kind == "SELECTION" and event.target in {
+            "appearance", "profile-theme", "settings-theme",
+        }:
             state["appearance"] = event.index
-        elif event.kind == "SELECTION" and event.target == "gallery-tree":
+        elif event.kind == "SELECTION" and event.target in {
+            "gallery-tree", "ide-tree", "files-tree",
+        }:
             state["tree_selected"] = event.item_id
         elif event.kind == "SELECTION" and event.target == "gallery-table":
             state["table_selected"] = event.item_id
-        elif event.kind == "CHANGE" and event.target == "gallery-editor":
+        elif event.kind == "CHANGE" and event.target in {"gallery-editor", "ide-editor"}:
             state["source"] = event.text
             state["selection_start"] = min(state["selection_start"], len(event.text))
             state["selection_end"] = min(state["selection_end"], len(event.text))
-        elif event.kind == "EDITOR_SELECTION" and event.target == "gallery-editor":
+        elif event.kind == "EDITOR_SELECTION" and event.target in {"gallery-editor", "ide-editor"}:
             state["selection_start"] = event.selection_start
             state["selection_end"] = event.selection_end
             continue
