@@ -121,7 +121,22 @@ class MacOSHostBackend:
             if native_event is None:
                 continue
 
-            application.sendEvent_(native_event)
+            # This host drives AppKit's event loop manually. Explicitly offer
+            # key-down events to the application menu before window dispatch:
+            # without an NSApplication.run() loop, platform menu equivalents
+            # must not depend on implicit key routing by the active window.
+            handled_by_menu = False
+            if (
+                hasattr(native_event, "type")
+                and native_event.type() == getattr(appkit, "NSEventTypeKeyDown", 10)
+            ):
+                main_menu = application.mainMenu()
+                if main_menu is not None:
+                    handled_by_menu = bool(
+                        main_menu.performKeyEquivalent_(native_event)
+                    )
+            if not handled_by_menu:
+                application.sendEvent_(native_event)
             application.updateWindows()
 
         return queue.popleft()
