@@ -149,3 +149,34 @@ def test_workspace_visual_tokens_and_keyboard_discovery_are_consistent():
     copy = [node.text for node in _walk(guide)
             if node.kind == "text" and node.text]
     assert any("Keyboard-friendly" in item for item in copy)
+
+
+def test_automatic_sidebar_switches_at_window_breakpoint_without_resetting_state():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["window_width"] = 1440
+    state["navigation_override"] = None
+    state["name"] = "Preserved entry"
+    desktop = gallery.build("controls", state)
+    state["window_width"] = 820
+    narrow = gallery.build("controls", state)
+    assert any(node.target == "nav-overview" for node in _walk(desktop))
+    assert not any(node.target == "nav-overview" for node in _walk(narrow))
+    assert any(node.text == "Preserved entry" or node.value == "Preserved entry"
+               for node in _walk(narrow))
+    state["window_width"] = 1440
+    restored = gallery.build("controls", state)
+    assert any(node.target == "nav-overview" for node in _walk(restored))
+
+
+def test_manual_override_takes_priority_over_automatic_breakpoint():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["window_width"] = 820
+    state["navigation_override"] = False
+    forced_open = gallery.build("overview", state)
+    assert any(node.target == "nav-overview" for node in _walk(forced_open))
+    state["window_width"] = 1600
+    state["navigation_override"] = True
+    forced_closed = gallery.build("overview", state)
+    assert not any(node.target == "nav-overview" for node in _walk(forced_closed))

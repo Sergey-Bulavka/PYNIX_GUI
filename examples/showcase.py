@@ -877,12 +877,15 @@ def page_view(page, state):
 
 
 def build(page, state):
-    """Commercial workspace with a user-controlled compact navigation mode.
-
-    Compact mode is deliberately explicit. Native window resize callbacks
-    do not yet expose a portable width event to the semantic application.
-    """
-    compact = bool(state.get("compact_navigation", False))
+    """Responsive workspace: automatic compact layout with manual override."""
+    compact = (
+        state["navigation_override"]
+        if state.get("navigation_override") is not None
+        else (
+            bool(state.get("compact_navigation", False))
+            or float(state.get("window_width", 1440)) < 1020
+        )
+    )
     sidebar = navigation_sidebar(
         "PYNIX GUI",
         [
@@ -983,6 +986,8 @@ def main():
         "selection_start": 0,
         "selection_end": 0,
         "compact_navigation": False,
+        "navigation_override": None,
+        "window_width": 1440.0,
     }
     page = "overview"
 
@@ -995,8 +1000,29 @@ def main():
         if event.kind == "CLOSE":
             break
 
-        if event.kind == "ACTIVATE" and event.target == "toggle-navigation":
-            state["compact_navigation"] = not state["compact_navigation"]
+        if event.kind == "RESIZE":
+            if event.width is None:
+                continue
+            previous_compact = (
+                state["navigation_override"]
+                if state["navigation_override"] is not None
+                else state["window_width"] < 1020
+            )
+            state["window_width"] = event.width
+            current_compact = (
+                state["navigation_override"]
+                if state["navigation_override"] is not None
+                else state["window_width"] < 1020
+            )
+            if previous_compact == current_compact:
+                continue
+        elif event.kind == "ACTIVATE" and event.target == "toggle-navigation":
+            currently_compact = (
+                state["navigation_override"]
+                if state["navigation_override"] is not None
+                else state["window_width"] < 1020
+            )
+            state["navigation_override"] = not currently_compact
         elif event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
             page = DISCOVERY_ROUTES[event.target]
         elif event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):

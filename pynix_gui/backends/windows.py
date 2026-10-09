@@ -80,6 +80,17 @@ class WindowsGUIBackend:
                 super().__init__()
                 self._pynix_allow_close = False
 
+            def resizeEvent(self, event):
+                super().resizeEvent(event)
+                if self in backend._event_queues:
+                    viewport = self.centralWidget()
+                    width = viewport.width() if viewport is not None else self.width()
+                    height = viewport.height() if viewport is not None else self.height()
+                    queue = backend._queue(self)
+                    if queue and queue[-1].kind == "RESIZE":
+                        queue.pop()
+                    queue.append(GUIEvent("RESIZE", width=float(width), height=float(height)))
+
             def closeEvent(self, event):
                 if self._pynix_allow_close:
                     event.accept()
