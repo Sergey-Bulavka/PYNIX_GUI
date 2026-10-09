@@ -3,7 +3,7 @@
 
 import pytest
 
-from pynix_gui import column, grid, padding, row, text
+from pynix_gui import column, grid, padding, row, scroll, text
 from pynix_gui.layout import layout
 from pynix_gui.wrap_engine import wrap_text
 from pynix_gui.text_layout import native_text_layout
@@ -66,3 +66,22 @@ def test_native_fallback_not_allowed_to_hide_wrap_overflow():
             measure_text=lambda view: snap,
             wrap_measure=line_measure,
         )
+
+
+def test_scroll_viewport_keeps_fixed_height_while_wrap_content_grows():
+    tree = scroll(column([
+        text("ABCDEFGHIJKLMNOP", overflow="wrap"),
+        text("Bottom"),
+    ], 6))
+    result = layout(tree, 80, 40, wrap_measure=line_measure)
+    assert result.rect.height == 40
+    assert result.children[0].rect.height > 40
+
+
+def test_nonwrapped_tree_does_not_consult_wrap_measurer():
+    tree = column([text("Plain"), text("Labels")], 4)
+    def fail(*args):
+        raise AssertionError("unexpected native wrap measurement")
+    wrapped = layout(tree, 200, 100, wrap_measure=fail)
+    baseline = layout(tree, 200, 100)
+    assert wrapped == baseline
