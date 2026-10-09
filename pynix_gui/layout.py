@@ -758,14 +758,16 @@ def layout(view, width: float, height: float, *, split_positions=None, text_metr
         raise ValueError("GUI layout dimensions must be non-negative")
 
     split_positions = {} if split_positions is None else split_positions
-    if wrap_measure is not None:
-        def has_wrapped_text(node):
-            return (
-                node.kind == "text" and getattr(node, "overflow", None) == "wrap"
-            ) or any(has_wrapped_text(child) for child in node.children)
-        if not has_wrapped_text(view):
-            # Preserve the exact V2 algorithm for all existing windows.
-            wrap_measure = None
+    def has_wrapped_text(node):
+        return (
+            node.kind == "text" and getattr(node, "overflow", None) == "wrap"
+        ) or any(has_wrapped_text(child) for child in node.children)
+    if has_wrapped_text(view):
+        if wrap_measure is None:
+            raise ValueError("wrapped GUI text requires width-dependent font measurements")
+    else:
+        # Preserve the exact V2 algorithm for all existing windows.
+        wrap_measure = None
     return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
 
 
