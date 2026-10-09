@@ -1281,6 +1281,24 @@ class MacOSGUIBackend(MacOSHostBackend):
             return method(size, weights.get(weight, weights["regular"]))
         return appkit.NSFont.systemFontOfSize_(size)
 
+    def text_metrics_snapshot(self, view):
+        """Measure immutable GUI text leaves with AppKit on the GUI thread."""
+        from ..text_metrics import snapshot_text_metrics
+
+        appkit = self._load_appkit()
+        if appkit is None:
+            raise RuntimeError("AppKit is unavailable for native text measurement")
+
+        def measure(role, value):
+            font = self._font_for_role(appkit, role)
+            attributes = {appkit.NSFontAttributeName: font}
+            size = appkit.NSString.stringWithString_(value).sizeWithAttributes_(
+                attributes
+            )
+            return float(size.width), float(size.height)
+
+        return snapshot_text_metrics(view, measure)
+
     @staticmethod
     def _set_button_title_color(appkit, button, color, font=None):
         if color is None:
