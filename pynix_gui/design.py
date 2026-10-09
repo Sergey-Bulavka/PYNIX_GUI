@@ -40,6 +40,15 @@ LINES = {
     "focus": 2,
 }
 
+# Product-facing workspace composition tokens (logical points).
+WORKSPACE_METRICS = {
+    "sidebarMinimum": 230,
+    "sidebarMaximum": 270,
+    "contentInset": 24,
+    "sectionGap": 16,
+    "headerGap": 12,
+}
+
 CONTROL_METRICS = {
     "compactControl": 28,
     "standardControl": 32,
