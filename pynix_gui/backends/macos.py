@@ -1523,6 +1523,8 @@ class MacOSGUIBackend(MacOSHostBackend):
                 bridge,
                 "controlActivated:",
             )
+            if hasattr(native, "setAccessibilityLabel_"):
+                native.setAccessibilityLabel_(view.text)
             if hasattr(native, "setFont_"):
                 native.setFont_(self._font_for_role(appkit, "label"))
 
