@@ -18,6 +18,7 @@ from pynix_gui import (
     draggable,
     drop_target,
     group,
+    min_size,
     text,
     validate_view,
 )
@@ -292,3 +293,95 @@ def test_adv03_dock_target_layout_is_geometry_neutral():
     assert calculated.rect.height == 80
     assert len(calculated.children) == 1
     assert calculated.children[0].rect == calculated.rect
+
+
+
+def test_adv03_dock_requested_sizes_are_clamped_to_panel_minimums():
+    custom_panels = [
+        dock_panel(
+            "left",
+            "Left",
+            min_size(text("Left", "body"), 180, 120),
+        ),
+        dock_panel(
+            "right",
+            "Right",
+            min_size(text("Right", "body"), 300, 140),
+        ),
+        dock_panel(
+            "bottom",
+            "Bottom",
+            min_size(text("Bottom", "body"), 200, 170),
+        ),
+        dock_panel(
+            "center",
+            "Center",
+            min_size(text("Center", "body"), 260, 220),
+        ),
+    ]
+    custom_state = dock_state(
+        [
+            dock_placement("left", "left"),
+            dock_placement("right", "right"),
+            dock_placement("bottom", "bottom"),
+            dock_placement("center", "center"),
+        ],
+        active_left="left",
+        active_right="right",
+        active_bottom="bottom",
+        active_center="center",
+        left_width=80,
+        right_width=90,
+        bottom_height=60,
+    )
+
+    view = dock_workspace("workspace", custom_panels, custom_state)
+    calculated = layout(view, 1000, 700)
+
+    left, right, bottom, center = calculated.children
+    assert left.rect.width >= 180
+    assert right.rect.width >= 300
+    assert bottom.rect.height >= 170
+    assert center.rect.width >= 260
+    assert center.rect.height >= 220
+
+
+def test_adv03_dock_requested_sizes_shrink_surplus_without_breaking_minimums():
+    custom_panels = [
+        dock_panel(
+            "left",
+            "Left",
+            min_size(text("Left", "body"), 180, 120),
+        ),
+        dock_panel(
+            "right",
+            "Right",
+            min_size(text("Right", "body"), 220, 120),
+        ),
+        dock_panel(
+            "center",
+            "Center",
+            min_size(text("Center", "body"), 300, 200),
+        ),
+    ]
+    custom_state = dock_state(
+        [
+            dock_placement("left", "left"),
+            dock_placement("right", "right"),
+            dock_placement("center", "center"),
+        ],
+        active_left="left",
+        active_right="right",
+        active_center="center",
+        left_width=500,
+        right_width=500,
+    )
+
+    view = dock_workspace("workspace", custom_panels, custom_state)
+    calculated = layout(view, 800, 500)
+
+    left, right, center = calculated.children
+    assert left.rect.width >= 180
+    assert right.rect.width >= 220
+    assert center.rect.width >= 300
+    assert left.rect.width + right.rect.width + center.rect.width == pytest.approx(800)
