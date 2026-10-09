@@ -221,6 +221,15 @@ def responsive_pair(state, items, gap=16):
     return column(items, gap) if content_columns(state, 2) == 1 else row(items, gap)
 
 
+def advanced_viewport(view, minimum_width, minimum_height):
+    """Keep intrinsic data/canvas geometry inside a locally scrollable area.
+
+    A card can now shrink with its workspace, while wide native content
+    preserves its columns, drawing coordinates, and interaction targets.
+    """
+    return scroll(min_size(view, minimum_width, minimum_height))
+
+
 def responsive_section_header(state, title, subtitle=None, action=None):
     # At narrow widths the trailing badge/action must not reserve a huge
     # horizontal track beside the heading.
@@ -477,7 +486,7 @@ def data_page(state):
         responsive_pair(state, [
             fill(card(
                 "Project Tree",
-                min_size(
+                advanced_viewport(
                     tree(
                         "gallery-tree",
                         TREE,
@@ -491,7 +500,7 @@ def data_page(state):
             )),
             fill(card(
                 "Component Table",
-                min_size(
+                advanced_viewport(
                     table(
                         "gallery-table",
                         COLUMNS,
@@ -525,7 +534,7 @@ def editor_page(state):
         responsive_pair(state, [
             fill(card(
                 "Source",
-                min_size(
+                advanced_viewport(
                     rich_editor(
                         "gallery-editor",
                         state["source"],
@@ -572,7 +581,7 @@ def canvas_page(state=None):
         ),
         card(
             "Interactive retained scene",
-            min_size(canvas("gallery-canvas", product_scene()), 760, 420),
+            advanced_viewport(canvas("gallery-canvas", product_scene()), 760, 420),
             "Click the metric card, circle or health bar. Events return semantic targets rather than coordinates.",
         ),
         row([
@@ -670,7 +679,7 @@ def dashboard_page(state=None):
         responsive_pair(state, [
             fill(card(
                 "Workspace activity",
-                min_size(canvas("example-canvas", product_scene()), 620, 300),
+                advanced_viewport(canvas("example-canvas", product_scene()), 620, 300),
                 "A Canvas module can live beside ordinary controls and data views.",
             )),
             max_size(card(
@@ -686,7 +695,7 @@ def dashboard_page(state=None):
         ], 16),
         card(
             "Projects",
-            min_size(
+            advanced_viewport(
                 table(
                     "example-table",
                     [
@@ -723,7 +732,7 @@ def ide_app_page(state):
         responsive_pair(state, [
             max_size(card(
                 "Explorer",
-                min_size(
+                advanced_viewport(
                     tree(
                         "ide-tree",
                         TREE,
@@ -737,7 +746,7 @@ def ide_app_page(state):
             ), 320, 900),
             fill(card(
                 "main.pnx",
-                min_size(
+                advanced_viewport(
                     rich_editor(
                         "ide-editor",
                         state["source"],
@@ -753,7 +762,7 @@ def ide_app_page(state):
         ], 16),
         card(
             "Problems",
-            min_size(
+            advanced_viewport(
                 table(
                     "ide-problems",
                     [
@@ -850,7 +859,7 @@ def file_manager_page(state):
         row([
             max_size(card(
                 "Folders",
-                min_size(
+                advanced_viewport(
                     tree(
                         "files-tree",
                         TREE,
@@ -864,7 +873,7 @@ def file_manager_page(state):
             ), 320, 900),
             fill(card(
                 "Files",
-                min_size(
+                advanced_viewport(
                     table(
                         "files-table",
                         [
