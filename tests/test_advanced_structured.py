@@ -368,3 +368,23 @@ def test_adv02_tree_disclosure_focus_restores_to_selected_tree_row():
         "project",
         "src",
     )
+
+
+
+def test_adv02_table_intrinsic_width_honors_declared_columns():
+    view = table(
+        "files",
+        [
+            table_column("name", "Name", 220),
+            table_column("type", "Type", 120),
+            table_column("state", "State", 120),
+        ],
+        [
+            table_row("one", ["main.pnx", "PYNIX", "Modified"]),
+        ],
+    )
+
+    constraints = measure(view)
+
+    assert constraints.minimum.width >= 474
+    assert constraints.preferred.width >= constraints.minimum.width
