@@ -24,17 +24,23 @@ A pure `height_for_width` preflight allocates row and grid track widths, sums
 column heights, and propagates padding/surface insets. It has dedicated tests
 and does not yet change production geometry or public text validation.
 
-## Phase B: geometry integration (blocking production rollout)
+## Phase B: opt-in geometry integration (implemented, pending live acceptance)
 
-Before exposing `overflow="wrap"` as a public accepted mode:
+The public `overflow="wrap"` mode and native rendering are now wired to
+width-first Row/Column/Grid layout. Ordinary screens without wrapped text
+retain the V2 path. Scroll content can grow vertically within its viewport.
+A wrapped tree requires native width-dependent measurements and raises if
+they are unavailable, rather than silently clipping.
+
+Before approving production rollout:
 
 1. Determine child widths first; query height at *those exact widths*.
 2. In Row, take the maximum child height; in Column, distribute recomputed
    heights sequentially; in Grid, use the maximum height per grid row.
 3. Propagate height demands through padding, surfaces, tabs, align and
    scroll. Define overflow and impossibility behavior for constrained parents.
-4. Ensure the text leaf has an actual multi-line native rendering frame
-   with consistent line spacing. Re-layout on resize and font changes.
+4. Validate the native multi-line text frame and line spacing against the
+   height planner. Re-layout on resize and font changes.
 5. Test very long words, emoji grapheme clusters, embedded newlines,
    nested grids and rows, scrollable content and minimum/maximum bounds.
 6. Confirm product gallery and native macOS/Windows renderers interactively.
@@ -51,6 +57,7 @@ complex scripts, with results materialized into an immutable snapshot.
 
 ## Decision
 
-Do not prematurely connect the V4 measurement layer to product views or
-change existing V3 overflow behavior until Phase B's geometry contract has
-tests and macOS/Windows acceptance.
+Keep V4 in a feature PR until CI and interactive macOS verification confirm
+that row/grid content never overlaps during window resizing. Windows native
+interactive verification remains separate from cross-platform pytest.
+Complex-script word breaking requires a later native TextKit/QTextLayout pass.
