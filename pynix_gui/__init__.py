@@ -11,7 +11,7 @@ from .core import (
     GUIView,
     align,
     button,
-    canvas,
+    canvas as _canvas_view,
     check_box,
     column,
     combo_box,
@@ -284,3 +284,7 @@ __all__ = [
 ]
 
 from .runtime import GUIRuntime, GUIRuntimeState, GUIWindow
+
+# Importing the .canvas submodule installs it as package attribute "canvas".
+# Re-export the public GUI view constructor deliberately after all submodule imports.
+canvas = _canvas_view
