@@ -124,11 +124,16 @@ def measure(view) -> GUIConstraints:
 
     if kind == "text":
         font_size, weight = TYPOGRAPHY[view.role]
-        # Backend-independent conservative allocation, not a glyph measurement.
-        # 0.56em underestimates labels containing uppercase/wide glyphs on AppKit.
-        # Preserve enough space for native text metrics and rounding differences.
-        factor = 0.75 if weight != "monospace" else 0.66
-        width = max(1.0, len(view.text)) * font_size * factor + 4.0
+        # Compact captions (used by badges) need a slightly larger
+        # platform-independent budget for uppercase native glyphs.
+        # Avoid expanding other typography roles: some screens intentionally
+        # constrain their width with max-size wrappers.
+        factor = 0.75 if view.role == "caption" else (
+            0.62 if weight == "monospace" else 0.56
+        )
+        width = max(1.0, len(view.text)) * font_size * factor
+        if view.role == "caption":
+            width += 4.0
         height = max(18.0, font_size * 1.45)
         size = GUISize(width, height)
         return GUIConstraints(size, size, GUISize(INF, height))
