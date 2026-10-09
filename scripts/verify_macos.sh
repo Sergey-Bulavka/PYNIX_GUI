@@ -17,6 +17,15 @@ run_tests() {
   python -m pytest -q
 }
 
+run_gallery() {
+  echo
+  echo "============================================================"
+  echo "Product Gallery: examples/showcase.py"
+  echo "Explore all Gallery sections, then close the window."
+  echo "============================================================"
+  python examples/showcase.py
+}
+
 run_smokes() {
   local scripts=(
     "examples/adv_01_commands_smoke.py"
@@ -25,7 +34,6 @@ run_smokes() {
     "examples/adv_04_canvas_smoke.py"
     "examples/adv_05_editor_smoke.py"
     "examples/resources_smoke.py"
-    "examples/showcase.py"
   )
 
   for script in "${scripts[@]}"; do
@@ -45,12 +53,16 @@ case "$MODE" in
   smokes)
     run_smokes
     ;;
+  gallery)
+    run_gallery
+    ;;
   all)
     run_tests
     run_smokes
+    run_gallery
     ;;
   *)
-    echo "Usage: bash scripts/verify_macos.sh [tests|smokes|all]" >&2
+    echo "Usage: bash scripts/verify_macos.sh [tests|smokes|gallery|all]" >&2
     exit 2
     ;;
 esac
