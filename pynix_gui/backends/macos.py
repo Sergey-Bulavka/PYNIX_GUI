@@ -2955,8 +2955,10 @@ class MacOSGUIBackend(MacOSHostBackend):
         if node.view.kind == "text" and parent_horizontal_inset > 0:
             try:
                 measured_width = float(native.intrinsicContentSize().width)
+                # Native cell insets and Retina rounding can clip glyph ink.
+                # Consume only the room already reserved by padding.
                 native_width = min(
-                    max(native_width, measured_width + 2.0),
+                    max(native_width, measured_width + 8.0),
                     native_width + 2.0 * parent_horizontal_inset,
                 )
             except (AttributeError, TypeError, ValueError):
