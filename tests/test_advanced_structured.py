@@ -147,7 +147,10 @@ def test_adv02_tree_and_table_have_professional_default_geometry():
 
     assert tree_size.minimum.width == 180
     assert tree_size.preferred.height == 260
-    assert table_size.minimum.width == 260
+
+    # Explicit table widths are part of the layout contract:
+    # 220 + 120 + 90 columns plus 14 px native scroll chrome.
+    assert table_size.minimum.width == 444
     assert table_size.preferred.width == 520
     assert table_size.preferred.height == 280
 
