@@ -3,6 +3,8 @@
 
 from types import SimpleNamespace
 
+import pytest
+
 from pynix_gui.layout import GUIRect, layout, measure
 
 
