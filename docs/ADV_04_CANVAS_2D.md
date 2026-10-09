@@ -2,13 +2,20 @@
 
 ## Status
 
-**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+**ACCEPTED — PYNIX GUI 0.1.4-dev**
 
-The retained scene model, semantic hit testing, macOS rendering, Windows rendering,
-logical image-resource resolution and focused regression coverage are staged. Acceptance
-and the 0.1.4-dev bump require the consolidated verification pass.
+Acceptance evidence on the reference macOS/AppKit backend:
 
-Target version after acceptance: **PYNIX GUI 0.1.4-dev**.
+```text
+Full standalone regression: PASS
+Native Canvas smoke: PASS
+Semantic hit targets: PASS
+Scale/resize behavior: PASS
+Affine transform + clipping rendering: PASS
+Integrated Showcase Canvas: PASS
+```
+
+The Windows Canvas implementation remains subject to the separate Windows parity gate.
 
 ## Contract
 
