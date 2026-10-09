@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import math
 from collections.abc import Sequence
 
 from .design import ICON_METRICS, TEXT_ROLES, THEMES
@@ -115,7 +116,18 @@ class GUIEvent:
         )
 
         valid = (
-            (self.kind == "CLOSE" and self.target is None and payload_count == 0)
+            (
+                self.kind == "RESIZE"
+                and self.target is None
+                and payload_count == 0
+                and type(self.width) is float
+                and type(self.height) is float
+                and math.isfinite(self.width)
+                and math.isfinite(self.height)
+                and self.width >= 0
+                and self.height >= 0
+            )
+            or (self.kind == "CLOSE" and self.target is None and payload_count == 0)
             or (
                 self.kind == "ACTIVATE"
                 and _is_non_empty_string(self.target)
@@ -204,6 +216,9 @@ class GUIEvent:
                 and payload_count == 2
             )
         )
+
+        if self.kind != "RESIZE" and (self.width is not None or self.height is not None):
+            valid = False
 
         if not valid:
             raise GUIError(
