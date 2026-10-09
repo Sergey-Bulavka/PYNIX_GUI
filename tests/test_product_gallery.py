@@ -63,3 +63,46 @@ def test_product_gallery_canvas_labels_are_centered_inside_shape_bounds():
     assert circle.text_valign == status.text_valign == "center"
     assert status.fill_role == "textOnAccent"
     assert texts["24.8k"].text_align == "start"
+
+
+def _walk(view):
+    yield view
+    for child in view.children:
+        yield from _walk(child)
+
+
+def test_product_gallery_has_guided_entry_point_and_routes():
+    gallery = _gallery_module()
+    assert ("start", "Start Here") in gallery.NAVIGATION
+    assert set(gallery.DISCOVERY_ROUTES.values()) <= {
+        page for page, _label in gallery.NAVIGATION
+    }
+    for page in ("start", "overview"):
+        view = gallery.build(page, _state(gallery))
+        validate_view(view)
+        actions = {
+            node.target
+            for node in _walk(view)
+            if node.kind == "button" and node.target
+        }
+        assert "discover-start" in actions or "discover-controls" in actions
+        assert any(target in gallery.DISCOVERY_ROUTES for target in actions)
+
+
+def test_every_discovery_destination_is_valid_and_has_real_content():
+    gallery = _gallery_module()
+    for destination in gallery.DISCOVERY_ROUTES.values():
+        view = gallery.page_view(destination, _state(gallery))
+        validate_view(view)
+        assert sum(1 for _ in _walk(view)) > 10
+
+
+def test_guide_has_real_clickable_navigation_not_inert_promises():
+    gallery = _gallery_module()
+    guide = gallery.getting_started_page()
+    buttons = {
+        item.target for item in _walk(guide)
+        if item.kind == "button" and item.target is not None
+    }
+    assert {"discover-controls", "discover-forms", "discover-ide"} <= buttons
+    assert buttons <= set(gallery.DISCOVERY_ROUTES)
