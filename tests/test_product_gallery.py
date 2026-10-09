@@ -106,3 +106,46 @@ def test_guide_has_real_clickable_navigation_not_inert_promises():
     }
     assert {"discover-controls", "discover-forms", "discover-ide"} <= buttons
     assert buttons <= set(gallery.DISCOVERY_ROUTES)
+
+
+def test_workspace_compact_navigation_removes_sidebar_without_losing_content():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    regular = gallery.build("overview", state)
+    state["compact_navigation"] = True
+    compact = gallery.build("overview", state)
+    validate_view(regular)
+    validate_view(compact)
+    def targets(root):
+        return {node.target for node in _walk(root)
+                if node.kind == "button" and node.target}
+    assert "toggle-navigation" in targets(regular)
+    assert "toggle-navigation" in targets(compact)
+    assert "nav-overview" in targets(regular)
+    assert "nav-overview" not in targets(compact)
+    assert "discover-start" in targets(compact)
+
+
+def test_workspace_compact_mode_preserves_all_pages():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["compact_navigation"] = True
+    for page, label in gallery.NAVIGATION:
+        root = gallery.build(page, state)
+        validate_view(root)
+        assert "toggle-navigation" in {
+            node.target for node in _walk(root)
+            if node.kind == "button" and node.target
+        }
+
+
+def test_workspace_visual_tokens_and_keyboard_discovery_are_consistent():
+    from pynix_gui.design import WORKSPACE_METRICS
+    assert WORKSPACE_METRICS["sidebarMinimum"] <= WORKSPACE_METRICS["sidebarMaximum"]
+    assert WORKSPACE_METRICS["headerGap"] < WORKSPACE_METRICS["sectionGap"]
+    assert WORKSPACE_METRICS["contentInset"] >= WORKSPACE_METRICS["sectionGap"]
+    gallery = _gallery_module()
+    guide = gallery.getting_started_page()
+    copy = [node.text for node in _walk(guide)
+            if node.kind == "text" and node.text]
+    assert any("Keyboard-friendly" in item for item in copy)
