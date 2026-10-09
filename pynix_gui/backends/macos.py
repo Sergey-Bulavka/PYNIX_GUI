@@ -3000,7 +3000,6 @@ class MacOSGUIBackend(MacOSHostBackend):
                     )
 
         if node.view.kind == "tree":
-        if node.view.kind == "tree":
             try:
                 document = native.documentView()
                 rows = tuple(document.subviews())
