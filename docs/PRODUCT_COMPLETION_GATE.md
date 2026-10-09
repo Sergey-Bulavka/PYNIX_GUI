@@ -4,9 +4,9 @@
 
 **macOS REFERENCE-BACKEND GATE ACCEPTED — PYNIX GUI 0.1.6-dev**
 
-Standalone regression, native Advanced smokes and the integrated Showcase passed on the
-reference macOS/AppKit backend. Remaining product-completion gates are real Windows parity,
-CI confirmation and PYNIX language-integration regression.
+Standalone regression, native Advanced smokes, PYNIX language integration and the original
+engineering Showcase passed on the reference macOS/AppKit backend. Three-OS CI is also
+accepted. The Commercial Product Pass v1 is active before final real Windows parity.
 
 The toolkit must not be called commercially complete until every required gate below is green.
 
@@ -29,11 +29,24 @@ The toolkit must not be called commercially complete until every required gate b
 - macOS product polish
 - integrated Showcase
 
+## Accepted automated/integration evidence
+
+- three-OS CI regression matrix;
+- PYNIX language integration on macOS;
+- real PYNIX-source AppKit smoke including continuous Rich Editor focus.
+
+## Active commercial product pass
+
+- Design System 2;
+- high-level commercial composition components;
+- navigable Product Gallery;
+- richer AppKit/Qt semantic styling.
+
+These changes require a new macOS visual/product acceptance pass after implementation.
+
 ## Implemented, verification pending
 
-- Windows Qt/PySide6 parity backend
-- three-OS CI regression matrix
-- PYNIX language integration
+- real interactive Windows Qt/PySide6 parity acceptance.
 
 ## Commercial completion requirements
 
