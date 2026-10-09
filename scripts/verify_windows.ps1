@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Tests", "Smokes", "All")]
+    [ValidateSet("Tests", "Smokes", "Gallery", "All")]
     [string]$Mode = "All"
 )
 
@@ -24,8 +24,7 @@ function Invoke-Smokes {
         "examples\adv_03_drag_dock_smoke.py",
         "examples\adv_04_canvas_smoke.py",
         "examples\adv_05_editor_smoke.py",
-        "examples\resources_smoke.py",
-        "examples\showcase.py"
+        "examples\resources_smoke.py"
     )
 
     foreach ($Script in $Scripts) {
@@ -38,11 +37,22 @@ function Invoke-Smokes {
     }
 }
 
+function Invoke-Gallery {
+    Write-Host ""
+    Write-Host "============================================================"
+    Write-Host "Product Gallery: examples\showcase.py"
+    Write-Host "Explore all Gallery sections, then close the window."
+    Write-Host "============================================================"
+    & $Python "examples\showcase.py"
+}
+
 switch ($Mode) {
     "Tests" { Invoke-Tests }
     "Smokes" { Invoke-Smokes }
+    "Gallery" { Invoke-Gallery }
     "All" {
         Invoke-Tests
         Invoke-Smokes
+        Invoke-Gallery
     }
 }
