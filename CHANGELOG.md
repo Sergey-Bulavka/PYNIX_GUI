@@ -5,13 +5,27 @@ All notable PYNIX GUI product milestones are recorded here.
 A version is listed as released/accepted only after its documented verification gate passes.
 Implemented-but-unverified work stays under **Unreleased**.
 
-## Unreleased
+## Unreleased — Commercial Product Pass v1
 
-Pending acceptance work:
+Implemented for the next product acceptance:
 
-- native Windows parity verification;
-- three-OS CI confirmation;
-- PYNIX language-integration regression and real .pnx smoke.
+- Design System 2 typography, semantic surfaces, muted status colors and elevation metadata;
+- commercial composition components: card, hero, metric card, badge, alert, navigation,
+  forms, property rows, empty states and button groups;
+- stronger AppKit/Qt semantic surface and text hierarchy;
+- Product Gallery replacing the engineering-only Showcase;
+- four application examples inside the Gallery: Dashboard, IDE, Settings and File Manager;
+- product-gallery regression coverage.
+
+Already accepted evidence:
+
+- three-OS CI matrix;
+- PYNIX language integration and real .pnx AppKit smoke.
+
+Still pending:
+
+- Commercial Product Pass macOS visual/product acceptance;
+- real interactive Windows parity verification.
 
 ## 0.1.6-dev — resources and macOS product polish accepted
 
