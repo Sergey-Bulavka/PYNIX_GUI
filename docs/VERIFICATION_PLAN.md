@@ -1,5 +1,17 @@
 # Consolidated Verification Plan
 
+## Accepted evidence to date
+
+The macOS/AppKit standalone gate is accepted through **PYNIX GUI 0.1.6-dev**:
+
+- full standalone regression: PASS;
+- ADV-01 through ADV-05 native smokes: PASS;
+- resource/vector native smoke: PASS;
+- integrated Showcase: PASS;
+- final Showcase visual/product-polish review: ACCEPTED.
+
+Remaining gates: PYNIX language integration, CI confirmation, and real Windows parity.
+
 Run this plan after the current large implementation batch. Do not skip directly to Showcase.
 
 ## Phase A — install and full standalone regression
