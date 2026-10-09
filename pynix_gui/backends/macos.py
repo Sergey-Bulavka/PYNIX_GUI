@@ -1466,6 +1466,15 @@ class MacOSGUIBackend(MacOSHostBackend):
                 split_views[view.split_id] = native
         elif view.kind == "text":
             native = appkit.NSTextField.labelWithString_(view.text)
+            if view.overflow in ("ellipsis", "clip"):
+                cell = native.cell()
+                cell.setWraps_(False)
+                cell.setScrollable_(False)
+                cell.setLineBreakMode_(
+                    appkit.NSLineBreakByTruncatingTail
+                    if view.overflow == "ellipsis"
+                    else appkit.NSLineBreakByClipping
+                )
             if hasattr(native, "setFont_"):
                 native.setFont_(self._font_for_role(appkit, view.role))
             if hasattr(native, "setTextColor_"):
