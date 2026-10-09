@@ -279,6 +279,7 @@ class WindowsGUIBackend:
             max(1, window.centralWidget().width()),
             max(1, window.centralWidget().height()),
             measure_text=self.text_metrics_snapshot,
+            wrap_measure=self.measure_wrapped_text,
         ).root
         self._apply_geometry(calculated, nodes, None, ())
         root.show()
@@ -400,6 +401,8 @@ class WindowsGUIBackend:
             native = W.QLabel(view.text, parent)
             native.setFont(self._font(qt, view.role))
             native.setProperty("pynixTextRole", view.role)
+            if view.overflow == "wrap":
+                native.setWordWrap(True)
             if view.overflow == "ellipsis":
                 native.setProperty("pynixFullText", view.text)
                 native.setProperty("pynixElide", True)
@@ -1277,6 +1280,7 @@ class WindowsGUIBackend:
                 max(1, content.width()),
                 max(1, content.height()),
                 measure_text=self.text_metrics_snapshot,
+            wrap_measure=self.measure_wrapped_text,
             ).root
             self._apply_geometry(calculated, nodes, None, ())
         except Exception:
