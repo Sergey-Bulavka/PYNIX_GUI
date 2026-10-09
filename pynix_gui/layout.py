@@ -88,6 +88,10 @@ def _apply_size_wrapper(view, child: GUIConstraints) -> GUIConstraints:
             max(preferred.width, minimum.width),
             max(preferred.height, minimum.height),
         )
+        maximum = GUISize(
+            max(maximum.width, minimum.width),
+            max(maximum.height, minimum.height),
+        )
     elif view.kind == "preferredSize":
         preferred = GUISize(float(view.width), float(view.height))
     elif view.kind == "maxSize":
