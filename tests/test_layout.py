@@ -84,3 +84,26 @@ def test_surface_geometry_uses_design_tokens():
     assert child.rect.y == 13
     assert child.rect.width == 274
     assert child.rect.height == 174
+
+
+
+def test_min_size_can_expand_fixed_intrinsic_dimension():
+    content = view("text", text="Label", role="body")
+    wrapped = view(
+        "minSize",
+        children=(content,),
+        width=180,
+        height=120,
+    )
+
+    constraints = measure(wrapped)
+
+    assert constraints.minimum.width == 180
+    assert constraints.minimum.height == 120
+    assert constraints.preferred.width >= 180
+    assert constraints.preferred.height >= 120
+    assert constraints.maximum.width >= 180
+    assert constraints.maximum.height >= 120
+
+    result = layout(wrapped, 220, 140)
+    assert result.rect == GUIRect(0, 0, 220, 140)
