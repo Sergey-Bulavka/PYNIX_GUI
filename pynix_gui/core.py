@@ -80,6 +80,8 @@ class GUIView:
 class GUIEvent:
     kind: str
     target: str | None = None
+    width: float | None = None
+    height: float | None = None
     text: str | None = None
     index: int | None = None
     number: float | None = None
