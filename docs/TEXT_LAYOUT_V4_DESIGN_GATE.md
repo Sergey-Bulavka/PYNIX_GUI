@@ -18,6 +18,12 @@ its old position. V3 truncation does not have this problem.
   sequences are covered by isolated regression tests.
 - The algorithm does not import a windowing framework or modify GUI widgets.
 
+## Phase A2: Width-first geometry preflight (implemented, not yet active)
+
+A pure `height_for_width` preflight allocates row and grid track widths, sums
+column heights, and propagates padding/surface insets. It has dedicated tests
+and does not yet change production geometry or public text validation.
+
 ## Phase B: geometry integration (blocking production rollout)
 
 Before exposing `overflow="wrap"` as a public accepted mode:
