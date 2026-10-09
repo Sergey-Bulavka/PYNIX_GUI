@@ -424,6 +424,23 @@ def _command_contains(command, x, y):
     return False
 
 
+def canvas_viewport(scene, host_width, host_height):
+    """Return uniform aspect-fit scale and centered host offset for a scene."""
+    if not isinstance(scene, GUICanvasScene):
+        raise GUIError("PYNIX-GUI-011", "GUI canvas viewport requires a scene.")
+    width = float(host_width)
+    height = float(host_height)
+    if width <= 0 or height <= 0:
+        return (0.0, 0.0, 0.0)
+
+    scale = min(width / scene.width, height / scene.height)
+    draw_width = scene.width * scale
+    draw_height = scene.height * scale
+    offset_x = (width - draw_width) / 2.0
+    offset_y = (height - draw_height) / 2.0
+    return (scale, offset_x, offset_y)
+
+
 def hit_test_scene(scene, x, y, host_width, host_height):
     """Return the topmost semantic hit target at host-logical coordinates."""
     if not isinstance(scene, GUICanvasScene):
@@ -431,8 +448,24 @@ def hit_test_scene(scene, x, y, host_width, host_height):
     if host_width <= 0 or host_height <= 0:
         return None
 
-    logical_x = float(x) * scene.width / float(host_width)
-    logical_y = float(y) * scene.height / float(host_height)
+    scale, offset_x, offset_y = canvas_viewport(scene, host_width, host_height)
+    if scale <= 0:
+        return None
+
+    local_host_x = float(x) - offset_x
+    local_host_y = float(y) - offset_y
+    draw_width = scene.width * scale
+    draw_height = scene.height * scale
+    if (
+        local_host_x < 0
+        or local_host_y < 0
+        or local_host_x > draw_width
+        or local_host_y > draw_height
+    ):
+        return None
+
+    logical_x = local_host_x / scale
+    logical_y = local_host_y / scale
     identity = (1.0, 0.0, 0.0, 1.0, 0.0, 0.0)
 
     def visit(commands, matrix):
