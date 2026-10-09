@@ -1,17 +1,13 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import replace
-
 from pynix_gui import column, grid, padding, row, text
 from pynix_gui.height_for_width import height_for_width
 from pynix_gui.wrap_engine import wrap_text
 
 
 def wrapped(value):
-    # Internal preflight view; public overflow='wrap' remains gated until
-    # the real layout pass uses the computed heights.
-    return replace(text(value, overflow="ellipsis"), overflow="wrap")
+    return text(value, overflow="wrap")
 
 
 def measure_lines(role, value, width):
