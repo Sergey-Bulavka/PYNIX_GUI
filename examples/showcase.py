@@ -221,6 +221,14 @@ def responsive_pair(state, items, gap=16):
     return column(items, gap) if content_columns(state, 2) == 1 else row(items, gap)
 
 
+def responsive_section_header(state, title, subtitle=None, action=None):
+    # At narrow widths the trailing badge/action must not reserve a huge
+    # horizontal track beside the heading.
+    if action is not None and content_columns(state, 2) == 1:
+        return column([section_header(title, subtitle), action], 8)
+    return section_header(title, subtitle, action)
+
+
 def getting_started_page(state=None):
     state = {} if state is None else state
     return column([
@@ -233,7 +241,7 @@ def getting_started_page(state=None):
                 button("discover-dashboard", "Open an application example"),
             ],
         ),
-        section_header(
+        responsive_section_header(state, 
             "Three steps to your first interface",
             "Each step opens a working Product Gallery screen.",
         ),
@@ -266,7 +274,7 @@ def getting_started_page(state=None):
                 "Inspect complete application examples.",
             ),
         ], 16),
-        section_header(
+        responsive_section_header(state, 
             "Explore by capability",
             "Choose a real demonstration rather than reading a feature list.",
         ),
@@ -361,13 +369,13 @@ def overview_page(state=None):
             ],
         ),
         responsive_grid(state, 3, metrics, 16),
-        section_header(
+        responsive_section_header(state, 
             "What you can build",
             "The Gallery exposes the product as a toolkit, not as an engineering test fixture.",
             badge("Commercial Product Pass", "accent"),
         ),
         responsive_grid(state, 2, capability_cards, 16),
-        section_header(
+        responsive_section_header(state, 
             "Try it yourself",
             "Each action opens an interactive demonstration.",
         ),
@@ -398,7 +406,7 @@ def overview_page(state=None):
 
 def controls_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Controls",
             "Production controls with semantic states and commercial defaults.",
             badge("Interactive", "success"),
@@ -461,7 +469,7 @@ def controls_page(state):
 
 def data_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Data views",
             "Stable identities, selection and keyboard behavior for structured information.",
             badge("ADV-02", "accent"),
@@ -509,7 +517,7 @@ def data_page(state):
 
 def editor_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Rich Editor",
             "Controlled source text with semantic spans and native editing behavior.",
             badge("ADV-05", "accent"),
@@ -557,7 +565,7 @@ def editor_page(state):
 def canvas_page(state=None):
     state = {} if state is None else state
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Canvas 2D",
             "Retained drawing commands, transforms and semantic hit testing.",
             badge("ADV-04", "accent"),
@@ -580,7 +588,7 @@ def canvas_page(state=None):
 
 def forms_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Forms & settings",
             "High-level composition for application settings and account flows.",
             badge("Composition", "accent"),
@@ -641,7 +649,7 @@ def dashboard_page(state=None):
         table_row("gamma", ["Gamma Studio", "Creative", "Preview"]),
     ]
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Application example",
             "A realistic operations dashboard assembled entirely from PYNIX GUI primitives and commercial components.",
             badge("Reference UI", "success"),
@@ -699,7 +707,7 @@ def dashboard_page(state=None):
 
 def ide_app_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "IDE application",
             "A complete developer workspace assembled from Tree, Rich Editor, Table and commands.",
             badge("Reference UI", "success"),
@@ -769,7 +777,7 @@ def ide_app_page(state):
 
 def settings_app_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Settings application",
             "A polished preferences surface using forms, property rows, alerts and semantic status.",
             badge("Reference UI", "success"),
@@ -828,7 +836,7 @@ def file_manager_page(state):
         table_row("f-assets", ["assets", "Folder", "—"]),
     ]
     return column([
-        section_header(
+        responsive_section_header(state, 
             "File manager",
             "Navigation, search, structured data and actions composed into a familiar desktop workflow.",
             badge("Reference UI", "success"),
