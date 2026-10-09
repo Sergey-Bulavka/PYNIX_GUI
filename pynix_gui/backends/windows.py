@@ -11,7 +11,7 @@ import sys
 import time
 
 from ..core import GUIEvent
-from ..canvas import hit_test_scene
+from ..canvas import canvas_viewport, hit_test_scene
 from ..design import DARK, LIGHT, TYPOGRAPHY
 from ..layout import layout
 
@@ -868,9 +868,13 @@ class WindowsGUIBackend:
                 painter = qt.QtGui.QPainter(self)
                 try:
                     painter.setRenderHint(qt.QtGui.QPainter.Antialiasing, True)
-                    sx = self.width() / scene.width
-                    sy = self.height() / scene.height
-                    painter.scale(sx, sy)
+                    scale, offset_x, offset_y = canvas_viewport(
+                        scene,
+                        self.width(),
+                        self.height(),
+                    )
+                    painter.translate(offset_x, offset_y)
+                    painter.scale(scale, scale)
                     backend._paint_canvas_qt(
                         qt,
                         painter,
