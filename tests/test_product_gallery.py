@@ -180,3 +180,39 @@ def test_manual_override_takes_priority_over_automatic_breakpoint():
     state["navigation_override"] = True
     forced_closed = gallery.build("overview", state)
     assert not any(node.target == "nav-overview" for node in _walk(forced_closed))
+
+
+def test_responsive_gallery_reflows_card_grids_without_losing_actions():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    for width, expected in [(1440, 3), (1000, 2), (620, 1)]:
+        state["window_width"] = width
+        state["navigation_override"] = None
+        root = gallery.build("overview", state)
+        validate_view(root)
+        grids = [node for node in _walk(root) if node.kind == "grid"]
+        assert any(node.columns == expected for node in grids)
+        assert any(node.target == "discover-start" for node in _walk(root))
+
+
+def test_responsive_pair_switches_to_column_at_narrow_width():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    from pynix_gui import button
+    children = [button("responsive-a", "A"), button("responsive-b", "B")]
+    state["window_width"] = 620
+    narrow = gallery.responsive_pair(state, children)
+    assert narrow.kind == "column"
+    state["window_width"] = 1440
+    wide = gallery.responsive_pair(state, children)
+    assert wide.kind == "row"
+
+
+def test_every_gallery_page_valid_at_three_responsive_widths():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    for width in (620, 1000, 1440):
+        state["window_width"] = width
+        state["navigation_override"] = None
+        for page, _ in gallery.NAVIGATION:
+            validate_view(gallery.build(page, state))
