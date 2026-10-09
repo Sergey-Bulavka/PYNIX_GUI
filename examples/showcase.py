@@ -870,6 +870,12 @@ def page_view(page, state):
 
 
 def build(page, state):
+    """Commercial workspace with a user-controlled compact navigation mode.
+
+    Compact mode is deliberately explicit. Native window resize callbacks
+    do not yet expose a portable width event to the semantic application.
+    """
+    compact = bool(state.get("compact_navigation", False))
     sidebar = navigation_sidebar(
         "PYNIX GUI",
         [
@@ -882,9 +888,24 @@ def build(page, state):
         ], 6),
     )
 
+    # The disclosure button is always reachable, even when the sidebar is
+    # hidden. It is a native button, so keyboard activation still works.
+    nav_action = button(
+        "toggle-navigation",
+        "Show navigation" if compact else "Hide navigation",
+        "secondary",
+    )
     content = scroll(
         padding(
             column([
+                row([
+                    nav_action,
+                    fill(text(
+                        next((label for key, label in NAVIGATION if key == page),
+                             "Overview"),
+                        "subheading",
+                    )),
+                ], 12),
                 page_view(page, state),
                 text("PYNIX Standard · semantic by default", "caption"),
             ], 16),
@@ -892,13 +913,11 @@ def build(page, state):
         )
     )
 
-    return theme(
-        row([
-            max_size(min_size(sidebar, 230, 560), 270, 2000),
-            fill(content),
-        ], 0),
-        "system",
-    )
+    workspace = [fill(content)] if compact else [
+        max_size(min_size(sidebar, 230, 560), 270, 2000),
+        fill(content),
+    ]
+    return theme(row(workspace, 0), "system")
 
 
 def main():
@@ -955,6 +974,7 @@ def main():
         "source": SOURCE,
         "selection_start": 0,
         "selection_end": 0,
+        "compact_navigation": False,
     }
     page = "overview"
 
@@ -967,7 +987,9 @@ def main():
         if event.kind == "CLOSE":
             break
 
-        if event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
+        if event.kind == "ACTIVATE" and event.target == "toggle-navigation":
+            state["compact_navigation"] = not state["compact_navigation"]
+        elif event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
             page = DISCOVERY_ROUTES[event.target]
         elif event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
             page = event.target[4:]
