@@ -2716,6 +2716,19 @@ class MacOSGUIBackend(MacOSHostBackend):
             return ("control", meta[1], None)
         return None
 
+    def _capture_structured_focus(self, window):
+        """Backward-compatible ADV-02 helper for structured-control focus."""
+        previous = self._capture_focus(window)
+        if previous is None or previous[0] not in {"treeRow", "tableRow"}:
+            return None
+        return previous
+
+    def _restore_structured_focus(self, window, view, previous):
+        """Backward-compatible ADV-02 helper for structured-control focus."""
+        if previous is None:
+            return
+        self._restore_focus(window, view, previous)
+
     def _restore_focus(self, window, view, previous):
         if previous is None:
             return
