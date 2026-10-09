@@ -943,7 +943,8 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
                     panel.content,
                     region_rects[region],
                     split_positions,
-                , text_metrics=text_metrics)
+                    text_metrics=text_metrics,
+        )
             )
 
         return GUILayoutNode(view, rect, tuple(nodes))
@@ -1010,7 +1011,8 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             available,
             float(view.spacing),
             horizontal,
-        , text_metrics=text_metrics)
+            text_metrics=text_metrics,
+        )
         cursor = rect.x if horizontal else rect.y
         nodes = []
 
