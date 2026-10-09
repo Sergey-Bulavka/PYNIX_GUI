@@ -23,7 +23,8 @@ Pending acceptance work:
 - synthesized standard macOS application menu;
 - interactive controls inside dialog content;
 - focus/event routing preserved across rerender;
-- integrated commercial Showcase layout/polish acceptance.
+- integrated commercial Showcase layout/polish acceptance;
+- continuous Rich Editor focus/caret preservation across controlled rerenders.
 
 Acceptance evidence: full standalone regression, resource/vector native smoke, integrated
 Showcase PASS, and visual macOS product review.
