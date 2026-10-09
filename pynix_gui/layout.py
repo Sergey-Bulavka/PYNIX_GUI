@@ -204,9 +204,27 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind == "table":
+        columns, _rows = view.data
+        explicit_width = sum(
+            float(column.width)
+            for column in columns
+            if column.width is not None
+        )
+        flexible_count = sum(
+            column.width is None
+            for column in columns
+        )
+        content_minimum = (
+            explicit_width
+            + flexible_count * 120.0
+        )
+        # Reserve room for native scroll chrome so declared column widths
+        # remain fully visible rather than being clipped by the scroller.
+        minimum_width = max(260.0, content_minimum + 14.0)
+        preferred_width = max(520.0, minimum_width)
         return GUIConstraints(
-            GUISize(260.0, 140.0),
-            GUISize(520.0, 280.0),
+            GUISize(minimum_width, 140.0),
+            GUISize(preferred_width, 280.0),
             GUISize(INF, INF),
         )
 
