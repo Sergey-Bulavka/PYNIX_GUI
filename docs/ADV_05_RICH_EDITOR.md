@@ -2,13 +2,22 @@
 
 ## Status
 
-**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+**ACCEPTED — PYNIX GUI 0.1.5-dev**
 
-Controlled text/selection state, semantic spans, native macOS NSTextView realization,
-Windows QPlainTextEdit realization and focused regression coverage are staged. Acceptance
-and the 0.1.5-dev bump require the consolidated verification pass.
+Acceptance evidence on the reference macOS/AppKit backend:
 
-Target version after acceptance: **PYNIX GUI 0.1.5-dev**.
+```text
+Full standalone regression: PASS
+Native Rich Editor smoke: PASS
+Text editing and deletion: PASS
+Keyboard/caret navigation: PASS
+Mouse/keyboard selection: PASS
+Native scrolling: PASS
+Controlled rerender/selection restoration: PASS
+Integrated Showcase editor: PASS
+```
+
+The Windows editor implementation remains subject to the separate Windows parity gate.
 
 ## Goal
 
