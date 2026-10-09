@@ -85,3 +85,9 @@ def test_nonwrapped_tree_does_not_consult_wrap_measurer():
     wrapped = layout(tree, 200, 100, wrap_measure=fail)
     baseline = layout(tree, 200, 100)
     assert wrapped == baseline
+
+
+def test_wrapped_layout_requires_native_width_measurements():
+    tree = text("Text should wrap", overflow="wrap")
+    with pytest.raises(ValueError, match="requires width-dependent"):
+        layout(tree, 100, 100)
