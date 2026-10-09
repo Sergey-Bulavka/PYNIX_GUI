@@ -4,6 +4,8 @@
 import importlib.util
 from pathlib import Path
 
+import pytest
+
 from pynix_gui import validate_view
 
 
@@ -32,12 +34,13 @@ def _state(module):
     }
 
 
-def test_product_gallery_all_pages_are_valid_gui_trees():
+@pytest.mark.parametrize(
+    "page",
+    ["overview", "controls", "data", "editor", "canvas", "forms", "dashboard", "ide", "settings", "files"],
+)
+def test_product_gallery_page_is_valid_gui_tree(page):
     gallery = _gallery_module()
-    state = _state(gallery)
-
-    for page, _label in gallery.NAVIGATION:
-        validate_view(gallery.build(page, state))
+    validate_view(gallery.build(page, _state(gallery)))
 
 
 def test_product_gallery_contains_four_application_examples():
