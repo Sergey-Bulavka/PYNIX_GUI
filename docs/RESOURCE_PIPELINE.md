@@ -2,10 +2,19 @@
 
 ## Status
 
-**IMPLEMENTATION COMPLETE — consolidated verification pending.**
+**ACCEPTED on the reference macOS backend — PYNIX GUI 0.1.6-dev**
 
-Logical image resources, retained vector resources, SVG resources, vector icons,
-Canvas-image resolution and per-window resource catalogs are staged on macOS and Windows.
+Acceptance evidence:
+
+```text
+Full standalone regression: PASS
+Native resource/vector smoke: PASS
+Logical vector resource resolution: PASS
+Integrated Canvas/resource rendering: PASS
+Showcase product-polish gate: PASS
+```
+
+The Windows resource realization remains subject to the separate Windows parity gate.
 
 ## Goal
 
