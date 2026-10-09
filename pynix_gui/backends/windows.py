@@ -12,6 +12,7 @@ import time
 
 from ..core import GUIEvent
 from ..canvas import canvas_viewport, hit_test_scene
+from ..text_layout import native_text_layout
 from ..design import DARK, LIGHT, TYPOGRAPHY
 from ..layout import layout
 
@@ -273,11 +274,12 @@ class WindowsGUIBackend:
         self._native_nodes[window] = nodes
         self._controls[window] = controls
 
-        calculated = layout(
+        calculated = native_text_layout(
             view,
             max(1, window.centralWidget().width()),
             max(1, window.centralWidget().height()),
-        )
+            measure_text=self.text_metrics_snapshot,
+        ).root
         self._apply_geometry(calculated, nodes, None, ())
         root.show()
         app.processEvents()
@@ -1240,11 +1242,12 @@ class WindowsGUIBackend:
         app.processEvents()
 
         try:
-            calculated = layout(
+            calculated = native_text_layout(
                 dialog.content,
                 max(1, content.width()),
                 max(1, content.height()),
-            )
+                measure_text=self.text_metrics_snapshot,
+            ).root
             self._apply_geometry(calculated, nodes, None, ())
         except Exception:
             native.close()

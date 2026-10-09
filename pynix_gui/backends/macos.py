@@ -1038,11 +1038,14 @@ class MacOSGUIBackend(MacOSHostBackend):
         ] = dialog.content
         self._merge_dialog_event_maps(window)
 
-        calculated = layout(
-            dialog.content,
-            width - 40.0,
-            content_height,
-        )
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            from ..text_layout import native_text_layout
+            calculated = native_text_layout(
+                dialog.content, width - 40.0, content_height,
+                measure_text=self.text_metrics_snapshot,
+            ).root
+        else:
+            calculated = layout(dialog.content, width - 40.0, content_height)
         self._apply_layout(
             window,
             calculated,
@@ -2909,12 +2912,17 @@ class MacOSGUIBackend(MacOSHostBackend):
         width, height = self._content_extent(window)
         positions = self._gui_split_positions_by_window.setdefault(window, {})
         self._seed_split_positions(view, positions)
-        calculated = layout(
-            view,
-            width,
-            height,
-            split_positions=positions,
-        )
+        if self.platform_name == "darwin" and self._appkit_override is None:
+            from ..text_layout import native_text_layout
+            calculated = native_text_layout(
+                view, width, height,
+                measure_text=self.text_metrics_snapshot,
+                split_positions=positions,
+            ).root
+        else:
+            calculated = layout(
+                view, width, height, split_positions=positions,
+            )
 
         native_nodes = self._gui_native_nodes_by_window[window]
         tab_labels = self._gui_tab_labels_by_window.get(window, {})
