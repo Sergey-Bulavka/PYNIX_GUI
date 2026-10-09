@@ -2932,6 +2932,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         parent_rect,
         root_height,
         path,
+        parent_horizontal_inset=0.0,
     ):
         appkit = self._load_appkit()
         native = native_nodes[path]
@@ -2947,11 +2948,25 @@ class MacOSGUIBackend(MacOSHostBackend):
             y_from_top = rect.y - parent_top
             y = parent_rect.height - y_from_top - rect.height
 
+        # Text inside a padding wrapper has real horizontal breathing room.
+        # The logical estimator is font-agnostic; use AppKit's actual glyph
+        # width within that reserved space instead of clipping the NSTextField.
+        native_width = max(0.0, rect.width)
+        if node.view.kind == "text" and parent_horizontal_inset > 0:
+            try:
+                measured_width = float(native.intrinsicContentSize().width)
+                native_width = min(
+                    max(native_width, measured_width + 2.0),
+                    native_width + 2.0 * parent_horizontal_inset,
+                )
+            except (AttributeError, TypeError, ValueError):
+                pass
+
         native.setFrame_(
             appkit.NSMakeRect(
                 x,
                 y,
-                max(0.0, rect.width),
+                native_width,
                 max(0.0, rect.height),
             )
         )
@@ -3259,6 +3274,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                 parent_rect=rect,
                 root_height=root_height,
                 path=path + (index,),
+                parent_horizontal_inset=(
+                    float(node.view.horizontal)
+                    if node.view.kind == "padding"
+                    else 0.0
+                ),
             )
 
     def close(self, window):
