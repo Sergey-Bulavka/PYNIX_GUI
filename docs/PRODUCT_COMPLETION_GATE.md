@@ -2,11 +2,11 @@
 
 ## Status
 
-**IMPLEMENTATION COMPLETE CANDIDATE — consolidated verification pending.**
+**macOS REFERENCE-BACKEND GATE ACCEPTED — PYNIX GUI 0.1.6-dev**
 
-No new public capability is planned before the verification pass. Remaining work is
-evidence: standalone regression, native macOS acceptance, visual Light/Dark acceptance,
-real Windows parity acceptance, CI, and PYNIX language integration regression.
+Standalone regression, native Advanced smokes and the integrated Showcase passed on the
+reference macOS/AppKit backend. Remaining product-completion gates are real Windows parity,
+CI confirmation and PYNIX language-integration regression.
 
 The toolkit must not be called commercially complete until every required gate below is green.
 
@@ -21,14 +21,19 @@ The toolkit must not be called commercially complete until every required gate b
 - ADV-02 Tree/Table
 - ADV-03 Drag/Drop/Docking
 
-## Implemented, verification pending
+## Accepted on macOS reference backend
 
 - ADV-04 retained Canvas 2D
 - ADV-05 Rich Editor
 - logical image/retained-vector/SVG resource catalog
+- macOS product polish
+- integrated Showcase
+
+## Implemented, verification pending
+
 - Windows Qt/PySide6 parity backend
-- cross-platform Showcase
 - three-OS CI regression matrix
+- PYNIX language integration
 
 ## Commercial completion requirements
 
@@ -97,14 +102,14 @@ Accepted versions:
 0.1.1-dev  ADV-01 Commands / Transients
 0.1.2-dev  ADV-02 Tree / Table
 0.1.3-dev  ADV-03 Drag / Drop / Docking
+0.1.4-dev  ADV-04 Canvas 2D
+0.1.5-dev  ADV-05 Rich Editor
+0.1.6-dev  Resource pipeline + macOS product polish
 ```
 
 Pending after verification:
 
 ```text
-0.1.4-dev  ADV-04 Canvas 2D
-0.1.5-dev  ADV-05 Rich Editor
-0.1.6-dev  Resource pipeline + macOS product polish
 0.2.0-dev  Windows parity accepted
 ```
 
