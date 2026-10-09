@@ -57,6 +57,7 @@ from pynix_gui import (
 )
 from pynix_gui import dialog, dialog_action
 from pynix_gui.backends import default_backend
+from pynix_gui.design import WORKSPACE_METRICS
 
 
 NAVIGATION = (
@@ -265,6 +266,12 @@ def getting_started_page():
                 "Inspect a composed navigation and data interface.",
             ),
         ], 16, 16),
+        alert(
+            "Keyboard-friendly navigation",
+            "Use the native Explore and Applications menus to move between screens. "
+            "The navigation toggle is a standard keyboard-accessible button.",
+            "info",
+        ),
         alert(
             "Complex inside. Simple outside.",
             "PYNIX GUI provides semantic interface primitives; native "
@@ -905,16 +912,16 @@ def build(page, state):
                              "Overview"),
                         "subheading",
                     )),
-                ], 12),
+                ], WORKSPACE_METRICS["headerGap"]),
                 page_view(page, state),
                 text("PYNIX Standard · semantic by default", "caption"),
-            ], 16),
-            24,
+            ], WORKSPACE_METRICS["sectionGap"]),
+            WORKSPACE_METRICS["contentInset"],
         )
     )
 
     workspace = [fill(content)] if compact else [
-        max_size(min_size(sidebar, 230, 560), 270, 2000),
+        max_size(min_size(sidebar, WORKSPACE_METRICS["sidebarMinimum"], 560), WORKSPACE_METRICS["sidebarMaximum"], 2000),
         fill(content),
     ]
     return theme(row(workspace, 0), "system")
@@ -938,13 +945,14 @@ def main():
                     menu_item("nav-overview", "Overview", shortcut("1", ["primary"])),
                     menu_item("nav-start", "Start Here", shortcut("2", ["primary"])),
                     menu_item("open-dialog", "About PYNIX GUI", shortcut("d", ["primary"])),
+                    menu_item("toggle-navigation", "Show / Hide Sidebar", shortcut("0", ["primary"])),
                 ],
             ),
             menu(
                 "Explore",
                 [
-                    menu_item("nav-controls", "Controls"),
-                    menu_item("nav-data", "Data Views"),
+                    menu_item("nav-controls", "Controls", shortcut("3", ["primary"])),
+                    menu_item("nav-data", "Data Views", shortcut("4", ["primary"])),
                     menu_item("nav-editor", "Rich Editor"),
                     menu_item("nav-canvas", "Canvas 2D"),
                     menu_item("nav-forms", "Forms"),
@@ -953,8 +961,8 @@ def main():
             menu(
                 "Applications",
                 [
-                    menu_item("nav-dashboard", "Dashboard"),
-                    menu_item("nav-ide", "IDE"),
+                    menu_item("nav-dashboard", "Dashboard", shortcut("5", ["primary"])),
+                    menu_item("nav-ide", "IDE", shortcut("6", ["primary"])),
                     menu_item("nav-settings", "Settings"),
                     menu_item("nav-files", "File Manager"),
                 ],
