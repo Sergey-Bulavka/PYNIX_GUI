@@ -34,6 +34,10 @@ def height_for_width(view, width, *, measure_wrapped, text_metrics=None):
     if not view.children:
         return baseline
 
+    if kind == "scroll":
+        # Scroll content may grow vertically without enlarging its viewport.
+        return baseline
+
     if kind == "row":
         widths = _allocate_linear(
             view.children, width, float(view.spacing), True,
