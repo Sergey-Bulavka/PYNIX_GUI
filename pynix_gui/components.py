@@ -239,7 +239,11 @@ def property_row(
         raise GUIError("PYNIX-GUI-014", "GUI property row label/value must be String.")
     _optional_text(detail, "GUI property row detail")
 
-    # Reserve native glyph overhang inside the property label column.\n    # The backend-independent text estimator is deliberately approximate;\n    # a local inset protects the complete label without changing other layouts.\n    left = [padding(text(label, "bodyStrong"), 6, 0)]\n    if detail:
+    # Reserve native glyph overhang inside the property label column.
+    # The backend-independent text estimator is deliberately approximate;
+    # a local inset protects the complete label without changing other layouts.
+    left = [padding(text(label, "bodyStrong"), 6, 0)]
+    if detail:
         left.append(text(detail, "caption"))
     return row([
         column(left, 2),
