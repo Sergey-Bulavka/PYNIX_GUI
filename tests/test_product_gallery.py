@@ -231,7 +231,14 @@ def test_overview_content_fits_narrow_viewport_without_horizontal_clipping():
     # preferred text width may force the scroll document wider than its frame.
     measured = measure(root)
     assert measured.minimum.width <= 690.0
-    geometry = layout(root, 690, 900)
+    from pynix_gui.wrap_engine import wrap_text
+    geometry = layout(
+        root, 690, 900,
+        wrap_measure=lambda role, value, width: wrap_text(
+            value, width, measure_width=lambda token: len(token) * 8,
+            line_height=22,
+        ),
+    )
     scroll_nodes = [node for node in _layout_walk(geometry)
                     if node.view.kind == "scroll"]
     assert scroll_nodes
