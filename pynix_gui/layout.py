@@ -758,6 +758,14 @@ def layout(view, width: float, height: float, *, split_positions=None, text_metr
         raise ValueError("GUI layout dimensions must be non-negative")
 
     split_positions = {} if split_positions is None else split_positions
+    if wrap_measure is not None:
+        def has_wrapped_text(node):
+            return (
+                node.kind == "text" and getattr(node, "overflow", None) == "wrap"
+            ) or any(has_wrapped_text(child) for child in node.children)
+        if not has_wrapped_text(view):
+            # Preserve the exact V2 algorithm for all existing windows.
+            wrap_measure = None
     return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
 
 
@@ -840,11 +848,22 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None, wrap_mea
 
     if kind == "scroll":
         child_constraints = measure(view.children[0], text_metrics=text_metrics)
+        content_width = max(rect.width, child_constraints.minimum.width, child_constraints.preferred.width)
+        content_height = max(rect.height, child_constraints.minimum.height, child_constraints.preferred.height)
+        if wrap_measure is not None:
+            from .height_for_width import height_for_width
+            content_height = max(
+                content_height,
+                height_for_width(
+                    view.children[0], max(content_width, 0.0001),
+                    measure_wrapped=wrap_measure, text_metrics=text_metrics,
+                ),
+            )
         child_rect = GUIRect(
             rect.x,
             rect.y,
-            max(rect.width, child_constraints.minimum.width, child_constraints.preferred.width),
-            max(rect.height, child_constraints.minimum.height, child_constraints.preferred.height),
+            content_width,
+            content_height,
         )
         child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
