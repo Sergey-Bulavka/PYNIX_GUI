@@ -1043,6 +1043,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             calculated = native_text_layout(
                 dialog.content, width - 40.0, content_height,
                 measure_text=self.text_metrics_snapshot,
+                wrap_measure=self.measure_wrapped_text,
             ).root
         else:
             calculated = layout(dialog.content, width - 40.0, content_height)
@@ -1284,6 +1285,30 @@ class MacOSGUIBackend(MacOSHostBackend):
             return method(size, weights.get(weight, weights["regular"]))
         return appkit.NSFont.systemFontOfSize_(size)
 
+    def measure_wrapped_text(self, role, value, width):
+        """AppKit-backed exact candidate widths for height-for-width planning."""
+        from ..wrap_engine import wrap_text
+
+        appkit = self._load_appkit()
+        font = self._font_for_role(appkit, role)
+        attributes = {appkit.NSFontAttributeName: font}
+
+        def measure_width(candidate):
+            return float(
+                appkit.NSString.stringWithString_(candidate)
+                .sizeWithAttributes_(attributes).width
+            )
+
+        line_height = float(
+            appkit.NSString.stringWithString_("Ag")
+            .sizeWithAttributes_(attributes).height
+        )
+        return wrap_text(
+            value, width,
+            measure_width=measure_width,
+            line_height=line_height,
+        )
+
     def text_metrics_snapshot(self, view):
         """Measure immutable GUI text leaves with AppKit on the GUI thread."""
         from ..text_metrics import snapshot_text_metrics
@@ -1466,6 +1491,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                 split_views[view.split_id] = native
         elif view.kind == "text":
             native = appkit.NSTextField.labelWithString_(view.text)
+            if view.overflow == "wrap":
+                cell = native.cell()
+                cell.setWraps_(True)
+                cell.setScrollable_(False)
+                cell.setLineBreakMode_(appkit.NSLineBreakByWordWrapping)
             if view.overflow in ("ellipsis", "clip"):
                 cell = native.cell()
                 cell.setWraps_(False)
@@ -2921,17 +2951,31 @@ class MacOSGUIBackend(MacOSHostBackend):
         width, height = self._content_extent(window)
         positions = self._gui_split_positions_by_window.setdefault(window, {})
         self._seed_split_positions(view, positions)
-        if self.platform_name == "darwin" and self._appkit_override is None:
-            from ..text_layout import native_text_layout
-            calculated = native_text_layout(
-                view, width, height,
-                measure_text=self.text_metrics_snapshot,
-                split_positions=positions,
-            ).root
-        else:
-            calculated = layout(
-                view, width, height, split_positions=positions,
-            )
+        try:
+            if self.platform_name == "darwin" and self._appkit_override is None:
+                from ..text_layout import native_text_layout
+                calculated = native_text_layout(
+                    view, width, height,
+                    measure_text=self.text_metrics_snapshot,
+                    wrap_measure=self.measure_wrapped_text,
+                    split_positions=positions,
+                ).root
+            else:
+                calculated = layout(
+                    view, width, height, split_positions=positions,
+                )
+        except ValueError as error:
+            # A window can temporarily be smaller than its content's strict
+            # intrinsic minimum while the user drags a resize handle. Keep
+            # the previous valid layout instead of aborting the native event
+            # loop. Recompute normally as soon as the window grows again.
+            if (
+                "available GUI rectangle" not in str(error)
+                and "available GUI extent" not in str(error)
+                and "available GUI grid extent" not in str(error)
+            ):
+                raise
+            return
 
         native_nodes = self._gui_native_nodes_by_window[window]
         tab_labels = self._gui_tab_labels_by_window.get(window, {})

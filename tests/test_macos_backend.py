@@ -164,3 +164,43 @@ def test_macos_backend_preserves_rich_editor_focus_across_rerender():
 
     assert previous == ("control", "source-editor", None)
     assert window.first_responder is new_editor
+
+
+def test_macos_resize_smaller_than_minimum_keeps_last_valid_geometry(monkeypatch):
+    from pynix_gui import text
+    backend = MacOSGUIBackend(platform_name="darwin", appkit=fake_host_appkit())
+    window = FakeWindow()
+    root = object()
+    backend._gui_views_by_window[window] = text("Long label")
+    backend._gui_native_roots_by_window[window] = root
+    backend._gui_split_views_by_window[window] = {}
+    backend._gui_split_positions_by_window[window] = {}
+    backend._gui_native_nodes_by_window[window] = {}
+    backend._gui_tab_labels_by_window[window] = {}
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (1.0, 1.0))
+    called = []
+    monkeypatch.setattr(MacOSGUIBackend, "_apply_layout", lambda *args, **kwargs: called.append("applied"))
+    backend._relayout(window)
+    assert called == []
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (500.0, 80.0))
+    backend._relayout(window)
+    assert called == ["applied"]
+
+
+def test_macos_resize_does_not_hide_unrelated_layout_errors(monkeypatch):
+    from pynix_gui import text
+    import pytest
+    import pynix_gui.backends.macos as macos_module
+
+    backend = MacOSGUIBackend(platform_name="darwin", appkit=fake_host_appkit())
+    window = FakeWindow()
+    backend._gui_views_by_window[window] = text("Label")
+    backend._gui_native_roots_by_window[window] = object()
+    backend._gui_split_views_by_window[window] = {}
+    backend._gui_split_positions_by_window[window] = {}
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (500.0, 80.0))
+    def fail(*args, **kwargs):
+        raise ValueError("invalid font configuration")
+    monkeypatch.setattr(macos_module, "layout", fail)
+    with pytest.raises(ValueError, match="invalid font"):
+        backend._relayout(window)

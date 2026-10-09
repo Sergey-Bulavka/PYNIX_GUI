@@ -44,7 +44,7 @@ def test_ellipsis_text_in_row_shrinks_without_pushing_neighbors_out():
 
 def test_invalid_overflow_is_rejected():
     with pytest.raises(GUIError, match="overflow"):
-        text("Label", overflow="wrap")
+        text("Label", overflow="marquee")
 
 
 def test_text_metrics_requests_do_not_change_with_overflow():

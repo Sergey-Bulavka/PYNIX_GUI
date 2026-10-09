@@ -279,6 +279,7 @@ class WindowsGUIBackend:
             max(1, window.centralWidget().width()),
             max(1, window.centralWidget().height()),
             measure_text=self.text_metrics_snapshot,
+            wrap_measure=self.measure_wrapped_text,
         ).root
         self._apply_geometry(calculated, nodes, None, ())
         root.show()
@@ -316,6 +317,20 @@ class WindowsGUIBackend:
         elif weight == "medium":
             font.setWeight(qt.QtGui.QFont.Medium)
         return font
+
+    def measure_wrapped_text(self, role, value, width):
+        """Qt-backed exact candidate widths for height-for-width planning."""
+        from ..wrap_engine import wrap_text
+
+        qt, _app = self._app()
+        metrics = qt.QtGui.QFontMetricsF(self._font(qt, role))
+        return wrap_text(
+            value, width,
+            measure_width=lambda candidate: float(
+                metrics.horizontalAdvance(candidate)
+            ),
+            line_height=float(metrics.lineSpacing()),
+        )
 
     def text_metrics_snapshot(self, view):
         """Measure text leaves using the active Qt font configuration."""
@@ -386,6 +401,8 @@ class WindowsGUIBackend:
             native = W.QLabel(view.text, parent)
             native.setFont(self._font(qt, view.role))
             native.setProperty("pynixTextRole", view.role)
+            if view.overflow == "wrap":
+                native.setWordWrap(True)
             if view.overflow == "ellipsis":
                 native.setProperty("pynixFullText", view.text)
                 native.setProperty("pynixElide", True)
@@ -1263,6 +1280,7 @@ class WindowsGUIBackend:
                 max(1, content.width()),
                 max(1, content.height()),
                 measure_text=self.text_metrics_snapshot,
+            wrap_measure=self.measure_wrapped_text,
             ).root
             self._apply_geometry(calculated, nodes, None, ())
         except Exception:
