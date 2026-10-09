@@ -44,6 +44,7 @@ class GUIView:
     selected: int | None = None
     target: str | None = None
     text: str | None = None
+    overflow: str = "natural"
     value: str | None = None
     placeholder: str | None = None
     items: tuple = ()
@@ -513,12 +514,14 @@ def collapsible(target: str, label: str, expanded: bool, content: GUIView) -> GU
     )
 
 
-def text(value: str, role="body") -> GUIView:
+def text(value: str, role="body", *, overflow="natural") -> GUIView:
     if type(value) is not str:
         raise GUIError("PYNIX-GUI-006", "GUI text value must be String.")
     if role not in _TEXT_ROLES:
         raise GUIError("PYNIX-GUI-006", "GUI text role is invalid.")
-    return GUIView("text", text=value, role=role)
+    if overflow not in ("natural", "ellipsis", "clip"):
+        raise GUIError("PYNIX-GUI-006", "GUI text overflow must be natural, ellipsis or clip.")
+    return GUIView("text", text=value, role=role, overflow=overflow)
 
 
 def button(target: str, label: str, role="secondary") -> GUIView:

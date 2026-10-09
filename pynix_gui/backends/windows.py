@@ -386,6 +386,12 @@ class WindowsGUIBackend:
             native = W.QLabel(view.text, parent)
             native.setFont(self._font(qt, view.role))
             native.setProperty("pynixTextRole", view.role)
+            if view.overflow == "ellipsis":
+                native.setProperty("pynixFullText", view.text)
+                native.setProperty("pynixElide", True)
+            elif view.overflow == "clip":
+                native.setProperty("pynixFullText", view.text)
+                native.setProperty("pynixClip", True)
         elif kind == "button":
             native = W.QPushButton(view.text, parent)
             native.setProperty("pynixRole", view.role)
@@ -751,6 +757,16 @@ class WindowsGUIBackend:
             max(0, int(round(rect.width))),
             max(0, int(round(rect.height))),
         )
+        if node.view.kind == "text" and node.view.overflow in ("ellipsis", "clip"):
+            full_text = node.view.text
+            if node.view.overflow == "ellipsis":
+                qt, _ = self._app()
+                full_text = native.fontMetrics().elidedText(
+                    full_text,
+                    qt.QtCore.Qt.TextElideMode.ElideRight,
+                    max(0, int(round(rect.width))),
+                )
+            native.setText(full_text)
         if node.view.kind == "collapsible":
             try:
                 for child_widget in native.children():
