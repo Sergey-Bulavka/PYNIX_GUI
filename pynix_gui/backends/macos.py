@@ -26,6 +26,7 @@ class _PythonGUIEventBridge:
 
     def windowDidResize_(self, notification):
         self._backend._relayout(self._window)
+        self._backend._queue_resize(self._window)
 
     def controlActivated_(self, sender):
         self._backend._queue_control_activation(self._window, sender)
@@ -261,6 +262,7 @@ def _objc_gui_event_bridge_type():
 
         def windowDidResize_(self, notification):
             self._backend._relayout(self._window)
+        self._backend._queue_resize(self._window)
 
         def controlActivated_(self, sender):
             self._backend._queue_control_activation(self._window, sender)
@@ -2940,6 +2942,15 @@ class MacOSGUIBackend(MacOSHostBackend):
 
         for child in view.children:
             self._seed_split_positions(child, positions)
+
+    def _queue_resize(self, window):
+        width, height = self._content_extent(window)
+        queue = self._event_queue(window)
+        # Ignore intermediate drag sizes: application state needs only the
+        # latest effective viewport, never a flood of stale rerenders.
+        if queue and queue[-1].kind == "RESIZE":
+            queue.pop()
+        queue.append(GUIEvent("RESIZE", width=float(width), height=float(height)))
 
     def _relayout(self, window):
         view = self._gui_views_by_window.get(window)
