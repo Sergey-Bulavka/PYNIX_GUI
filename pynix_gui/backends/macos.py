@@ -1139,7 +1139,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         if appkit is None:
             raise OSError("Cocoa GUI backend is unavailable.")
 
-        structured_focus = self._capture_structured_focus(window)
+        previous_focus = self._capture_focus(window)
         self._capture_split_positions(window)
 
         bridge = self._bridge_for_window(window)
@@ -1179,7 +1179,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         window.setContentView_(native_root)
         self._relayout(window)
         self._apply_control_state(window, view)
-        self._restore_structured_focus(window, view, structured_focus)
+        self._restore_focus(window, view, previous_focus)
         return None
 
     def _new_container(self, appkit):
@@ -2697,7 +2697,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             for child in children or ():
                 MacOSGUIBackend._set_enabled_recursive(child, enabled)
 
-    def _capture_structured_focus(self, window):
+    def _capture_focus(self, window):
         try:
             responder = window.firstResponder()
         except Exception:
@@ -2712,13 +2712,25 @@ class MacOSGUIBackend(MacOSHostBackend):
             return (kind, meta[1], meta[2])
         if kind == "treeDisclosure":
             return ("treeRow", meta[1], meta[2])
+        if kind in {"textField", "textArea", "richEditor"}:
+            return ("control", meta[1], None)
         return None
 
-    def _restore_structured_focus(self, window, view, previous):
+    def _restore_focus(self, window, view, previous):
         if previous is None:
             return
 
         previous_kind, target, _previous_item_id = previous
+        if previous_kind == "control":
+            control = self._gui_controls_by_window.get(window, {}).get(target)
+            if control is None:
+                return
+            try:
+                window.makeFirstResponder_(control)
+            except Exception:
+                pass
+            return
+
         desired_kind = "treeRow" if previous_kind == "treeRow" else "tableRow"
 
         structured_view = self._structured_view(
