@@ -161,7 +161,7 @@ def product_scene():
                 line_width=2,
                 hit_target="canvas-circle",
             ),
-            canvas_text(352, 218, "72%", role="title"),
+            canvas_text(320, 135, "72%", role="title", width=150, height=150, align="center", valign="center"),
             canvas_rect(
                 530,
                 160,
@@ -171,7 +171,7 @@ def product_scene():
                 stroke="success",
                 hit_target="canvas-status",
             ),
-            canvas_text(552, 181, "HEALTHY", role="label"),
+            canvas_text(530, 160, "HEALTHY", role="label", color="textOnAccent", width=160, height=28, align="center", valign="center"),
         ],
     )
 
