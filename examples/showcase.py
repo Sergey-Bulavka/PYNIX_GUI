@@ -1,46 +1,73 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""Cross-platform commercial showcase for PYNIX GUI."""
+"""PYNIX GUI Product Gallery — commercial showcase and capability browser."""
 
 from pynix_gui import (
     GUIRuntime,
+    alert,
+    badge,
     button,
+    button_group,
     canvas,
     canvas_ellipse,
     canvas_line,
     canvas_rect,
     canvas_scene,
     canvas_text,
+    card,
+    check_box,
     column,
-    dialog,
-    dialog_action,
-    dock_panel,
-    dock_placement,
-    dock_state,
-    dock_workspace,
+    combo_box,
+    empty_state,
     fill,
-    group,
+    form_row,
+    form_section,
+    grid,
+    hero,
+    max_size,
     menu,
     menu_bar,
     menu_item,
+    metric_card,
+    min_size,
+    navigation_item,
+    navigation_sidebar,
     padding,
+    progress_bar,
+    property_row,
+    radio_button,
     rich_editor,
     row,
+    scroll,
+    search_field,
+    section_header,
     shortcut,
-    status_bar,
+    slider,
     table,
     table_column,
     table_row,
     text,
+    text_area,
+    text_field,
     text_span,
     theme,
-    toolbar,
     tree,
     tree_node,
 )
+from pynix_gui import dialog, dialog_action
 from pynix_gui.backends import default_backend
 
+
+NAVIGATION = (
+    ("overview", "Overview"),
+    ("controls", "Controls"),
+    ("data", "Data"),
+    ("editor", "Rich Editor"),
+    ("canvas", "Canvas 2D"),
+    ("forms", "Forms"),
+    ("examples", "App Example"),
+)
 
 TREE = [
     tree_node(
@@ -48,169 +75,516 @@ TREE = [
         "src",
         [
             tree_node("main", "main.pnx"),
-            tree_node("ui", "ui", [tree_node("app", "app.pnx")]),
+            tree_node(
+                "ui",
+                "ui",
+                [
+                    tree_node("gallery", "gallery.pnx"),
+                    tree_node("components", "components.pnx"),
+                ],
+            ),
         ],
     ),
+    tree_node("assets", "assets"),
     tree_node("tests", "tests"),
 ]
 
 COLUMNS = [
-    # Keep the inspector comfortably readable without taking visual priority
-    # away from the central editor workspace.
-    table_column("name", "Name", 190),
-    table_column("type", "Type", 100),
-    table_column("state", "State", 100),
+    table_column("name", "Component", 220),
+    table_column("category", "Category", 150),
+    table_column("state", "State", 120),
 ]
 
 ROWS = [
-    table_row("main", ["main.pnx", "PYNIX", "Modified"]),
-    table_row("app", ["app.pnx", "PYNIX", "Clean"]),
-    table_row("readme", ["README.md", "Markdown", "Clean"]),
+    table_row("editor", ["Rich Editor", "Advanced", "Accepted"]),
+    table_row("canvas", ["Canvas 2D", "Advanced", "Accepted"]),
+    table_row("tree", ["Tree", "Data", "Accepted"]),
+    table_row("table", ["Table", "Data", "Accepted"]),
+    table_row("dialog", ["Dialog", "Commands", "Accepted"]),
 ]
 
-SOURCE = """fn main() {
-    let app = GUI.open("PYNIX")
-    app.render(build())
-}
+SOURCE = """function buildDashboard()
+    return GUI.column([
+        GUI.heading("Workspace"),
+        GUI.card("Traffic", chart),
+        GUI.table("sessions", columns, rows)
+    ])
 """
 
 
 def source_spans(value):
-    result = []
+    spans = []
     for token, role in (
-        ("fn", "keyword"),
-        ("main", "function"),
-        ("let", "keyword"),
+        ("function", "keyword"),
+        ("return", "keyword"),
         ("GUI", "type"),
-        ('"PYNIX"', "string"),
+        ('"Workspace"', "string"),
+        ('"Traffic"', "string"),
+        ('"sessions"', "string"),
     ):
         start = value.find(token)
         if start >= 0:
-            result.append(text_span(start, start + len(token), role))
-    return result
+            spans.append(text_span(start, start + len(token), role))
+    return spans
 
 
-def scene():
+def product_scene():
     return canvas_scene(
-        520,
-        260,
+        760,
+        360,
         [
-            canvas_rect(10, 10, 500, 240, fill="surface", stroke="borderStrong"),
-            canvas_text(30, 45, "PYNIX GUI", role="titleLarge"),
-            canvas_line(30, 70, 490, 70, stroke="separator"),
+            canvas_rect(12, 12, 736, 336, fill="surface", stroke="borderStrong"),
+            canvas_text(42, 50, "Realtime workspace", role="titleLarge"),
+            canvas_text(42, 82, "Retained Canvas 2D + semantic hit targets", role="body"),
+            canvas_line(42, 104, 710, 104, stroke="separator"),
             canvas_rect(
-                35, 105, 160, 90,
+                42,
+                135,
+                210,
+                150,
                 fill="surfaceSelected",
                 stroke="accent",
-                hit_target="showcase-card",
+                hit_target="canvas-card",
             ),
-            canvas_text(58, 155, "Interactive", role="titleSmall"),
+            canvas_text(68, 176, "24.8k", role="titleLarge"),
+            canvas_text(68, 208, "active sessions", role="body"),
             canvas_ellipse(
-                250, 105, 90, 90,
+                320,
+                135,
+                150,
+                150,
                 fill="accentMuted",
                 stroke="accent",
-                hit_target="showcase-circle",
+                line_width=2,
+                hit_target="canvas-circle",
             ),
+            canvas_text(352, 218, "72%", role="title"),
+            canvas_rect(
+                530,
+                160,
+                160,
+                28,
+                fill="success",
+                stroke="success",
+                hit_target="canvas-status",
+            ),
+            canvas_text(552, 181, "HEALTHY", role="label"),
         ],
     )
 
 
-def make_dock_state():
-    return dock_state(
-        [
-            dock_placement("project", "left"),
-            dock_placement("editor", "center"),
-            dock_placement("inspector", "right"),
-            dock_placement("output", "bottom"),
-        ],
-        active_left="project",
-        active_center="editor",
-        active_right="inspector",
-        active_bottom="output",
-        left_width=230,
-        right_width=404,
-        # Keep the preview large enough to read as a first-class workspace
-        # surface rather than a compressed output strip.
-        bottom_height=300,
-    )
-
-
-def build(source, selection_start, selection_end, tree_selected, table_selected):
-    project = dock_panel(
-        "project",
-        "Project",
-        group(
-            tree(
-                "project-tree",
-                TREE,
-                expanded_ids=["src", "ui"],
-                selected_id=tree_selected,
-            ),
-            "section",
+def overview_page():
+    metrics = [
+        metric_card(
+            "Core surfaces",
+            "30+",
+            "Composable semantic building blocks",
+            badge("Stable", "success"),
         ),
-    )
-
-    editor = dock_panel(
-        "editor",
-        "Editor",
-        rich_editor(
-            "source-editor",
-            source,
-            selection_start,
-            selection_end,
-            source_spans(source),
+        metric_card(
+            "Advanced systems",
+            "5",
+            "Tree/Table · Dock · Canvas · Editor",
+            badge("Native", "accent"),
         ),
-        closable=False,
-    )
-
-    inspector = dock_panel(
-        "inspector",
-        "Inspector",
-        group(
-            table(
-                "file-table",
-                COLUMNS,
-                ROWS,
-                selected_id=table_selected,
-            ),
-            "section",
+        metric_card(
+            "Supported themes",
+            "3",
+            "System · Light · Dark",
+            badge("Ready", "info"),
         ),
-    )
+    ]
 
-    output = dock_panel(
-        "output",
-        "Output",
-        group(
+    capability_cards = [
+        card(
+            "Desktop foundation",
             column([
-                text("Canvas preview", "titleSmall"),
-                canvas("preview", scene()),
-            ], 8),
-            "section",
+                property_row("Layout", "Row · Column · Grid · Stack"),
+                property_row("Surfaces", "Cards · Panels · Scroll · Split"),
+                property_row("Commands", "Menus · Dialogs · Shortcuts"),
+            ], 10),
+            "Predictable geometry and native lifecycle.",
         ),
+        card(
+            "Advanced workspace",
+            column([
+                property_row("Data", "Tree · Table"),
+                property_row("Content", "Rich Editor · Canvas 2D"),
+                property_row("Interaction", "Drag · Drop · Docking"),
+            ], 10),
+            "The pieces needed for serious desktop software.",
+        ),
+    ]
+
+    return column([
+        hero(
+            "Build polished desktop software with less ceremony.",
+            "PYNIX GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
+            [
+                button("open-dialog", "Explore PYNIX GUI", "primary"),
+                button("nav-examples", "See app example"),
+            ],
+        ),
+        grid(3, metrics, 16, 16),
+        section_header(
+            "What you can build",
+            "The Gallery exposes the product as a toolkit, not as an engineering test fixture.",
+            badge("Commercial Product Pass", "accent"),
+        ),
+        grid(2, capability_cards, 16, 16),
+        alert(
+            "Complex inside. Simple outside.",
+            "Application code works with semantic PYNIX values while AppKit and Qt remain private implementation details.",
+            "info",
+        ),
+    ], 20)
+
+
+def controls_page(state):
+    return column([
+        section_header(
+            "Controls",
+            "Production controls with semantic states and commercial defaults.",
+            badge("Interactive", "success"),
+        ),
+        grid(2, [
+            card(
+                "Buttons",
+                column([
+                    button_group([
+                        button("primary-action", "Primary", "primary"),
+                        button("secondary-action", "Secondary"),
+                        button("quiet-action", "Quiet", "quiet"),
+                        button("danger-action", "Danger", "danger"),
+                    ]),
+                    text("Primary, secondary, quiet and destructive intent.", "caption"),
+                ], 10),
+                "Intent is semantic; native backend styling stays internal.",
+            ),
+            card(
+                "Input",
+                column([
+                    search_field("gallery-search", state["search"], "Search components"),
+                    text_field("display-name", state["name"], "Display name"),
+                    text_area("notes", state["notes"]),
+                ], 10),
+                "Controlled text inputs and multiline editing.",
+            ),
+            card(
+                "Selection",
+                column([
+                    check_box("telemetry", "Enable telemetry", state["checked"]),
+                    radio_button("channel-stable", "Stable channel", True),
+                    combo_box("appearance", ["System", "Light", "Dark"], state["appearance"]),
+                ], 10),
+                "Check, radio and selection controls normalize events.",
+            ),
+            card(
+                "Range & status",
+                column([
+                    text("Workspace scale", "label"),
+                    slider("scale", state["scale"], 0, 100),
+                    progress_bar(state["scale"], 0, 100),
+                    row([
+                        badge("Healthy", "success"),
+                        badge("Preview", "warning"),
+                        badge("Offline", "danger"),
+                        badge("Info", "info"),
+                    ], 8),
+                ], 10),
+                "Range controls pair naturally with semantic status components.",
+            ),
+        ], 16, 16),
+        alert(
+            "Focus is preserved across controlled rerenders.",
+            "Rich text and ordinary text controls keep interaction continuity when application state updates.",
+            "success",
+        ),
+    ], 18)
+
+
+def data_page(state):
+    return column([
+        section_header(
+            "Data views",
+            "Stable identities, selection and keyboard behavior for structured information.",
+            badge("ADV-02", "accent"),
+        ),
+        row([
+            fill(card(
+                "Project Tree",
+                min_size(
+                    tree(
+                        "gallery-tree",
+                        TREE,
+                        expanded_ids=["src", "ui"],
+                        selected_id=state["tree_selected"],
+                    ),
+                    300,
+                    360,
+                ),
+                "Hierarchical navigation with controlled expansion.",
+            )),
+            fill(card(
+                "Component Table",
+                min_size(
+                    table(
+                        "gallery-table",
+                        COLUMNS,
+                        ROWS,
+                        selected_id=state["table_selected"],
+                    ),
+                    520,
+                    360,
+                ),
+                "Explicit columns remain readable and selectable.",
+            )),
+        ], 16),
+        card(
+            "Selected state",
+            row([
+                badge("Tree: " + str(state["tree_selected"]), "neutral"),
+                badge("Table: " + str(state["table_selected"]), "neutral"),
+            ], 8),
+            "Selection is application state, not an opaque native object.",
+        ),
+    ], 18)
+
+
+def editor_page(state):
+    return column([
+        section_header(
+            "Rich Editor",
+            "Controlled source text with semantic spans and native editing behavior.",
+            badge("ADV-05", "accent"),
+        ),
+        row([
+            fill(card(
+                "Source",
+                min_size(
+                    rich_editor(
+                        "gallery-editor",
+                        state["source"],
+                        state["selection_start"],
+                        state["selection_end"],
+                        source_spans(state["source"]),
+                    ),
+                    620,
+                    480,
+                ),
+                "Continuous typing, Backspace, native selection and scrolling.",
+            )),
+            max_size(
+                card(
+                    "Editor contract",
+                    column([
+                        property_row("Text", "Controlled"),
+                        property_row("Selection", "Controlled"),
+                        property_row("Styling", "Semantic spans"),
+                        property_row("Undo", "Native"),
+                        property_row("Find", "Native"),
+                        alert(
+                            "Focus preserved",
+                            "Controlled rerender keeps the active caret.",
+                            "success",
+                        ),
+                    ], 12),
+                    "No native NSTextView or QPlainTextEdit leaks into application code.",
+                ),
+                360,
+                900,
+            ),
+        ], 16),
+    ], 18)
+
+
+def canvas_page():
+    return column([
+        section_header(
+            "Canvas 2D",
+            "Retained drawing commands, transforms and semantic hit testing.",
+            badge("ADV-04", "accent"),
+        ),
+        card(
+            "Interactive retained scene",
+            min_size(canvas("gallery-canvas", product_scene()), 760, 420),
+            "Click the metric card, circle or health bar. Events return semantic targets rather than coordinates.",
+        ),
+        row([
+            badge("Paths", "neutral"),
+            badge("Text", "neutral"),
+            badge("Images", "neutral"),
+            badge("Clip", "neutral"),
+            badge("Transform", "neutral"),
+            badge("Hit targets", "success"),
+        ], 8),
+    ], 18)
+
+
+def forms_page(state):
+    return column([
+        section_header(
+            "Forms & settings",
+            "High-level composition for application settings and account flows.",
+            badge("Composition", "accent"),
+        ),
+        row([
+            fill(form_section(
+                "Profile",
+                [
+                    form_row(
+                        "Display name",
+                        text_field("profile-name", state["name"], "Your name"),
+                        "Shown in collaborative workspaces.",
+                    ),
+                    form_row(
+                        "Appearance",
+                        combo_box("profile-theme", ["System", "Light", "Dark"], state["appearance"]),
+                        "System follows the host operating system.",
+                    ),
+                    form_row(
+                        "Search",
+                        search_field("profile-search", state["search"], "Filter preferences"),
+                    ),
+                ],
+                "A complete semantic form without platform-specific layout code.",
+            )),
+            max_size(
+                card(
+                    "Workspace",
+                    column([
+                        property_row("Autosave", "Enabled", "Every 30 seconds"),
+                        property_row("Cloud sync", "Connected"),
+                        property_row("Channel", "Stable"),
+                        alert(
+                            "All changes saved",
+                            "Settings are synchronized with the current workspace.",
+                            "success",
+                        ),
+                    ], 12),
+                    "Dense property presentation for inspectors and settings.",
+                ),
+                420,
+                900,
+            ),
+        ], 16),
+        empty_state(
+            "No additional integrations",
+            "Connected services and plugin surfaces can appear here when available.",
+            button("open-dialog", "Learn more", "primary"),
+        ),
+    ], 18)
+
+
+def examples_page():
+    project_rows = [
+        table_row("alpha", ["Alpha Workspace", "Dashboard", "Healthy"]),
+        table_row("beta", ["Beta Console", "Operations", "Healthy"]),
+        table_row("gamma", ["Gamma Studio", "Creative", "Preview"]),
+    ]
+    return column([
+        section_header(
+            "Application example",
+            "A realistic operations dashboard assembled entirely from PYNIX GUI primitives and commercial components.",
+            badge("Reference UI", "success"),
+        ),
+        hero(
+            "Operations Console",
+            "Monitor workspaces, inspect health and act on the same semantic event model used by every other PYNIX GUI application.",
+            [
+                button("new-workspace", "New workspace", "primary"),
+                button("open-dialog", "Share"),
+            ],
+        ),
+        grid(3, [
+            metric_card("Active users", "24.8k", "+12.4% this month", badge("+12.4%", "success")),
+            metric_card("Latency", "38 ms", "Global median", badge("Good", "success")),
+            metric_card("Incidents", "2", "One requires review", badge("Review", "warning")),
+        ], 16, 16),
+        row([
+            fill(card(
+                "Workspace activity",
+                min_size(canvas("example-canvas", product_scene()), 620, 300),
+                "A Canvas module can live beside ordinary controls and data views.",
+            )),
+            max_size(card(
+                "Environment",
+                column([
+                    property_row("Region", "EU Central"),
+                    property_row("Runtime", "PYNIX 1.x"),
+                    property_row("GUI", "0.1.6-dev"),
+                    alert("Healthy", "All core services are operational.", "success"),
+                ], 12),
+                "Inspector-style application surface.",
+            ), 360, 900),
+        ], 16),
+        card(
+            "Projects",
+            min_size(
+                table(
+                    "example-table",
+                    [
+                        table_column("project", "Project", 260),
+                        table_column("kind", "Type", 180),
+                        table_column("health", "Health", 140),
+                    ],
+                    project_rows,
+                    selected_id="alpha",
+                ),
+                620,
+                220,
+            ),
+            "Tables belong inside finished application layouts, not isolated demos.",
+        ),
+    ], 18)
+
+
+def page_view(page, state):
+    if page == "controls":
+        return controls_page(state)
+    if page == "data":
+        return data_page(state)
+    if page == "editor":
+        return editor_page(state)
+    if page == "canvas":
+        return canvas_page()
+    if page == "forms":
+        return forms_page(state)
+    if page == "examples":
+        return examples_page()
+    return overview_page()
+
+
+def build(page, state):
+    sidebar = navigation_sidebar(
+        "PYNIX GUI",
+        [
+            navigation_item("nav-" + key, label, page == key)
+            for key, label in NAVIGATION
+        ],
+        footer=column([
+            badge("0.1.6-dev", "accent"),
+            text("Commercial Product Pass", "caption"),
+        ], 6),
     )
 
-    workspace = dock_workspace(
-        "showcase-workspace",
-        [project, editor, inspector, output],
-        make_dock_state(),
+    content = scroll(
+        padding(
+            column([
+                page_view(page, state),
+                fill(empty_state(
+                    "Explore the Gallery",
+                    "Use the navigation to inspect controls, data, editor, Canvas, forms and a full application example.",
+                )) if False else text("PYNIX Standard · semantic by default", "caption"),
+            ], 16),
+            24,
+        )
     )
 
     return theme(
-        column([
-            toolbar(
-                row([
-                    button("new", "New", "primary"),
-                    button("open-dialog", "Dialog"),
-                    text("PYNIX Standard", "label"),
-                ], 8)
-            ),
-            fill(padding(workspace, 12)),
-            status_bar(
-                row([
-                    text("PYNIX GUI 0.1.x", "caption"),
-                    text("Ready", "caption"),
-                ], 12)
-            ),
+        row([
+            max_size(min_size(sidebar, 230, 560), 270, 2000),
+            fill(content),
         ], 0),
         "system",
     )
@@ -225,38 +599,44 @@ def main():
     if not runtime.is_available():
         raise SystemExit("PYNIX GUI backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI Showcase", 1280, 820)
+    window = runtime.open("PYNIX GUI — Product Gallery", 1440, 900)
     window.set_menu_bar(
         menu_bar([
             menu(
                 "File",
                 [
-                    menu_item("new", "New", shortcut("n", ["primary"])),
-                    menu_item(
-                        "open-dialog",
-                        "Show Dialog",
-                        shortcut("d", ["primary"]),
-                    ),
+                    menu_item("nav-overview", "Overview", shortcut("1", ["primary"])),
+                    menu_item("open-dialog", "About PYNIX GUI", shortcut("d", ["primary"])),
                 ],
-            )
+            ),
+            menu(
+                "View",
+                [
+                    menu_item("nav-controls", "Controls"),
+                    menu_item("nav-data", "Data"),
+                    menu_item("nav-editor", "Rich Editor"),
+                    menu_item("nav-canvas", "Canvas 2D"),
+                ],
+            ),
         ])
     )
 
-    source = SOURCE
-    selection_start = 0
-    selection_end = 0
-    tree_selected = "main"
-    table_selected = "main"
+    state = {
+        "search": "",
+        "name": "PYNIX Developer",
+        "notes": "Commercial defaults, semantic API, native backend.",
+        "checked": True,
+        "appearance": 0,
+        "scale": 72.0,
+        "tree_selected": "main",
+        "table_selected": "editor",
+        "source": SOURCE,
+        "selection_start": 0,
+        "selection_end": 0,
+    }
+    page = "overview"
 
-    window.render(
-        build(
-            source,
-            selection_start,
-            selection_end,
-            tree_selected,
-            table_selected,
-        )
-    )
+    window.render(build(page, state))
 
     while True:
         event = window.next_event()
@@ -265,16 +645,23 @@ def main():
         if event.kind == "CLOSE":
             break
 
-        if event.kind == "ACTIVATE" and event.target == "open-dialog":
+        if event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
+            page = event.target[4:]
+        elif event.kind == "ACTIVATE" and event.target == "open-dialog":
             window.present_dialog(
                 dialog(
-                    "showcase-dialog",
+                    "about-gallery",
                     "PYNIX GUI",
                     column([
-                        text("Commercial desktop GUI toolkit", "title"),
+                        text("Commercial desktop UI with a compact semantic API.", "title"),
                         text(
-                            "The dialog uses the same semantic GUI model.",
+                            "The Product Gallery is built from the same public components available to applications.",
                             "body",
+                        ),
+                        alert(
+                            "Native where it matters",
+                            "AppKit and Qt stay behind the PYNIX GUI boundary.",
+                            "info",
                         ),
                     ], 12),
                     [
@@ -288,47 +675,46 @@ def main():
                 )
             )
             continue
-
-        if event.kind == "CHANGE" and event.target == "source-editor":
-            source = event.text
-            selection_start = min(selection_start, len(source))
-            selection_end = min(selection_end, len(source))
-        elif event.kind == "EDITOR_SELECTION" and event.target == "source-editor":
-            selection_start = event.selection_start
-            selection_end = event.selection_end
+        elif event.kind == "CHANGE" and event.target == "gallery-search":
+            state["search"] = event.text
+        elif event.kind == "CHANGE" and event.target in {"display-name", "profile-name"}:
+            state["name"] = event.text
+        elif event.kind == "CHANGE" and event.target == "notes":
+            state["notes"] = event.text
+        elif event.kind == "CHANGE" and event.target == "telemetry":
+            state["checked"] = event.checked
+        elif event.kind == "CHANGE" and event.target == "scale":
+            state["scale"] = event.number
+        elif event.kind == "SELECTION" and event.target in {"appearance", "profile-theme"}:
+            state["appearance"] = event.index
+        elif event.kind == "SELECTION" and event.target == "gallery-tree":
+            state["tree_selected"] = event.item_id
+        elif event.kind == "SELECTION" and event.target == "gallery-table":
+            state["table_selected"] = event.item_id
+        elif event.kind == "CHANGE" and event.target == "gallery-editor":
+            state["source"] = event.text
+            state["selection_start"] = min(state["selection_start"], len(event.text))
+            state["selection_end"] = min(state["selection_end"], len(event.text))
+        elif event.kind == "EDITOR_SELECTION" and event.target == "gallery-editor":
+            state["selection_start"] = event.selection_start
+            state["selection_end"] = event.selection_end
             continue
-        elif event.kind == "SELECTION" and event.target == "project-tree":
-            tree_selected = event.item_id
-        elif event.kind == "SELECTION" and event.target == "file-table":
-            table_selected = event.item_id
         elif event.kind == "EXPANSION":
-            # The showcase keeps its initial expanded set fixed; dedicated ADV-02 smoke
-            # verifies controlled expansion behavior.
             continue
         elif event.kind == "ACTIVATE" and event.target in {
-            "showcase-card",
-            "showcase-circle",
+            "canvas-card",
+            "canvas-circle",
+            "canvas-status",
         }:
             print("canvas activation:", event.target)
             continue
         elif event.kind == "ACTIVATE" and event.target == "dialog-ok":
             continue
-        elif event.kind == "ACTIVATE" and event.target == "new":
-            source = SOURCE
-            selection_start = selection_end = 0
 
-        window.render(
-            build(
-                source,
-                selection_start,
-                selection_end,
-                tree_selected,
-                table_selected,
-            )
-        )
+        window.render(build(page, state))
 
     window.close()
-    print("PYNIX GUI cross-platform showcase: PASS")
+    print("PYNIX GUI Product Gallery: PASS")
 
 
 if __name__ == "__main__":
