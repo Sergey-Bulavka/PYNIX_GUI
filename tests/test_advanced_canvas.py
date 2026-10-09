@@ -228,3 +228,35 @@ def test_adv04_canvas_uniform_viewport_keeps_circle_geometry_circular():
 
     assert 100 * scale == 100 * scale
     assert scale == 2.5
+
+
+def test_adv04_canvas_bounded_text_alignment_is_retained():
+    command = canvas_text(
+        530, 160, "HEALTHY", role="label",
+        width=160, height=28, align="center", valign="center",
+    )
+    assert command.values == (530, 160, "HEALTHY", 160, 28)
+    assert command.text_align == "center"
+    assert command.text_valign == "center"
+
+
+def test_adv04_canvas_unbounded_text_keeps_existing_wire_format():
+    command = canvas_text(42, 50, "Title", role="title")
+    assert command.values == (42, 50, "Title")
+    assert command.text_align == "start"
+    assert command.text_valign == "top"
+
+
+@pytest.mark.parametrize("kwargs", [
+    {"width": 160},
+    {"height": 28},
+    {"width": 0, "height": 28},
+    {"width": 160, "height": 28, "align": "diagonal"},
+    {"width": 160, "height": 28, "valign": "baseline"},
+    {"align": "center"},
+    {"valign": "center"},
+])
+def test_adv04_canvas_text_rejects_invalid_alignment_bounds(kwargs):
+    with pytest.raises(GUIError) as failure:
+        canvas_text(0, 0, "Label", **kwargs)
+    assert failure.value.code == "PYNIX-GUI-011"
