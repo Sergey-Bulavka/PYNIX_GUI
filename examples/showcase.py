@@ -225,7 +225,7 @@ def overview_page():
             "PYNIX GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
             [
                 button("open-dialog", "Explore PYNIX GUI", "primary"),
-                button("nav-dashboard", "See app examples"),
+                button("show-dashboard", "See app examples"),
             ],
         ),
         grid(3, metrics, 16, 16),
@@ -837,6 +837,8 @@ def main():
 
         if event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
             page = event.target[4:]
+        elif event.kind == "ACTIVATE" and event.target == "show-dashboard":
+            page = "dashboard"
         elif event.kind == "ACTIVATE" and event.target == "open-dialog":
             window.present_dialog(
                 dialog(
