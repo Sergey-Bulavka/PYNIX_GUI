@@ -61,6 +61,13 @@ class FakeWindow:
     def setContentView_(self, value):
         self.content_views.append(value)
 
+    def firstResponder(self):
+        return getattr(self, "first_responder", None)
+
+    def makeFirstResponder_(self, value):
+        self.first_responder = value
+        return True
+
 
 class FakeWindowAllocator:
     def initWithContentRect_styleMask_backing_defer_(self, rect, style, backing, defer):
@@ -129,3 +136,31 @@ def test_macos_backend_module_has_no_compiler_or_desktop_dependency():
     assert MacOSGUIBackend.__module__ == "pynix_gui.backends.macos"
     assert all("compiler" not in cls.__module__ for cls in MacOSGUIBackend.__mro__)
     assert all("desktop" not in cls.__module__ for cls in MacOSGUIBackend.__mro__)
+
+
+def test_macos_backend_preserves_rich_editor_focus_across_rerender():
+    backend = MacOSGUIBackend(platform_name="darwin", appkit=fake_host_appkit())
+    window = FakeWindow()
+    old_editor = object()
+    new_editor = object()
+
+    backend._gui_control_meta_by_window[window] = {
+        old_editor: ("richEditor", "source-editor"),
+    }
+    backend._gui_controls_by_window[window] = {
+        "source-editor": old_editor,
+    }
+    window.first_responder = old_editor
+
+    previous = backend._capture_focus(window)
+
+    backend._gui_controls_by_window[window] = {
+        "source-editor": new_editor,
+    }
+    backend._gui_control_meta_by_window[window] = {
+        new_editor: ("richEditor", "source-editor"),
+    }
+    backend._restore_focus(window, None, previous)
+
+    assert previous == ("control", "source-editor", None)
+    assert window.first_responder is new_editor
