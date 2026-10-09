@@ -917,16 +917,27 @@ def main():
                 "File",
                 [
                     menu_item("nav-overview", "Overview", shortcut("1", ["primary"])),
+                    menu_item("nav-start", "Start Here", shortcut("2", ["primary"])),
                     menu_item("open-dialog", "About PYNIX GUI", shortcut("d", ["primary"])),
                 ],
             ),
             menu(
-                "View",
+                "Explore",
                 [
                     menu_item("nav-controls", "Controls"),
-                    menu_item("nav-data", "Data"),
+                    menu_item("nav-data", "Data Views"),
                     menu_item("nav-editor", "Rich Editor"),
                     menu_item("nav-canvas", "Canvas 2D"),
+                    menu_item("nav-forms", "Forms"),
+                ],
+            ),
+            menu(
+                "Applications",
+                [
+                    menu_item("nav-dashboard", "Dashboard"),
+                    menu_item("nav-ide", "IDE"),
+                    menu_item("nav-settings", "Settings"),
+                    menu_item("nav-files", "File Manager"),
                 ],
             ),
         ])
