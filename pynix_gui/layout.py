@@ -584,14 +584,17 @@ def _allocate_tracks(minimums, preferreds, available: float, spacing: float):
     return sizes
 
 
-def _allocate_linear(children, available: float, spacing: float, horizontal: bool, *, text_metrics=None):
+def _allocate_linear(children, available: float, spacing: float, horizontal: bool, *, text_metrics=None, minimum_overrides=None):
     measured = [measure(child, text_metrics=text_metrics) for child in children]
     minimums = []
     preferreds = []
     maximums = []
 
-    for item in measured:
+    for index, item in enumerate(measured):
         minimum, preferred, maximum = _axis_values(item, horizontal)
+        if minimum_overrides is not None:
+            minimum = max(minimum, float(minimum_overrides[index]))
+            preferred = max(preferred, minimum)
         minimums.append(minimum)
         preferreds.append(preferred)
         maximums.append(maximum)
@@ -749,16 +752,16 @@ def _aligned_rect(view, rect: GUIRect, constraints: GUIConstraints) -> GUIRect:
     return GUIRect(x, y, width, height)
 
 
-def layout(view, width: float, height: float, *, split_positions=None, text_metrics=None) -> GUILayoutNode:
+def layout(view, width: float, height: float, *, split_positions=None, text_metrics=None, wrap_measure=None) -> GUILayoutNode:
     """Calculate deterministic logical rectangles for one GUIView tree."""
     if width < 0 or height < 0:
         raise ValueError("GUI layout dimensions must be non-negative")
 
     split_positions = {} if split_positions is None else split_positions
-    return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions, text_metrics=text_metrics)
+    return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
 
 
-def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILayoutNode:
+def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None, wrap_measure=None) -> GUILayoutNode:
     constraints = measure(view, text_metrics=text_metrics)
 
     if (
@@ -768,6 +771,14 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
         raise ValueError("available GUI rectangle violates minimum constraints")
 
     kind = view.kind
+    if wrap_measure is not None and kind != "scroll":
+        from .height_for_width import height_for_width
+        required_height = height_for_width(
+            view, max(rect.width, 0.0001),
+            measure_wrapped=wrap_measure, text_metrics=text_metrics,
+        )
+        if rect.height + 1e-9 < required_height:
+            raise ValueError("available GUI rectangle violates wrapped text height")
 
     if kind in {
         "empty",
@@ -797,7 +808,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
         "fill", "minSize", "preferredSize", "enabled", "focused", "theme",
         "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
     }:
-        child = _layout(view.children[0], rect, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "collapsible":
@@ -813,7 +824,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
                 rect.height - COLLAPSIBLE_HEADER_HEIGHT - COLLAPSIBLE_CONTENT_GAP,
             ),
         )
-        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "maxSize":
@@ -824,7 +835,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             min(rect.width, float(view.width), child_constraints.maximum.width),
             min(rect.height, float(view.height), child_constraints.maximum.height),
         )
-        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "scroll":
@@ -835,7 +846,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             max(rect.width, child_constraints.minimum.width, child_constraints.preferred.width),
             max(rect.height, child_constraints.minimum.height, child_constraints.preferred.height),
         )
-        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "dockWorkspace":
@@ -946,7 +957,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
                     region_rects[region],
                     split_positions,
                     text_metrics=text_metrics,
-        )
+        , wrap_measure=wrap_measure)
             )
 
         return GUILayoutNode(view, rect, tuple(nodes))
@@ -954,7 +965,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
     if kind == "align":
         child_constraints = measure(view.children[0], text_metrics=text_metrics)
         child_rect = _aligned_rect(view, rect, child_constraints)
-        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "padding":
@@ -964,7 +975,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             max(0.0, rect.width - view.horizontal * 2.0),
             max(0.0, rect.height - view.vertical * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind in {"panel", "group"}:
@@ -979,7 +990,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             max(0.0, rect.width - inset * 2.0),
             max(0.0, rect.height - inset * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind in {"toolbar", "statusBar"}:
@@ -989,7 +1000,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             max(0.0, rect.width - BAR_PADDING_X * 2.0),
             max(0.0, rect.height - BAR_PADDING_Y * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "tabs":
@@ -1000,7 +1011,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             max(0.0, rect.height - TAB_STRIP_HEIGHT),
         )
         nodes = tuple(
-            _layout(child, page_rect, split_positions, text_metrics=text_metrics)
+            _layout(child, page_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure)
             for child in view.children
         )
         return GUILayoutNode(view, rect, nodes)
@@ -1008,12 +1019,23 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
     if kind in {"row", "column"}:
         horizontal = kind == "row"
         available = rect.width if horizontal else rect.height
+        minimum_overrides = None
+        if not horizontal and wrap_measure is not None:
+            from .height_for_width import height_for_width
+            minimum_overrides = [
+                height_for_width(
+                    child, max(rect.width, 0.0001),
+                    measure_wrapped=wrap_measure, text_metrics=text_metrics,
+                )
+                for child in view.children
+            ]
         sizes = _allocate_linear(
             view.children,
             available,
             float(view.spacing),
             horizontal,
             text_metrics=text_metrics,
+            minimum_overrides=minimum_overrides,
         )
         cursor = rect.x if horizontal else rect.y
         nodes = []
@@ -1025,7 +1047,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             else:
                 child_rect = GUIRect(rect.x, cursor, rect.width, size)
                 cursor += size + view.spacing
-            nodes.append(_layout(child_view, child_rect, split_positions, text_metrics=text_metrics))
+            nodes.append(_layout(child_view, child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure))
 
         return GUILayoutNode(view, rect, tuple(nodes))
 
@@ -1033,7 +1055,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
         return GUILayoutNode(
             view,
             rect,
-            tuple(_layout(child, rect, split_positions, text_metrics=text_metrics) for child in view.children),
+            tuple(_layout(child, rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure) for child in view.children),
         )
 
     if kind == "grid":
@@ -1064,6 +1086,15 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             rect.width,
             float(view.column_spacing),
         )
+        if wrap_measure is not None:
+            from .height_for_width import height_for_width
+            for index, child in enumerate(view.children):
+                needed = height_for_width(
+                    child, max(0.0001, column_widths[index % columns]),
+                    measure_wrapped=wrap_measure, text_metrics=text_metrics,
+                )
+                row_min[index // columns] = max(row_min[index // columns], needed)
+                row_pref[index // columns] = max(row_pref[index // columns], needed)
         row_heights = _allocate_tracks(
             row_min,
             row_pref,
@@ -1093,7 +1124,7 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
                 column_widths[column],
                 row_heights[row],
             )
-            nodes.append(_layout(child, child_rect, split_positions, text_metrics=text_metrics))
+            nodes.append(_layout(child, child_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure))
 
         return GUILayoutNode(view, rect, tuple(nodes))
 
@@ -1144,8 +1175,8 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILa
             view,
             rect,
             (
-                _layout(first_view, first_rect, split_positions, text_metrics=text_metrics),
-                _layout(second_view, second_rect, split_positions, text_metrics=text_metrics),
+                _layout(first_view, first_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure),
+                _layout(second_view, second_rect, split_positions, text_metrics=text_metrics, wrap_measure=wrap_measure),
             ),
         )
 
