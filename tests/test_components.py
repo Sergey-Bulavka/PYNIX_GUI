@@ -107,3 +107,17 @@ def test_commercial_components_reject_invalid_values():
 
     with pytest.raises(GUIError):
         form_section("Bad", [text("ok"), "not-a-view"])
+
+
+def test_property_row_reserves_space_for_native_label_glyphs():
+    from pynix_gui.layout import measure, layout
+    item = property_row("Commands", "Menus · Dialogs · Shortcuts")
+    left_column = item.children[0]
+    assert left_column.children[0].kind == "padding"
+    padded = left_column.children[0]
+    caption = padded.children[0]
+    assert caption.text == "Commands"
+    assert measure(padded).minimum.width >= measure(caption).minimum.width + 12
+    constraints = measure(item)
+    result = layout(item, constraints.minimum.width, constraints.minimum.height)
+    assert result.children[0].rect.width >= measure(left_column).minimum.width
