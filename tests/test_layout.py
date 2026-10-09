@@ -107,3 +107,19 @@ def test_min_size_does_not_override_child_maximum_constraint():
     with pytest.raises(ValueError, match="unsatisfiable"):
         measure(contradictory)
 
+
+
+def test_native_text_intrinsic_width_has_headroom_for_uppercase_badge():
+    caption = view("text", text="ADV-04", role="caption")
+    measured = measure(caption)
+    assert measured.minimum.width >= 58.0
+    assert measured.preferred.width == measured.minimum.width
+
+
+def test_property_labels_keep_minimum_width_inside_row():
+    from pynix_gui.components import property_row
+    root = property_row("Commands", "Menus · Dialogs · Shortcuts")
+    measured = measure(root)
+    laid_out = layout(root, measured.minimum.width, measured.minimum.height)
+    assert laid_out.children[0].rect.width >= measure(root.children[0]).minimum.width
+    assert laid_out.children[2].rect.width >= measure(root.children[2]).minimum.width
