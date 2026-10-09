@@ -55,9 +55,11 @@ TREE = [
 ]
 
 COLUMNS = [
-    table_column("name", "Name", 220),
-    table_column("type", "Type", 120),
-    table_column("state", "State", 120),
+    # Keep the inspector comfortably readable without taking visual priority
+    # away from the central editor workspace.
+    table_column("name", "Name", 190),
+    table_column("type", "Type", 100),
+    table_column("state", "State", 100),
 ]
 
 ROWS = [
@@ -126,7 +128,7 @@ def make_dock_state():
         active_right="inspector",
         active_bottom="output",
         left_width=230,
-        right_width=250,
+        right_width=404,
         # Keep the preview large enough to read as a first-class workspace
         # surface rather than a compressed output strip.
         bottom_height=300,
