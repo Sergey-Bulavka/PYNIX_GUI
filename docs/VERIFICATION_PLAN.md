@@ -7,8 +7,9 @@ The macOS/AppKit standalone gate is accepted through **PYNIX GUI 0.1.6-dev**:
 - full standalone regression: PASS;
 - ADV-01 through ADV-05 native smokes: PASS;
 - resource/vector native smoke: PASS;
-- integrated Showcase: PASS;
-- final Showcase visual/product-polish review: ACCEPTED.
+- original engineering Showcase: PASS;
+- original Showcase visual/product-polish review: ACCEPTED;
+- Commercial Product Pass v1: IMPLEMENTED, new Product Gallery visual acceptance pending.
 
 PYNIX language integration and the three-OS CI gate are accepted. The only remaining
 product-completion gate is real interactive Windows parity verification.
@@ -28,6 +29,37 @@ pytest (ubuntu-latest)   PASS
 The Windows job successfully installs the package with its conditional PySide6 dependency
 and runs the complete pytest suite on GitHub-hosted Windows. This is strong automated
 parity evidence, but it does not replace the required real interactive Windows smoke.
+
+## Commercial Product Pass v1 verification
+
+The active product pass adds Design System 2, commercial composition components and the
+navigable Product Gallery. Automated regression must remain green before visual review.
+
+Focused macOS Product Gallery run:
+
+```bash
+cd /Users/morphey/PycharmProjects/PYNIX_GUI
+git pull --ff-only
+source .venv/bin/activate
+python -m pip install -e .
+bash scripts/verify_macos.sh gallery
+```
+
+Review every Gallery destination:
+
+- Overview
+- Controls
+- Data
+- Rich Editor
+- Canvas 2D
+- Forms
+- Dashboard App
+- IDE App
+- Settings App
+- File Manager
+
+Acceptance is visual and interactive: hierarchy, spacing, cards, semantic status, resizing,
+navigation and finished-application credibility matter in addition to event correctness.
 
 ## Phase A — install and full standalone regression
 
@@ -164,6 +196,9 @@ Or use the prepared runner:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1 -Mode All
+
+# Product Gallery only:
+powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1 -Mode Gallery
 ```
 
 Verify the Windows checklist in docs/WINDOWS_BACKEND.md.
