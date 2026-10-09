@@ -180,3 +180,72 @@ def test_manual_override_takes_priority_over_automatic_breakpoint():
     state["navigation_override"] = True
     forced_closed = gallery.build("overview", state)
     assert not any(node.target == "nav-overview" for node in _walk(forced_closed))
+
+
+def test_responsive_gallery_reflows_card_grids_without_losing_actions():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    for width, expected in [(1440, 3), (1000, 2), (620, 1)]:
+        state["window_width"] = width
+        state["navigation_override"] = None
+        root = gallery.build("overview", state)
+        validate_view(root)
+        grids = [node for node in _walk(root) if node.kind == "grid"]
+        assert any(node.columns == expected for node in grids)
+        assert any(node.target == "discover-start" for node in _walk(root))
+
+
+def test_responsive_pair_switches_to_column_at_narrow_width():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    from pynix_gui import button
+    children = [button("responsive-a", "A"), button("responsive-b", "B")]
+    state["window_width"] = 620
+    narrow = gallery.responsive_pair(state, children)
+    assert narrow.kind == "column"
+    state["window_width"] = 1440
+    wide = gallery.responsive_pair(state, children)
+    assert wide.kind == "row"
+
+
+def test_every_gallery_page_valid_at_three_responsive_widths():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    for width in (620, 1000, 1440):
+        state["window_width"] = width
+        state["navigation_override"] = None
+        for page, _ in gallery.NAVIGATION:
+            validate_view(gallery.build(page, state))
+
+
+def test_overview_content_fits_narrow_viewport_without_horizontal_clipping():
+    from pynix_gui.layout import measure, layout
+
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["window_width"] = 690.0
+    state["navigation_override"] = None
+    root = gallery.build("overview", state)
+    validate_view(root)
+    # The workspace itself contains a viewport-sized scroll; no intrinsic
+    # preferred text width may force the scroll document wider than its frame.
+    measured = measure(root)
+    assert measured.minimum.width <= 690.0
+    from pynix_gui.wrap_engine import wrap_text
+    geometry = layout(
+        root, 690, 900,
+        wrap_measure=lambda role, value, width: wrap_text(
+            value, width, measure_width=lambda token: len(token) * 8,
+            line_height=22,
+        ),
+    )
+    scroll_nodes = [node for node in _layout_walk(geometry)
+                    if node.view.kind == "scroll"]
+    assert scroll_nodes
+    assert scroll_nodes[0].children[0].rect.width <= 690.0
+
+
+def _layout_walk(node):
+    yield node
+    for child in node.children:
+        yield from _layout_walk(child)

@@ -196,7 +196,41 @@ DISCOVERY_ROUTES = {
 }
 
 
-def getting_started_page():
+# Responsive Content V1 keeps every leaf control/target unchanged while
+# selecting a layout topology from the content viewport, not window chrome.
+def content_columns(state, desktop):
+    width = float(state.get("window_width", 1440))
+    navigation = (
+        state.get("navigation_override")
+        if state.get("navigation_override") is not None
+        else (state.get("compact_navigation", False) or width < 1020)
+    )
+    available = width - (0 if navigation else 270) - 48
+    if available < 680:
+        return 1
+    if available < 1060:
+        return min(2, desktop)
+    return desktop
+
+
+def responsive_grid(state, desktop, items, gap=16):
+    return grid(content_columns(state, desktop), items, gap, gap)
+
+
+def responsive_pair(state, items, gap=16):
+    return column(items, gap) if content_columns(state, 2) == 1 else row(items, gap)
+
+
+def responsive_section_header(state, title, subtitle=None, action=None):
+    # At narrow widths the trailing badge/action must not reserve a huge
+    # horizontal track beside the heading.
+    if action is not None and content_columns(state, 2) == 1:
+        return column([section_header(title, subtitle), action], 8)
+    return section_header(title, subtitle, action)
+
+
+def getting_started_page(state=None):
+    state = {} if state is None else state
     return column([
         hero(
             "From an idea to a native desktop application.",
@@ -207,11 +241,11 @@ def getting_started_page():
                 button("discover-dashboard", "Open an application example"),
             ],
         ),
-        section_header(
+        responsive_section_header(state, 
             "Three steps to your first interface",
             "Each step opens a working Product Gallery screen.",
         ),
-        grid(3, [
+        responsive_grid(state, 3, [
             card(
                 "01 · Build",
                 column([
@@ -239,12 +273,12 @@ def getting_started_page():
                 ], 12),
                 "Inspect complete application examples.",
             ),
-        ], 16, 16),
-        section_header(
+        ], 16),
+        responsive_section_header(state, 
             "Explore by capability",
             "Choose a real demonstration rather than reading a feature list.",
         ),
-        grid(2, [
+        responsive_grid(state, 2, [
             card(
                 "Structured data",
                 button("discover-data", "Explore Tree & Table", "primary"),
@@ -265,7 +299,7 @@ def getting_started_page():
                 button("discover-files", "Open File Manager", "primary"),
                 "Inspect a composed navigation and data interface.",
             ),
-        ], 16, 16),
+        ], 16),
         alert(
             "Keyboard-friendly navigation",
             "Use the native Explore and Applications menus to move between screens. "
@@ -281,7 +315,8 @@ def getting_started_page():
     ], 20)
 
 
-def overview_page():
+def overview_page(state=None):
+    state = {} if state is None else state
     metrics = [
         metric_card(
             "Core surfaces",
@@ -333,18 +368,18 @@ def overview_page():
                 button("discover-dashboard", "See application examples"),
             ],
         ),
-        grid(3, metrics, 16, 16),
-        section_header(
+        responsive_grid(state, 3, metrics, 16),
+        responsive_section_header(state, 
             "What you can build",
             "The Gallery exposes the product as a toolkit, not as an engineering test fixture.",
             badge("Commercial Product Pass", "accent"),
         ),
-        grid(2, capability_cards, 16, 16),
-        section_header(
+        responsive_grid(state, 2, capability_cards, 16),
+        responsive_section_header(state, 
             "Try it yourself",
             "Each action opens an interactive demonstration.",
         ),
-        grid(3, [
+        responsive_grid(state, 3, [
             card(
                 "UI building blocks",
                 button("discover-controls", "Explore controls", "primary"),
@@ -360,7 +395,7 @@ def overview_page():
                 button("discover-dashboard-card", "View dashboard", "primary"),
                 "See components working together.",
             ),
-        ], 16, 16),
+        ], 16),
         alert(
             "Complex inside. Simple outside.",
             "Application code works with semantic PYNIX values while AppKit and Qt remain private implementation details.",
@@ -371,12 +406,12 @@ def overview_page():
 
 def controls_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Controls",
             "Production controls with semantic states and commercial defaults.",
             badge("Interactive", "success"),
         ),
-        grid(2, [
+        responsive_grid(state, 2, [
             card(
                 "Buttons",
                 column([
@@ -423,7 +458,7 @@ def controls_page(state):
                 ], 10),
                 "Range controls pair naturally with semantic status components.",
             ),
-        ], 16, 16),
+        ], 16),
         alert(
             "Focus is preserved across controlled rerenders.",
             "Rich text and ordinary text controls keep interaction continuity when application state updates.",
@@ -434,12 +469,12 @@ def controls_page(state):
 
 def data_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Data views",
             "Stable identities, selection and keyboard behavior for structured information.",
             badge("ADV-02", "accent"),
         ),
-        row([
+        responsive_pair(state, [
             fill(card(
                 "Project Tree",
                 min_size(
@@ -482,12 +517,12 @@ def data_page(state):
 
 def editor_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Rich Editor",
             "Controlled source text with semantic spans and native editing behavior.",
             badge("ADV-05", "accent"),
         ),
-        row([
+        responsive_pair(state, [
             fill(card(
                 "Source",
                 min_size(
@@ -527,9 +562,10 @@ def editor_page(state):
     ], 18)
 
 
-def canvas_page():
+def canvas_page(state=None):
+    state = {} if state is None else state
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Canvas 2D",
             "Retained drawing commands, transforms and semantic hit testing.",
             badge("ADV-04", "accent"),
@@ -552,12 +588,12 @@ def canvas_page():
 
 def forms_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Forms & settings",
             "High-level composition for application settings and account flows.",
             badge("Composition", "accent"),
         ),
-        row([
+        responsive_pair(state, [
             fill(form_section(
                 "Profile",
                 [
@@ -605,14 +641,15 @@ def forms_page(state):
     ], 18)
 
 
-def dashboard_page():
+def dashboard_page(state=None):
+    state = {} if state is None else state
     project_rows = [
         table_row("alpha", ["Alpha Workspace", "Dashboard", "Healthy"]),
         table_row("beta", ["Beta Console", "Operations", "Healthy"]),
         table_row("gamma", ["Gamma Studio", "Creative", "Preview"]),
     ]
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Application example",
             "A realistic operations dashboard assembled entirely from PYNIX GUI primitives and commercial components.",
             badge("Reference UI", "success"),
@@ -625,12 +662,12 @@ def dashboard_page():
                 button("open-dialog", "Share"),
             ],
         ),
-        grid(3, [
+        responsive_grid(state, 3, [
             metric_card("Active users", "24.8k", "+12.4% this month", badge("+12.4%", "success")),
             metric_card("Latency", "38 ms", "Global median", badge("Good", "success")),
             metric_card("Incidents", "2", "One requires review", badge("Review", "warning")),
-        ], 16, 16),
-        row([
+        ], 16),
+        responsive_pair(state, [
             fill(card(
                 "Workspace activity",
                 min_size(canvas("example-canvas", product_scene()), 620, 300),
@@ -670,7 +707,7 @@ def dashboard_page():
 
 def ide_app_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "IDE application",
             "A complete developer workspace assembled from Tree, Rich Editor, Table and commands.",
             badge("Reference UI", "success"),
@@ -683,7 +720,7 @@ def ide_app_page(state):
                 button("open-dialog", "Command palette"),
             ],
         ),
-        row([
+        responsive_pair(state, [
             max_size(card(
                 "Explorer",
                 min_size(
@@ -740,7 +777,7 @@ def ide_app_page(state):
 
 def settings_app_page(state):
     return column([
-        section_header(
+        responsive_section_header(state, 
             "Settings application",
             "A polished preferences surface using forms, property rows, alerts and semantic status.",
             badge("Reference UI", "success"),
@@ -750,7 +787,7 @@ def settings_app_page(state):
             "Manage appearance, identity and synchronization without hand-built platform layout.",
             [button("settings-save", "Save changes", "primary")],
         ),
-        row([
+        responsive_pair(state, [
             fill(form_section(
                 "General",
                 [
@@ -799,12 +836,12 @@ def file_manager_page(state):
         table_row("f-assets", ["assets", "Folder", "—"]),
     ]
     return column([
-        section_header(
+        responsive_section_header(state, 
             "File manager",
             "Navigation, search, structured data and actions composed into a familiar desktop workflow.",
             badge("Reference UI", "success"),
         ),
-        row([
+        responsive_pair(state, [
             search_field("files-search", state["search"], "Search files"),
             fill(text("Project / src", "caption")),
             button("file-new", "New", "primary"),
@@ -854,7 +891,7 @@ def file_manager_page(state):
 
 def page_view(page, state):
     if page == "start":
-        return getting_started_page()
+        return getting_started_page(state)
     if page == "controls":
         return controls_page(state)
     if page == "data":
@@ -862,18 +899,18 @@ def page_view(page, state):
     if page == "editor":
         return editor_page(state)
     if page == "canvas":
-        return canvas_page()
+        return canvas_page(state)
     if page == "forms":
         return forms_page(state)
     if page == "dashboard":
-        return dashboard_page()
+        return dashboard_page(state)
     if page == "ide":
         return ide_app_page(state)
     if page == "settings":
         return settings_app_page(state)
     if page == "files":
         return file_manager_page(state)
-    return overview_page()
+    return overview_page(state)
 
 
 def build(page, state):
@@ -1008,6 +1045,7 @@ def main():
                 if state["navigation_override"] is not None
                 else state["window_width"] < 1020
             )
+            old_width = state["window_width"]
             state["window_width"] = event.width
             current_compact = (
                 state["navigation_override"]
@@ -1015,7 +1053,11 @@ def main():
                 else state["window_width"] < 1020
             )
             if previous_compact == current_compact:
-                continue
+                # Content topology changes at its own breakpoints even if the
+                # navigation mode stays unchanged. Render only on a crossing.
+                prior = dict(state, window_width=old_width)
+                if content_columns(prior, 3) == content_columns(state, 3):
+                    continue
         elif event.kind == "ACTIVATE" and event.target == "toggle-navigation":
             currently_compact = (
                 state["navigation_override"]

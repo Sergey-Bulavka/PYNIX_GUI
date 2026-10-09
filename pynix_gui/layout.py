@@ -850,7 +850,10 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None, wrap_mea
 
     if kind == "scroll":
         child_constraints = measure(view.children[0], text_metrics=text_metrics)
-        content_width = max(rect.width, child_constraints.minimum.width, child_constraints.preferred.width)
+        # Scroll the content only when its intrinsic minimum exceeds the
+        # viewport. Preferred width is not a hard minimum: using it here
+        # prevented responsive columns from following a narrowing window.
+        content_width = max(rect.width, child_constraints.minimum.width)
         content_height = max(rect.height, child_constraints.minimum.height, child_constraints.preferred.height)
         if wrap_measure is not None:
             from .height_for_width import height_for_width
