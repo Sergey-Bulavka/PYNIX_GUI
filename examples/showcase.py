@@ -127,7 +127,9 @@ def make_dock_state():
         active_bottom="output",
         left_width=230,
         right_width=250,
-        bottom_height=150,
+        # Keep the preview large enough to read as a first-class workspace
+        # surface rather than a compressed output strip.
+        bottom_height=300,
     )
 
 
