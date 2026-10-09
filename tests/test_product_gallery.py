@@ -48,3 +48,18 @@ def test_product_gallery_contains_four_application_examples():
     pages = {page for page, _label in gallery.NAVIGATION}
 
     assert {"dashboard", "ide", "settings", "files"} <= pages
+
+
+def test_product_gallery_canvas_labels_are_centered_inside_shape_bounds():
+    gallery = _gallery_module()
+    scene = gallery.product_scene()
+    texts = {command.values[2]: command for command in scene.commands
+             if command.kind == "text"}
+    circle = texts["72%"]
+    status = texts["HEALTHY"]
+    assert circle.values == (320, 135, "72%", 150, 150)
+    assert status.values == (530, 160, "HEALTHY", 160, 28)
+    assert circle.text_align == status.text_align == "center"
+    assert circle.text_valign == status.text_valign == "center"
+    assert status.fill_role == "textOnAccent"
+    assert texts["24.8k"].text_align == "start"

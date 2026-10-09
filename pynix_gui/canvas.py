@@ -50,6 +50,8 @@ class GUICanvasCommand:
     fill_role: str | None = None
     line_width: float = 1.0
     text_role: str | None = None
+    text_align: str = "start"
+    text_valign: str = "top"
     resource: str | None = None
     hit_target: str | None = None
     children: tuple["GUICanvasCommand", ...] = ()
@@ -70,6 +72,11 @@ class GUICanvasCommand:
             _role(self.fill_role)
         if self.text_role is not None:
             _non_empty(self.text_role, "GUI canvas text role")
+        if self.kind == "text":
+            if self.text_align not in {"start", "center", "end"}:
+                raise GUIError("PYNIX-GUI-011", "Invalid canvas horizontal text alignment.")
+            if self.text_valign not in {"top", "center", "bottom"}:
+                raise GUIError("PYNIX-GUI-011", "Invalid canvas vertical text alignment.")
         if self.resource is not None:
             _non_empty(self.resource, "GUI canvas image resource")
         _optional_target(self.hit_target)
@@ -201,18 +208,40 @@ def canvas_path(points, *, closed=False, stroke="textPrimary", fill=None, line_w
     )
 
 
-def canvas_text(x, y, value, *, role="body", color="textPrimary", hit_target=None):
+def canvas_text(
+    x, y, value, *, role="body", color="textPrimary", hit_target=None,
+    width=None, height=None, align="start", valign="top",
+):
+    """Draw text from its top-left, or align it inside a sized rectangle.
+
+    A bounded text command avoids manual platform-dependent font offsets.
+    Unbounded commands preserve the original three-value scene representation.
+    """
     if type(value) is not str:
         raise GUIError("PYNIX-GUI-011", "GUI canvas text must be String.")
+    if align not in {"start", "center", "end"} or valign not in {"top", "center", "bottom"}:
+        raise GUIError("PYNIX-GUI-011", "Invalid canvas text alignment.")
+    if (width is None) != (height is None):
+        raise GUIError("PYNIX-GUI-011", "Canvas text bounds need both width and height.")
+    values = (
+        _number(x, "GUI canvas text x"),
+        _number(y, "GUI canvas text y"),
+        value,
+    )
+    if width is not None:
+        values += (
+            _positive(width, "GUI canvas text width"),
+            _positive(height, "GUI canvas text height"),
+        )
+    elif align != "start" or valign != "top":
+        raise GUIError("PYNIX-GUI-011", "Aligned canvas text requires bounds.")
     return GUICanvasCommand(
         "text",
-        (
-            _number(x, "GUI canvas text x"),
-            _number(y, "GUI canvas text y"),
-            value,
-        ),
+        values,
         fill_role=_role(color),
         text_role=_non_empty(role, "GUI canvas text role"),
+        text_align=align,
+        text_valign=valign,
         hit_target=_optional_target(hit_target),
     )
 

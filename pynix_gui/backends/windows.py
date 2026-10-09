@@ -965,14 +965,36 @@ class WindowsGUIBackend:
                     path.closeSubpath()
                 painter.drawPath(path)
             elif command.kind == "text":
-                x, y, value = command.values
+                x, y, value = command.values[:3]
                 painter.setPen(
                     qt.QtGui.QColor(
                         palette.get(command.fill_role or "textPrimary", palette["textPrimary"])
                     )
                 )
                 painter.setFont(self._font(qt, command.text_role or "body"))
-                painter.drawText(qt.QtCore.QPointF(x, y), value)
+                if len(command.values) == 5:
+                    box_width, box_height = command.values[3:]
+                    horizontal = {
+                        "start": qt.QtCore.Qt.AlignLeft,
+                        "center": qt.QtCore.Qt.AlignHCenter,
+                        "end": qt.QtCore.Qt.AlignRight,
+                    }[command.text_align]
+                    vertical = {
+                        "top": qt.QtCore.Qt.AlignTop,
+                        "center": qt.QtCore.Qt.AlignVCenter,
+                        "bottom": qt.QtCore.Qt.AlignBottom,
+                    }[command.text_valign]
+                    painter.drawText(
+                        qt.QtCore.QRectF(x, y, box_width, box_height),
+                        horizontal | vertical | qt.QtCore.Qt.TextSingleLine,
+                        value,
+                    )
+                else:
+                    # Canvas coordinates use a top-left text origin on every backend.
+                    painter.drawText(
+                        qt.QtCore.QPointF(x, y + painter.fontMetrics().ascent()),
+                        value,
+                    )
             elif command.kind == "image":
                 x, y, width, height = command.values
                 catalog = self._resources.get(window)

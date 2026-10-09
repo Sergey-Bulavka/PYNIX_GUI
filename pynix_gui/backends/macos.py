@@ -514,7 +514,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                 continue
 
             if command.kind == "text":
-                x, y, value = command.values
+                x, y, value = command.values[:3]
                 color = (
                     fill
                     if fill is not None
@@ -525,7 +525,19 @@ class MacOSGUIBackend(MacOSHostBackend):
                     appkit.NSForegroundColorAttributeName: color,
                     appkit.NSFontAttributeName: font,
                 }
-                appkit.NSString.stringWithString_(value).drawAtPoint_withAttributes_(
+                string = appkit.NSString.stringWithString_(value)
+                if len(command.values) == 5:
+                    box_width, box_height = command.values[3:]
+                    measured = string.sizeWithAttributes_(attributes)
+                    if command.text_align == "center":
+                        x += (box_width - float(measured.width)) / 2
+                    elif command.text_align == "end":
+                        x += box_width - float(measured.width)
+                    if command.text_valign == "center":
+                        y += (box_height - float(measured.height)) / 2
+                    elif command.text_valign == "bottom":
+                        y += box_height - float(measured.height)
+                string.drawAtPoint_withAttributes_(
                     appkit.NSMakePoint(x, y),
                     attributes,
                 )
