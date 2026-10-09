@@ -1043,6 +1043,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             calculated = native_text_layout(
                 dialog.content, width - 40.0, content_height,
                 measure_text=self.text_metrics_snapshot,
+                wrap_measure=self.measure_wrapped_text,
             ).root
         else:
             calculated = layout(dialog.content, width - 40.0, content_height)
@@ -1490,6 +1491,11 @@ class MacOSGUIBackend(MacOSHostBackend):
                 split_views[view.split_id] = native
         elif view.kind == "text":
             native = appkit.NSTextField.labelWithString_(view.text)
+            if view.overflow == "wrap":
+                cell = native.cell()
+                cell.setWraps_(True)
+                cell.setScrollable_(False)
+                cell.setLineBreakMode_(appkit.NSLineBreakByWordWrapping)
             if view.overflow in ("ellipsis", "clip"):
                 cell = native.cell()
                 cell.setWraps_(False)
@@ -2950,6 +2956,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             calculated = native_text_layout(
                 view, width, height,
                 measure_text=self.text_metrics_snapshot,
+                wrap_measure=self.measure_wrapped_text,
                 split_positions=positions,
             ).root
         else:
