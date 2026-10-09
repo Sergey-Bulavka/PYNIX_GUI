@@ -124,8 +124,17 @@ def measure(view) -> GUIConstraints:
 
     if kind == "text":
         font_size, weight = TYPOGRAPHY[view.role]
-        factor = 0.56 if weight != "monospace" else 0.62
+        # Compact captions (used by badges) need a slightly larger
+        # platform-independent budget for uppercase native glyphs.
+        # Avoid expanding other typography roles: some screens intentionally
+        # constrain their width with max-size wrappers.
+        compact_caption = view.role == "caption" and len(view.text) <= 8
+        factor = 0.75 if compact_caption else (
+            0.62 if weight == "monospace" else 0.56
+        )
         width = max(1.0, len(view.text)) * font_size * factor
+        if compact_caption:
+            width += 4.0
         height = max(18.0, font_size * 1.45)
         size = GUISize(width, height)
         return GUIConstraints(size, size, GUISize(INF, height))
