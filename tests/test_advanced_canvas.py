@@ -180,3 +180,12 @@ def test_adv04_canvas_ellipse_hit_test_uses_ellipse_not_bounding_box():
 
     assert hit_test_scene(value, 50, 50, 100, 100) == "circle"
     assert hit_test_scene(value, 12, 12, 100, 100) is None
+
+
+
+def test_adv04_public_canvas_export_is_callable():
+    import pynix_gui
+
+    assert callable(pynix_gui.canvas)
+    view = pynix_gui.canvas("diagram", scene())
+    assert view.kind == "canvas"
