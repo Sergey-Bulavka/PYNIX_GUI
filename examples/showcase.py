@@ -572,10 +572,7 @@ def build(page, state):
         padding(
             column([
                 page_view(page, state),
-                fill(empty_state(
-                    "Explore the Gallery",
-                    "Use the navigation to inspect controls, data, editor, Canvas, forms and a full application example.",
-                )) if False else text("PYNIX Standard · semantic by default", "caption"),
+                text("PYNIX Standard · semantic by default", "caption"),
             ], 16),
             24,
         )
