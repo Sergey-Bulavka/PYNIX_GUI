@@ -177,12 +177,12 @@ def test_macos_resize_smaller_than_minimum_keeps_last_valid_geometry(monkeypatch
     backend._gui_split_positions_by_window[window] = {}
     backend._gui_native_nodes_by_window[window] = {}
     backend._gui_tab_labels_by_window[window] = {}
-    backend._content_extent = lambda _: (1.0, 1.0)
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (1.0, 1.0))
     called = []
-    backend._apply_layout = lambda *args, **kwargs: called.append("applied")
+    monkeypatch.setattr(MacOSGUIBackend, "_apply_layout", lambda *args, **kwargs: called.append("applied"))
     backend._relayout(window)
     assert called == []
-    backend._content_extent = lambda _: (500.0, 80.0)
+    monkeypatch.setattr(MacOSGUIBackend, "_content_extent", lambda self, _: (500.0, 80.0))
     backend._relayout(window)
     assert called == ["applied"]
 
