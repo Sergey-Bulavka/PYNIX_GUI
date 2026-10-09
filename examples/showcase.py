@@ -61,6 +61,7 @@ from pynix_gui.backends import default_backend
 
 NAVIGATION = (
     ("overview", "Overview"),
+    ("start", "Start Here"),
     ("controls", "Controls"),
     ("data", "Data"),
     ("editor", "Rich Editor"),
@@ -176,6 +177,101 @@ def product_scene():
     )
 
 
+# These are real gallery routes, not decorative buttons. Each target opens
+# a working page powered by the same public PYNIX GUI component API.
+DISCOVERY_ROUTES = {
+    "discover-start": "start",
+    "discover-controls": "controls",
+    "discover-data": "data",
+    "discover-editor": "editor",
+    "discover-canvas": "canvas",
+    "discover-forms": "forms",
+    "discover-dashboard": "dashboard",
+    "discover-ide": "ide",
+    "discover-settings": "settings",
+    "discover-files": "files",
+}
+
+
+def getting_started_page():
+    return column([
+        hero(
+            "From an idea to a native desktop application.",
+            "Explore the building blocks, combine them into screens, and see "
+            "the same semantic interface running through AppKit and Qt.",
+            [
+                button("discover-controls", "Explore components", "primary"),
+                button("discover-dashboard", "Open an application example"),
+            ],
+        ),
+        section_header(
+            "Three steps to your first interface",
+            "Each step opens a working Product Gallery screen.",
+        ),
+        grid(3, [
+            card(
+                "01 · Build",
+                column([
+                    text("Compose with Row, Column, Grid, Panel and Card.",
+                         "body", overflow="wrap"),
+                    button("discover-controls", "Explore controls"),
+                ], 12),
+                "Build layouts using semantic views.",
+            ),
+            card(
+                "02 · Connect",
+                column([
+                    text("Use inputs, validation-oriented forms and "
+                         "normalized interaction events.", "body", overflow="wrap"),
+                    button("discover-forms", "Open forms"),
+                ], 12),
+                "Handle user input with native controls.",
+            ),
+            card(
+                "03 · Ship",
+                column([
+                    text("Combine data, editing and drawing in desktop "
+                         "application layouts.", "body", overflow="wrap"),
+                    button("discover-ide", "See the IDE example"),
+                ], 12),
+                "Inspect complete application examples.",
+            ),
+        ], 16, 16),
+        section_header(
+            "Explore by capability",
+            "Choose a real demonstration rather than reading a feature list.",
+        ),
+        grid(2, [
+            card(
+                "Structured data",
+                button("discover-data", "Explore Tree & Table", "primary"),
+                "Selection, expansion and normalized data events.",
+            ),
+            card(
+                "Rich editing",
+                button("discover-editor", "Explore the editor", "primary"),
+                "Controlled source text, selections and semantic spans.",
+            ),
+            card(
+                "Canvas 2D",
+                button("discover-canvas", "Open interactive canvas", "primary"),
+                "Retained drawing, transforms and semantic hit testing.",
+            ),
+            card(
+                "Desktop workflows",
+                button("discover-files", "Open File Manager", "primary"),
+                "Inspect a composed navigation and data interface.",
+            ),
+        ], 16, 16),
+        alert(
+            "Complex inside. Simple outside.",
+            "PYNIX GUI provides semantic interface primitives; native "
+            "implementation details remain inside the platform backends.",
+            "info",
+        ),
+    ], 20)
+
+
 def overview_page():
     metrics = [
         metric_card(
@@ -224,8 +320,8 @@ def overview_page():
             "Build polished desktop software with less ceremony.",
             "PYNIX GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
             [
-                button("open-dialog", "Explore PYNIX GUI", "primary"),
-                button("show-dashboard", "See app examples"),
+                button("discover-start", "Get started", "primary"),
+                button("discover-dashboard", "See application examples"),
             ],
         ),
         grid(3, metrics, 16, 16),
@@ -235,6 +331,27 @@ def overview_page():
             badge("Commercial Product Pass", "accent"),
         ),
         grid(2, capability_cards, 16, 16),
+        section_header(
+            "Try it yourself",
+            "Each action opens an interactive demonstration.",
+        ),
+        grid(3, [
+            card(
+                "UI building blocks",
+                button("discover-controls", "Explore controls", "primary"),
+                "Buttons, input, selection and state.",
+            ),
+            card(
+                "Advanced workspaces",
+                button("discover-editor", "Explore rich editor", "primary"),
+                "Editing, data views and native interaction.",
+            ),
+            card(
+                "Complete applications",
+                button("discover-dashboard", "View dashboard", "primary"),
+                "See components working together.",
+            ),
+        ], 16, 16),
         alert(
             "Complex inside. Simple outside.",
             "Application code works with semantic PYNIX values while AppKit and Qt remain private implementation details.",
@@ -727,6 +844,8 @@ def file_manager_page(state):
 
 
 def page_view(page, state):
+    if page == "start":
+        return getting_started_page()
     if page == "controls":
         return controls_page(state)
     if page == "data":
@@ -835,7 +954,9 @@ def main():
         if event.kind == "CLOSE":
             break
 
-        if event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
+        if event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
+            page = DISCOVERY_ROUTES[event.target]
+        elif event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
             page = event.target[4:]
         elif event.kind == "ACTIVATE" and event.target == "show-dashboard":
             page = "dashboard"
