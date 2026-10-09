@@ -216,3 +216,29 @@ def test_every_gallery_page_valid_at_three_responsive_widths():
         state["navigation_override"] = None
         for page, _ in gallery.NAVIGATION:
             validate_view(gallery.build(page, state))
+
+
+def test_overview_content_fits_narrow_viewport_without_horizontal_clipping():
+    from pynix_gui.layout import measure, layout
+
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["window_width"] = 690.0
+    state["navigation_override"] = None
+    root = gallery.build("overview", state)
+    validate_view(root)
+    # The workspace itself contains a viewport-sized scroll; no intrinsic
+    # preferred text width may force the scroll document wider than its frame.
+    measured = measure(root)
+    assert measured.minimum.width <= 690.0
+    geometry = layout(root, 690, 900)
+    scroll_nodes = [node for node in _layout_walk(geometry)
+                    if node.view.kind == "scroll"]
+    assert scroll_nodes
+    assert scroll_nodes[0].children[0].rect.width <= 690.0
+
+
+def _layout_walk(node):
+    yield node
+    for child in node.children:
+        yield from _layout_walk(child)
