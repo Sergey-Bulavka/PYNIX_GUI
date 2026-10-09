@@ -1284,6 +1284,30 @@ class MacOSGUIBackend(MacOSHostBackend):
             return method(size, weights.get(weight, weights["regular"]))
         return appkit.NSFont.systemFontOfSize_(size)
 
+    def measure_wrapped_text(self, role, value, width):
+        """AppKit-backed exact candidate widths for height-for-width planning."""
+        from ..wrap_engine import wrap_text
+
+        appkit = self._load_appkit()
+        font = self._font_for_role(appkit, role)
+        attributes = {appkit.NSFontAttributeName: font}
+
+        def measure_width(candidate):
+            return float(
+                appkit.NSString.stringWithString_(candidate)
+                .sizeWithAttributes_(attributes).width
+            )
+
+        line_height = float(
+            appkit.NSString.stringWithString_("Ag")
+            .sizeWithAttributes_(attributes).height
+        )
+        return wrap_text(
+            value, width,
+            measure_width=measure_width,
+            line_height=line_height,
+        )
+
     def text_metrics_snapshot(self, view):
         """Measure immutable GUI text leaves with AppKit on the GUI thread."""
         from ..text_metrics import snapshot_text_metrics
