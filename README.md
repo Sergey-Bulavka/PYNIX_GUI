@@ -2,9 +2,9 @@
 
 Commercial-grade desktop GUI toolkit for the PYNIX programming language.
 
-> **Status:** macOS reference-backend product gate accepted through ADV-05 and the
-> resource/polish layer. Windows parity and PYNIX language-integration acceptance remain
-> separate gates.
+> **Status:** macOS reference backend and PYNIX language integration are accepted through
+> 0.1.6-dev. The Commercial Product Pass v1 is active. Automated CI is green on macOS,
+> Windows and Ubuntu; real interactive Windows acceptance remains pending.
 >
 > Component version: **0.1.6-dev**
 
@@ -52,6 +52,8 @@ Advanced desktop capabilities are built on top of that foundation:
 - Drag & Drop
 - Canvas 2D
 - richer editor/content controls
+- commercial composition components (card, hero, metrics, badge, alert, navigation, forms)
+- Product Gallery for capability discovery and visual acceptance
 
 ## Platform direction
 
@@ -66,9 +68,10 @@ The accepted GUI implementation is being migrated from
 compatibility coverage until PYNIX can consume this package through a narrow adapter.
 
 The accepted macOS reference-backend component version is **0.1.6-dev**:
-ADV-04 Canvas 2D, ADV-05 Rich Editor, logical resources and macOS product polish are
-accepted. Windows parity code is implemented but remains unaccepted until native Windows
-verification passes.
+ADV-04 Canvas 2D, ADV-05 Rich Editor, logical resources, macOS product polish and real
+PYNIX-language integration are accepted. The active Commercial Product Pass adds Design
+System 2, a high-level composition layer and the Product Gallery before the final Windows
+native parity gate.
 
 ## License
 
