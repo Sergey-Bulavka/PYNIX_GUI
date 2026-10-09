@@ -881,7 +881,10 @@ def build(page, state):
     compact = (
         state["navigation_override"]
         if state.get("navigation_override") is not None
-        else float(state.get("window_width", 1440)) < 1020
+        else (
+            bool(state.get("compact_navigation", False))
+            or float(state.get("window_width", 1440)) < 1020
+        )
     )
     sidebar = navigation_sidebar(
         "PYNIX GUI",
