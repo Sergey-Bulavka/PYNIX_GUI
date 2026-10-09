@@ -144,7 +144,7 @@ def measure(view, *, text_metrics=None) -> GUIConstraints:
                 width = max(1.0, float(extent.width) + 2.0)
                 height = max(height, float(extent.height))
         size = GUISize(width, height)
-        if getattr(view, "overflow", "natural") in ("ellipsis", "clip"):
+        if getattr(view, "overflow", "natural") in ("ellipsis", "clip", "wrap"):
             return GUIConstraints(GUISize(0.0, height), size, GUISize(INF, height))
         return GUIConstraints(size, size, GUISize(INF, height))
 
