@@ -3,7 +3,7 @@
 
 """PYNIX GUI public Python runtime package."""
 
-__version__ = "0.1.3-dev"
+__version__ = "0.1.4-dev"
 
 from .core import (
     GUIError,
