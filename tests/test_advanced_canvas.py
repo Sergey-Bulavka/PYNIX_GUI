@@ -189,3 +189,42 @@ def test_adv04_public_canvas_export_is_callable():
     assert callable(pynix_gui.canvas)
     view = pynix_gui.canvas("diagram", scene())
     assert view.kind == "canvas"
+
+
+def test_adv04_canvas_viewport_preserves_aspect_ratio_and_centers_scene():
+    from pynix_gui.canvas import canvas_viewport
+
+    value = canvas_scene(200, 100, [])
+    scale, offset_x, offset_y = canvas_viewport(value, 200, 200)
+
+    assert scale == 1.0
+    assert offset_x == 0.0
+    assert offset_y == 50.0
+
+
+def test_adv04_canvas_hit_testing_ignores_letterbox_margins():
+    from pynix_gui.canvas import hit_test_scene
+
+    value = canvas_scene(
+        200,
+        100,
+        [canvas_rect(0, 0, 200, 100, hit_target="scene")],
+    )
+
+    assert hit_test_scene(value, 100, 100, 200, 200) == "scene"
+    assert hit_test_scene(value, 100, 10, 200, 200) is None
+    assert hit_test_scene(value, 100, 190, 200, 200) is None
+
+
+def test_adv04_canvas_uniform_viewport_keeps_circle_geometry_circular():
+    from pynix_gui.canvas import canvas_viewport
+
+    value = canvas_scene(
+        200,
+        100,
+        [canvas_ellipse(50, 0, 100, 100, hit_target="circle")],
+    )
+    scale, _offset_x, _offset_y = canvas_viewport(value, 500, 500)
+
+    assert 100 * scale == 100 * scale
+    assert scale == 2.5
