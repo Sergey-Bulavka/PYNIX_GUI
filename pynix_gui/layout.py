@@ -111,7 +111,7 @@ def _apply_size_wrapper(view, child: GUIConstraints) -> GUIConstraints:
     return GUIConstraints(minimum, preferred, maximum)
 
 
-def measure(view) -> GUIConstraints:
+def measure(view, *, text_metrics=None) -> GUIConstraints:
     """Return platform-independent intrinsic constraints for a GUIView tree."""
     kind = view.kind
 
@@ -136,6 +136,13 @@ def measure(view) -> GUIConstraints:
         if compact_caption:
             width += 4.0
         height = max(18.0, font_size * 1.45)
+        if text_metrics is not None:
+            extent = text_metrics.get(view.role, view.text)
+            if extent is not None:
+                # Native extent includes glyph advances; two points allow
+                # platform text-cell rounding without changing source code.
+                width = max(1.0, float(extent.width) + 2.0)
+                height = max(height, float(extent.height))
         size = GUISize(width, height)
         return GUIConstraints(size, size, GUISize(INF, height))
 
@@ -258,7 +265,7 @@ def measure(view) -> GUIConstraints:
         "fill", "align", "enabled", "focused", "theme",
         "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
     }:
-        return measure(view.children[0])
+        return measure(view.children[0], text_metrics=text_metrics)
 
     if kind == "collapsible":
         label_width = max(96.0, len(view.text or "") * 8.0 + 32.0)
@@ -266,7 +273,7 @@ def measure(view) -> GUIConstraints:
         if not view.checked:
             return GUIConstraints(header, header, GUISize(INF, COLLAPSIBLE_HEADER_HEIGHT))
 
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         minimum = GUISize(
             max(header.width, child.minimum.width),
             COLLAPSIBLE_HEADER_HEIGHT + COLLAPSIBLE_CONTENT_GAP + child.minimum.height,
@@ -288,7 +295,7 @@ def measure(view) -> GUIConstraints:
             region: (
                 None
                 if panel is None
-                else measure(panel.content)
+                else measure(panel.content, text_metrics=text_metrics)
             )
             for region, panel in active.items()
         }
@@ -331,7 +338,7 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind == "scroll":
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         return GUIConstraints(
             GUISize(0.0, 0.0),
             child.preferred,
@@ -339,10 +346,10 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind in {"minSize", "preferredSize", "maxSize"}:
-        return _apply_size_wrapper(view, measure(view.children[0]))
+        return _apply_size_wrapper(view, measure(view.children[0], text_metrics=text_metrics))
 
     if kind == "padding":
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         horizontal = float(view.horizontal)
         vertical = float(view.vertical)
         extra_w = horizontal * 2.0
@@ -357,7 +364,7 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind in {"panel", "group"}:
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         inset = (
             PANEL_PADDING + PANEL_BORDER
             if kind == "panel"
@@ -374,7 +381,7 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind == "toolbar":
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         minimum = GUISize(
             child.minimum.width + BAR_PADDING_X * 2.0,
             max(child.minimum.height + BAR_PADDING_Y * 2.0, TOOLBAR_HEIGHT),
@@ -386,7 +393,7 @@ def measure(view) -> GUIConstraints:
         return GUIConstraints(minimum, preferred, GUISize(INF, INF))
 
     if kind == "statusBar":
-        child = measure(view.children[0])
+        child = measure(view.children[0], text_metrics=text_metrics)
         minimum = GUISize(
             child.minimum.width + BAR_PADDING_X * 2.0,
             max(child.minimum.height + BAR_PADDING_Y * 2.0, STATUS_HEIGHT),
@@ -411,7 +418,7 @@ def measure(view) -> GUIConstraints:
         )
 
     if kind == "tabs":
-        children = tuple(measure(child) for child in view.children)
+        children = tuple(measure(child, text_metrics=text_metrics) for child in view.children)
         minimum = GUISize(
             max((item.minimum.width for item in children), default=0.0),
             max((item.minimum.height for item in children), default=0.0) + TAB_STRIP_HEIGHT,
@@ -423,7 +430,7 @@ def measure(view) -> GUIConstraints:
         return GUIConstraints(minimum, preferred, GUISize(INF, INF))
 
     if kind in {"row", "column"}:
-        children = tuple(measure(child) for child in view.children)
+        children = tuple(measure(child, text_metrics=text_metrics) for child in view.children)
         spacing = float(view.spacing)
         if kind == "row":
             minimum = GUISize(
@@ -448,7 +455,7 @@ def measure(view) -> GUIConstraints:
         return GUIConstraints(minimum, preferred, maximum)
 
     if kind == "stack":
-        children = tuple(measure(child) for child in view.children)
+        children = tuple(measure(child, text_metrics=text_metrics) for child in view.children)
         minimum = GUISize(
             max((item.minimum.width for item in children), default=0.0),
             max((item.minimum.height for item in children), default=0.0),
@@ -460,7 +467,7 @@ def measure(view) -> GUIConstraints:
         return GUIConstraints(minimum, preferred, GUISize(INF, INF))
 
     if kind == "grid":
-        children = tuple(measure(child) for child in view.children)
+        children = tuple(measure(child, text_metrics=text_metrics) for child in view.children)
         columns = view.columns
         rows = (len(children) + columns - 1) // columns if children else 0
         column_min = [0.0] * columns
@@ -487,8 +494,8 @@ def measure(view) -> GUIConstraints:
         return GUIConstraints(minimum, preferred, GUISize(INF, INF))
 
     if kind in {"horizontalSplit", "verticalSplit"}:
-        first = measure(view.children[0])
-        second = measure(view.children[1])
+        first = measure(view.children[0], text_metrics=text_metrics)
+        second = measure(view.children[1], text_metrics=text_metrics)
         if kind == "horizontalSplit":
             minimum = GUISize(
                 first.minimum.width + second.minimum.width,
@@ -575,8 +582,8 @@ def _allocate_tracks(minimums, preferreds, available: float, spacing: float):
     return sizes
 
 
-def _allocate_linear(children, available: float, spacing: float, horizontal: bool):
-    measured = [measure(child) for child in children]
+def _allocate_linear(children, available: float, spacing: float, horizontal: bool, *, text_metrics=None):
+    measured = [measure(child, text_metrics=text_metrics) for child in children]
     minimums = []
     preferreds = []
     maximums = []
@@ -740,17 +747,17 @@ def _aligned_rect(view, rect: GUIRect, constraints: GUIConstraints) -> GUIRect:
     return GUIRect(x, y, width, height)
 
 
-def layout(view, width: float, height: float, *, split_positions=None) -> GUILayoutNode:
+def layout(view, width: float, height: float, *, split_positions=None, text_metrics=None) -> GUILayoutNode:
     """Calculate deterministic logical rectangles for one GUIView tree."""
     if width < 0 or height < 0:
         raise ValueError("GUI layout dimensions must be non-negative")
 
     split_positions = {} if split_positions is None else split_positions
-    return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions)
+    return _layout(view, GUIRect(0.0, 0.0, float(width), float(height)), split_positions, text_metrics=text_metrics)
 
 
-def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
-    constraints = measure(view)
+def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None) -> GUILayoutNode:
+    constraints = measure(view, text_metrics=text_metrics)
 
     if (
         rect.width + 1e-9 < constraints.minimum.width
@@ -788,7 +795,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         "fill", "minSize", "preferredSize", "enabled", "focused", "theme",
         "contextMenu", "tooltip", "draggable", "dropTarget", "dockTarget",
     }:
-        child = _layout(view.children[0], rect, split_positions)
+        child = _layout(view.children[0], rect, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "collapsible":
@@ -804,29 +811,29 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
                 rect.height - COLLAPSIBLE_HEADER_HEIGHT - COLLAPSIBLE_CONTENT_GAP,
             ),
         )
-        child = _layout(view.children[0], child_rect, split_positions)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "maxSize":
-        child_constraints = measure(view.children[0])
+        child_constraints = measure(view.children[0], text_metrics=text_metrics)
         child_rect = GUIRect(
             rect.x,
             rect.y,
             min(rect.width, float(view.width), child_constraints.maximum.width),
             min(rect.height, float(view.height), child_constraints.maximum.height),
         )
-        child = _layout(view.children[0], child_rect, split_positions)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "scroll":
-        child_constraints = measure(view.children[0])
+        child_constraints = measure(view.children[0], text_metrics=text_metrics)
         child_rect = GUIRect(
             rect.x,
             rect.y,
             max(rect.width, child_constraints.minimum.width, child_constraints.preferred.width),
             max(rect.height, child_constraints.minimum.height, child_constraints.preferred.height),
         )
-        child = _layout(view.children[0], child_rect, split_positions)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "dockWorkspace":
@@ -840,7 +847,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             region: (
                 None
                 if panel is None
-                else measure(panel.content)
+                else measure(panel.content, text_metrics=text_metrics)
             )
             for region, panel in active.items()
         }
@@ -936,15 +943,16 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
                     panel.content,
                     region_rects[region],
                     split_positions,
-                )
+                    text_metrics=text_metrics,
+        )
             )
 
         return GUILayoutNode(view, rect, tuple(nodes))
 
     if kind == "align":
-        child_constraints = measure(view.children[0])
+        child_constraints = measure(view.children[0], text_metrics=text_metrics)
         child_rect = _aligned_rect(view, rect, child_constraints)
-        child = _layout(view.children[0], child_rect, split_positions)
+        child = _layout(view.children[0], child_rect, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "padding":
@@ -954,7 +962,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             max(0.0, rect.width - view.horizontal * 2.0),
             max(0.0, rect.height - view.vertical * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind in {"panel", "group"}:
@@ -969,7 +977,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             max(0.0, rect.width - inset * 2.0),
             max(0.0, rect.height - inset * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind in {"toolbar", "statusBar"}:
@@ -979,7 +987,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             max(0.0, rect.width - BAR_PADDING_X * 2.0),
             max(0.0, rect.height - BAR_PADDING_Y * 2.0),
         )
-        child = _layout(view.children[0], inner, split_positions)
+        child = _layout(view.children[0], inner, split_positions, text_metrics=text_metrics)
         return GUILayoutNode(view, rect, (child,))
 
     if kind == "tabs":
@@ -990,7 +998,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             max(0.0, rect.height - TAB_STRIP_HEIGHT),
         )
         nodes = tuple(
-            _layout(child, page_rect, split_positions)
+            _layout(child, page_rect, split_positions, text_metrics=text_metrics)
             for child in view.children
         )
         return GUILayoutNode(view, rect, nodes)
@@ -1003,6 +1011,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             available,
             float(view.spacing),
             horizontal,
+            text_metrics=text_metrics,
         )
         cursor = rect.x if horizontal else rect.y
         nodes = []
@@ -1014,7 +1023,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             else:
                 child_rect = GUIRect(rect.x, cursor, rect.width, size)
                 cursor += size + view.spacing
-            nodes.append(_layout(child_view, child_rect, split_positions))
+            nodes.append(_layout(child_view, child_rect, split_positions, text_metrics=text_metrics))
 
         return GUILayoutNode(view, rect, tuple(nodes))
 
@@ -1022,7 +1031,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         return GUILayoutNode(
             view,
             rect,
-            tuple(_layout(child, rect, split_positions) for child in view.children),
+            tuple(_layout(child, rect, split_positions, text_metrics=text_metrics) for child in view.children),
         )
 
     if kind == "grid":
@@ -1033,7 +1042,7 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         if count == 0:
             return GUILayoutNode(view, rect)
 
-        measured = [measure(child) for child in view.children]
+        measured = [measure(child, text_metrics=text_metrics) for child in view.children]
         column_min = [0.0] * columns
         column_pref = [0.0] * columns
         row_min = [0.0] * rows
@@ -1082,14 +1091,14 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
                 column_widths[column],
                 row_heights[row],
             )
-            nodes.append(_layout(child, child_rect, split_positions))
+            nodes.append(_layout(child, child_rect, split_positions, text_metrics=text_metrics))
 
         return GUILayoutNode(view, rect, tuple(nodes))
 
     if kind in {"horizontalSplit", "verticalSplit"}:
         first_view, second_view = view.children
-        first_constraints = measure(first_view)
-        second_constraints = measure(second_view)
+        first_constraints = measure(first_view, text_metrics=text_metrics)
+        second_constraints = measure(second_view, text_metrics=text_metrics)
         horizontal = kind == "horizontalSplit"
 
         total = rect.width if horizontal else rect.height
@@ -1133,8 +1142,8 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
             view,
             rect,
             (
-                _layout(first_view, first_rect, split_positions),
-                _layout(second_view, second_rect, split_positions),
+                _layout(first_view, first_rect, split_positions, text_metrics=text_metrics),
+                _layout(second_view, second_rect, split_positions, text_metrics=text_metrics),
             ),
         )
 

@@ -315,6 +315,22 @@ class WindowsGUIBackend:
             font.setWeight(qt.QtGui.QFont.Medium)
         return font
 
+    def text_metrics_snapshot(self, view):
+        """Measure text leaves using the active Qt font configuration."""
+        from ..text_metrics import snapshot_text_metrics
+
+        qt, _app = self._app()
+
+        def measure(role, value):
+            font = self._font(qt, role)
+            metrics = qt.QtGui.QFontMetricsF(font)
+            return (
+                float(metrics.horizontalAdvance(value)),
+                float(metrics.height()),
+            )
+
+        return snapshot_text_metrics(view, measure)
+
     def _generic(self, qt, parent):
         return qt.QtWidgets.QWidget(parent)
 
