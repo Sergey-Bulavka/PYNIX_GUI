@@ -87,23 +87,21 @@ def test_surface_geometry_uses_design_tokens():
 
 
 
-def test_min_size_can_expand_fixed_intrinsic_dimension():
+def test_min_size_does_not_override_child_maximum_constraint():
     content = view("text", text="Label", role="body")
-    wrapped = view(
-        "minSize",
+    capped = view(
+        "maxSize",
         children=(content,),
-        width=180,
-        height=120,
+        width=100,
+        height=100,
+    )
+    contradictory = view(
+        "minSize",
+        children=(capped,),
+        width=120,
+        height=80,
     )
 
-    constraints = measure(wrapped)
+    with pytest.raises(ValueError, match="unsatisfiable"):
+        measure(contradictory)
 
-    assert constraints.minimum.width == 180
-    assert constraints.minimum.height == 120
-    assert constraints.preferred.width >= 180
-    assert constraints.preferred.height >= 120
-    assert constraints.maximum.width >= 180
-    assert constraints.maximum.height >= 120
-
-    result = layout(wrapped, 220, 140)
-    assert result.rect == GUIRect(0, 0, 220, 140)
