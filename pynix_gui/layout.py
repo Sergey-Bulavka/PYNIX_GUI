@@ -957,7 +957,8 @@ def _layout(view, rect: GUIRect, split_positions, *, text_metrics=None, wrap_mea
                     region_rects[region],
                     split_positions,
                     text_metrics=text_metrics,
-        , wrap_measure=wrap_measure)
+                    wrap_measure=wrap_measure,
+                )
             )
 
         return GUILayoutNode(view, rect, tuple(nodes))
