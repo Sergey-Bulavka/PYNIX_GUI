@@ -225,6 +225,9 @@ class WindowsGUIBackend:
                 border: 1px solid {p["border"]};
                 border-radius: 8px;
             }}
+            QLabel[pynixTextRole="caption"] {{ color: {p["textMuted"]}; }}
+            QLabel[pynixTextRole="overline"] {{ color: {p["accent"]}; }}
+            QLabel[pynixTextRole="body"] {{ color: {p["textSecondary"]}; }}
             QToolTip {{
                 color: {p["textPrimary"]};
                 background: {p["surfaceRaised"]};
@@ -364,6 +367,7 @@ class WindowsGUIBackend:
         if kind == "text":
             native = W.QLabel(view.text, parent)
             native.setFont(self._font(qt, view.role))
+            native.setProperty("pynixTextRole", view.role)
         elif kind == "button":
             native = W.QPushButton(view.text, parent)
             native.setProperty("pynixRole", view.role)
