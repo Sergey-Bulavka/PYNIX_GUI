@@ -209,8 +209,17 @@ class GUIEvent:
             )
 
 
-_PANEL_ROLES = {"panel", "sidebar", "workspace", "toolPanel", "dialog"}
-_GROUP_ROLES = {"group", "settings", "section"}
+_PANEL_ROLES = {
+    "panel", "sidebar", "workspace", "toolPanel", "dialog",
+    "card", "hero", "navigation", "overlay",
+    "mutedSurface", "successSurface", "warningSurface",
+    "dangerSurface", "infoSurface", "accentSurface",
+}
+_GROUP_ROLES = {
+    "group", "settings", "section", "card", "mutedSurface",
+    "successSurface", "warningSurface", "dangerSurface",
+    "infoSurface", "accentSurface",
+}
 _TEXT_ROLES = set(TEXT_ROLES)
 _BUTTON_ROLES = {"primary", "secondary", "quiet", "danger"}
 _FOCUSABLE_KINDS = {
