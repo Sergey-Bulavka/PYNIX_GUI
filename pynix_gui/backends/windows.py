@@ -12,6 +12,7 @@ import time
 
 from ..core import GUIEvent
 from ..canvas import canvas_viewport, hit_test_scene
+from ..text_layout import native_text_layout
 from ..design import DARK, LIGHT, TYPOGRAPHY
 from ..layout import layout
 
@@ -273,7 +274,6 @@ class WindowsGUIBackend:
         self._native_nodes[window] = nodes
         self._controls[window] = controls
 
-        from ..text_layout import native_text_layout
         calculated = native_text_layout(
             view,
             max(1, window.centralWidget().width()),
