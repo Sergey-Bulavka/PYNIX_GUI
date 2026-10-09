@@ -128,11 +128,12 @@ def measure(view) -> GUIConstraints:
         # platform-independent budget for uppercase native glyphs.
         # Avoid expanding other typography roles: some screens intentionally
         # constrain their width with max-size wrappers.
-        factor = 0.75 if view.role == "caption" else (
+        compact_caption = view.role == "caption" and len(view.text) <= 8
+        factor = 0.75 if compact_caption else (
             0.62 if weight == "monospace" else 0.56
         )
         width = max(1.0, len(view.text)) * font_size * factor
-        if view.role == "caption":
+        if compact_caption:
             width += 4.0
         height = max(18.0, font_size * 1.45)
         size = GUISize(width, height)
