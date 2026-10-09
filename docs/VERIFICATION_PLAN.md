@@ -10,9 +10,24 @@ The macOS/AppKit standalone gate is accepted through **PYNIX GUI 0.1.6-dev**:
 - integrated Showcase: PASS;
 - final Showcase visual/product-polish review: ACCEPTED.
 
-Remaining gates: PYNIX language integration, CI confirmation, and real Windows parity.
+PYNIX language integration and the three-OS CI gate are accepted. The only remaining
+product-completion gate is real interactive Windows parity verification.
 
 Run this plan after the current large implementation batch. Do not skip directly to Showcase.
+
+## Accepted CI evidence
+
+Latest GitHub Actions matrix on the accepted 0.1.6-dev code line:
+
+```text
+pytest (windows-latest)  PASS
+pytest (macos-latest)    PASS
+pytest (ubuntu-latest)   PASS
+```
+
+The Windows job successfully installs the package with its conditional PySide6 dependency
+and runs the complete pytest suite on GitHub-hosted Windows. This is strong automated
+parity evidence, but it does not replace the required real interactive Windows smoke.
 
 ## Phase A — install and full standalone regression
 
@@ -156,15 +171,16 @@ Verify the Windows checklist in docs/WINDOWS_BACKEND.md.
 Do not mark Windows parity accepted from CI alone; real interactive Windows verification is
 required.
 
-## Phase F — CI
+## Phase F — CI — ACCEPTED
 
-Check GitHub Actions on:
+GitHub Actions is green on:
 
 - macos-latest;
 - windows-latest;
 - ubuntu-latest.
 
-Ubuntu proves backend-neutral model/layout portability only.
+Ubuntu proves backend-neutral model/layout portability only. Windows CI proves installation,
+imports and automated behavioral contracts, but not native interactive acceptance.
 
 ## Phase G — acceptance/versioning
 
@@ -182,9 +198,10 @@ Only after green evidence:
 10. then begin PYNIX language-surface integration/finalization and later IDE work.
 
 
-## Phase H — PYNIX language integration
+## Phase H — PYNIX language integration — ACCEPTED on macOS
 
-After standalone PYNIX_GUI is green, verify the language adapter and static surface:
+The language adapter, full PYNIX regression and real PYNIX-source native smoke are accepted
+on macOS. The commands below remain as the reproducible verification procedure:
 
 ```bash
 cd /Users/morphey/PycharmProjects/PYNIX
