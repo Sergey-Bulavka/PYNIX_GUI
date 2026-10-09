@@ -411,6 +411,7 @@ class WindowsGUIBackend:
                 native.setProperty("pynixClip", True)
         elif kind == "button":
             native = W.QPushButton(view.text, parent)
+            native.setAccessibleName(view.text)
             native.setProperty("pynixRole", view.role)
             native.clicked.connect(
                 lambda _checked=False, target=view.target:

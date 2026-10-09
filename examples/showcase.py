@@ -57,6 +57,7 @@ from pynix_gui import (
 )
 from pynix_gui import dialog, dialog_action
 from pynix_gui.backends import default_backend
+from pynix_gui.design import WORKSPACE_METRICS
 
 
 NAVIGATION = (
@@ -265,6 +266,12 @@ def getting_started_page():
                 "Inspect a composed navigation and data interface.",
             ),
         ], 16, 16),
+        alert(
+            "Keyboard-friendly navigation",
+            "Use the native Explore and Applications menus to move between screens. "
+            "The navigation toggle is a standard keyboard-accessible button.",
+            "info",
+        ),
         alert(
             "Complex inside. Simple outside.",
             "PYNIX GUI provides semantic interface primitives; native "
@@ -870,6 +877,12 @@ def page_view(page, state):
 
 
 def build(page, state):
+    """Commercial workspace with a user-controlled compact navigation mode.
+
+    Compact mode is deliberately explicit. Native window resize callbacks
+    do not yet expose a portable width event to the semantic application.
+    """
+    compact = bool(state.get("compact_navigation", False))
     sidebar = navigation_sidebar(
         "PYNIX GUI",
         [
@@ -882,23 +895,36 @@ def build(page, state):
         ], 6),
     )
 
+    # The disclosure button is always reachable, even when the sidebar is
+    # hidden. It is a native button, so keyboard activation still works.
+    nav_action = button(
+        "toggle-navigation",
+        "Show navigation" if compact else "Hide navigation",
+        "secondary",
+    )
     content = scroll(
         padding(
             column([
+                row([
+                    nav_action,
+                    fill(text(
+                        next((label for key, label in NAVIGATION if key == page),
+                             "Overview"),
+                        "subheading",
+                    )),
+                ], WORKSPACE_METRICS["headerGap"]),
                 page_view(page, state),
                 text("PYNIX Standard · semantic by default", "caption"),
-            ], 16),
-            24,
+            ], WORKSPACE_METRICS["sectionGap"]),
+            WORKSPACE_METRICS["contentInset"],
         )
     )
 
-    return theme(
-        row([
-            max_size(min_size(sidebar, 230, 560), 270, 2000),
-            fill(content),
-        ], 0),
-        "system",
-    )
+    workspace = [fill(content)] if compact else [
+        max_size(min_size(sidebar, WORKSPACE_METRICS["sidebarMinimum"], 560), WORKSPACE_METRICS["sidebarMaximum"], 2000),
+        fill(content),
+    ]
+    return theme(row(workspace, 0), "system")
 
 
 def main():
@@ -919,13 +945,14 @@ def main():
                     menu_item("nav-overview", "Overview", shortcut("1", ["primary"])),
                     menu_item("nav-start", "Start Here", shortcut("2", ["primary"])),
                     menu_item("open-dialog", "About PYNIX GUI", shortcut("d", ["primary"])),
+                    menu_item("toggle-navigation", "Show / Hide Sidebar", shortcut("0", ["primary"])),
                 ],
             ),
             menu(
                 "Explore",
                 [
-                    menu_item("nav-controls", "Controls"),
-                    menu_item("nav-data", "Data Views"),
+                    menu_item("nav-controls", "Controls", shortcut("3", ["primary"])),
+                    menu_item("nav-data", "Data Views", shortcut("4", ["primary"])),
                     menu_item("nav-editor", "Rich Editor"),
                     menu_item("nav-canvas", "Canvas 2D"),
                     menu_item("nav-forms", "Forms"),
@@ -934,8 +961,8 @@ def main():
             menu(
                 "Applications",
                 [
-                    menu_item("nav-dashboard", "Dashboard"),
-                    menu_item("nav-ide", "IDE"),
+                    menu_item("nav-dashboard", "Dashboard", shortcut("5", ["primary"])),
+                    menu_item("nav-ide", "IDE", shortcut("6", ["primary"])),
                     menu_item("nav-settings", "Settings"),
                     menu_item("nav-files", "File Manager"),
                 ],
@@ -955,6 +982,7 @@ def main():
         "source": SOURCE,
         "selection_start": 0,
         "selection_end": 0,
+        "compact_navigation": False,
     }
     page = "overview"
 
@@ -967,7 +995,9 @@ def main():
         if event.kind == "CLOSE":
             break
 
-        if event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
+        if event.kind == "ACTIVATE" and event.target == "toggle-navigation":
+            state["compact_navigation"] = not state["compact_navigation"]
+        elif event.kind == "ACTIVATE" and event.target in DISCOVERY_ROUTES:
             page = DISCOVERY_ROUTES[event.target]
         elif event.kind == "ACTIVATE" and event.target and event.target.startswith("nav-"):
             page = event.target[4:]
