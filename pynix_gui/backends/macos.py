@@ -1334,7 +1334,19 @@ class MacOSGUIBackend(MacOSHostBackend):
                 pass
 
         if view.kind in {"panel", "group"}:
-            border = self._native_color(appkit, "separator", theme)
+            border_role = "separator"
+            if view.role == "hero":
+                border_role = "accentMuted"
+            elif view.role == "successSurface":
+                border_role = "success"
+            elif view.role == "warningSurface":
+                border_role = "warning"
+            elif view.role == "dangerSurface":
+                border_role = "error"
+            elif view.role == "infoSurface":
+                border_role = "info"
+
+            border = self._native_color(appkit, border_role, theme)
             if border is not None:
                 try:
                     with warnings.catch_warnings():
@@ -1343,10 +1355,29 @@ class MacOSGUIBackend(MacOSHostBackend):
                     layer.setBorderWidth_(1.0)
                 except Exception:
                     pass
+
+            radius = (
+                RADII["radius3"]
+                if view.role in {"card", "hero", "overlay"}
+                else RADII["radius2"]
+            )
             try:
-                layer.setCornerRadius_(float(RADII["radius2"]))
+                layer.setCornerRadius_(float(radius))
             except Exception:
                 pass
+
+            if view.role in {"card", "overlay"}:
+                try:
+                    if hasattr(layer, "setMasksToBounds_"):
+                        layer.setMasksToBounds_(False)
+                    if hasattr(layer, "setShadowOpacity_"):
+                        layer.setShadowOpacity_(0.14 if theme != "dark" else 0.28)
+                    if hasattr(layer, "setShadowRadius_"):
+                        layer.setShadowRadius_(8.0)
+                    if hasattr(layer, "setShadowOffset_"):
+                        layer.setShadowOffset_(appkit.NSMakeSize(0.0, -2.0))
+                except Exception:
+                    pass
 
     def _build_native_tree(
         self,
