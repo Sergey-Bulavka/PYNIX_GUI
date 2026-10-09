@@ -182,11 +182,13 @@ def product_scene():
 DISCOVERY_ROUTES = {
     "discover-start": "start",
     "discover-controls": "controls",
+    "discover-controls-step": "controls",
     "discover-data": "data",
     "discover-editor": "editor",
     "discover-canvas": "canvas",
     "discover-forms": "forms",
     "discover-dashboard": "dashboard",
+    "discover-dashboard-card": "dashboard",
     "discover-ide": "ide",
     "discover-settings": "settings",
     "discover-files": "files",
@@ -214,7 +216,7 @@ def getting_started_page():
                 column([
                     text("Compose with Row, Column, Grid, Panel and Card.",
                          "body", overflow="wrap"),
-                    button("discover-controls", "Explore controls"),
+                    button("discover-controls-step", "Explore controls"),
                 ], 12),
                 "Build layouts using semantic views.",
             ),
@@ -348,7 +350,7 @@ def overview_page():
             ),
             card(
                 "Complete applications",
-                button("discover-dashboard", "View dashboard", "primary"),
+                button("discover-dashboard-card", "View dashboard", "primary"),
                 "See components working together.",
             ),
         ], 16, 16),
