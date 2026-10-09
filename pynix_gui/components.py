@@ -242,7 +242,7 @@ def property_row(
     # Reserve native glyph overhang inside the property label column.
     # The backend-independent text estimator is deliberately approximate;
     # a local inset protects the complete label without changing other layouts.
-    left = [padding(text(label, "bodyStrong"), 6, 0)]
+    left = [padding(text(label, "bodyStrong"), 10, 0)]
     if detail:
         left.append(text(detail, "caption"))
     return row([
