@@ -622,6 +622,60 @@ def _allocate_linear(children, available: float, spacing: float, horizontal: boo
     return sizes
 
 
+def _allocate_dock_horizontal(
+    total: float,
+    left_requested: float,
+    left_minimum: float,
+    right_requested: float,
+    right_minimum: float,
+    center_minimum: float,
+):
+    """Honor dock requests while preserving every active region minimum."""
+    side_capacity = total - center_minimum
+    if side_capacity + 1e-9 < left_minimum + right_minimum:
+        raise ValueError("available GUI extent is smaller than minimum dock width")
+
+    left = max(left_minimum, left_requested)
+    right = max(right_minimum, right_requested)
+    requested_total = left + right
+
+    if requested_total <= side_capacity + 1e-9:
+        return left, right, total - left - right
+
+    left_extra = max(0.0, left - left_minimum)
+    right_extra = max(0.0, right - right_minimum)
+    extra_total = left_extra + right_extra
+    available_extra = max(
+        0.0,
+        side_capacity - left_minimum - right_minimum,
+    )
+
+    if extra_total <= 1e-9:
+        left = left_minimum
+        right = right_minimum
+    else:
+        ratio = available_extra / extra_total
+        left = left_minimum + left_extra * ratio
+        right = right_minimum + right_extra * ratio
+
+    return left, right, total - left - right
+
+
+def _allocate_dock_vertical(
+    total: float,
+    bottom_requested: float,
+    bottom_minimum: float,
+    center_minimum: float,
+):
+    """Honor bottom dock height while preserving center minimum height."""
+    if total + 1e-9 < bottom_minimum + center_minimum:
+        raise ValueError("available GUI extent is smaller than minimum dock height")
+
+    bottom = max(bottom_minimum, bottom_requested)
+    bottom = min(bottom, total - center_minimum)
+    return bottom, total - bottom
+
+
 def _aligned_rect(view, rect: GUIRect, constraints: GUIConstraints) -> GUIRect:
     if view.kind != "align":
         return rect
@@ -755,28 +809,73 @@ def _layout(view, rect: GUIRect, split_positions) -> GUILayoutNode:
         state = view.dock_state
         active = active_dock_panels(panels, state)
 
-        left_width = (
-            min(float(state.left_width), max(0.0, rect.width * 0.45))
+        measured = {
+            region: (
+                None
+                if panel is None
+                else measure(panel.content)
+            )
+            for region, panel in active.items()
+        }
+
+        left_minimum = (
+            measured["left"].minimum.width
+            if measured["left"] is not None
+            else 0.0
+        )
+        right_minimum = (
+            measured["right"].minimum.width
+            if measured["right"] is not None
+            else 0.0
+        )
+        center_minimum_width = (
+            measured["center"].minimum.width
+            if measured["center"] is not None
+            else 0.0
+        )
+
+        left_requested = (
+            float(state.left_width)
             if active["left"] is not None
             else 0.0
         )
-        right_width = (
-            min(
-                float(state.right_width),
-                max(0.0, rect.width * 0.45),
-                max(0.0, rect.width - left_width),
-            )
+        right_requested = (
+            float(state.right_width)
             if active["right"] is not None
             else 0.0
         )
-        center_width = max(0.0, rect.width - left_width - right_width)
 
-        bottom_height = (
-            min(float(state.bottom_height), max(0.0, rect.height * 0.45))
+        left_width, right_width, center_width = _allocate_dock_horizontal(
+            rect.width,
+            left_requested,
+            left_minimum,
+            right_requested,
+            right_minimum,
+            center_minimum_width,
+        )
+
+        bottom_minimum = (
+            measured["bottom"].minimum.height
+            if measured["bottom"] is not None
+            else 0.0
+        )
+        center_minimum_height = (
+            measured["center"].minimum.height
+            if measured["center"] is not None
+            else 0.0
+        )
+        bottom_requested = (
+            float(state.bottom_height)
             if active["bottom"] is not None
             else 0.0
         )
-        center_height = max(0.0, rect.height - bottom_height)
+
+        bottom_height, center_height = _allocate_dock_vertical(
+            rect.height,
+            bottom_requested,
+            bottom_minimum,
+            center_minimum_height,
+        )
 
         region_rects = {
             "left": GUIRect(rect.x, rect.y, left_width, rect.height),
