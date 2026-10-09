@@ -394,7 +394,7 @@ def editor_page(state):
                     ], 12),
                     "No native NSTextView or QPlainTextEdit leaks into application code.",
                 ),
-                360,
+                520,
                 900,
             ),
         ], 16),
@@ -660,7 +660,7 @@ def settings_app_page(state):
                     ),
                 ], 12),
                 "Semantic application state.",
-            ), 400, 900),
+            ), 540, 900),
         ], 16),
     ], 18)
 
