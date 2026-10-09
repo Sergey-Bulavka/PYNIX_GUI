@@ -140,36 +140,90 @@ class WindowsGUIBackend:
             QPushButton {{
                 background: {p["surfaceRaised"]};
                 border: 1px solid {p["borderStrong"]};
-                padding: 4px 10px;
-                border-radius: 5px;
+                padding: 6px 12px;
+                border-radius: 7px;
             }}
             QPushButton:hover {{ background: {p["surfaceHover"]}; }}
+            QPushButton:pressed {{ background: {p["surfacePressed"]}; }}
+            QPushButton:focus {{ border: 2px solid {p["focus"]}; }}
+            QPushButton:disabled {{
+                color: {p["textDisabled"]};
+                background: {p["surfaceSunken"]};
+                border-color: {p["border"]};
+            }}
             QPushButton[pynixRole="primary"] {{
                 background: {p["accent"]};
                 color: {p["textOnAccent"]};
                 border-color: {p["accent"]};
             }}
+            QPushButton[pynixRole="primary"]:hover {{ background: {p["accentHover"]}; }}
+            QPushButton[pynixRole="primary"]:pressed {{ background: {p["accentPressed"]}; }}
+            QPushButton[pynixRole="quiet"] {{
+                background: transparent;
+                border-color: transparent;
+            }}
             QPushButton[pynixRole="danger"] {{
-                color: {p["error"]};
+                background: {p["error"]};
+                color: {p["textOnAccent"]};
                 border-color: {p["error"]};
+            }}
+            QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus,
+            QListWidget:focus, QTreeWidget:focus, QTableWidget:focus {{
+                border: 2px solid {p["focus"]};
             }}
             QWidget[pynixSurface="panel"],
             QWidget[pynixSurface="workspace"],
             QWidget[pynixSurface="toolPanel"] {{
                 background: {p["surface"]};
                 border: 1px solid {p["border"]};
+                border-radius: 8px;
             }}
             QWidget[pynixSurface="sidebar"],
+            QWidget[pynixSurface="navigation"],
             QWidget[pynixSurface="toolbar"],
             QWidget[pynixSurface="statusBar"] {{
                 background: {p["surfaceRaised"]};
                 border: 1px solid {p["border"]};
             }}
+            QWidget[pynixSurface="card"],
+            QWidget[pynixSurface="overlay"] {{
+                background: {p["surfaceRaised"]};
+                border: 1px solid {p["border"]};
+                border-radius: 12px;
+            }}
+            QWidget[pynixSurface="hero"],
+            QWidget[pynixSurface="accentSurface"] {{
+                background: {p["accentSubtle"]};
+                border: 1px solid {p["accentMuted"]};
+                border-radius: 12px;
+            }}
+            QWidget[pynixSurface="successSurface"] {{
+                background: {p["successMuted"]};
+                border: 1px solid {p["success"]};
+                border-radius: 8px;
+            }}
+            QWidget[pynixSurface="warningSurface"] {{
+                background: {p["warningMuted"]};
+                border: 1px solid {p["warning"]};
+                border-radius: 8px;
+            }}
+            QWidget[pynixSurface="dangerSurface"] {{
+                background: {p["errorMuted"]};
+                border: 1px solid {p["error"]};
+                border-radius: 8px;
+            }}
+            QWidget[pynixSurface="infoSurface"] {{
+                background: {p["infoMuted"]};
+                border: 1px solid {p["info"]};
+                border-radius: 8px;
+            }}
             QWidget[pynixSurface="group"],
             QWidget[pynixSurface="settings"],
-            QWidget[pynixSurface="section"] {{
+            QWidget[pynixSurface="section"],
+            QWidget[pynixSurface="mutedSurface"] {{
                 background: {p["surfaceSunken"]};
                 border: 1px solid {p["border"]};
+                border-radius: 8px;
             }}
             QToolTip {{
                 color: {p["textPrimary"]};
