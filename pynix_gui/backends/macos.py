@@ -2951,18 +2951,31 @@ class MacOSGUIBackend(MacOSHostBackend):
         width, height = self._content_extent(window)
         positions = self._gui_split_positions_by_window.setdefault(window, {})
         self._seed_split_positions(view, positions)
-        if self.platform_name == "darwin" and self._appkit_override is None:
-            from ..text_layout import native_text_layout
-            calculated = native_text_layout(
-                view, width, height,
-                measure_text=self.text_metrics_snapshot,
-                wrap_measure=self.measure_wrapped_text,
-                split_positions=positions,
-            ).root
-        else:
-            calculated = layout(
-                view, width, height, split_positions=positions,
-            )
+        try:
+            if self.platform_name == "darwin" and self._appkit_override is None:
+                from ..text_layout import native_text_layout
+                calculated = native_text_layout(
+                    view, width, height,
+                    measure_text=self.text_metrics_snapshot,
+                    wrap_measure=self.measure_wrapped_text,
+                    split_positions=positions,
+                ).root
+            else:
+                calculated = layout(
+                    view, width, height, split_positions=positions,
+                )
+        except ValueError as error:
+            # A window can temporarily be smaller than its content's strict
+            # intrinsic minimum while the user drags a resize handle. Keep
+            # the previous valid layout instead of aborting the native event
+            # loop. Recompute normally as soon as the window grows again.
+            if (
+                "available GUI rectangle" not in str(error)
+                and "available GUI extent" not in str(error)
+                and "available GUI grid extent" not in str(error)
+            ):
+                raise
+            return
 
         native_nodes = self._gui_native_nodes_by_window[window]
         tab_labels = self._gui_tab_labels_by_window.get(window, {})
