@@ -147,7 +147,7 @@ GUI-ADV-01 — Commands and transient UI   ACCEPTED in 0.1.1-dev
 GUI-ADV-02 — Tree and Table              ACCEPTED in 0.1.2-dev
 GUI-ADV-03 — Drag Drop and Docking        ACCEPTED in 0.1.3-dev
 GUI-ADV-04 — Canvas 2D                    ACCEPTED in 0.1.4-dev
-GUI-ADV-05 — Rich Editor                  IMPLEMENTED, verification pending
+GUI-ADV-05 — Rich Editor                  ACCEPTED in 0.1.5-dev
 ```
 
 Planned capability set:
