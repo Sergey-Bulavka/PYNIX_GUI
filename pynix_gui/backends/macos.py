@@ -1437,8 +1437,13 @@ class MacOSGUIBackend(MacOSHostBackend):
             if hasattr(native, "setFont_"):
                 native.setFont_(self._font_for_role(appkit, view.role))
             if hasattr(native, "setTextColor_"):
+                text_color_role = {
+                    "caption": "textMuted",
+                    "overline": "accent",
+                    "body": "textSecondary",
+                }.get(view.role, "textPrimary")
                 native.setTextColor_(
-                    self._native_color(appkit, "textPrimary", theme)
+                    self._native_color(appkit, text_color_role, theme)
                 )
 
         elif view.kind == "button":
