@@ -262,7 +262,7 @@ def _objc_gui_event_bridge_type():
 
         def windowDidResize_(self, notification):
             self._backend._relayout(self._window)
-        self._backend._queue_resize(self._window)
+            self._backend._queue_resize(self._window)
 
         def controlActivated_(self, sender):
             self._backend._queue_control_activation(self._window, sender)
