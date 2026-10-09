@@ -22,7 +22,15 @@ RADII = {
     "radius1": 4,
     "radius2": 8,
     "radius3": 12,
+    "radius4": 16,
     "radiusRound": 999,
+}
+
+ELEVATION = {
+    "flat": 0,
+    "raised": 1,
+    "floating": 2,
+    "overlay": 3,
 }
 
 LINES = {
@@ -50,12 +58,17 @@ ICON_METRICS = {
 
 TYPOGRAPHY = {
     "caption": (12.0, "regular"),
+    "overline": (11.0, "semibold"),
     "body": (13.0, "regular"),
     "bodyStrong": (13.0, "semibold"),
     "label": (13.0, "medium"),
+    "subheading": (14.0, "semibold"),
     "titleSmall": (15.0, "semibold"),
     "title": (18.0, "semibold"),
+    "heading": (20.0, "bold"),
     "titleLarge": (24.0, "bold"),
+    "display": (30.0, "bold"),
+    "metric": (28.0, "bold"),
     "code": (13.0, "monospace"),
 }
 
@@ -85,6 +98,12 @@ LIGHT = {
     "warning": "#B7791F",
     "error": "#D1242F",
     "info": "#0969DA",
+    "successMuted": "#E9F7ED",
+    "warningMuted": "#FFF4D6",
+    "errorMuted": "#FDECEE",
+    "infoMuted": "#E8F2FF",
+    "accentSubtle": "#EEF5FF",
+    "surfaceOverlay": "#FFFFFF",
 }
 
 DARK = {
@@ -112,6 +131,12 @@ DARK = {
     "warning": "#D29922",
     "error": "#F85149",
     "info": "#58A6FF",
+    "successMuted": "#183C24",
+    "warningMuted": "#433618",
+    "errorMuted": "#442326",
+    "infoMuted": "#18344F",
+    "accentSubtle": "#1E2D41",
+    "surfaceOverlay": "#30343B",
 }
 
 THEMES = {"light", "dark", "system"}
@@ -134,6 +159,16 @@ SURFACE_COLOR_ROLES = {
     "separator": "separator",
     "selected": "surfaceSelected",
     "surfaceSelected": "surfaceSelected",
+    "card": "surfaceRaised",
+    "hero": "accentSubtle",
+    "navigation": "surfaceRaised",
+    "mutedSurface": "surfaceSunken",
+    "successSurface": "successMuted",
+    "warningSurface": "warningMuted",
+    "dangerSurface": "errorMuted",
+    "infoSurface": "infoMuted",
+    "accentSurface": "accentSubtle",
+    "overlay": "surfaceOverlay",
 }
 
 BUTTON_VISUALS = {
