@@ -2930,6 +2930,76 @@ class MacOSGUIBackend(MacOSHostBackend):
                     )
                 )
 
+        if node.view.kind == "richEditor":
+            try:
+                text_view = native.documentView()
+            except Exception:
+                text_view = None
+
+            if text_view is not None:
+                content_width = max(0.0, rect.width - 14.0)
+                content_height = max(0.0, rect.height)
+                try:
+                    layout_manager = text_view.layoutManager()
+                    text_container = text_view.textContainer()
+                    if text_container is not None:
+                        text_container.setContainerSize_(
+                            appkit.NSMakeSize(
+                                max(content_width, 1.0),
+                                1.0e7,
+                            )
+                        )
+                        if hasattr(text_container, "setWidthTracksTextView_"):
+                            text_container.setWidthTracksTextView_(True)
+
+                    if hasattr(text_view, "setHorizontallyResizable_"):
+                        text_view.setHorizontallyResizable_(False)
+                    if hasattr(text_view, "setVerticallyResizable_"):
+                        text_view.setVerticallyResizable_(True)
+                    if hasattr(text_view, "setMinSize_"):
+                        text_view.setMinSize_(
+                            appkit.NSMakeSize(content_width, content_height)
+                        )
+                    if hasattr(text_view, "setMaxSize_"):
+                        text_view.setMaxSize_(
+                            appkit.NSMakeSize(content_width, 1.0e7)
+                        )
+
+                    used_height = content_height
+                    if layout_manager is not None and text_container is not None:
+                        try:
+                            layout_manager.ensureLayoutForTextContainer_(
+                                text_container
+                            )
+                            used = layout_manager.usedRectForTextContainer_(
+                                text_container
+                            )
+                            used_height = max(
+                                content_height,
+                                float(used.size.height) + 16.0,
+                            )
+                        except Exception:
+                            pass
+
+                    text_view.setFrame_(
+                        appkit.NSMakeRect(
+                            0,
+                            0,
+                            content_width,
+                            used_height,
+                        )
+                    )
+                except Exception:
+                    text_view.setFrame_(
+                        appkit.NSMakeRect(
+                            0,
+                            0,
+                            content_width,
+                            content_height,
+                        )
+                    )
+
+        if node.view.kind == "tree":
         if node.view.kind == "tree":
             try:
                 document = native.documentView()
