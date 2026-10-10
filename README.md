@@ -3,8 +3,10 @@
 Commercial-grade desktop GUI toolkit for the PYNIX programming language.
 
 > **Status:** macOS reference backend and PYNIX language integration are accepted through
-> 0.1.6-dev. The Commercial Product Pass v1 is active. Automated CI is green on macOS,
-> Windows and Ubuntu; real interactive Windows acceptance remains pending.
+> 0.1.6-dev. Text Layout V1–V4, Product Gallery, Responsive Workspace V2,
+> Responsive Content V1 and Advanced Components Quality V1 are implemented and
+> have macOS user acceptance. Automated CI runs on macOS, Windows and Ubuntu;
+> interactive Windows/Qt parity remains pending.
 >
 > Component version: **0.1.6-dev**
 
@@ -93,4 +95,5 @@ Windows:
 powershell -ExecutionPolicy Bypass -File scripts\verify_windows.ps1 -Mode All
 ```
 
-See `docs/VERIFICATION_PLAN.md` and `docs/PRODUCT_COMPLETION_GATE.md`.
+See `docs/VERIFICATION_PLAN.md`, `docs/PRODUCT_COMPLETION_GATE.md`, and
+`docs/STABILITY_RELEASE_READINESS_2026-10-10.md` for evidence and release blockers.
