@@ -2648,7 +2648,7 @@ class MacOSGUIBackend(MacOSHostBackend):
             double_click = False
             if target == "files-table":
                 try:
-                    native_event = self._appkit().NSApp.currentEvent()
+                    native_event = self._load_appkit().NSApplication.sharedApplication().currentEvent()
                     double_click = int(native_event.clickCount()) >= 2
                 except (AttributeError, TypeError, ValueError):
                     pass
