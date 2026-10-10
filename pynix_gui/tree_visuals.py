@@ -34,4 +34,17 @@ def tree_disclosure_size(row_height: float, font_size: float) -> float:
     """A clearly visible chevron balanced with the item icon and row."""
     if row_height <= 0 or font_size <= 0:
         return 0.0
-    return min(max(13.0, font_size * 1.16), row_height * 0.60)
+    return min(max(17.0, font_size * 1.45), row_height * 0.76)
+
+
+def tree_file_icon_kind(label: str, is_folder: bool) -> str:
+    """One consistent icon choice for macOS and Qt trees."""
+    if is_folder:
+        return "folder"
+    return "pnx" if label.casefold().endswith(".pnx") else "file"
+
+
+def tree_disclosure_column_width(row_height: float) -> float:
+    if row_height <= 0:
+        return 18.0
+    return max(22.0, row_height * 0.80)
