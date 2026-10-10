@@ -21,3 +21,10 @@ def compact_tree_label_width(label: str, available: float) -> float:
         return 0.0
     estimated = max(56.0, len(label) * 8.3 + 46.0)
     return min(float(available), estimated)
+
+
+def tree_icon_size(row_height: float, font_size: float) -> float:
+    """Native icon point size: font-led and always smaller than the row."""
+    if row_height <= 0 or font_size <= 0:
+        return 0.0
+    return min(max(12.0, font_size * 1.18), row_height * 0.64)
