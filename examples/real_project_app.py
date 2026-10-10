@@ -21,19 +21,44 @@ from pynix_gui.backends import default_backend
 from .project_explorer import ProjectExplorer, ProjectExplorerError
 
 
-def _nodes(explorer, folder="", depth=0, show_hidden=False):
-    """Show folders only, bounded to prevent expensive workspace-wide scans.
-
-    The right table remains the authoritative complete listing (including files).
-    """
-    if depth >= min(explorer.max_depth, 4):
-        return []
-    directories = [entry for entry in explorer.entries(folder)
-                   if entry.is_directory and (show_hidden or not entry.name.startswith("."))]
+def _directory_entries(explorer, folder, show_hidden):
     return [
-        tree_node(entry.path, entry.name, _nodes(explorer, entry.path, depth + 1, show_hidden), kind="folder")
-        for entry in directories
+        entry for entry in explorer.entries(folder)
+        if entry.is_directory and (show_hidden or not entry.name.startswith("."))
     ]
+
+
+def _nodes(explorer, folder="", *, expanded=(), show_hidden=False):
+    """Load only visible branches; a hidden sentinel supplies a disclosure arrow.
+
+    Collapsed folders have no recursive subtree traversal. The single-level
+    lookahead determines whether the folder actually has child folders.
+    """
+    active = set(expanded)
+    result = []
+    for entry in _directory_entries(explorer, folder, show_hidden):
+        if entry.path in active:
+            children = _nodes(
+                explorer, entry.path, expanded=active, show_hidden=show_hidden,
+            )
+        else:
+            has_children = bool(_directory_entries(explorer, entry.path, show_hidden))
+            children = (
+                [tree_node("__lazy__/" + entry.path, "", kind="file")]
+                if has_children else []
+            )
+        result.append(tree_node(entry.path, entry.name, children, kind="folder"))
+    return result
+
+
+def _expand_ancestors(state, folder):
+    """Keep the active directory reachable and selected in the folder tree."""
+    expanded = set(state["expanded"])
+    expanded.add("__project_root__")
+    parts = folder.split("/") if folder else []
+    for i in range(1, len(parts)):
+        expanded.add("/".join(parts[:i]))
+    state["expanded"] = sorted(expanded)
 
 
 def _folder_ids(nodes):
@@ -65,7 +90,9 @@ def build(explorer, state):
         "real-project-preview",
         state["preview"], 0, 0, [], read_only=True,
     )
-    folders = [tree_node("__project_root__", explorer.root.name, _nodes(explorer, show_hidden=state.get("show_hidden", False)), kind="folder")]
+    folders = [tree_node("__project_root__", explorer.root.name, _nodes(
+        explorer, expanded=state["expanded"], show_hidden=state.get("show_hidden", False),
+    ), kind="folder")]
     visible_folders = _folder_ids(folders)
     expanded = [folder for folder in state["expanded"] if folder in visible_folders]
     current_folder = explorer.folder if explorer.folder in visible_folders else "__project_root__"
@@ -132,7 +159,9 @@ def dispatch(explorer, state, event):
             path = event.item_id
             if path == "__project_root__":
                 explorer.folder, explorer.selected = "", None
-            elif path in _folder_ids([tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]):
+            elif path in _folder_ids([tree_node("__project_root__", explorer.root.name, _nodes(
+                explorer, expanded=state["expanded"], show_hidden=state.get("show_hidden", False),
+            ), kind="folder")]):
                 explorer.folder, explorer.selected = path, None
             else:
                 state["message"] = "Select a file in the table to open it."
