@@ -35,7 +35,10 @@ def test_deep_folders_not_limited_to_four_levels(tmp_path):
     for index in range(9):
         prefix = "/".join("d" + str(i) for i in range(index + 1))
         nodes = _nodes(explorer, expanded=state["expanded"])
-        assert _find(nodes, prefix) is None if index > 0 else True
+        assert _find(nodes, prefix) is not None
+        if index < 8:
+            deeper = prefix + "/d" + str(index + 1)
+            assert _find(nodes, deeper) is None
         state["expanded"].append(prefix)
     nodes = _nodes(explorer, expanded=state["expanded"])
     assert _find(nodes, "/".join("d" + str(i) for i in range(9))) is not None
