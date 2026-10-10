@@ -128,6 +128,6 @@ class ProjectExplorer:
                 data = file.read(max_bytes + 1)
             if len(data) > max_bytes:
                 raise ProjectExplorerError("Source file is too large to open.")
-            return data.decode("utf-8")
+            return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         except (OSError, UnicodeError) as exc:
             raise ProjectExplorerError(f"Cannot read PYNIX source: {exc}") from exc
