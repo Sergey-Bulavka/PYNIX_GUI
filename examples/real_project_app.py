@@ -28,7 +28,8 @@ def _nodes(explorer, folder="", depth=0, show_hidden=False):
     """
     if depth >= min(explorer.max_depth, 4):
         return []
-    directories = [entry for entry in explorer.entries(folder)\n                   if entry.is_directory and (show_hidden or not entry.name.startswith("."))]
+    directories = [entry for entry in explorer.entries(folder)
+                   if entry.is_directory and (show_hidden or not entry.name.startswith("."))]
     return [
         tree_node(entry.path, entry.name, _nodes(explorer, entry.path, depth + 1, show_hidden), kind="folder")
         for entry in directories
