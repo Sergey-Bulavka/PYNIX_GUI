@@ -2073,13 +2073,56 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             for row_value in rows:
                 row = self._new_container(appkit)
-                for column_value, cell in zip(columns, row_value.cells):
+                for column_index, (column_value, cell) in enumerate(
+                    zip(columns, row_value.cells)
+                ):
+                    is_file_manager_name = (
+                        view.target == "files-table" and column_index == 0
+                    )
+                    is_directory = (
+                        is_file_manager_name and len(row_value.cells) > 1
+                        and row_value.cells[1] == "Folder"
+                    )
+                    display_cell = (
+                        ("›  " if is_directory else "") + cell
+                        if is_file_manager_name else cell
+                    )
                     cell_button = self._navigation_button(
                         appkit,
                         bridge._window,
-                        cell,
+                        display_cell,
                         bridge,
                     )
+                    if is_file_manager_name:
+                        from ..tree_visuals import (
+                            tree_file_icon_kind, tree_icon_size, pnx_icon_path,
+                        )
+                        kind = tree_file_icon_kind(cell, is_directory)
+                        try:
+                            if kind == "pnx":
+                                picture = appkit.NSImage.alloc().initWithContentsOfFile_(
+                                    str(pnx_icon_path())
+                                )
+                            elif kind == "folder":
+                                picture = appkit.NSImage.imageNamed_(
+                                    getattr(appkit, "NSImageNameFolder", "NSFolder")
+                                )
+                            else:
+                                picture = appkit.NSWorkspace.sharedWorkspace(
+                                ).iconForFileType_("txt")
+                            if picture is not None:
+                                picture = picture.copy()
+                                side = tree_icon_size(row_height, 13.0)
+                                picture.setSize_(appkit.NSMakeSize(side, side))
+                                cell_button.setImage_(picture)
+                                cell_button.setImagePosition_(
+                                    getattr(appkit, "NSImageLeft", 2)
+                                )
+                                cell_button.setImageScaling_(
+                                    getattr(appkit, "NSImageScaleProportionallyDown", 0)
+                                )
+                        except (AttributeError, TypeError):
+                            pass
                     if hasattr(cell_button, "setBordered_"):
                         cell_button.setBordered_(
                             row_value.row_id == view.selected_id
