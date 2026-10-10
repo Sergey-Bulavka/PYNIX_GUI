@@ -1941,7 +1941,21 @@ class MacOSGUIBackend(MacOSHostBackend):
                 try:
                     icon_image = appkit.NSImage.imageNamed_(image_name)
                     if icon_image is not None:
-                        label.setImage_(icon_image)
+                        from ..tree_visuals import tree_icon_size
+                        # imageNamed_ returns a shared NSImage. Resize a copy,
+                        # never the global system image used by other controls.
+                        font = label.font() if hasattr(label, "font") else None
+                        font_points = (
+                            float(font.pointSize()) if font is not None
+                            else 13.0
+                        )
+                        points = tree_icon_size(row_height, font_points)
+                        sized_icon = icon_image.copy()
+                        sized_icon.setSize_(appkit.NSMakeSize(points, points))
+                        label.setImage_(sized_icon)
+                        label.setImageScaling_(
+                            getattr(appkit, "NSImageScaleProportionallyDown", 0)
+                        )
                         label.setImagePosition_(
                             getattr(appkit, "NSImageLeft", 2)
                         )
