@@ -633,15 +633,51 @@ class WindowsGUIBackend:
                     self._table_selected(window, target, widget, qt)
             )
             if view.target == "files-table":
-                native.itemDoubleClicked.connect(
-                    lambda item, target=view.target:
+                def open_current():
+                    item = native.currentItem()
+                    if item is not None:
                         self._queue(window).append(
-                            GUIEvent(
-                                "OPEN", target=target,
-                                item_id=str(item.data(qt.QtCore.Qt.UserRole)),
-                            )
+                            GUIEvent("OPEN", target="files-table",
+                                     item_id=str(item.data(qt.QtCore.Qt.UserRole)))
                         )
+
+                native.itemDoubleClicked.connect(
+                    lambda item: self._queue(window).append(
+                        GUIEvent("OPEN", target="files-table",
+                                 item_id=str(item.data(qt.QtCore.Qt.UserRole)))
                     )
+                )
+                enter_shortcut = qt.QtGui.QShortcut(
+                    qt.QtGui.QKeySequence(qt.QtCore.Qt.Key_Return), native
+                )
+                enter_shortcut.activated.connect(open_current)
+                back_shortcut = qt.QtGui.QShortcut(
+                    qt.QtGui.QKeySequence(qt.QtCore.Qt.Key_Backspace), native
+                )
+                back_shortcut.activated.connect(
+                    lambda: self._queue(window).append(
+                        GUIEvent("ACTIVATE", target="files-up")
+                    )
+                )
+
+                native.setContextMenuPolicy(qt.QtCore.Qt.CustomContextMenu)
+                def show_files_menu(position):
+                    item = native.itemAt(position)
+                    if item is not None:
+                        native.setCurrentItem(item)
+                    menu = W.QMenu(native)
+                    open_action = menu.addAction("Open")
+                    up_action = menu.addAction("Up")
+                    selected_action = menu.exec(
+                        native.viewport().mapToGlobal(position)
+                    )
+                    if selected_action == open_action:
+                        open_current()
+                    elif selected_action == up_action:
+                        self._queue(window).append(
+                            GUIEvent("ACTIVATE", target="files-up")
+                        )
+                native.customContextMenuRequested.connect(show_files_menu)
             controls[view.target] = native
         elif kind == "canvas":
             native = self._canvas_widget(qt, window, view.canvas_scene, theme, parent)
