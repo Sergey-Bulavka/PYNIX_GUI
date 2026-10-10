@@ -1164,12 +1164,67 @@ class MacOSGUIBackend(MacOSHostBackend):
         self._gui_dialog_views_by_window.get(window, {}).pop(dialog_id, None)
         return None
 
+    @staticmethod
+    def _table_id_sequences(view):
+        """Collect ordered row identities for each semantic table target."""
+        result = {}
+        def walk(node):
+            if node.kind == "table":
+                _columns, rows = node.data
+                result[node.target] = tuple(row.row_id for row in rows)
+            for child in node.children:
+                walk(child)
+        walk(view)
+        return result
+
+    def _capture_table_scroll(self, window, next_view):
+        """Retain offsets only while the exact logical table listing is stable."""
+        previous = self._gui_views_by_window.get(window)
+        if previous is None:
+            return {}
+        before = self._table_id_sequences(previous)
+        after = self._table_id_sequences(next_view)
+        positions = {}
+        for target, ids in after.items():
+            if before.get(target) != ids:
+                continue
+            native = self._gui_controls_by_window.get(window, {}).get(target)
+            if native is None or not hasattr(native, "contentView"):
+                continue
+            try:
+                clip = native.contentView()
+                origin = clip.bounds().origin
+                positions[target] = (float(origin.x), float(origin.y))
+            except (AttributeError, TypeError):
+                continue
+        return positions
+
+    def _restore_table_scroll(self, window, positions):
+        for target, (x, y) in positions.items():
+            native = self._gui_controls_by_window.get(window, {}).get(target)
+            if native is None or not hasattr(native, "contentView"):
+                continue
+            try:
+                clip = native.contentView()
+                document = native.documentView()
+                maximum_x = max(0.0, float(document.frame().size.width) - float(clip.bounds().size.width))
+                maximum_y = max(0.0, float(document.frame().size.height) - float(clip.bounds().size.height))
+                appkit = self._load_appkit()
+                clip.scrollToPoint_(appkit.NSMakePoint(
+                    max(0.0, min(x, maximum_x)),
+                    max(0.0, min(y, maximum_y)),
+                ))
+                native.reflectScrolledClipView_(clip)
+            except (AttributeError, TypeError):
+                continue
+
     def render(self, window, view):
         appkit = self._load_appkit()
         if appkit is None:
             raise OSError("Cocoa GUI backend is unavailable.")
 
         previous_focus = self._capture_focus(window)
+        previous_table_scroll = self._capture_table_scroll(window, view)
         self._capture_split_positions(window)
 
         bridge = self._bridge_for_window(window)
@@ -1209,6 +1264,7 @@ class MacOSGUIBackend(MacOSHostBackend):
         window.setContentView_(native_root)
         self._relayout(window)
         self._apply_control_state(window, view)
+        self._restore_table_scroll(window, previous_table_scroll)
         self._restore_focus(window, view, previous_focus)
         return None
 
