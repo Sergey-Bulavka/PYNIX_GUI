@@ -906,16 +906,24 @@ def file_manager_go_up(state):
 
 
 def file_manager_select_table_row(state, row_id):
-    """Folder click navigates; file click changes only the selection."""
-    folder = FILE_MANAGER_TABLE_DIRECTORIES.get(row_id)
+    """Single click changes selection but never changes the open directory."""
     current = state.get("files_folder", "root")
-    visible_ids = {entry[0] for entry in FILE_MANAGER_FOLDER_CONTENTS[current]}
-    if row_id not in visible_ids:
-        return
+    if row_id not in {entry[0] for entry in FILE_MANAGER_FOLDER_CONTENTS[current]}:
+        return False
+    state["files_table_selected"] = row_id
+    return True
+
+
+def file_manager_open_selected(state, row_id=None):
+    """Explicit open: folders navigate, documents retain the current listing."""
+    row_id = row_id or state.get("files_table_selected")
+    if not file_manager_select_table_row(state, row_id):
+        return False
+    folder = FILE_MANAGER_TABLE_DIRECTORIES.get(row_id)
     if folder is not None:
-        file_manager_open_directory(state, folder)
-    else:
-        state["files_table_selected"] = row_id
+        return file_manager_open_directory(state, folder)
+    state["files_last_opened"] = row_id
+    return True
 
 
 def file_manager_rows(folder):
@@ -940,6 +948,7 @@ def file_manager_page(state):
             search_field("files-search", state["search"], "Search files"),
             fill(text("Project / " + str(state.get("files_folder", "root")), "caption")),
             button("files-up", "Up"),
+            button("files-open", "Open"),
             button("file-new", "New", "primary"),
             button("file-more", "More"),
         ], 10),
@@ -1223,6 +1232,10 @@ def main():
                 file_manager_select_tree_node(state, event.item_id)
             else:
                 state["tree_selected"] = event.item_id
+        elif event.kind == "ACTIVATE" and event.target == "files-open":
+            file_manager_open_selected(state)
+        elif event.kind == "OPEN" and event.target == "files-table":
+            file_manager_open_selected(state, event.item_id)
         elif event.kind == "ACTIVATE" and event.target == "files-up":
             file_manager_go_up(state)
         elif event.kind == "SELECTION" and event.target == "files-table":
