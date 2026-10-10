@@ -48,3 +48,9 @@ def tree_disclosure_column_width(row_height: float) -> float:
     if row_height <= 0:
         return 18.0
     return max(22.0, row_height * 0.80)
+
+
+def pnx_icon_path():
+    """Stable installed-package path, independent of current working directory."""
+    from pathlib import Path
+    return Path(__file__).resolve().parent / "assets" / "icons" / "pnx-file.png"
