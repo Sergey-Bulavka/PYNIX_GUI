@@ -1901,6 +1901,14 @@ class MacOSGUIBackend(MacOSHostBackend):
                 )
                 if hasattr(disclosure, "setBordered_"):
                     disclosure.setBordered_(False)
+                if node_value.children and hasattr(disclosure, "setFont_"):
+                    # Glyph size follows the row's native typography.
+                    from ..tree_visuals import tree_disclosure_size
+                    disclosure.setFont_(
+                        appkit.NSFont.systemFontOfSize_(
+                            tree_disclosure_size(row_height, 13.0)
+                        )
+                    )
                 if hasattr(disclosure, "setTag_"):
                     disclosure.setTag_(depth)
                 row.addSubview_(disclosure)
@@ -1936,7 +1944,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                 image_name = (
                     getattr(appkit, "NSImageNameFolder", "NSFolder")
                     if folder
-                    else getattr(appkit, "NSImageNameMultipleDocuments", "NSMultipleDocuments")
+                    else getattr(appkit, "NSImageNameDocument", "NSDocument")
                 )
                 try:
                     icon_image = appkit.NSImage.imageNamed_(image_name)
