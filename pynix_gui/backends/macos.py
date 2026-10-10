@@ -1939,23 +1939,34 @@ class MacOSGUIBackend(MacOSHostBackend):
                     label.setAlignment_(getattr(appkit, "NSTextAlignmentLeft", 0))
                 # A compact, icon-bearing explorer item rather than a
                 # full-width text button. Keep selection and event metadata.
-                from ..tree_visuals import tree_node_kind
-                folder = tree_node_kind(node_value) == "folder"
-                image_name = (
-                    getattr(appkit, "NSImageNameFolder", "NSFolder")
-                    if folder
-                    else getattr(appkit, "NSImageNameSinglePageTemplate", "NSSinglePageTemplate")
+                from ..tree_visuals import (
+                    tree_file_icon_kind, tree_icon_size, pnx_icon_path,
                 )
+                kind = tree_file_icon_kind(
+                    node_value.label, bool(node_value.children)
+                )
+                icon_image = None
                 try:
-                    icon_image = appkit.NSImage.imageNamed_(image_name)
+                    if kind == "pnx":
+                        icon_image = appkit.NSImage.alloc().initWithContentsOfFile_(
+                            str(pnx_icon_path())
+                        )
+                    elif kind == "folder":
+                        icon_image = appkit.NSImage.imageNamed_(
+                            getattr(appkit, "NSImageNameFolder", "NSFolder")
+                        )
+                    else:
+                        # NSWorkspace resolves the file type to a real document
+                        # icon; unlike undocumented NSImage names it won't
+                        # silently leave the label iconless.
+                        workspace = appkit.NSWorkspace.sharedWorkspace()
+                        icon_image = workspace.iconForFileType_(
+                            "txt"
+                        )
                     if icon_image is not None:
-                        from ..tree_visuals import tree_icon_size
-                        # imageNamed_ returns a shared NSImage. Resize a copy,
-                        # never the global system image used by other controls.
                         font = label.font() if hasattr(label, "font") else None
                         font_points = (
-                            float(font.pointSize()) if font is not None
-                            else 13.0
+                            float(font.pointSize()) if font is not None else 13.0
                         )
                         points = tree_icon_size(row_height, font_points)
                         sized_icon = icon_image.copy()
@@ -3256,22 +3267,27 @@ class MacOSGUIBackend(MacOSHostBackend):
                         except Exception:
                             depth = 0
                         indent = 12.0 + depth * 18.0
+                        from ..tree_visuals import (
+                            compact_tree_label_width,
+                            tree_disclosure_column_width,
+                        )
+                        disclosure_width = tree_disclosure_column_width(
+                            row_height
+                        )
                         disclosure.setFrame_(
                             appkit.NSMakeRect(
-                                indent,
-                                0,
-                                24.0,
-                                row_height,
+                                indent, 0, disclosure_width, row_height,
                             )
                         )
-                        from ..tree_visuals import compact_tree_label_width
-                        available = max(0.0, content_width - indent - 24.0)
+                        available = max(
+                            0.0, content_width - indent - disclosure_width
+                        )
                         label_width = compact_tree_label_width(
                             str(label.title()), available
                         )
                         label.setFrame_(
                             appkit.NSMakeRect(
-                                indent + 24.0, 0, label_width, row_height,
+                                indent + disclosure_width, 0, label_width, row_height,
                             )
                         )
 
