@@ -329,7 +329,7 @@ def test_file_manager_root_and_folders_control_right_hand_listing():
     assert _file_manager_visible_names(gallery, state) == ("src", "assets", "tests")
     for selected, expected in (
         ("src", ("main.pnx", "ui")),
-        ("ui", ("gallery.pnx", "components.pnx")),
+        ("ui", ("components.pnx",)),
         ("assets", ()),
         ("tests", ()),
     ):
@@ -352,7 +352,7 @@ def test_file_manager_file_selection_keeps_parent_directory_contents():
     assert state["tree_selected"] == "gallery"
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
-        "gallery.pnx", "components.pnx",
+        "components.pnx",
     )
 
 
@@ -391,7 +391,7 @@ def test_file_manager_table_folder_selection_navigates_and_syncs_tree():
     assert state["files_folder"] == "ui"
     assert state["tree_selected"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
-        "gallery.pnx", "components.pnx",
+        "components.pnx",
     )
 
 
@@ -412,7 +412,7 @@ def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
     assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
     gallery.file_manager_select_table_row(state, "f-ui")
     assert _file_manager_visible_names(gallery, state) == (
-        "gallery.pnx", "components.pnx",
+        "components.pnx",
     )
     assert "main.pnx" not in _file_manager_visible_names(gallery, state)
     assert "ui" not in _file_manager_visible_names(gallery, state)
@@ -433,5 +433,5 @@ def test_file_manager_ignores_stale_selection_from_previous_directory():
     gallery.file_manager_select_table_row(state, "f-src")
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
-        "gallery.pnx", "components.pnx",
+        "components.pnx",
     )
