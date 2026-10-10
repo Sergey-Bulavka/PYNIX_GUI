@@ -25,3 +25,15 @@ and keyboard navigation survives. Check system Light and Dark appearance.
 
 Windows screenshots and physical interaction remain pending; CI checks
 contracts only. No changes to GUI version in this pass.
+
+
+## V3 visual corrections
+- Disclosure arrows use larger font-relative glyphs and a 24 pt disclosure
+  column in a 30 pt row.
+- Generic file icons use the reliable NSWorkspace file-type icon.
+- '.pnx' files use a bundled PNG icon cropped and downscaled from the supplied
+  PYNIX visual reference; shared across AppKit and Qt.
+- Empty directories can declare `tree_node(..., kind="folder")` while the
+  default `kind="auto"` preserves existing tree-node calls.
+- Packaging includes `assets/icons/*.png` for installed wheel/sdist use.
+- Native screenshot approval remains required before merging PR #17.
