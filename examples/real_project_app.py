@@ -21,24 +21,25 @@ from .project_explorer import ProjectExplorer, ProjectExplorerError
 
 
 def _nodes(explorer, folder="", depth=0):
-    # Lazy directory-only disclosure is a later enhancement; cap this preview.
-    nodes = []
-    for entry, children in explorer.tree(folder, depth=depth):
-        nodes.append(tree_node(
-            entry.path, entry.name,
-            _tuples_to_nodes(children), kind="folder" if entry.is_directory else "file",
-        ))
-    return nodes
+    """Show folders only, bounded to prevent expensive workspace-wide scans.
 
-
-def _tuples_to_nodes(items):
+    The right table remains the authoritative complete listing (including files).
+    """
+    if depth >= min(explorer.max_depth, 4):
+        return []
+    directories = [entry for entry in explorer.entries(folder) if entry.is_directory]
     return [
-        tree_node(
-            entry.path, entry.name, _tuples_to_nodes(children),
-            kind="folder" if entry.is_directory else "file",
-        )
-        for entry, children in items
+        tree_node(entry.path, entry.name, _nodes(explorer, entry.path, depth + 1), kind="folder")
+        for entry in directories
     ]
+
+
+def _folder_ids(nodes):
+    result = set()
+    for node in nodes:
+        result.add(node.node_id)
+        result.update(_folder_ids(node.children))
+    return result
 
 
 def build(explorer, state):
@@ -61,13 +62,13 @@ def build(explorer, state):
         "real-project-preview",
         state["preview"], 0, 0, [], read_only=True,
     )
-    left = column([
+    folders = [tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]\n    visible_folders = _folder_ids(folders)\n    expanded = [folder for folder in state["expanded"] if folder in visible_folders]\n    current_folder = explorer.folder if explorer.folder in visible_folders else "__project_root__"\n    left = column([
         text("Project folders", "subheading"),
         fill(tree(
             "real-project-tree",
-            [tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")],
-            expanded_ids=state["expanded"],
-            selected_id=explorer.folder or "__project_root__",
+            folders,
+            expanded_ids=expanded,
+            selected_id=current_folder,
         )),
     ], 8)
     right = column([
@@ -115,7 +116,7 @@ def dispatch(explorer, state, event):
             path = event.item_id
             if path == "__project_root__":
                 explorer.folder, explorer.selected = "", None
-            elif explorer._resolve(path).is_dir():
+            elif path in _folder_ids([tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]):
                 explorer.folder, explorer.selected = path, None
             else:
                 state["message"] = "Select a file in the table to open it."
