@@ -1940,10 +1940,10 @@ class MacOSGUIBackend(MacOSHostBackend):
                 # A compact, icon-bearing explorer item rather than a
                 # full-width text button. Keep selection and event metadata.
                 from ..tree_visuals import (
-                    tree_file_icon_kind, tree_icon_size, pnx_icon_path,
+                    tree_file_icon_kind, tree_node_kind, tree_icon_size, pnx_icon_path,
                 )
                 kind = tree_file_icon_kind(
-                    node_value.label, bool(node_value.children)
+                    node_value.label, tree_node_kind(node_value) == "folder"
                 )
                 icon_image = None
                 try:
