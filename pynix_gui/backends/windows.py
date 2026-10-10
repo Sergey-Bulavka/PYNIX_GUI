@@ -557,6 +557,11 @@ class WindowsGUIBackend:
                         )
                         item.setIcon(0, native.style().standardIcon(icon_role))
                     item.setData(0, qt.QtCore.Qt.UserRole, node.node_id)
+                    if node.has_children is not None:
+                        item.setChildIndicatorPolicy(
+                            W.QTreeWidgetItem.ShowIndicator if node.has_children
+                            else W.QTreeWidgetItem.DontShowIndicator
+                        )
                     by_id[node.node_id] = item
                     if parent_item is None:
                         native.addTopLevelItem(item)
