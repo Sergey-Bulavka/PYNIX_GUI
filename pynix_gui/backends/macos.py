@@ -85,6 +85,9 @@ def _objc_gui_navigation_button_type():
                 "\uf701": "down",
                 "\uf702": "left",
                 "\uf703": "right",
+                "\r": "enter",
+                "\n": "enter",
+                "\x7f": "backspace",
             }
             key = mapping.get(characters)
             if key is None:
@@ -97,15 +100,25 @@ def _objc_gui_navigation_button_type():
                     125: "down",
                     123: "left",
                     124: "right",
+                    36: "enter",
+                    51: "backspace",
                 }.get(key_code)
 
             if key is not None:
-                self._pynix_backend._queue_structured_key(
-                    self._pynix_window,
-                    self,
-                    key,
+                # Enter and Backspace belong to file-table navigation only;
+                # preserve native activation of unrelated buttons.
+                meta = self._pynix_backend._control_meta(
+                    self._pynix_window, self
                 )
-                return
+                if key not in {"enter", "backspace"} or (
+                    meta is not None
+                    and meta[0] == "tableRow"
+                    and meta[1] == "files-table"
+                ):
+                    self._pynix_backend._queue_structured_key(
+                        self._pynix_window, self, key,
+                    )
+                    return
 
             objc.super(PynixGUINavigationButton, self).keyDown_(event)
 
@@ -2073,6 +2086,21 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             for row_value in rows:
                 row = self._new_container(appkit)
+                selected_file_row = (
+                    view.target == "files-table"
+                    and row_value.row_id == view.selected_id
+                )
+                if selected_file_row and hasattr(row, "setWantsLayer_"):
+                    try:
+                        row.setWantsLayer_(True)
+                        row.layer().setBackgroundColor_(
+                            self._native_color(
+                                appkit, "surfaceSelected", theme
+                            ).CGColor()
+                        )
+                        row.layer().setCornerRadius_(7.0)
+                    except (AttributeError, TypeError):
+                        pass
                 for column_index, (column_value, cell) in enumerate(
                     zip(columns, row_value.cells)
                 ):
@@ -2126,10 +2154,12 @@ class MacOSGUIBackend(MacOSHostBackend):
                     if hasattr(cell_button, "setBordered_"):
                         cell_button.setBordered_(
                             row_value.row_id == view.selected_id
+                            and view.target != "files-table"
                         )
-                    if row_value.row_id == view.selected_id and hasattr(
-                        cell_button,
-                        "setBezelColor_",
+                    if (
+                        row_value.row_id == view.selected_id
+                        and view.target != "files-table"
+                        and hasattr(cell_button, "setBezelColor_")
                     ):
                         try:
                             cell_button.setBezelColor_(
@@ -2151,6 +2181,21 @@ class MacOSGUIBackend(MacOSHostBackend):
                         view.target,
                         row_value.row_id,
                     )
+                    if view.target == "files-table" and hasattr(cell_button, "setMenu_"):
+                        try:
+                            menu = appkit.NSMenu.alloc().initWithTitle_("File")
+                            for title, role in (("Open", "fileContextOpen"), ("Up", "fileContextUp")):
+                                menu_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                                    title, "controlChanged:", ""
+                                )
+                                menu_item.setTarget_(bridge)
+                                menu.addItem_(menu_item)
+                                control_meta[menu_item] = (
+                                    role, "files-table", row_value.row_id,
+                                )
+                            cell_button.setMenu_(menu)
+                        except (AttributeError, TypeError):
+                            pass
                 document.addSubview_(row)
 
             if hasattr(native, "setDocumentView_"):
@@ -2639,14 +2684,25 @@ class MacOSGUIBackend(MacOSHostBackend):
                 item_id=meta[2],
                 checked=not bool(meta[3]),
             )
+        elif kind == "fileContextOpen":
+            event = GUIEvent("OPEN", target=target, item_id=meta[2])
+        elif kind == "fileContextUp":
+            event = GUIEvent("ACTIVATE", target="files-up")
         elif kind == "tableRow":
             if hasattr(window, "makeFirstResponder_"):
                 try:
                     window.makeFirstResponder_(sender)
                 except Exception:
                     pass
+            double_click = False
+            if target == "files-table":
+                try:
+                    native_event = self._load_appkit().NSApplication.sharedApplication().currentEvent()
+                    double_click = int(native_event.clickCount()) >= 2
+                except (AttributeError, TypeError, ValueError):
+                    pass
             event = GUIEvent(
-                "SELECTION",
+                "OPEN" if double_click else "SELECTION",
                 target=target,
                 item_id=meta[2],
             )
@@ -2807,6 +2863,17 @@ class MacOSGUIBackend(MacOSHostBackend):
             if current_id not in identities:
                 return
 
+            if target == "files-table":
+                if key == "enter":
+                    self._event_queue(window).append(
+                        GUIEvent("OPEN", target=target, item_id=current_id)
+                    )
+                    return
+                if key == "backspace":
+                    self._event_queue(window).append(
+                        GUIEvent("ACTIVATE", target="files-up")
+                    )
+                    return
             index = identities.index(current_id)
             if key == "up" and index > 0:
                 next_id = identities[index - 1]
