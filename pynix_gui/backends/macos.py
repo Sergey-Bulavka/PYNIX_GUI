@@ -1902,13 +1902,31 @@ class MacOSGUIBackend(MacOSHostBackend):
                 if hasattr(disclosure, "setBordered_"):
                     disclosure.setBordered_(False)
                 if node_value.children and hasattr(disclosure, "setFont_"):
-                    # Glyph size follows the row's native typography.
-                    from ..tree_visuals import tree_disclosure_size
-                    disclosure.setFont_(
-                        appkit.NSFont.systemFontOfSize_(
-                            tree_disclosure_size(row_height, 13.0)
-                        )
+                    from ..tree_visuals import (
+                        tree_disclosure_size, tree_disclosure_baseline_offset,
                     )
+                    font_size = tree_disclosure_size(row_height, 13.0)
+                    disclosure.setFont_(appkit.NSFont.systemFontOfSize_(font_size))
+                    # Unicode chevrons are not centered within their line box:
+                    # the downward glyph in particular sits below the folder.
+                    # Move the glyph baseline, not its clickable button frame.
+                    if hasattr(disclosure, "setAttributedTitle_"):
+                        try:
+                            attributes = {
+                                appkit.NSFontAttributeName:
+                                    appkit.NSFont.systemFontOfSize_(font_size),
+                                appkit.NSBaselineOffsetAttributeName:
+                                    tree_disclosure_baseline_offset(
+                                        row_height,
+                                        node_value.node_id in expanded,
+                                    ),
+                            }
+                            title = disclosure.title()
+                            attributed = appkit.NSAttributedString.alloc(
+                            ).initWithString_attributes_(title, attributes)
+                            disclosure.setAttributedTitle_(attributed)
+                        except (AttributeError, TypeError):
+                            pass
                 if hasattr(disclosure, "setTag_"):
                     disclosure.setTag_(depth)
                 row.addSubview_(disclosure)
