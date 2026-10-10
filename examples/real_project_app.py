@@ -59,15 +59,15 @@ def build(explorer, state):
 
     editor = rich_editor(
         "real-project-preview",
-        state["preview"], 0, 0, [], True,
+        state["preview"], 0, 0, [], read_only=True,
     )
     left = column([
         text("Project folders", "subheading"),
         fill(tree(
             "real-project-tree",
-            [tree_node("", explorer.root.name, _nodes(explorer), kind="folder")],
+            [tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")],
             expanded_ids=state["expanded"],
-            selected_id=explorer.folder,
+            selected_id=explorer.folder or "__project_root__",
         )),
     ], 8)
     right = column([
@@ -113,7 +113,7 @@ def dispatch(explorer, state, event):
             explorer.entries()
         elif event.kind == "SELECTION" and event.target == "real-project-tree":
             path = event.item_id
-            if path == "":
+            if path == "__project_root__":
                 explorer.folder, explorer.selected = "", None
             elif explorer._resolve(path).is_dir():
                 explorer.folder, explorer.selected = path, None
@@ -155,7 +155,7 @@ def main():
     runtime = GUIRuntime(backend)
     if not runtime.is_available():
         raise SystemExit("PYNIX GUI backend is unavailable.")
-    state = {"expanded": [""], "preview": "", "message": "Ready"}
+    state = {"expanded": ["__project_root__"], "preview": "", "message": "Ready"}
     window = runtime.open("PYNIX GUI — Real Project Explorer", 1160, 760)
     try:
         window.render(build(explorer, state))
