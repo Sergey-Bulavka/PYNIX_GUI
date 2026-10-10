@@ -45,3 +45,9 @@ def test_file_icons_choose_pnx_and_fallback_consistently():
 def test_disclosure_width_and_size_match_readable_project_tree():
     assert tree_disclosure_size(30, 13) >= 18
     assert tree_disclosure_column_width(30) >= 24
+
+
+def test_empty_directories_are_explicitly_supported():
+    empty_dir = tree_node("assets", "assets", kind="folder")
+    assert tree_node_kind(empty_dir) == "folder"
+    assert tree_node_kind(tree_node("plain", "notes.txt")) == "file"
