@@ -61,6 +61,12 @@ Review every Gallery destination:
 Acceptance is visual and interactive: hierarchy, spacing, cards, semantic status, resizing,
 navigation and finished-application credibility matter in addition to event correctness.
 
+## Packaging gate (three operating systems)
+
+GitHub Actions builds wheel and source distribution and checks their contents.
+The wheel is installed in an isolated environment for import validation via
+`scripts/check_dist.py`. This gate catches incomplete distribution artifacts.
+
 ## Phase A — install and full standalone regression
 
 macOS:
@@ -73,8 +79,8 @@ python -m pip install -e .
 python -m pytest -q
 ```
 
-The staged suite is expected to be roughly 104 tests after the current batch. The exact
-collected count is authoritative; zero failures are required.
+The suite now includes responsive/layout, advanced component and distribution
+regressions. The exact collected count is authoritative; zero failures are required.
 
 If collection fails, fix import/syntax/contract issues before any native smoke.
 
