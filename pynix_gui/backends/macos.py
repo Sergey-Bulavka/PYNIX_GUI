@@ -2156,6 +2156,21 @@ class MacOSGUIBackend(MacOSHostBackend):
                         view.target,
                         row_value.row_id,
                     )
+                    if view.target == "files-table" and hasattr(cell_button, "setMenu_"):
+                        try:
+                            menu = appkit.NSMenu.alloc().initWithTitle_("File")
+                            for title, role in (("Open", "fileContextOpen"), ("Up", "fileContextUp")):
+                                menu_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+                                    title, "controlChanged:", ""
+                                )
+                                menu_item.setTarget_(bridge)
+                                menu.addItem_(menu_item)
+                                control_meta[menu_item] = (
+                                    role, "files-table", row_value.row_id,
+                                )
+                            cell_button.setMenu_(menu)
+                        except (AttributeError, TypeError):
+                            pass
                 document.addSubview_(row)
 
             if hasattr(native, "setDocumentView_"):
@@ -2644,6 +2659,10 @@ class MacOSGUIBackend(MacOSHostBackend):
                 item_id=meta[2],
                 checked=not bool(meta[3]),
             )
+        elif kind == "fileContextOpen":
+            event = GUIEvent("OPEN", target=target, item_id=meta[2])
+        elif kind == "fileContextUp":
+            event = GUIEvent("ACTIVATE", target="files-up")
         elif kind == "tableRow":
             if hasattr(window, "makeFirstResponder_"):
                 try:
