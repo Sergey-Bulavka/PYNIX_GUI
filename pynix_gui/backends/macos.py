@@ -1890,9 +1890,9 @@ class MacOSGUIBackend(MacOSHostBackend):
                 row = self._new_container(appkit)
                 disclosure = appkit.NSButton.buttonWithTitle_target_action_(
                     (
-                        "▾"
+                        "⌄"
                         if node_value.children and node_value.node_id in expanded
-                        else "▸"
+                        else "›"
                         if node_value.children
                         else ""
                     ),
@@ -1901,6 +1901,32 @@ class MacOSGUIBackend(MacOSHostBackend):
                 )
                 if hasattr(disclosure, "setBordered_"):
                     disclosure.setBordered_(False)
+                if node_value.children and hasattr(disclosure, "setFont_"):
+                    from ..tree_visuals import (
+                        tree_disclosure_size, tree_disclosure_baseline_offset,
+                    )
+                    font_size = tree_disclosure_size(row_height, 13.0)
+                    disclosure.setFont_(appkit.NSFont.systemFontOfSize_(font_size))
+                    # Unicode chevrons are not centered within their line box:
+                    # the downward glyph in particular sits below the folder.
+                    # Move the glyph baseline, not its clickable button frame.
+                    if hasattr(disclosure, "setAttributedTitle_"):
+                        try:
+                            attributes = {
+                                appkit.NSFontAttributeName:
+                                    appkit.NSFont.systemFontOfSize_(font_size),
+                                appkit.NSBaselineOffsetAttributeName:
+                                    tree_disclosure_baseline_offset(
+                                        row_height,
+                                        node_value.node_id in expanded,
+                                    ),
+                            }
+                            title = disclosure.title()
+                            attributed = appkit.NSAttributedString.alloc(
+                            ).initWithString_attributes_(title, attributes)
+                            disclosure.setAttributedTitle_(attributed)
+                        except (AttributeError, TypeError):
+                            pass
                 if hasattr(disclosure, "setTag_"):
                     disclosure.setTag_(depth)
                 row.addSubview_(disclosure)
@@ -1929,6 +1955,49 @@ class MacOSGUIBackend(MacOSHostBackend):
                         pass
                 if hasattr(label, "setAlignment_"):
                     label.setAlignment_(getattr(appkit, "NSTextAlignmentLeft", 0))
+                # A compact, icon-bearing explorer item rather than a
+                # full-width text button. Keep selection and event metadata.
+                from ..tree_visuals import (
+                    tree_file_icon_kind, tree_node_kind, tree_icon_size, pnx_icon_path,
+                )
+                kind = tree_file_icon_kind(
+                    node_value.label, tree_node_kind(node_value) == "folder"
+                )
+                icon_image = None
+                try:
+                    if kind == "pnx":
+                        icon_image = appkit.NSImage.alloc().initWithContentsOfFile_(
+                            str(pnx_icon_path())
+                        )
+                    elif kind == "folder":
+                        icon_image = appkit.NSImage.imageNamed_(
+                            getattr(appkit, "NSImageNameFolder", "NSFolder")
+                        )
+                    else:
+                        # NSWorkspace resolves the file type to a real document
+                        # icon; unlike undocumented NSImage names it won't
+                        # silently leave the label iconless.
+                        workspace = appkit.NSWorkspace.sharedWorkspace()
+                        icon_image = workspace.iconForFileType_(
+                            "txt"
+                        )
+                    if icon_image is not None:
+                        font = label.font() if hasattr(label, "font") else None
+                        font_points = (
+                            float(font.pointSize()) if font is not None else 13.0
+                        )
+                        points = tree_icon_size(row_height, font_points)
+                        sized_icon = icon_image.copy()
+                        sized_icon.setSize_(appkit.NSMakeSize(points, points))
+                        label.setImage_(sized_icon)
+                        label.setImageScaling_(
+                            getattr(appkit, "NSImageScaleProportionallyDown", 0)
+                        )
+                        label.setImagePosition_(
+                            getattr(appkit, "NSImageLeft", 2)
+                        )
+                except (AttributeError, TypeError):
+                    pass
                 row.addSubview_(label)
 
                 control_meta[label] = (
@@ -2004,13 +2073,56 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             for row_value in rows:
                 row = self._new_container(appkit)
-                for column_value, cell in zip(columns, row_value.cells):
+                for column_index, (column_value, cell) in enumerate(
+                    zip(columns, row_value.cells)
+                ):
+                    is_file_manager_name = (
+                        view.target == "files-table" and column_index == 0
+                    )
+                    is_directory = (
+                        is_file_manager_name and len(row_value.cells) > 1
+                        and row_value.cells[1] == "Folder"
+                    )
+                    display_cell = (
+                        ("›  " if is_directory else "") + cell
+                        if is_file_manager_name else cell
+                    )
                     cell_button = self._navigation_button(
                         appkit,
                         bridge._window,
-                        cell,
+                        display_cell,
                         bridge,
                     )
+                    if is_file_manager_name:
+                        from ..tree_visuals import (
+                            tree_file_icon_kind, tree_icon_size, pnx_icon_path,
+                        )
+                        kind = tree_file_icon_kind(cell, is_directory)
+                        try:
+                            if kind == "pnx":
+                                picture = appkit.NSImage.alloc().initWithContentsOfFile_(
+                                    str(pnx_icon_path())
+                                )
+                            elif kind == "folder":
+                                picture = appkit.NSImage.imageNamed_(
+                                    getattr(appkit, "NSImageNameFolder", "NSFolder")
+                                )
+                            else:
+                                picture = appkit.NSWorkspace.sharedWorkspace(
+                                ).iconForFileType_("txt")
+                            if picture is not None:
+                                picture = picture.copy()
+                                side = tree_icon_size(row_height, 13.0)
+                                picture.setSize_(appkit.NSMakeSize(side, side))
+                                cell_button.setImage_(picture)
+                                cell_button.setImagePosition_(
+                                    getattr(appkit, "NSImageLeft", 2)
+                                )
+                                cell_button.setImageScaling_(
+                                    getattr(appkit, "NSImageScaleProportionallyDown", 0)
+                                )
+                        except (AttributeError, TypeError):
+                            pass
                     if hasattr(cell_button, "setBordered_"):
                         cell_button.setBordered_(
                             row_value.row_id == view.selected_id
@@ -3216,20 +3328,27 @@ class MacOSGUIBackend(MacOSHostBackend):
                         except Exception:
                             depth = 0
                         indent = 12.0 + depth * 18.0
+                        from ..tree_visuals import (
+                            compact_tree_label_width,
+                            tree_disclosure_column_width,
+                        )
+                        disclosure_width = tree_disclosure_column_width(
+                            row_height
+                        )
                         disclosure.setFrame_(
                             appkit.NSMakeRect(
-                                indent,
-                                0,
-                                24.0,
-                                row_height,
+                                indent, 0, disclosure_width, row_height,
                             )
+                        )
+                        available = max(
+                            0.0, content_width - indent - disclosure_width
+                        )
+                        label_width = compact_tree_label_width(
+                            str(label.title()), available
                         )
                         label.setFrame_(
                             appkit.NSMakeRect(
-                                indent + 24.0,
-                                0,
-                                max(0.0, content_width - indent - 24.0),
-                                row_height,
+                                indent + disclosure_width, 0, label_width, row_height,
                             )
                         )
 
@@ -3313,11 +3432,14 @@ class MacOSGUIBackend(MacOSHostBackend):
                         cells = ()
                     cursor = 0.0
                     for cell, width in zip(cells, widths):
+                        # Match header cell insets; avoid text and selected
+                        # cell borders touching the table's left edge.
+                        inset = 8.0
                         cell.setFrame_(
                             appkit.NSMakeRect(
-                                cursor,
+                                cursor + inset,
                                 0,
-                                width,
+                                max(0.0, width - inset * 2),
                                 row_height,
                             )
                         )

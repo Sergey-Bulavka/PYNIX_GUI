@@ -542,6 +542,20 @@ class WindowsGUIBackend:
             def add_tree(nodes_values, parent_item=None):
                 for node in nodes_values:
                     item = W.QTreeWidgetItem([node.label])
+                    from ..tree_visuals import (
+                        tree_file_icon_kind, tree_node_kind, pnx_icon_path,
+                    )
+                    kind = tree_file_icon_kind(
+                        node.label, tree_node_kind(node) == "folder"
+                    )
+                    if kind == "pnx" and pnx_icon_path().is_file():
+                        item.setIcon(0, qt.QtGui.QIcon(str(pnx_icon_path())))
+                    else:
+                        icon_role = (
+                            W.QStyle.SP_DirIcon
+                            if kind == "folder" else W.QStyle.SP_FileIcon
+                        )
+                        item.setIcon(0, native.style().standardIcon(icon_role))
                     item.setData(0, qt.QtCore.Qt.UserRole, node.node_id)
                     by_id[node.node_id] = item
                     if parent_item is None:
@@ -577,7 +591,31 @@ class WindowsGUIBackend:
                     native.setColumnWidth(column_index, column.width)
             for row_index, row in enumerate(rows):
                 for column_index, cell in enumerate(row.cells):
-                    item = W.QTableWidgetItem(cell)
+                    is_file_manager_name = (
+                        view.target == "files-table" and column_index == 0
+                    )
+                    is_folder = (
+                        is_file_manager_name and len(row.cells) > 1
+                        and row.cells[1] == "Folder"
+                    )
+                    display_cell = (
+                        ("›  " if is_folder else "") + cell
+                        if is_file_manager_name else cell
+                    )
+                    item = W.QTableWidgetItem(display_cell)
+                    if is_file_manager_name:
+                        from ..tree_visuals import (
+                            tree_file_icon_kind, pnx_icon_path,
+                        )
+                        icon_kind = tree_file_icon_kind(cell, is_folder)
+                        if icon_kind == "pnx" and pnx_icon_path().is_file():
+                            item.setIcon(qt.QtGui.QIcon(str(pnx_icon_path())))
+                        else:
+                            icon_role = (
+                                W.QStyle.SP_DirIcon if icon_kind == "folder"
+                                else W.QStyle.SP_FileIcon
+                            )
+                            item.setIcon(native.style().standardIcon(icon_role))
                     item.setData(qt.QtCore.Qt.UserRole, row.row_id)
                     alignment = {
                         "start": qt.QtCore.Qt.AlignLeft,

@@ -84,14 +84,13 @@ TREE = [
                 "ui",
                 "ui",
                 [
-                    tree_node("gallery", "gallery.pnx"),
                     tree_node("components", "components.pnx"),
                 ],
             ),
         ],
     ),
-    tree_node("assets", "assets"),
-    tree_node("tests", "tests"),
+    tree_node("assets", "assets", kind="folder"),
+    tree_node("tests", "tests", kind="folder"),
 ]
 
 COLUMNS = [
@@ -198,6 +197,16 @@ DISCOVERY_ROUTES = {
 
 # Responsive Content V1 keeps every leaf control/target unchanged while
 # selecting a layout topology from the content viewport, not window chrome.
+def update_tree_expansion(state, item_id, checked):
+    """Apply controlled tree disclosure for every Gallery tree."""
+    expanded = set(state.get("tree_expanded", ["src", "ui"]))
+    if checked:
+        expanded.add(item_id)
+    else:
+        expanded.discard(item_id)
+    state["tree_expanded"] = sorted(expanded)
+
+
 def content_columns(state, desktop):
     width = float(state.get("window_width", 1440))
     navigation = (
@@ -490,7 +499,7 @@ def data_page(state):
                     tree(
                         "gallery-tree",
                         TREE,
-                        expanded_ids=["src", "ui"],
+                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
                         selected_id=state["tree_selected"],
                     ),
                     300,
@@ -736,7 +745,7 @@ def ide_app_page(state):
                     tree(
                         "ide-tree",
                         TREE,
-                        expanded_ids=["src", "ui"],
+                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
                         selected_id=state["tree_selected"],
                     ),
                     260,
@@ -837,13 +846,90 @@ def settings_app_page(state):
     ], 18)
 
 
+FILE_MANAGER_FOLDER_CONTENTS = {
+    "root": [
+        ("f-src", "src", "Folder", "—"),
+        ("f-assets", "assets", "Folder", "—"),
+        ("f-tests", "tests", "Folder", "—"),
+    ],
+    "src": [
+        ("f-main", "main.pnx", "PYNIX", "4 KB"),
+        ("f-ui", "ui", "Folder", "—"),
+    ],
+    "ui": [
+        ("f-components", "components.pnx", "PYNIX", "8 KB"),
+    ],
+    "assets": [],
+    "tests": [],
+}
+FILE_MANAGER_FILE_PARENT = {
+    "main": "src",
+    "components": "ui",
+}
+
+
+def file_manager_select_tree_node(state, node_id):
+    """Files select only; folders navigate and change the right-hand listing."""
+    state["tree_selected"] = node_id
+    if node_id in FILE_MANAGER_FOLDER_CONTENTS:
+        state["files_folder"] = node_id
+        state["files_table_selected"] = None
+    elif node_id in FILE_MANAGER_FILE_PARENT:
+        # Keep listing its parent directory, not a one-file pseudo-folder.
+        state["files_folder"] = FILE_MANAGER_FILE_PARENT[node_id]
+
+
+FILE_MANAGER_TABLE_DIRECTORIES = {
+    "f-src": "src", "f-ui": "ui", "f-assets": "assets", "f-tests": "tests",
+}
+FILE_MANAGER_PARENT = {
+    "root": None, "src": "root", "ui": "src",
+    "assets": "root", "tests": "root",
+}
+
+
+def file_manager_open_directory(state, folder):
+    """Navigation replaces the listing; never merge it with its parent."""
+    if folder not in FILE_MANAGER_FOLDER_CONTENTS:
+        return False
+    state["files_folder"] = folder
+    state["tree_selected"] = folder
+    state["files_table_selected"] = None
+    return True
+
+
+def file_manager_go_up(state):
+    parent = FILE_MANAGER_PARENT.get(state.get("files_folder", "root"))
+    if parent is None:
+        return False
+    return file_manager_open_directory(state, parent)
+
+
+def file_manager_select_table_row(state, row_id):
+    """Folder click navigates; file click changes only the selection."""
+    folder = FILE_MANAGER_TABLE_DIRECTORIES.get(row_id)
+    current = state.get("files_folder", "root")
+    visible_ids = {entry[0] for entry in FILE_MANAGER_FOLDER_CONTENTS[current]}
+    if row_id not in visible_ids:
+        return
+    if folder is not None:
+        file_manager_open_directory(state, folder)
+    else:
+        state["files_table_selected"] = row_id
+
+
+def file_manager_rows(folder):
+    """Direct children only. Never flatten descendants into the current list."""
+    return [table_row(row_id, [name, kind, size])
+            for row_id, name, kind, size
+            in FILE_MANAGER_FOLDER_CONTENTS.get(folder, [])]
+
+
 def file_manager_page(state):
-    file_rows = [
-        table_row("f-main", ["main.pnx", "PYNIX", "4 KB"]),
-        table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"]),
-        table_row("f-readme", ["README.md", "Markdown", "6 KB"]),
-        table_row("f-assets", ["assets", "Folder", "—"]),
-    ]
+    file_rows = file_manager_rows(state.get("files_folder", "root"))
+    selected_file = state.get("files_table_selected")
+    if selected_file not in {item.row_id for item in file_rows}:
+        selected_file = None
     return column([
         responsive_section_header(state, 
             "File manager",
@@ -852,7 +938,8 @@ def file_manager_page(state):
         ),
         responsive_pair(state, [
             search_field("files-search", state["search"], "Search files"),
-            fill(text("Project / src", "caption")),
+            fill(text("Project / " + str(state.get("files_folder", "root")), "caption")),
+            button("files-up", "Up"),
             button("file-new", "New", "primary"),
             button("file-more", "More"),
         ], 10),
@@ -862,9 +949,9 @@ def file_manager_page(state):
                 advanced_viewport(
                     tree(
                         "files-tree",
-                        TREE,
-                        expanded_ids=["src", "ui"],
-                        selected_id=state["tree_selected"],
+                        [tree_node("root", "Project", TREE, kind="folder")],
+                        expanded_ids=["root", *state.get("tree_expanded", ["src", "ui"])],
+                        selected_id=state.get("tree_selected", "root"),
                     ),
                     260,
                     480,
@@ -882,7 +969,7 @@ def file_manager_page(state):
                             table_column("size", "Size", 120),
                         ],
                         file_rows,
-                        selected_id="f-main",
+                        selected_id=selected_file,
                     ),
                     700,
                     480,
@@ -891,7 +978,7 @@ def file_manager_page(state):
             )),
         ], 16),
         row([
-            badge("4 items", "neutral"),
+            badge(str(len(file_rows)) + " items", "neutral"),
             badge("Synced", "success"),
             fill(text("PYNIX project", "caption")),
         ], 8),
@@ -1027,7 +1114,10 @@ def main():
         "appearance": 0,
         "scale": 72.0,
         "tree_selected": "main",
+        "tree_expanded": ["src", "ui"],
         "table_selected": "editor",
+        "files_table_selected": None,
+        "files_folder": "root",
         "source": SOURCE,
         "selection_start": 0,
         "selection_end": 0,
@@ -1129,7 +1219,14 @@ def main():
         elif event.kind == "SELECTION" and event.target in {
             "gallery-tree", "ide-tree", "files-tree",
         }:
-            state["tree_selected"] = event.item_id
+            if event.target == "files-tree":
+                file_manager_select_tree_node(state, event.item_id)
+            else:
+                state["tree_selected"] = event.item_id
+        elif event.kind == "ACTIVATE" and event.target == "files-up":
+            file_manager_go_up(state)
+        elif event.kind == "SELECTION" and event.target == "files-table":
+            file_manager_select_table_row(state, event.item_id)
         elif event.kind == "SELECTION" and event.target == "gallery-table":
             state["table_selected"] = event.item_id
         elif event.kind == "CHANGE" and event.target in {"gallery-editor", "ide-editor"}:
@@ -1140,8 +1237,10 @@ def main():
             state["selection_start"] = event.selection_start
             state["selection_end"] = event.selection_end
             continue
-        elif event.kind == "EXPANSION":
-            continue
+        elif event.kind == "EXPANSION" and event.target in {
+            "gallery-tree", "ide-tree", "files-tree",
+        }:
+            update_tree_expansion(state, event.item_id, event.checked)
         elif event.kind == "ACTIVATE" and event.target in {
             "canvas-card",
             "canvas-circle",

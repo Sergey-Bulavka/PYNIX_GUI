@@ -291,3 +291,147 @@ def test_advanced_viewport_does_not_mutate_native_widget_identity():
     assert viewport.kind == "scroll"
     assert viewport.children[0].kind == "minSize"
     assert viewport.children[0].children[0] is widget
+
+
+def test_tree_disclosure_updates_controlled_state_and_all_gallery_trees():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["tree_expanded"] = ["src", "ui"]
+    gallery.update_tree_expansion(state, "src", False)
+    assert state["tree_expanded"] == ["ui"]
+    for page in ("data", "ide", "files"):
+        nodes = [node for node in _walk(gallery.build(page, state))
+                 if node.kind == "tree"]
+        assert len(nodes) == 1
+        assert nodes[0].expanded_ids == (
+            ("root", "ui") if page == "files" else ("ui",)
+        )
+    gallery.update_tree_expansion(state, "src", True)
+    assert state["tree_expanded"] == ["src", "ui"]
+
+
+def _file_manager_visible_names(gallery, state):
+    root = gallery.build("files", state)
+    validate_view(root)
+    tables = [part for part in _walk(root)
+              if part.kind == "table" and part.target == "files-table"]
+    assert len(tables) == 1
+    return tuple(row.cells[0] for row in tables[0].data[1])
+
+
+def test_file_manager_root_and_folders_control_right_hand_listing():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    assert _file_manager_visible_names(gallery, state) == (
+        "src", "assets", "tests",
+    )
+    gallery.file_manager_select_tree_node(state, "root")
+    assert _file_manager_visible_names(gallery, state) == ("src", "assets", "tests")
+    for selected, expected in (
+        ("src", ("main.pnx", "ui")),
+        ("ui", ("components.pnx",)),
+        ("assets", ()),
+        ("tests", ()),
+    ):
+        gallery.file_manager_select_tree_node(state, selected)
+        assert state["files_folder"] == selected
+        assert _file_manager_visible_names(gallery, state) == expected
+
+
+def test_file_manager_file_selection_keeps_parent_directory_contents():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_tree_node(state, "src")
+    gallery.file_manager_select_tree_node(state, "main")
+    assert state["tree_selected"] == "main"
+    assert state["files_folder"] == "src"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+
+    gallery.file_manager_select_tree_node(state, "ui")
+    gallery.file_manager_select_tree_node(state, "components")
+    assert state["tree_selected"] == "components"
+    assert state["files_folder"] == "ui"
+    assert _file_manager_visible_names(gallery, state) == (
+        "components.pnx",
+    )
+
+
+def test_file_manager_selection_does_not_select_unrelated_hidden_file():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_tree_node(state, "ui")
+    state["files_table_selected"] = "f-main"
+    root = gallery.build("files", state)
+    selected = [part.selected_id for part in _walk(root)
+                if part.kind == "table" and part.target == "files-table"]
+    assert selected == [None]
+
+
+def test_file_manager_tree_exposes_selectable_project_root():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    root = gallery.build("files", state)
+    tree = next(part for part in _walk(root)
+                if part.kind == "tree" and part.target == "files-tree")
+    assert tree.data[0].node_id == "root"
+    assert tree.data[0].label == "Project"
+    assert "root" in tree.expanded_ids
+    gallery.file_manager_select_tree_node(state, "root")
+    assert state["files_folder"] == "root"
+
+
+def test_file_manager_table_folder_selection_navigates_and_syncs_tree():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_table_row(state, "f-src")
+    assert state["files_folder"] == "src"
+    assert state["tree_selected"] == "src"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    gallery.file_manager_select_table_row(state, "f-ui")
+    assert state["files_folder"] == "ui"
+    assert state["tree_selected"] == "ui"
+    assert _file_manager_visible_names(gallery, state) == (
+        "components.pnx",
+    )
+
+
+def test_file_manager_table_file_selection_does_not_navigate():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_tree_node(state, "src")
+    gallery.file_manager_select_table_row(state, "f-main")
+    assert state["files_folder"] == "src"
+    assert state["files_table_selected"] == "f-main"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+
+
+def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_table_row(state, "f-src")
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    gallery.file_manager_select_table_row(state, "f-ui")
+    assert _file_manager_visible_names(gallery, state) == (
+        "components.pnx",
+    )
+    assert "main.pnx" not in _file_manager_visible_names(gallery, state)
+    assert "ui" not in _file_manager_visible_names(gallery, state)
+    gallery.file_manager_go_up(state)
+    assert state["files_folder"] == "src"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    gallery.file_manager_go_up(state)
+    assert _file_manager_visible_names(gallery, state) == (
+        "src", "assets", "tests",
+    )
+
+
+def test_file_manager_ignores_stale_selection_from_previous_directory():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_table_row(state, "f-src")
+    gallery.file_manager_select_table_row(state, "f-ui")
+    gallery.file_manager_select_table_row(state, "f-src")
+    assert state["files_folder"] == "ui"
+    assert _file_manager_visible_names(gallery, state) == (
+        "components.pnx",
+    )
