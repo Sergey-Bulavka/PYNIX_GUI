@@ -105,12 +105,20 @@ def _objc_gui_navigation_button_type():
                 }.get(key_code)
 
             if key is not None:
-                self._pynix_backend._queue_structured_key(
-                    self._pynix_window,
-                    self,
-                    key,
+                # Enter and Backspace belong to file-table navigation only;
+                # preserve native activation of unrelated buttons.
+                meta = self._pynix_backend._control_meta(
+                    self._pynix_window, self
                 )
-                return
+                if key not in {"enter", "backspace"} or (
+                    meta is not None
+                    and meta[0] == "tableRow"
+                    and meta[1] == "files-table"
+                ):
+                    self._pynix_backend._queue_structured_key(
+                        self._pynix_window, self, key,
+                    )
+                    return
 
             objc.super(PynixGUINavigationButton, self).keyDown_(event)
 
