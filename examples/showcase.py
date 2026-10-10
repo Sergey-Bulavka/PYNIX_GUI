@@ -84,7 +84,6 @@ TREE = [
                 "ui",
                 "ui",
                 [
-                    tree_node("gallery", "gallery.pnx"),
                     tree_node("components", "components.pnx"),
                 ],
             ),
@@ -858,7 +857,6 @@ FILE_MANAGER_FOLDER_CONTENTS = {
         ("f-ui", "ui", "Folder", "—"),
     ],
     "ui": [
-        ("f-gallery", "gallery.pnx", "PYNIX", "11 KB"),
         ("f-components", "components.pnx", "PYNIX", "8 KB"),
     ],
     "assets": [],
@@ -866,7 +864,6 @@ FILE_MANAGER_FOLDER_CONTENTS = {
 }
 FILE_MANAGER_FILE_PARENT = {
     "main": "src",
-    "gallery": "ui",
     "components": "ui",
 }
 
