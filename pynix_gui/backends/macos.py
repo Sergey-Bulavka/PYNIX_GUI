@@ -1957,12 +1957,13 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             for node_value, depth in visible:
                 row = self._new_container(appkit)
+                expandable = (node_value.has_children if node_value.has_children is not None else bool(node_value.children))
                 disclosure = appkit.NSButton.buttonWithTitle_target_action_(
                     (
                         "⌄"
-                        if node_value.children and node_value.node_id in expanded
+                        if expandable and node_value.node_id in expanded
                         else "›"
-                        if node_value.children
+                        if expandable
                         else ""
                     ),
                     bridge,
@@ -1970,7 +1971,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                 )
                 if hasattr(disclosure, "setBordered_"):
                     disclosure.setBordered_(False)
-                if node_value.children and hasattr(disclosure, "setFont_"):
+                if expandable and hasattr(disclosure, "setFont_"):
                     from ..tree_visuals import (
                         tree_disclosure_size, tree_disclosure_baseline_offset,
                     )
@@ -2074,7 +2075,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                     view.target,
                     node_value.node_id,
                 )
-                if node_value.children:
+                if expandable:
                     control_meta[disclosure] = (
                         "treeDisclosure",
                         view.target,

@@ -29,11 +29,16 @@ class GUITreeNode:
     label: str
     children: tuple["GUITreeNode", ...] = ()
     kind: str = "auto"
+    has_children: bool | None = None
 
     def __post_init__(self):
         _non_empty(self.node_id, "GUI tree node id")
         if self.kind not in {"auto", "folder", "file"}:
             raise GUIError("PYNIX-GUI-009", "GUI tree node kind must be auto, folder or file.")
+        if self.has_children is not None and type(self.has_children) is not bool:
+            raise GUIError("PYNIX-GUI-009", "GUI tree node has_children must be Bool or None.")
+        if self.has_children is False and self.children:
+            raise GUIError("PYNIX-GUI-009", "GUI leaf node cannot contain children.")
         if type(self.label) is not str:
             raise GUIError("PYNIX-GUI-009", "GUI tree node label must be String.")
         if type(self.children) is not tuple or any(
@@ -74,9 +79,9 @@ class GUITableRow:
             raise GUIError("PYNIX-GUI-009", "GUI table row cells must be Strings.")
 
 
-def tree_node(node_id: str, label: str, children=(), *, kind="auto") -> GUITreeNode:
+def tree_node(node_id: str, label: str, children=(), *, kind="auto", has_children=None) -> GUITreeNode:
     child_values = _sequence(children, "GUI tree node children")
-    return GUITreeNode(node_id, label, child_values, kind)
+    return GUITreeNode(node_id, label, child_values, kind, has_children)
 
 
 def table_column(
