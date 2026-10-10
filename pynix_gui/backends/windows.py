@@ -542,13 +542,20 @@ class WindowsGUIBackend:
             def add_tree(nodes_values, parent_item=None):
                 for node in nodes_values:
                     item = W.QTreeWidgetItem([node.label])
-                    from ..tree_visuals import tree_node_kind
-                    icon_role = (
-                        W.QStyle.SP_DirIcon
-                        if tree_node_kind(node) == "folder"
-                        else W.QStyle.SP_FileIcon
+                    from ..tree_visuals import (
+                        tree_file_icon_kind, pnx_icon_path,
                     )
-                    item.setIcon(0, native.style().standardIcon(icon_role))
+                    kind = tree_file_icon_kind(
+                        node.label, bool(node.children)
+                    )
+                    if kind == "pnx" and pnx_icon_path().is_file():
+                        item.setIcon(0, qt.QtGui.QIcon(str(pnx_icon_path())))
+                    else:
+                        icon_role = (
+                            W.QStyle.SP_DirIcon
+                            if kind == "folder" else W.QStyle.SP_FileIcon
+                        )
+                        item.setIcon(0, native.style().standardIcon(icon_role))
                     item.setData(0, qt.QtCore.Qt.UserRole, node.node_id)
                     by_id[node.node_id] = item
                     if parent_item is None:
