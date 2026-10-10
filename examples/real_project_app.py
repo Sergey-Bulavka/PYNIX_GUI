@@ -62,7 +62,11 @@ def build(explorer, state):
         "real-project-preview",
         state["preview"], 0, 0, [], read_only=True,
     )
-    folders = [tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]\n    visible_folders = _folder_ids(folders)\n    expanded = [folder for folder in state["expanded"] if folder in visible_folders]\n    current_folder = explorer.folder if explorer.folder in visible_folders else "__project_root__"\n    left = column([
+    folders = [tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]
+    visible_folders = _folder_ids(folders)
+    expanded = [folder for folder in state["expanded"] if folder in visible_folders]
+    current_folder = explorer.folder if explorer.folder in visible_folders else "__project_root__"
+    left = column([
         text("Project folders", "subheading"),
         fill(tree(
             "real-project-tree",
