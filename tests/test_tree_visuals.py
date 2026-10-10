@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pynix_gui import tree_node
-from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size, tree_disclosure_size, tree_file_icon_kind, tree_disclosure_column_width, pnx_icon_path
+from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size, tree_disclosure_size, tree_file_icon_kind, tree_disclosure_column_width, tree_disclosure_baseline_offset, pnx_icon_path
 
 
 def test_folder_and_document_visually_distinguishable():
@@ -51,3 +51,10 @@ def test_empty_directories_are_explicitly_supported():
     empty_dir = tree_node("assets", "assets", kind="folder")
     assert tree_node_kind(empty_dir) == "folder"
     assert tree_node_kind(tree_node("plain", "notes.txt")) == "file"
+
+
+def test_chevron_baselines_are_optically_centered_without_moving_hit_area():
+    assert tree_disclosure_baseline_offset(30, True) > tree_disclosure_baseline_offset(30, False)
+    assert 4 <= tree_disclosure_baseline_offset(30, True) <= 6
+    assert 0 <= tree_disclosure_baseline_offset(30, False) <= 2
+    assert tree_disclosure_baseline_offset(0, True) == 0
