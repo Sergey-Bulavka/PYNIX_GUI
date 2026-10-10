@@ -3389,11 +3389,14 @@ class MacOSGUIBackend(MacOSHostBackend):
                         cells = ()
                     cursor = 0.0
                     for cell, width in zip(cells, widths):
+                        # Match header cell insets; avoid text and selected
+                        # cell borders touching the table's left edge.
+                        inset = 8.0
                         cell.setFrame_(
                             appkit.NSMakeRect(
-                                cursor,
+                                cursor + inset,
                                 0,
-                                width,
+                                max(0.0, width - inset * 2),
                                 row_height,
                             )
                         )
