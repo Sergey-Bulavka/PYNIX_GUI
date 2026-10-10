@@ -380,19 +380,21 @@ def test_file_manager_tree_exposes_selectable_project_root():
     assert state["files_folder"] == "root"
 
 
-def test_file_manager_table_folder_selection_navigates_and_syncs_tree():
+def test_file_manager_single_click_selects_and_double_open_navigates():
     gallery = _gallery_module()
     state = _state(gallery)
-    gallery.file_manager_select_table_row(state, "f-src")
+    assert gallery.file_manager_select_table_row(state, "f-src")
+    assert state["files_folder"] == "root"
+    assert state["files_table_selected"] == "f-src"
+    assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "src"
     assert state["tree_selected"] == "src"
     assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
-    gallery.file_manager_select_table_row(state, "f-ui")
+    assert gallery.file_manager_select_table_row(state, "f-ui")
+    assert state["files_folder"] == "src"
+    assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "ui"
-    assert state["tree_selected"] == "ui"
-    assert _file_manager_visible_names(gallery, state) == (
-        "components.pnx",
-    )
+    assert _file_manager_visible_names(gallery, state) == ("components.pnx",)
 
 
 def test_file_manager_table_file_selection_does_not_navigate():
@@ -408,9 +410,9 @@ def test_file_manager_table_file_selection_does_not_navigate():
 def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
     gallery = _gallery_module()
     state = _state(gallery)
-    gallery.file_manager_select_table_row(state, "f-src")
+    gallery.file_manager_open_selected(state, "f-src")
     assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
-    gallery.file_manager_select_table_row(state, "f-ui")
+    gallery.file_manager_open_selected(state, "f-ui")
     assert _file_manager_visible_names(gallery, state) == (
         "components.pnx",
     )
@@ -428,10 +430,21 @@ def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
 def test_file_manager_ignores_stale_selection_from_previous_directory():
     gallery = _gallery_module()
     state = _state(gallery)
-    gallery.file_manager_select_table_row(state, "f-src")
-    gallery.file_manager_select_table_row(state, "f-ui")
-    gallery.file_manager_select_table_row(state, "f-src")
+    gallery.file_manager_open_selected(state, "f-src")
+    gallery.file_manager_open_selected(state, "f-ui")
+    assert not gallery.file_manager_open_selected(state, "f-src")
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
         "components.pnx",
     )
+
+
+def test_file_manager_open_file_does_not_change_current_directory():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_open_selected(state, "f-src")
+    assert gallery.file_manager_select_table_row(state, "f-main")
+    assert gallery.file_manager_open_selected(state)
+    assert state["files_folder"] == "src"
+    assert state["files_last_opened"] == "f-main"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
