@@ -144,6 +144,12 @@ class GUIEvent:
                 )
             )
             or (
+                self.kind == "OPEN"
+                and _is_non_empty_string(self.target)
+                and _is_non_empty_string(self.item_id)
+                and payload_count == 1
+            )
+            or (
                 self.kind == "SELECTION"
                 and _is_non_empty_string(self.target)
                 and payload_count == 1
