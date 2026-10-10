@@ -1929,6 +1929,24 @@ class MacOSGUIBackend(MacOSHostBackend):
                         pass
                 if hasattr(label, "setAlignment_"):
                     label.setAlignment_(getattr(appkit, "NSTextAlignmentLeft", 0))
+                # A compact, icon-bearing explorer item rather than a
+                # full-width text button. Keep selection and event metadata.
+                from ..tree_visuals import tree_node_kind
+                folder = tree_node_kind(node_value) == "folder"
+                image_name = (
+                    getattr(appkit, "NSImageNameFolder", "NSFolder")
+                    if folder
+                    else getattr(appkit, "NSImageNameMultipleDocuments", "NSMultipleDocuments")
+                )
+                try:
+                    icon_image = appkit.NSImage.imageNamed_(image_name)
+                    if icon_image is not None:
+                        label.setImage_(icon_image)
+                        label.setImagePosition_(
+                            getattr(appkit, "NSImageLeft", 2)
+                        )
+                except (AttributeError, TypeError):
+                    pass
                 row.addSubview_(label)
 
                 control_meta[label] = (
@@ -3224,12 +3242,14 @@ class MacOSGUIBackend(MacOSHostBackend):
                                 row_height,
                             )
                         )
+                        from ..tree_visuals import compact_tree_label_width
+                        available = max(0.0, content_width - indent - 24.0)
+                        label_width = compact_tree_label_width(
+                            str(label.title()), available
+                        )
                         label.setFrame_(
                             appkit.NSMakeRect(
-                                indent + 24.0,
-                                0,
-                                max(0.0, content_width - indent - 24.0),
-                                row_height,
+                                indent + 24.0, 0, label_width, row_height,
                             )
                         )
 
