@@ -28,3 +28,10 @@ def tree_icon_size(row_height: float, font_size: float) -> float:
     if row_height <= 0 or font_size <= 0:
         return 0.0
     return min(max(12.0, font_size * 1.18), row_height * 0.64)
+
+
+def tree_disclosure_size(row_height: float, font_size: float) -> float:
+    """A clearly visible chevron balanced with the item icon and row."""
+    if row_height <= 0 or font_size <= 0:
+        return 0.0
+    return min(max(13.0, font_size * 1.16), row_height * 0.60)
