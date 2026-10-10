@@ -13,7 +13,8 @@ from pathlib import Path
 
 from pynix_gui import (
     GUIRuntime, button, column, fill, max_size, padding, rich_editor, row,
-    table, table_column, table_row, text, tree, tree_node, horizontal_split,\n    vertical_split,
+    table, table_column, table_row, text, tree, tree_node, horizontal_split,
+    vertical_split,
 )
 from pynix_gui.backends import default_backend
 
