@@ -543,10 +543,10 @@ class WindowsGUIBackend:
                 for node in nodes_values:
                     item = W.QTreeWidgetItem([node.label])
                     from ..tree_visuals import (
-                        tree_file_icon_kind, pnx_icon_path,
+                        tree_file_icon_kind, tree_node_kind, pnx_icon_path,
                     )
                     kind = tree_file_icon_kind(
-                        node.label, bool(node.children)
+                        node.label, tree_node_kind(node) == "folder"
                     )
                     if kind == "pnx" and pnx_icon_path().is_file():
                         item.setIcon(0, qt.QtGui.QIcon(str(pnx_icon_path())))
