@@ -37,12 +37,12 @@ def _nodes(explorer, folder="", *, expanded=(), show_hidden=False):
     active = set(expanded)
     result = []
     for entry in _directory_entries(explorer, folder, show_hidden):
+        has_children = bool(_directory_entries(explorer, entry.path, show_hidden))
         if entry.path in active:
             children = _nodes(
                 explorer, entry.path, expanded=active, show_hidden=show_hidden,
             )
         else:
-            has_children = bool(_directory_entries(explorer, entry.path, show_hidden))
             children = []
         result.append(tree_node(entry.path, entry.name, children, kind="folder",
                                 has_children=bool(children) if entry.path in active else has_children))
