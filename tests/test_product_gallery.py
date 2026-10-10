@@ -403,3 +403,35 @@ def test_file_manager_table_file_selection_does_not_navigate():
     assert state["files_folder"] == "src"
     assert state["files_table_selected"] == "f-main"
     assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+
+
+def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_table_row(state, "f-src")
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    gallery.file_manager_select_table_row(state, "f-ui")
+    assert _file_manager_visible_names(gallery, state) == (
+        "gallery.pnx", "components.pnx",
+    )
+    assert "main.pnx" not in _file_manager_visible_names(gallery, state)
+    assert "ui" not in _file_manager_visible_names(gallery, state)
+    gallery.file_manager_go_up(state)
+    assert state["files_folder"] == "src"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    gallery.file_manager_go_up(state)
+    assert _file_manager_visible_names(gallery, state) == (
+        "src", "assets", "tests",
+    )
+
+
+def test_file_manager_ignores_stale_selection_from_previous_directory():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_table_row(state, "f-src")
+    gallery.file_manager_select_table_row(state, "f-ui")
+    gallery.file_manager_select_table_row(state, "f-src")
+    assert state["files_folder"] == "ui"
+    assert _file_manager_visible_names(gallery, state) == (
+        "gallery.pnx", "components.pnx",
+    )
