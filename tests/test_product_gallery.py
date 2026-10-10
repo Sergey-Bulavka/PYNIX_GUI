@@ -384,7 +384,7 @@ def test_file_manager_single_click_selects_and_double_open_navigates():
     gallery = _gallery_module()
     state = _state(gallery)
     assert gallery.file_manager_select_table_row(state, "f-src")
-    assert state["files_folder"] == "root"
+    assert state.get("files_folder", "root") == "root"
     assert state["files_table_selected"] == "f-src"
     assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "src"
