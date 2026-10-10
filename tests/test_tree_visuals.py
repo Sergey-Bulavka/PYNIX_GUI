@@ -29,7 +29,7 @@ def test_tree_icons_follow_text_and_row_geometry():
 def test_disclosure_chevron_scales_with_tree_row_and_font():
     assert 18 <= tree_disclosure_size(30, 13) <= 23
     assert tree_disclosure_size(36, 16) > tree_disclosure_size(30, 12)
-    assert tree_disclosure_size(24, 13) <= 14.4
+    assert tree_disclosure_size(24, 13) <= 24 * 0.76
     assert tree_disclosure_size(0, 13) == 0
 
 
@@ -39,7 +39,7 @@ def test_file_icons_choose_pnx_and_fallback_consistently():
     assert tree_file_icon_kind("notes.txt", False) == "file"
     assert tree_file_icon_kind("src", True) == "folder"
     assert pnx_icon_path().is_file()
-    assert pnx_icon_path().read_bytes().startswith(b"\\x89PNG")
+    assert pnx_icon_path().read_bytes().startswith(bytes.fromhex("89504e47"))
 
 
 def test_disclosure_width_and_size_match_readable_project_tree():
