@@ -3458,6 +3458,25 @@ class MacOSGUIBackend(MacOSHostBackend):
                     appkit.NSMakeRect(0, 0, content_width, content_height)
                 )
 
+                # The table document uses bottom-left coordinates. AppKit's
+                # initial clip origin can consequently show its final rows,
+                # leaving the header and first entries above the viewport.
+                # Only initialize the scroll position when a table instance
+                # is first laid out; never reset navigation during rerenders.
+                clip_view = native.contentView() if hasattr(native, "contentView") else None
+                if clip_view is not None and not getattr(native, "_pynix_table_initialized", False):
+                    try:
+                        visible_height = float(clip_view.bounds().size.height)
+                        clip_view.scrollToPoint_(
+                            appkit.NSMakePoint(
+                                0.0, max(0.0, content_height - visible_height)
+                            )
+                        )
+                        native.reflectScrolledClipView_(clip_view)
+                        native._pynix_table_initialized = True
+                    except (AttributeError, TypeError):
+                        pass
+
                 if rows:
                     header = rows[0]
                     header.setFrame_(
