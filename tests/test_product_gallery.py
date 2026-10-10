@@ -306,3 +306,32 @@ def test_tree_disclosure_updates_controlled_state_and_all_gallery_trees():
         assert nodes[0].expanded_ids == ("ui",)
     gallery.update_tree_expansion(state, "src", True)
     assert state["tree_expanded"] == ["src", "ui"]
+
+
+def test_file_manager_table_tracks_selected_folder():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    for selected, expected in (
+        ("src", ("main.pnx", "ui")),
+        ("ui", ("gallery.pnx", "components.pnx")),
+        ("assets", ()),
+        ("tests", ()),
+    ):
+        state["tree_selected"] = selected
+        root = gallery.build("files", state)
+        validate_view(root)
+        tables = [part for part in _walk(root)
+                  if part.kind == "table" and part.target == "files-table"]
+        assert len(tables) == 1
+        assert tuple(row.cells[0] for row in tables[0].data[1]) == expected
+
+
+def test_file_manager_selection_does_not_select_unrelated_hidden_file():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["tree_selected"] = "ui"
+    state["files_table_selected"] = "f-main"
+    root = gallery.build("files", state)
+    selected = [part.selected_id for part in _walk(root)
+                if part.kind == "table" and part.target == "files-table"]
+    assert selected == [None]
