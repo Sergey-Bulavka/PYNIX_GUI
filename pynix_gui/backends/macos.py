@@ -2078,7 +2078,22 @@ class MacOSGUIBackend(MacOSHostBackend):
 
             for row_value in rows:
                 row = self._new_container(appkit)
-                for column_index, (column_value, cell) in enumerate(
+                selected_file_row = (
+                    view.target == "files-table"
+                    and row_value.row_id == view.selected_id
+                )
+                if selected_file_row and hasattr(row, "setWantsLayer_"):
+                    try:
+                        row.setWantsLayer_(True)
+                        row.layer().setBackgroundColor_(
+                            self._native_color(
+                                appkit, "surfaceSelected", theme
+                            ).CGColor()
+                        )
+                        row.layer().setCornerRadius_(7.0)
+                    except (AttributeError, TypeError):
+                        pass
+                for column_index, (column_value, cell) in enumerate
                     zip(columns, row_value.cells)
                 ):
                     is_file_manager_name = (
@@ -2131,10 +2146,12 @@ class MacOSGUIBackend(MacOSHostBackend):
                     if hasattr(cell_button, "setBordered_"):
                         cell_button.setBordered_(
                             row_value.row_id == view.selected_id
+                            and view.target != "files-table"
                         )
-                    if row_value.row_id == view.selected_id and hasattr(
-                        cell_button,
-                        "setBezelColor_",
+                    if (
+                        row_value.row_id == view.selected_id
+                        and view.target != "files-table"
+                        and hasattr(cell_button, "setBezelColor_")
                     ):
                         try:
                             cell_button.setBezelColor_(
