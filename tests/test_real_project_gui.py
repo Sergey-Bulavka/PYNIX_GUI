@@ -49,3 +49,30 @@ def test_gui_up_and_refresh_keep_valid_model(tmp_path):
     dispatch(explorer, state, GUIEvent("ACTIVATE", target="real-project-refresh"))
     assert explorer.folder == ""
     validate_view(build(explorer, state))
+
+
+def test_tree_does_not_render_source_files_or_stale_expansion(tmp_path):
+    explorer, state = _setup(tmp_path)
+    state["expanded"] = ["__project_root__", "deleted-folder"]
+    view = build(explorer, state)
+    validate_view(view)
+    def walk(node):
+        yield node
+        for child in node.children:
+            yield from walk(child)
+    tree_view = next(item for item in walk(view) if item.kind == "tree")
+    assert "deleted-folder" not in tree_view.expanded_ids
+    def ids(nodes):
+        for node in nodes:
+            yield node.node_id
+            yield from ids(node.children)
+    assert "src/main.pnx" not in set(ids(tree_view.data))
+
+
+def test_refresh_updates_real_files(tmp_path):
+    explorer, state = _setup(tmp_path)
+    (tmp_path / "new.pnx").write_text("new", encoding="utf-8")
+    dispatch(explorer, state, GUIEvent("ACTIVATE", target="real-project-refresh"))
+    view = build(explorer, state)
+    validate_view(view)
+    assert any(entry.path == "new.pnx" for entry in explorer.entries())
