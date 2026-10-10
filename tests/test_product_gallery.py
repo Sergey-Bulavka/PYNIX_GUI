@@ -291,3 +291,18 @@ def test_advanced_viewport_does_not_mutate_native_widget_identity():
     assert viewport.kind == "scroll"
     assert viewport.children[0].kind == "minSize"
     assert viewport.children[0].children[0] is widget
+
+
+def test_tree_disclosure_updates_controlled_state_and_all_gallery_trees():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["tree_expanded"] = ["src", "ui"]
+    gallery.update_tree_expansion(state, "src", False)
+    assert state["tree_expanded"] == ["ui"]
+    for page in ("data", "ide", "files"):
+        nodes = [node for node in _walk(gallery.build(page, state))
+                 if node.kind == "tree"]
+        assert len(nodes) == 1
+        assert nodes[0].expanded_ids == ("ui",)
+    gallery.update_tree_expansion(state, "src", True)
+    assert state["tree_expanded"] == ["src", "ui"]
