@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pynix_gui import tree_node
-from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size, tree_disclosure_size
+from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size, tree_disclosure_size, tree_file_icon_kind, tree_disclosure_column_width, pnx_icon_path
 
 
 def test_folder_and_document_visually_distinguishable():
@@ -27,7 +27,21 @@ def test_tree_icons_follow_text_and_row_geometry():
 
 
 def test_disclosure_chevron_scales_with_tree_row_and_font():
-    assert 14 <= tree_disclosure_size(30, 13) <= 18
+    assert 18 <= tree_disclosure_size(30, 13) <= 23
     assert tree_disclosure_size(36, 16) > tree_disclosure_size(30, 12)
     assert tree_disclosure_size(24, 13) <= 14.4
     assert tree_disclosure_size(0, 13) == 0
+
+
+def test_file_icons_choose_pnx_and_fallback_consistently():
+    assert tree_file_icon_kind("main.pnx", False) == "pnx"
+    assert tree_file_icon_kind("MAIN.PNX", False) == "pnx"
+    assert tree_file_icon_kind("notes.txt", False) == "file"
+    assert tree_file_icon_kind("src", True) == "folder"
+    assert pnx_icon_path().is_file()
+    assert pnx_icon_path().read_bytes().startswith(b"\\x89PNG")
+
+
+def test_disclosure_width_and_size_match_readable_project_tree():
+    assert tree_disclosure_size(30, 13) >= 18
+    assert tree_disclosure_column_width(30) >= 24
