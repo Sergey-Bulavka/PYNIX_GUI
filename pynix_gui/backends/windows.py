@@ -632,6 +632,16 @@ class WindowsGUIBackend:
                 lambda target=view.target, widget=native:
                     self._table_selected(window, target, widget, qt)
             )
+            if view.target == "files-table":
+                native.itemDoubleClicked.connect(
+                    lambda item, target=view.target:
+                        self._queue(window).append(
+                            GUIEvent(
+                                "OPEN", target=target,
+                                item_id=str(item.data(qt.QtCore.Qt.UserRole)),
+                            )
+                        )
+                    )
             controls[view.target] = native
         elif kind == "canvas":
             native = self._canvas_widget(qt, window, view.canvas_scene, theme, parent)
