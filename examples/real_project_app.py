@@ -29,7 +29,7 @@ def _directory_entries(explorer, folder, show_hidden):
 
 
 def _nodes(explorer, folder="", *, expanded=(), show_hidden=False):
-    """Load only visible branches; a hidden sentinel supplies a disclosure arrow.
+    """Load only visible branches; node metadata supplies disclosure arrows.
 
     Collapsed folders have no recursive subtree traversal. The single-level
     lookahead determines whether the folder actually has child folders.
@@ -43,11 +43,9 @@ def _nodes(explorer, folder="", *, expanded=(), show_hidden=False):
             )
         else:
             has_children = bool(_directory_entries(explorer, entry.path, show_hidden))
-            children = (
-                [tree_node("__lazy__/" + entry.path, "", kind="file")]
-                if has_children else []
-            )
-        result.append(tree_node(entry.path, entry.name, children, kind="folder"))
+            children = []
+        result.append(tree_node(entry.path, entry.name, children, kind="folder",
+                                has_children=bool(children) if entry.path in active else has_children))
     return result
 
 
