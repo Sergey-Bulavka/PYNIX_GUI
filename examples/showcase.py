@@ -490,7 +490,7 @@ def data_page(state):
                     tree(
                         "gallery-tree",
                         TREE,
-                        expanded_ids=["src", "ui"],
+                        expanded_ids=state["tree_expanded"],
                         selected_id=state["tree_selected"],
                     ),
                     300,
@@ -736,7 +736,7 @@ def ide_app_page(state):
                     tree(
                         "ide-tree",
                         TREE,
-                        expanded_ids=["src", "ui"],
+                        expanded_ids=state["tree_expanded"],
                         selected_id=state["tree_selected"],
                     ),
                     260,
@@ -863,7 +863,7 @@ def file_manager_page(state):
                     tree(
                         "files-tree",
                         TREE,
-                        expanded_ids=["src", "ui"],
+                        expanded_ids=state["tree_expanded"],
                         selected_id=state["tree_selected"],
                     ),
                     260,
@@ -1027,6 +1027,7 @@ def main():
         "appearance": 0,
         "scale": 72.0,
         "tree_selected": "main",
+        "tree_expanded": ["src", "ui"],
         "table_selected": "editor",
         "source": SOURCE,
         "selection_start": 0,
@@ -1140,8 +1141,15 @@ def main():
             state["selection_start"] = event.selection_start
             state["selection_end"] = event.selection_end
             continue
-        elif event.kind == "EXPANSION":
-            continue
+        elif event.kind == "EXPANSION" and event.target in {
+            "gallery-tree", "ide-tree", "files-tree",
+        }:
+            expanded = set(state["tree_expanded"])
+            if event.checked:
+                expanded.add(event.item_id)
+            else:
+                expanded.discard(event.item_id)
+            state["tree_expanded"] = sorted(expanded)
         elif event.kind == "ACTIVATE" and event.target in {
             "canvas-card",
             "canvas-circle",
