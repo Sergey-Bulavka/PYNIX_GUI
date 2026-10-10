@@ -56,3 +56,10 @@ def pnx_icon_path():
     """Stable installed-package path, independent of current working directory."""
     from pathlib import Path
     return Path(__file__).resolve().parent / "assets" / "icons" / "pnx-file.png"
+
+
+def tree_disclosure_baseline_offset(row_height: float, expanded: bool) -> float:
+    """Optical adjustment for Unicode chevrons within AppKit button glyphs."""
+    if row_height <= 0:
+        return 0.0
+    return min(row_height * (0.17 if expanded else 0.04), 6.0)
