@@ -911,9 +911,9 @@ def file_manager_page(state):
                 advanced_viewport(
                     tree(
                         "files-tree",
-                        TREE,
-                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
-                        selected_id=state["tree_selected"],
+                        [tree_node("root", "Project", TREE, kind="folder")],
+                        expanded_ids=["root", *state.get("tree_expanded", ["src", "ui"])],
+                        selected_id=state.get("tree_selected", "root"),
                     ),
                     260,
                     480,
