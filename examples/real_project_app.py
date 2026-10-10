@@ -46,7 +46,8 @@ def _folder_ids(nodes):
 
 def build(explorer, state):
     """Application-scoped model -> platform-independent GUI view."""
-    entries = explorer.entries()
+    entries = [entry for entry in explorer.entries()
+               if state.get("show_hidden", False) or not entry.name.startswith(".")]
     rows = [
         table_row(entry.path, [
             entry.name,
@@ -107,3 +108,82 @@ def build(explorer, state):
         16,
     )
 
+
+def dispatch(explorer, state, event):
+    """Translate semantic events into application state; return False on close."""
+    if event.kind == "CLOSE":
+        return False
+    try:
+        if event.kind == "SELECTION" and event.target == "real-project-files":
+            explorer.select(event.item_id)
+        elif event.kind == "OPEN" and event.target == "real-project-files":
+            _open(explorer, state, event.item_id)
+        elif event.kind == "ACTIVATE" and event.target == "real-project-open":
+            _open(explorer, state, None)
+        elif event.kind == "ACTIVATE" and event.target == "real-project-up":
+            explorer.up()
+        elif event.kind == "ACTIVATE" and event.target == "real-project-hidden":
+            state["show_hidden"] = not state.get("show_hidden", False)
+            explorer.selected = None
+            state["message"] = "Hidden files " + ("shown" if state["show_hidden"] else "hidden")
+        elif event.kind == "ACTIVATE" and event.target == "real-project-refresh":
+            explorer.entries()
+        elif event.kind == "SELECTION" and event.target == "real-project-tree":
+            path = event.item_id
+            if path == "__project_root__":
+                explorer.folder, explorer.selected = "", None
+            elif path in _folder_ids([tree_node("__project_root__", explorer.root.name, _nodes(explorer), kind="folder")]):
+                explorer.folder, explorer.selected = path, None
+            else:
+                state["message"] = "Select a file in the table to open it."
+        elif event.kind == "EXPANSION" and event.target == "real-project-tree":
+            expanded = set(state["expanded"])
+            if event.checked:
+                expanded.add(event.item_id)
+            else:
+                expanded.discard(event.item_id)
+            state["expanded"] = sorted(expanded)
+        state["message"] = state["message"] or "Ready"
+    except ProjectExplorerError as exc:
+        state["message"] = str(exc)
+    return True
+
+
+def _open(explorer, state, item_id):
+    path = explorer.open(item_id)
+    if path is None:
+        state["message"] = "Folder: " + (explorer.folder or explorer.root.name)
+        return
+    if not path.lower().endswith(".pnx"):
+        state["message"] = "Only .pnx files can be previewed."
+        return
+    state["preview"] = explorer.read_pnx(path)
+    state["message"] = "Preview: " + path + " (read-only)"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="PYNIX real project explorer")
+    parser.add_argument("root", type=Path, help="Local project directory")
+    args = parser.parse_args()
+    explorer = ProjectExplorer(args.root)
+    backend = default_backend()
+    if backend is None:
+        raise SystemExit("No native PYNIX GUI backend is available.")
+    runtime = GUIRuntime(backend)
+    if not runtime.is_available():
+        raise SystemExit("PYNIX GUI backend is unavailable.")
+    state = {"expanded": ["__project_root__"], "preview": "", "message": "Ready", "show_hidden": False}
+    window = runtime.open("PYNIX GUI — Real Project Explorer", 1160, 760)
+    try:
+        window.render(build(explorer, state))
+        while True:
+            event = window.next_event()
+            if not dispatch(explorer, state, event):
+                break
+            window.render(build(explorer, state))
+    finally:
+        window.close()
+
+
+if __name__ == "__main__":
+    main()
