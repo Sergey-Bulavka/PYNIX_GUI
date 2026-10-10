@@ -303,7 +303,9 @@ def test_tree_disclosure_updates_controlled_state_and_all_gallery_trees():
         nodes = [node for node in _walk(gallery.build(page, state))
                  if node.kind == "tree"]
         assert len(nodes) == 1
-        assert nodes[0].expanded_ids == ("ui",)
+        assert nodes[0].expanded_ids == (
+            ("root", "ui") if page == "files" else ("ui",)
+        )
     gallery.update_tree_expansion(state, "src", True)
     assert state["tree_expanded"] == ["src", "ui"]
 
