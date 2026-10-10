@@ -847,28 +847,49 @@ def settings_app_page(state):
     ], 18)
 
 
-def file_manager_rows(selected_folder):
-    """Demo folder contents derived from the selected explorer node."""
-    by_folder = {
-        "src": [
-            table_row("f-main", ["main.pnx", "PYNIX", "4 KB"]),
-            table_row("f-ui", ["ui", "Folder", "—"]),
-        ],
-        "ui": [
-            table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"]),
-            table_row("f-components", ["components.pnx", "PYNIX", "8 KB"]),
-        ],
-        "assets": [],
-        "tests": [],
-        "main": [table_row("f-main", ["main.pnx", "PYNIX", "4 KB"])],
-        "gallery": [table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"])],
-        "components": [table_row("f-components", ["components.pnx", "PYNIX", "8 KB"])],
-    }
-    return by_folder.get(selected_folder, [])
+FILE_MANAGER_FOLDER_CONTENTS = {
+    "root": [
+        ("f-src", "src", "Folder", "—"),
+        ("f-assets", "assets", "Folder", "—"),
+        ("f-tests", "tests", "Folder", "—"),
+    ],
+    "src": [
+        ("f-main", "main.pnx", "PYNIX", "4 KB"),
+        ("f-ui", "ui", "Folder", "—"),
+    ],
+    "ui": [
+        ("f-gallery", "gallery.pnx", "PYNIX", "11 KB"),
+        ("f-components", "components.pnx", "PYNIX", "8 KB"),
+    ],
+    "assets": [],
+    "tests": [],
+}
+FILE_MANAGER_FILE_PARENT = {
+    "main": "src",
+    "gallery": "ui",
+    "components": "ui",
+}
+
+
+def file_manager_select_tree_node(state, node_id):
+    """Files select only; folders navigate and change the right-hand listing."""
+    state["tree_selected"] = node_id
+    if node_id in FILE_MANAGER_FOLDER_CONTENTS:
+        state["files_folder"] = node_id
+        state["files_table_selected"] = None
+    elif node_id in FILE_MANAGER_FILE_PARENT:
+        # Keep listing its parent directory, not a one-file pseudo-folder.
+        state["files_folder"] = FILE_MANAGER_FILE_PARENT[node_id]
+
+
+def file_manager_rows(folder):
+    return [table_row(row_id, [name, kind, size])
+            for row_id, name, kind, size
+            in FILE_MANAGER_FOLDER_CONTENTS.get(folder, [])]
 
 
 def file_manager_page(state):
-    file_rows = file_manager_rows(state.get("tree_selected", "src"))
+    file_rows = file_manager_rows(state.get("files_folder", "root"))
     selected_file = state.get("files_table_selected")
     if selected_file not in {item.row_id for item in file_rows}:
         selected_file = None
@@ -880,7 +901,7 @@ def file_manager_page(state):
         ),
         responsive_pair(state, [
             search_field("files-search", state["search"], "Search files"),
-            fill(text("Project / " + str(state.get("tree_selected", "src")), "caption")),
+            fill(text("Project / " + str(state.get("files_folder", "root")), "caption")),
             button("file-new", "New", "primary"),
             button("file-more", "More"),
         ], 10),
@@ -1058,6 +1079,7 @@ def main():
         "tree_expanded": ["src", "ui"],
         "table_selected": "editor",
         "files_table_selected": None,
+        "files_folder": "root",
         "source": SOURCE,
         "selection_start": 0,
         "selection_end": 0,
@@ -1159,7 +1181,10 @@ def main():
         elif event.kind == "SELECTION" and event.target in {
             "gallery-tree", "ide-tree", "files-tree",
         }:
-            state["tree_selected"] = event.item_id
+            if event.target == "files-tree":
+                file_manager_select_tree_node(state, event.item_id)
+            else:
+                state["tree_selected"] = event.item_id
         elif event.kind == "SELECTION" and event.target == "files-table":
             state["files_table_selected"] = event.item_id
         elif event.kind == "SELECTION" and event.target == "gallery-table":
