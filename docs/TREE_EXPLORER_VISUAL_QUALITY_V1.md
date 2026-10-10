@@ -6,7 +6,7 @@ than a collection of full-width push buttons. Visual reference: PyCharm's
 Project pane (compact hierarchy, chevrons, folder/document icon distinction).
 
 ## Changes
-- macOS: compact AppKit label button bounds based on measured approximation
+- macOS: folder/document NSImage copied and resized from row height and native font point size (around 15–18 pt in a 30 pt row). The shared NSImage is never modified. Compact AppKit label button bounds based on measured approximation
   (not stretched to the entire panel width); native NSImage icons for folders
   and documents, preserving selection IDs and disclosure event mapping.
 - Windows/Qt: use platform standard folder/document icons in QTreeWidget.
