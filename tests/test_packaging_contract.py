@@ -35,3 +35,17 @@ def test_default_runtime_uses_platform_backend_selector(monkeypatch):
 
 def test_unknown_platform_has_no_native_default_backend():
     assert default_backend(platform_name="unknown") is None
+
+
+def test_public_export_manifest_is_complete_and_duplicate_free():
+    assert len(pynix_gui.__all__) == len(set(pynix_gui.__all__))
+    for name in pynix_gui.__all__:
+        assert hasattr(pynix_gui, name), name
+
+
+def test_declared_status_is_not_mistaken_for_stable_release():
+    pyproject = Path(__file__).resolve().parents[1] / "pyproject.toml"
+    metadata = tomllib.loads(pyproject.read_text(encoding="utf-8"))["project"]
+    assert ".dev" in metadata["version"]
+    assert pynix_gui.__version__.endswith("-dev")
+    assert "Development Status :: 2 - Pre-Alpha" in metadata["classifiers"]
