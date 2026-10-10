@@ -249,3 +249,45 @@ def _layout_walk(node):
     yield node
     for child in node.children:
         yield from _layout_walk(child)
+
+
+def test_advanced_widgets_have_local_viewports_to_keep_workspaces_narrow():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    state["window_width"] = 600
+    state["navigation_override"] = None
+    expected = {
+        "data": {"gallery-table", "gallery-tree"},
+        "editor": {"gallery-editor"},
+        "canvas": {"gallery-canvas"},
+        "dashboard": {"example-canvas", "example-table"},
+        "ide": {"ide-editor", "ide-tree", "ide-problems"},
+        "files": {"files-table", "files-tree"},
+    }
+
+    def descendant_targets(node):
+        return {
+            part.target for part in _walk(node)
+            if part.target
+        }
+
+    for page, targets in expected.items():
+        root = gallery.build(page, state)
+        validate_view(root)
+        for target in targets:
+            assert any(
+                target in descendant_targets(view.children[0])
+                for view in _walk(root)
+                if view.kind == "scroll" and view.children
+                and view is not root
+            ), (page, target)
+
+
+def test_advanced_viewport_does_not_mutate_native_widget_identity():
+    from pynix_gui import text
+    gallery = _gallery_module()
+    widget = text("content")
+    viewport = gallery.advanced_viewport(widget, 500, 200)
+    assert viewport.kind == "scroll"
+    assert viewport.children[0].kind == "minSize"
+    assert viewport.children[0].children[0] is widget
