@@ -198,6 +198,16 @@ DISCOVERY_ROUTES = {
 
 # Responsive Content V1 keeps every leaf control/target unchanged while
 # selecting a layout topology from the content viewport, not window chrome.
+def update_tree_expansion(state, item_id, checked):
+    """Apply controlled tree disclosure for every Gallery tree."""
+    expanded = set(state.get("tree_expanded", ["src", "ui"]))
+    if checked:
+        expanded.add(item_id)
+    else:
+        expanded.discard(item_id)
+    state["tree_expanded"] = sorted(expanded)
+
+
 def content_columns(state, desktop):
     width = float(state.get("window_width", 1440))
     navigation = (
@@ -490,7 +500,7 @@ def data_page(state):
                     tree(
                         "gallery-tree",
                         TREE,
-                        expanded_ids=state["tree_expanded"],
+                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
                         selected_id=state["tree_selected"],
                     ),
                     300,
@@ -736,7 +746,7 @@ def ide_app_page(state):
                     tree(
                         "ide-tree",
                         TREE,
-                        expanded_ids=state["tree_expanded"],
+                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
                         selected_id=state["tree_selected"],
                     ),
                     260,
@@ -863,7 +873,7 @@ def file_manager_page(state):
                     tree(
                         "files-tree",
                         TREE,
-                        expanded_ids=state["tree_expanded"],
+                        expanded_ids=state.get("tree_expanded", ["src", "ui"]),
                         selected_id=state["tree_selected"],
                     ),
                     260,
@@ -1144,12 +1154,7 @@ def main():
         elif event.kind == "EXPANSION" and event.target in {
             "gallery-tree", "ide-tree", "files-tree",
         }:
-            expanded = set(state["tree_expanded"])
-            if event.checked:
-                expanded.add(event.item_id)
-            else:
-                expanded.discard(event.item_id)
-            state["tree_expanded"] = sorted(expanded)
+            update_tree_expansion(state, event.item_id, event.checked)
         elif event.kind == "ACTIVATE" and event.target in {
             "canvas-card",
             "canvas-circle",
