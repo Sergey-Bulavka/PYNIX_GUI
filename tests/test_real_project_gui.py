@@ -95,3 +95,21 @@ def test_hidden_directories_are_opt_in(tmp_path):
     validate_view(view)
     t = next(node for node in walk(view) if node.kind == "tree")
     assert any(child.label == ".git" for child in t.data[0].children)
+
+
+def test_explorer_sidebar_is_present_in_workspace_layout(tmp_path):
+    explorer, state = _setup(tmp_path)
+    view = build(explorer, state)
+    validate_view(view)
+
+    def walk(node):
+        yield node
+        for child in node.children:
+            yield from walk(child)
+
+    # Regression: the sidebar must remain a sibling of the main content,
+    # not disappear behind a native nested split view.
+    tree_nodes = [node for node in walk(view) if node.kind == "tree"]
+    assert len(tree_nodes) == 1
+    assert any(node.kind == "row" and len(node.children) == 2 for node in walk(view))
+    assert any(node.kind == "table" for node in walk(view))
