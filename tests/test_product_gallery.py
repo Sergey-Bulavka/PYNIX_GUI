@@ -323,6 +323,8 @@ def test_file_manager_root_and_folders_control_right_hand_listing():
     assert _file_manager_visible_names(gallery, state) == (
         "src", "assets", "tests",
     )
+    gallery.file_manager_select_tree_node(state, "root")
+    assert _file_manager_visible_names(gallery, state) == ("src", "assets", "tests")
     for selected, expected in (
         ("src", ("main.pnx", "ui")),
         ("ui", ("gallery.pnx", "components.pnx")),
@@ -361,3 +363,16 @@ def test_file_manager_selection_does_not_select_unrelated_hidden_file():
     selected = [part.selected_id for part in _walk(root)
                 if part.kind == "table" and part.target == "files-table"]
     assert selected == [None]
+
+
+def test_file_manager_tree_exposes_selectable_project_root():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    root = gallery.build("files", state)
+    tree = next(part for part in _walk(root)
+                if part.kind == "tree" and part.target == "files-tree")
+    assert tree.data[0].node_id == "root"
+    assert tree.data[0].label == "Project"
+    assert "root" in tree.expanded_ids
+    gallery.file_manager_select_tree_node(state, "root")
+    assert state["files_folder"] == "root"
