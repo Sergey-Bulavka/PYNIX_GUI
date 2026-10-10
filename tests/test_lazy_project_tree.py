@@ -62,7 +62,9 @@ def test_collapsed_branches_are_not_traversed(tmp_path):
     nodes = _nodes(explorer)
     assert _find(nodes, "src") is not None
     assert _find(nodes, "src/nested") is None
-    assert _find(nodes, "__lazy__/src") is not None
+    src = _find(nodes, "src")
+    assert src.has_children is True
+    assert src.children == ()
 
 
 def test_tree_expand_and_collapse_preserve_other_branches(tmp_path):
