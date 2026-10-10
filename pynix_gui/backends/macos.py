@@ -1890,9 +1890,9 @@ class MacOSGUIBackend(MacOSHostBackend):
                 row = self._new_container(appkit)
                 disclosure = appkit.NSButton.buttonWithTitle_target_action_(
                     (
-                        "▾"
+                        "⌄"
                         if node_value.children and node_value.node_id in expanded
-                        else "▸"
+                        else "›"
                         if node_value.children
                         else ""
                     ),
