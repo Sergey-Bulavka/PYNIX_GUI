@@ -2093,7 +2093,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                         row.layer().setCornerRadius_(7.0)
                     except (AttributeError, TypeError):
                         pass
-                for column_index, (column_value, cell) in enumerate
+                for column_index, (column_value, cell) in enumerate(
                     zip(columns, row_value.cells)
                 ):
                     is_file_manager_name = (
