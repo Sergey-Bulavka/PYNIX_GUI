@@ -12,6 +12,8 @@ def tree_node_kind(node) -> str:
     Any expandable node is a folder. Leaf nodes are documents unless the
     caller explicitly sets the optional kind in a future semantic model.
     """
+    if getattr(node, "kind", "auto") != "auto":
+        return node.kind
     return "folder" if node.children else "file"
 
 
