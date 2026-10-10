@@ -85,6 +85,9 @@ def _objc_gui_navigation_button_type():
                 "\uf701": "down",
                 "\uf702": "left",
                 "\uf703": "right",
+                "\r": "enter",
+                "\n": "enter",
+                "\x7f": "backspace",
             }
             key = mapping.get(characters)
             if key is None:
@@ -97,6 +100,8 @@ def _objc_gui_navigation_button_type():
                     125: "down",
                     123: "left",
                     124: "right",
+                    36: "enter",
+                    51: "backspace",
                 }.get(key_code)
 
             if key is not None:
@@ -2814,6 +2819,17 @@ class MacOSGUIBackend(MacOSHostBackend):
             if current_id not in identities:
                 return
 
+            if target == "files-table":
+                if key == "enter":
+                    self._event_queue(window).append(
+                        GUIEvent("OPEN", target=target, item_id=current_id)
+                    )
+                    return
+                if key == "backspace":
+                    self._event_queue(window).append(
+                        GUIEvent("ACTIVATE", target="files-up")
+                    )
+                    return
             index = identities.index(current_id)
             if key == "up" and index > 0:
                 next_id = identities[index - 1]
