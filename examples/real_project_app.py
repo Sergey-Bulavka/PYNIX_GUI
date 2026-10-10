@@ -21,10 +21,24 @@ from pynix_gui.backends import default_backend
 from .project_explorer import ProjectExplorer, ProjectExplorerError
 
 
+_IGNORED_DIRECTORIES = frozenset({
+    "__pycache__", ".git", ".venv", "venv", ".pytest_cache",
+    ".mypy_cache", ".ruff_cache", ".idea", ".worktrees",
+    "node_modules", "dist", "build",
+})
+
+
+def _visible(entry, show_hidden):
+    return show_hidden or (
+        not entry.name.startswith(".")
+        and not (entry.is_directory and entry.name in _IGNORED_DIRECTORIES)
+    )
+
+
 def _directory_entries(explorer, folder, show_hidden):
     return [
         entry for entry in explorer.entries(folder)
-        if entry.is_directory and (show_hidden or not entry.name.startswith("."))
+        if entry.is_directory and _visible(entry, show_hidden)
     ]
 
 
@@ -70,7 +84,7 @@ def _folder_ids(nodes):
 def build(explorer, state):
     """Application-scoped model -> platform-independent GUI view."""
     entries = [entry for entry in explorer.entries()
-               if state.get("show_hidden", False) or not entry.name.startswith(".")]
+               if _visible(entry, state.get("show_hidden", False))]
     rows = [
         table_row(entry.path, [
             entry.name,
