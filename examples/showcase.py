@@ -847,13 +847,31 @@ def settings_app_page(state):
     ], 18)
 
 
+def file_manager_rows(selected_folder):
+    """Demo folder contents derived from the selected explorer node."""
+    by_folder = {
+        "src": [
+            table_row("f-main", ["main.pnx", "PYNIX", "4 KB"]),
+            table_row("f-ui", ["ui", "Folder", "—"]),
+        ],
+        "ui": [
+            table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"]),
+            table_row("f-components", ["components.pnx", "PYNIX", "8 KB"]),
+        ],
+        "assets": [],
+        "tests": [],
+        "main": [table_row("f-main", ["main.pnx", "PYNIX", "4 KB"])],
+        "gallery": [table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"])],
+        "components": [table_row("f-components", ["components.pnx", "PYNIX", "8 KB"])],
+    }
+    return by_folder.get(selected_folder, [])
+
+
 def file_manager_page(state):
-    file_rows = [
-        table_row("f-main", ["main.pnx", "PYNIX", "4 KB"]),
-        table_row("f-gallery", ["gallery.pnx", "PYNIX", "11 KB"]),
-        table_row("f-readme", ["README.md", "Markdown", "6 KB"]),
-        table_row("f-assets", ["assets", "Folder", "—"]),
-    ]
+    file_rows = file_manager_rows(state.get("tree_selected", "src"))
+    selected_file = state.get("files_table_selected")
+    if selected_file not in {item.row_id for item in file_rows}:
+        selected_file = None
     return column([
         responsive_section_header(state, 
             "File manager",
@@ -862,7 +880,7 @@ def file_manager_page(state):
         ),
         responsive_pair(state, [
             search_field("files-search", state["search"], "Search files"),
-            fill(text("Project / src", "caption")),
+            fill(text("Project / " + str(state.get("tree_selected", "src")), "caption")),
             button("file-new", "New", "primary"),
             button("file-more", "More"),
         ], 10),
@@ -892,7 +910,7 @@ def file_manager_page(state):
                             table_column("size", "Size", 120),
                         ],
                         file_rows,
-                        selected_id="f-main",
+                        selected_id=selected_file,
                     ),
                     700,
                     480,
@@ -901,7 +919,7 @@ def file_manager_page(state):
             )),
         ], 16),
         row([
-            badge("4 items", "neutral"),
+            badge(str(len(file_rows)) + " items", "neutral"),
             badge("Synced", "success"),
             fill(text("PYNIX project", "caption")),
         ], 8),
@@ -1039,6 +1057,7 @@ def main():
         "tree_selected": "main",
         "tree_expanded": ["src", "ui"],
         "table_selected": "editor",
+        "files_table_selected": None,
         "source": SOURCE,
         "selection_start": 0,
         "selection_end": 0,
@@ -1141,6 +1160,8 @@ def main():
             "gallery-tree", "ide-tree", "files-tree",
         }:
             state["tree_selected"] = event.item_id
+        elif event.kind == "SELECTION" and event.target == "files-table":
+            state["files_table_selected"] = event.item_id
         elif event.kind == "SELECTION" and event.target == "gallery-table":
             state["table_selected"] = event.item_id
         elif event.kind == "CHANGE" and event.target in {"gallery-editor", "ide-editor"}:
