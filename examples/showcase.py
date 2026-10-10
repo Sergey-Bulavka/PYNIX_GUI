@@ -90,8 +90,8 @@ TREE = [
             ),
         ],
     ),
-    tree_node("assets", "assets"),
-    tree_node("tests", "tests"),
+    tree_node("assets", "assets", kind="folder"),
+    tree_node("tests", "tests", kind="folder"),
 ]
 
 COLUMNS = [
