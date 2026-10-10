@@ -882,6 +882,21 @@ def file_manager_select_tree_node(state, node_id):
         state["files_folder"] = FILE_MANAGER_FILE_PARENT[node_id]
 
 
+FILE_MANAGER_TABLE_DIRECTORIES = {
+    "f-src": "src", "f-ui": "ui", "f-assets": "assets", "f-tests": "tests",
+}
+
+
+def file_manager_select_table_row(state, row_id):
+    """A selected folder opens in the same file list and tree."""
+    state["files_table_selected"] = row_id
+    folder = FILE_MANAGER_TABLE_DIRECTORIES.get(row_id)
+    if folder is not None:
+        state["files_folder"] = folder
+        state["tree_selected"] = folder
+        state["files_table_selected"] = None
+
+
 def file_manager_rows(folder):
     return [table_row(row_id, [name, kind, size])
             for row_id, name, kind, size
@@ -1186,7 +1201,7 @@ def main():
             else:
                 state["tree_selected"] = event.item_id
         elif event.kind == "SELECTION" and event.target == "files-table":
-            state["files_table_selected"] = event.item_id
+            file_manager_select_table_row(state, event.item_id)
         elif event.kind == "SELECTION" and event.target == "gallery-table":
             state["table_selected"] = event.item_id
         elif event.kind == "CHANGE" and event.target in {"gallery-editor", "ide-editor"}:
