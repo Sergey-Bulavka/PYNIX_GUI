@@ -81,7 +81,7 @@ def test_read_pnx_validations(project):
         project.read_pnx("README.md")
     with pytest.raises(ProjectExplorerError):
         project.read_pnx("src/main.pnx", max_bytes=2)
-    (project.root / "src" / "invalid.pnx").write_bytes(b"\\xff\\xfe")
+    (project.root / "src" / "invalid.pnx").write_bytes(bytes([0xff, 0xfe]))
     with pytest.raises(ProjectExplorerError):
         project.read_pnx("src/invalid.pnx")
 
