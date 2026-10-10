@@ -885,19 +885,44 @@ def file_manager_select_tree_node(state, node_id):
 FILE_MANAGER_TABLE_DIRECTORIES = {
     "f-src": "src", "f-ui": "ui", "f-assets": "assets", "f-tests": "tests",
 }
+FILE_MANAGER_PARENT = {
+    "root": None, "src": "root", "ui": "src",
+    "assets": "root", "tests": "root",
+}
+
+
+def file_manager_open_directory(state, folder):
+    """Navigation replaces the listing; never merge it with its parent."""
+    if folder not in FILE_MANAGER_FOLDER_CONTENTS:
+        return False
+    state["files_folder"] = folder
+    state["tree_selected"] = folder
+    state["files_table_selected"] = None
+    return True
+
+
+def file_manager_go_up(state):
+    parent = FILE_MANAGER_PARENT.get(state.get("files_folder", "root"))
+    if parent is None:
+        return False
+    return file_manager_open_directory(state, parent)
 
 
 def file_manager_select_table_row(state, row_id):
-    """A selected folder opens in the same file list and tree."""
-    state["files_table_selected"] = row_id
+    """Folder click navigates; file click changes only the selection."""
     folder = FILE_MANAGER_TABLE_DIRECTORIES.get(row_id)
+    current = state.get("files_folder", "root")
+    visible_ids = {entry[0] for entry in FILE_MANAGER_FOLDER_CONTENTS[current]}
+    if row_id not in visible_ids:
+        return
     if folder is not None:
-        state["files_folder"] = folder
-        state["tree_selected"] = folder
-        state["files_table_selected"] = None
+        file_manager_open_directory(state, folder)
+    else:
+        state["files_table_selected"] = row_id
 
 
 def file_manager_rows(folder):
+    """Direct children only. Never flatten descendants into the current list."""
     return [table_row(row_id, [name, kind, size])
             for row_id, name, kind, size
             in FILE_MANAGER_FOLDER_CONTENTS.get(folder, [])]
@@ -917,6 +942,7 @@ def file_manager_page(state):
         responsive_pair(state, [
             search_field("files-search", state["search"], "Search files"),
             fill(text("Project / " + str(state.get("files_folder", "root")), "caption")),
+            button("files-up", "Up"),
             button("file-new", "New", "primary"),
             button("file-more", "More"),
         ], 10),
@@ -1200,6 +1226,8 @@ def main():
                 file_manager_select_tree_node(state, event.item_id)
             else:
                 state["tree_selected"] = event.item_id
+        elif event.kind == "ACTIVATE" and event.target == "files-up":
+            file_manager_go_up(state)
         elif event.kind == "SELECTION" and event.target == "files-table":
             file_manager_select_table_row(state, event.item_id)
         elif event.kind == "SELECTION" and event.target == "gallery-table":
