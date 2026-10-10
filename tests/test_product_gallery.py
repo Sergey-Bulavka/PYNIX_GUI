@@ -308,28 +308,54 @@ def test_tree_disclosure_updates_controlled_state_and_all_gallery_trees():
     assert state["tree_expanded"] == ["src", "ui"]
 
 
-def test_file_manager_table_tracks_selected_folder():
+def _file_manager_visible_names(gallery, state):
+    root = gallery.build("files", state)
+    validate_view(root)
+    tables = [part for part in _walk(root)
+              if part.kind == "table" and part.target == "files-table"]
+    assert len(tables) == 1
+    return tuple(row.cells[0] for row in tables[0].data[1])
+
+
+def test_file_manager_root_and_folders_control_right_hand_listing():
     gallery = _gallery_module()
     state = _state(gallery)
+    assert _file_manager_visible_names(gallery, state) == (
+        "src", "assets", "tests",
+    )
     for selected, expected in (
         ("src", ("main.pnx", "ui")),
         ("ui", ("gallery.pnx", "components.pnx")),
         ("assets", ()),
         ("tests", ()),
     ):
-        state["tree_selected"] = selected
-        root = gallery.build("files", state)
-        validate_view(root)
-        tables = [part for part in _walk(root)
-                  if part.kind == "table" and part.target == "files-table"]
-        assert len(tables) == 1
-        assert tuple(row.cells[0] for row in tables[0].data[1]) == expected
+        gallery.file_manager_select_tree_node(state, selected)
+        assert state["files_folder"] == selected
+        assert _file_manager_visible_names(gallery, state) == expected
+
+
+def test_file_manager_file_selection_keeps_parent_directory_contents():
+    gallery = _gallery_module()
+    state = _state(gallery)
+    gallery.file_manager_select_tree_node(state, "src")
+    gallery.file_manager_select_tree_node(state, "main")
+    assert state["tree_selected"] == "main"
+    assert state["files_folder"] == "src"
+    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+
+    gallery.file_manager_select_tree_node(state, "ui")
+    gallery.file_manager_select_tree_node(state, "gallery")
+    assert state["tree_selected"] == "gallery"
+    assert state["files_folder"] == "ui"
+    assert _file_manager_visible_names(gallery, state) == (
+        "gallery.pnx", "components.pnx",
+    )
 
 
 def test_file_manager_selection_does_not_select_unrelated_hidden_file():
     gallery = _gallery_module()
     state = _state(gallery)
-    state["tree_selected"] = "ui"
+    gallery.file_manager_select_tree_node(state, "ui")
     state["files_table_selected"] = "f-main"
     root = gallery.build("files", state)
     selected = [part.selected_id for part in _walk(root)
