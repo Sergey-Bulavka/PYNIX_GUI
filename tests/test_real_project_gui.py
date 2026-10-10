@@ -76,3 +76,22 @@ def test_refresh_updates_real_files(tmp_path):
     view = build(explorer, state)
     validate_view(view)
     assert any(entry.path == "new.pnx" for entry in explorer.entries())
+
+
+def test_hidden_directories_are_opt_in(tmp_path):
+    explorer, state = _setup(tmp_path)
+    (tmp_path / ".git").mkdir()
+    view = build(explorer, state)
+    validate_view(view)
+    def walk(node):
+        yield node
+        for child in node.children:
+            yield from walk(child)
+    t = next(node for node in walk(view) if node.kind == "tree")
+    assert all(child.label != ".git" for child in t.data[0].children)
+    dispatch(explorer, state, GUIEvent("ACTIVATE", target="real-project-hidden"))
+    assert state["show_hidden"] is True
+    view = build(explorer, state)
+    validate_view(view)
+    t = next(node for node in walk(view) if node.kind == "tree")
+    assert any(child.label == ".git" for child in t.data[0].children)
