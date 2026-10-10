@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from pynix_gui import tree_node
-from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size
+from pynix_gui.tree_visuals import tree_node_kind, compact_tree_label_width, tree_icon_size, tree_disclosure_size
 
 
 def test_folder_and_document_visually_distinguishable():
@@ -24,3 +24,10 @@ def test_tree_icons_follow_text_and_row_geometry():
     assert tree_icon_size(36, 16) > tree_icon_size(30, 12)
     assert tree_icon_size(0, 13) == 0
     assert tree_icon_size(30, 0) == 0
+
+
+def test_disclosure_chevron_scales_with_tree_row_and_font():
+    assert 14 <= tree_disclosure_size(30, 13) <= 18
+    assert tree_disclosure_size(36, 16) > tree_disclosure_size(30, 12)
+    assert tree_disclosure_size(24, 13) <= 14.4
+    assert tree_disclosure_size(0, 13) == 0
