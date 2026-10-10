@@ -1944,7 +1944,7 @@ class MacOSGUIBackend(MacOSHostBackend):
                 image_name = (
                     getattr(appkit, "NSImageNameFolder", "NSFolder")
                     if folder
-                    else getattr(appkit, "NSImageNameDocument", "NSDocument")
+                    else getattr(appkit, "NSImageNameSinglePageTemplate", "NSSinglePageTemplate")
                 )
                 try:
                     icon_image = appkit.NSImage.imageNamed_(image_name)
