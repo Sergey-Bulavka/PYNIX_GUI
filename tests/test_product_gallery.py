@@ -348,8 +348,8 @@ def test_file_manager_file_selection_keeps_parent_directory_contents():
     assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
 
     gallery.file_manager_select_tree_node(state, "ui")
-    gallery.file_manager_select_tree_node(state, "gallery")
-    assert state["tree_selected"] == "gallery"
+    gallery.file_manager_select_tree_node(state, "components")
+    assert state["tree_selected"] == "components"
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
         "components.pnx",
