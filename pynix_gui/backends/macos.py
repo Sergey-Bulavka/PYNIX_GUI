@@ -2645,8 +2645,15 @@ class MacOSGUIBackend(MacOSHostBackend):
                     window.makeFirstResponder_(sender)
                 except Exception:
                     pass
+            double_click = False
+            if target == "files-table":
+                try:
+                    native_event = self._appkit().NSApp.currentEvent()
+                    double_click = int(native_event.clickCount()) >= 2
+                except (AttributeError, TypeError, ValueError):
+                    pass
             event = GUIEvent(
-                "SELECTION",
+                "OPEN" if double_click else "SELECTION",
                 target=target,
                 item_id=meta[2],
             )
