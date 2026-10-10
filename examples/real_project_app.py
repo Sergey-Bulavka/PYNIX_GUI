@@ -13,7 +13,7 @@ from pathlib import Path
 
 from pynix_gui import (
     GUIRuntime, button, column, fill, max_size, padding, rich_editor, row,
-    table, table_column, table_row, text, tree, tree_node, vertical_split,
+    table, table_column, table_row, text, tree, tree_node, horizontal_split,
 )
 from pynix_gui.backends import default_backend
 
@@ -91,7 +91,7 @@ def build(explorer, state):
         fill(editor),
     ], 8)
     return padding(
-        vertical_split(max_size(left, 340, 1200), fill(right)),
+        horizontal_split(max_size(left, 340, 1200), fill(right)),
         16,
     )
 
