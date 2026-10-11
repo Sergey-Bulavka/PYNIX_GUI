@@ -30,6 +30,9 @@ ICONS = {
 }
 
 
+FILLED_KINDS = {"folder", "folder-open", "file", "pnx"}
+
+
 def draw_icon(appkit, x, y, name, color, size=20):
     """Draw transformed icon paths without modifying the graphics context."""
     if name not in ICONS:
@@ -64,7 +67,7 @@ def draw_icon(appkit, x, y, name, color, size=20):
         transform.scaleBy_(scale)
         path.transformUsingAffineTransform_(transform)
         path.setLineWidth_(STROKE * scale)
-        if kind == "dot":
+        if kind == "dot" or (name in FILLED_KINDS and kind == "poly" and command[-1] is True):
             path.fill()
         else:
             path.stroke()
