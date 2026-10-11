@@ -77,3 +77,10 @@ def test_vector_painter_executes_without_graphics_context_selectors():
 
     for name in ICONS:
         draw_icon(FakeAppKit, 10, 20, name, Color(), 18)
+
+
+def test_folder_silhouettes_are_filled_but_document_code_detail_remains_visible():
+    from pynix_gui.ide_iconography import FILLED_KINDS
+    assert {"folder", "folder-open"} <= FILLED_KINDS
+    assert "pnx" not in FILLED_KINDS
+    assert "file" not in FILLED_KINDS
