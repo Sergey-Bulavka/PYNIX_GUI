@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from collections.abc import Sequence
 
 from .core import GUIError
@@ -14,7 +15,10 @@ from .core import GUIError
 def _number(value, label):
     if type(value) not in {int, float}:
         raise GUIError("PYNIX-GUI-011", f"{label} must be numeric.")
-    return float(value)
+    result = float(value)
+    if not isfinite(result):
+        raise GUIError("PYNIX-GUI-011", f"{label} must be finite.")
+    return result
 
 
 def _positive(value, label):
