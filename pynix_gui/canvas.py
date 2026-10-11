@@ -548,3 +548,29 @@ def hit_test_scene(scene, x, y, host_width, host_height):
         return None
 
     return visit(scene.commands, identity)
+
+
+def canvas_text_origin(command, measured_width, measured_height):
+    """Resolve a text command to its drawing origin using measured glyph bounds.
+
+    Both native backends can use this geometry without inventing per-font
+    offsets. Unbounded labels retain their original drawing origin.
+    """
+    if not isinstance(command, GUICanvasCommand) or command.kind != "text":
+        raise GUIError("PYNIX-GUI-011", "Canvas text placement requires a text command.")
+    width = _number(measured_width, "GUI canvas measured text width")
+    height = _number(measured_height, "GUI canvas measured text height")
+    if width < 0 or height < 0:
+        raise GUIError("PYNIX-GUI-011", "Measured canvas text size cannot be negative.")
+    x, y = command.values[:2]
+    if len(command.values) == 5:
+        box_width, box_height = command.values[3:]
+        if command.text_align == "center":
+            x += (box_width - width) / 2
+        elif command.text_align == "end":
+            x += box_width - width
+        if command.text_valign == "center":
+            y += (box_height - height) / 2
+        elif command.text_valign == "bottom":
+            y += box_height - height
+    return x, y
