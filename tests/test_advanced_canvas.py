@@ -260,3 +260,41 @@ def test_adv04_canvas_text_rejects_invalid_alignment_bounds(kwargs):
     with pytest.raises(GUIError) as failure:
         canvas_text(0, 0, "Label", **kwargs)
     assert failure.value.code == "PYNIX-GUI-011"
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_rejects_nonfinite_shape_and_text_coordinates(nonfinite):
+    for build in (
+        lambda: canvas_rect(nonfinite, 0, 40, 30),
+        lambda: canvas_ellipse(0, nonfinite, 40, 30),
+        lambda: canvas_line(0, 0, nonfinite, 10),
+        lambda: canvas_text(0, nonfinite, "Label"),
+        lambda: canvas_path([(0, 0), (nonfinite, 10)]),
+        lambda: canvas_rect(0, 0, nonfinite, 30),
+        lambda: canvas_scene(nonfinite, 100, []),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            build()
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_rejects_nonfinite_transform_and_stroke(nonfinite):
+    for build in (
+        lambda: canvas_transform([], translate_x=nonfinite),
+        lambda: canvas_transform([], scale_y=nonfinite),
+        lambda: canvas_transform([], rotate=nonfinite),
+        lambda: canvas_rect(0, 0, 10, 10, line_width=nonfinite),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            build()
+
+
+def test_canvas_finite_negative_translation_and_rotation_are_supported():
+    transform = canvas_transform(
+        [canvas_rect(0, 0, 10, 10)],
+        translate_x=-25,
+        translate_y=12,
+        scale_x=-1,
+        rotate=-90,
+    )
+    assert transform.values == (-25.0, 12.0, -1.0, 1.0, -90.0)
