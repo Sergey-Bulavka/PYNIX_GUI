@@ -5,7 +5,20 @@ from types import SimpleNamespace
 
 from examples.ide_shell_showcase import SOURCE, build, dispatch, initial_state, shell_menus
 from pynix_gui.core import validate_view
-from pynix_gui.layout import layout
+from pynix_gui.layout import layout, measure
+
+
+def assert_shell_valid(scene):
+    """Report the offending subtree instead of only a root size error."""
+    def check(node, path):
+        try:
+            measure(node)
+        except ValueError as error:
+            for index, child in enumerate(node.children):
+                check(child, path + f"/{index}:{child.kind}")
+            raise AssertionError(f"Invalid GUI constraints at {path}: {error}") from error
+    check(scene, "root")
+    validate_view(scene)
 
 
 def event(kind, target=None, **kw):
@@ -14,7 +27,7 @@ def event(kind, target=None, **kw):
 
 def test_shell_all_panels_have_valid_constraints():
     state = initial_state()
-    validate_view(build(state))
+    assert_shell_valid(build(state))
     assert shell_menus() is not None
 
 
@@ -28,7 +41,7 @@ def test_shell_panel_visibility_and_activity_are_controlled():
     assert state["inspector"]
     dispatch(state, event("ACTIVATE", "shell-toggle-bottom"))
     assert not state["bottom"]
-    validate_view(build(state))
+    assert_shell_valid(build(state))
 
 
 def test_shell_has_multiple_working_editor_tabs():
@@ -42,7 +55,7 @@ def test_shell_has_multiple_working_editor_tabs():
     assert state["active"] == "gui.pnx"
     assert state["tabs"] == ["gui.pnx"]
     assert state["source"] != SOURCE
-    validate_view(build(state))
+    assert_shell_valid(build(state))
 
 
 def test_shell_bottom_tools_and_visual_run():
@@ -52,7 +65,7 @@ def test_shell_bottom_tools_and_visual_run():
     dispatch(state, event("ACTIVATE", "shell-run"))
     assert state["tool_tab"] == "Output"
     assert "no code executed" in state["tool_message"]
-    validate_view(build(state))
+    assert_shell_valid(build(state))
 
 
 def test_shell_open_project_and_close():
@@ -66,7 +79,7 @@ def test_shell_visual_geometry_at_desktop_sizes():
     for width, height in ((1024, 640), (1280, 800), (1440, 900), (1920, 1080)):
         state = initial_state()
         scene = build(state)
-        validate_view(scene)
+        assert_shell_valid(scene)
         root = layout(scene, width, height)
         regions = {}
         def walk(node):
