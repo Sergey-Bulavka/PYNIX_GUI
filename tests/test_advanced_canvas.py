@@ -310,3 +310,34 @@ def test_canvas_retained_scene_rejects_nonfinite_dimensions():
     from pynix_gui.canvas import GUICanvasScene
     with pytest.raises(GUIError, match="size"):
         GUICanvasScene((), float("inf"), 100)
+
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_viewport_rejects_nonfinite_host_dimensions(invalid):
+    from pynix_gui.canvas import canvas_viewport
+    for host_width, host_height in ((invalid, 100), (100, invalid)):
+        with pytest.raises(GUIError, match="finite"):
+            canvas_viewport(scene(), host_width, host_height)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_hit_test_rejects_nonfinite_coordinates_and_host_dimensions(invalid):
+    from pynix_gui.canvas import hit_test_scene
+    value = canvas_scene(100, 100, [canvas_rect(10, 10, 50, 50, hit_target="shape")])
+    for x, y, width, height in (
+        (invalid, 20, 100, 100),
+        (20, invalid, 100, 100),
+        (20, 20, invalid, 100),
+        (20, 20, 100, invalid),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            hit_test_scene(value, x, y, width, height)
+
+
+def test_canvas_hit_test_retains_letterbox_and_valid_target_behavior():
+    from pynix_gui.canvas import canvas_viewport, hit_test_scene
+    value = canvas_scene(100, 50, [canvas_rect(0, 0, 100, 50, hit_target="surface")])
+    assert canvas_viewport(value, 200, 200) == (2.0, 0.0, 50.0)
+    assert hit_test_scene(value, 100, 100, 200, 200) == "surface"
+    assert hit_test_scene(value, 100, 20, 200, 200) is None
