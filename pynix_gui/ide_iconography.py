@@ -35,15 +35,7 @@ def draw_icon(appkit, x, y, name, color, size=20):
     if name not in ICONS:
         raise ValueError(f"unknown IDE icon: {name}")
     scale = size / GRID
-    context = appkit.NSGraphicsContext.currentContext()
-    if context is None:
-        return
-    context.saveGraphicsState()
     try:
-        transform = appkit.NSAffineTransform.transform()
-        transform.translateXBy_yBy_(x, y)
-        transform.scaleBy_(scale)
-        transform.concat()
         color.setStroke()
         color.setFill()
         for command in ICONS[name]:
@@ -74,7 +66,11 @@ def draw_icon(appkit, x, y, name, color, size=20):
                     (cx-radius, cy-radius, radius*2, radius*2))
                 path.fill()
                 continue
-            path.setLineWidth_(STROKE)
+            transform = appkit.NSAffineTransform.transform()
+            transform.scaleBy_(scale)
+            transform.translateXBy_yBy_(x / scale, y / scale)
+            path.transformUsingAffineTransform_(transform)
+            path.setLineWidth_(STROKE * scale)
             path.setLineCapStyle_(appkit.NSRoundLineCapStyle)
             path.setLineJoinStyle_(appkit.NSRoundLineJoinStyle)
             path.stroke()
