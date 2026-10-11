@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import sys
 
+from pynix_gui.ide_iconography import draw_icon
+
 
 PALETTE = {
     "canvas": "#10151E",
@@ -101,60 +103,8 @@ def native_shell_class(appkit):
 
         @objc.python_method
         def _icon(self, x, y, kind, color="subtle"):
-            # Compact AppKit vector paths rather than Unicode placeholder glyphs.
-            c = _rgb(appkit, color)
-            if kind in ("folder", "file"):
-                if kind == "folder":
-                    self._fill(x, y+4, 14, 10, "yellow", 2)
-                    self._fill(x+1, y+3, 6, 4, "#D6B675", 1)
-                else:
-                    self._fill(x+2, y+1, 11, 15, color, 2)
-                    self._fill(x+4, y+5, 7, 1, "sidebar")
-                    self._fill(x+4, y+8, 6, 1, "sidebar")
-                return
-            if kind == "run":
-                path = appkit.NSBezierPath.bezierPath()
-                path.moveToPoint_(appkit.NSMakePoint(x+3, y+1))
-                path.lineToPoint_(appkit.NSMakePoint(x+14, y+8))
-                path.lineToPoint_(appkit.NSMakePoint(x+3, y+15))
-                path.closePath()
-                c.setFill()
-                path.fill()
-                return
-            if kind == "search":
-                c.setStroke()
-                path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
-                    appkit.NSMakeRect(x+1, y+1, 10, 10))
-                path.setLineWidth_(1.7)
-                path.stroke()
-                path = appkit.NSBezierPath.bezierPath()
-                path.moveToPoint_(appkit.NSMakePoint(x+10, y+11))
-                path.lineToPoint_(appkit.NSMakePoint(x+16, y+17))
-                path.setLineWidth_(1.7)
-                path.stroke()
-                return
-            if kind == "explorer":
-                self._fill(x+1, y+1, 14, 16, "subtle", 2)
-                self._fill(x+4, y+4, 8, 1, "rail")
-                self._fill(x+4, y+8, 8, 1, "rail")
-                self._fill(x+4, y+12, 6, 1, "rail")
-                return
-            if kind == "settings":
-                c.setStroke()
-                ring = appkit.NSBezierPath.bezierPathWithOvalInRect_(
-                    appkit.NSMakeRect(x+2, y+2, 13, 13))
-                ring.setLineWidth_(2.0)
-                ring.stroke()
-                return
-            if kind == "terminal":
-                c.setStroke()
-                path = appkit.NSBezierPath.bezierPath()
-                for ax, ay, bx, by in ((x+2,y+4,x+8,y+9),(x+8,y+9,x+2,y+14),(x+10,y+14,x+16,y+14)):
-                    path.moveToPoint_(appkit.NSMakePoint(ax,ay))
-                    path.lineToPoint_(appkit.NSMakePoint(bx,by))
-                path.setLineWidth_(1.6)
-                path.stroke()
-                return
+            name = {"file": "pnx"}.get(kind, kind)
+            draw_icon(appkit, x, y, name, _rgb(appkit, color), size=18)
 
         @objc.python_method
         def _chip(self, x, y, width, label, active=False):
@@ -208,7 +158,7 @@ def native_shell_class(appkit):
             self._fill(rail_w, body_top, sidebar_w, body_bottom-body_top, "sidebar")
             self._rule(content_x-1, body_top, 1, body_bottom-body_top)
             self._label(rail_w+16, body_top+18, "EXPLORER", size=11, color="subtle", weight="bold")
-            self._label(content_x-32, body_top+18, "···", size=14, color="faint")
+            self._icon(content_x-35, body_top+16, "more", "faint")
             self._rule(rail_w+12, body_top+48, sidebar_w-24)
             ty=body_top+62
             for index, (depth,name,kind,selected) in enumerate(PROJECT_TREE):
@@ -217,8 +167,7 @@ def native_shell_class(appkit):
                 if selected:
                     self._fill(rail_w+7, yy-3, sidebar_w-14, 25, "#304A64", 5)
                 if kind=="folder":
-                    self._label(xx, yy+1, "⌄" if name!="assets" else "›",
-                                color="faint", size=11)
+                    self._icon(xx-2, yy-1, "chevron-right" if name=="assets" else "chevron-down", "faint")
                     xx += 13
                 self._icon(xx, yy+1, kind, "accent" if selected else "subtle")
                 self._label(xx+21, yy+1, name, size=12,
@@ -237,7 +186,7 @@ def native_shell_class(appkit):
             self._rule(content_x+158, body_top+7, 1, tabs_h-14)
             self._icon(content_x+15, body_top+11, "file", "accent")
             self._label(content_x+37, body_top+12, "main.pnx", size=12, weight="bold")
-            self._label(content_x+137, body_top+10, "×", size=15, color="subtle")
+            self._icon(content_x+133, body_top+11, "close", "subtle")
             self._icon(content_x+177, body_top+11, "file", "faint")
             self._label(content_x+199, body_top+12, "gui.pnx", size=12, color="faint")
             self._rule(content_x, body_top+tabs_h, content_w)
