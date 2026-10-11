@@ -52,3 +52,22 @@ def test_native_preview_terminates_after_last_window_closes():
     source = Path(scene.__file__).read_text(encoding="utf-8")
     assert "applicationShouldTerminateAfterLastWindowClosed_" in source
     assert "app.setDelegate_(delegate)" in source
+
+
+def test_source_control_preview_structure():
+    assert len(scene.GIT_CHANGES) >= 3
+    assert ("M", "src/main.pnx") in scene.GIT_CHANGES
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    assert 'GIT_PREVIEW = "--git" in sys.argv' in source
+    for label in ("SOURCE CONTROL", "COMMIT MESSAGE", "CHANGES  (3)",
+                  "BRANCHES", "HISTORY", "Visual preview only"):
+        assert label in source
+
+
+def test_git_visual_mode_has_no_git_side_effects():
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    # Source Control is a static mock; no subprocess or git process is started.
+    assert not any(isinstance(node, ast.Import) and
+                   any(alias.name == "subprocess" for alias in node.names)
+                   for node in ast.walk(tree))
