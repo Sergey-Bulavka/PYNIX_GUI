@@ -169,7 +169,7 @@ def native_shell_class(appkit):
                 if kind=="folder":
                     self._icon(xx-2, yy-1, "chevron-right" if name=="assets" else "chevron-down", "faint")
                     xx += 13
-                self._icon(xx, yy+1, kind, "accent" if selected else "subtle")
+                self._icon(xx, yy+1, ("folder-open" if name in ("PYNIX", "src", "tests") else "folder") if kind == "folder" else ("pnx" if name.endswith(".pnx") else "file"), "accent" if selected else "subtle")
                 self._label(xx+21, yy+1, name, size=12,
                             color="text" if selected else "subtle",
                             weight="bold" if selected else "regular")
