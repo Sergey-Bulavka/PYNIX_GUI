@@ -199,7 +199,7 @@ def native_shell_class(appkit):
             self._fill(0, body_top, rail_w, body_bottom-body_top, "rail")
             self._rule(rail_w-1, body_top, 1, body_bottom-body_top)
             self._fill(3, body_top+18, 3, 38, "accent", 1)
-            self._fill(8, body_top+18, 33, 38, "selected", 6)
+            self._fill(8, body_top+18, 33, 38, "#2A4056", 6)
             for i, icon_name in enumerate(("explorer", "search", "run", "terminal", "settings")):
                 self._icon(17, body_top+29+i*54, icon_name,
                            "accent" if i == 0 else "subtle")
@@ -209,13 +209,13 @@ def native_shell_class(appkit):
             self._rule(content_x-1, body_top, 1, body_bottom-body_top)
             self._label(rail_w+16, body_top+18, "EXPLORER", size=11, color="subtle", weight="bold")
             self._label(content_x-32, body_top+18, "···", size=14, color="faint")
-            self._rule(rail_w, body_top+48, sidebar_w)
+            self._rule(rail_w+12, body_top+48, sidebar_w-24)
             ty=body_top+62
             for index, (depth,name,kind,selected) in enumerate(PROJECT_TREE):
                 yy=ty + index*27
                 xx=rail_w+17+depth*17
                 if selected:
-                    self._fill(rail_w+7, yy-3, sidebar_w-14, 25, "selected", 5)
+                    self._fill(rail_w+7, yy-3, sidebar_w-14, 25, "#304A64", 5)
                 if kind=="folder":
                     self._label(xx, yy+1, "⌄" if name!="assets" else "›",
                                 color="faint", size=11)
@@ -248,7 +248,7 @@ def native_shell_class(appkit):
             code_top=body_top+tabs_h+crumb_h+15
             self._fill(content_x, code_top-15, 59, terminal_y-code_top+15, "canvas")
             self._rule(content_x+59, code_top-15, 1, terminal_y-code_top+15)
-            self._fill(content_x+60, code_top+37, content_w-60, 23, "editor_header")
+            self._fill(content_x+60, code_top+37, content_w-60, 23, "#1B2837")
             font_size=13
             for i,parts in enumerate(SAMPLE_LINES):
                 y=code_top + i*23
@@ -273,7 +273,7 @@ def native_shell_class(appkit):
                             color="text" if active else "subtle",
                             weight="bold" if active else "regular")
                 if active:
-                    self._fill(cx, terminal_y+35, 60, 2, "accent")
+                    self._fill(cx, terminal_y+36, len(name)*6.3, 2, "accent")
                 cx+=len(name)*8+36
             self._rule(content_x, terminal_y+39, content_w)
             self._label(content_x+22, terminal_y+63, "pynix $", mono=True, color="green", size=12)
