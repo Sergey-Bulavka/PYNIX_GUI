@@ -341,3 +341,42 @@ def test_canvas_hit_test_retains_letterbox_and_valid_target_behavior():
     assert canvas_viewport(value, 200, 200) == (2.0, 0.0, 50.0)
     assert hit_test_scene(value, 100, 100, 200, 200) == "surface"
     assert hit_test_scene(value, 100, 20, 200, 200) is None
+
+
+@pytest.mark.parametrize(
+    ("align", "valign", "expected"),
+    [
+        ("start", "top", (100.0, 200.0)),
+        ("center", "center", (135.0, 222.0)),
+        ("end", "bottom", (170.0, 244.0)),
+        ("center", "top", (135.0, 200.0)),
+        ("end", "center", (170.0, 222.0)),
+    ],
+)
+def test_canvas_text_placement_uses_actual_measured_size(align, valign, expected):
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(
+        100, 200, "CENTER", width=100, height=60,
+        align=align, valign=valign,
+    )
+    assert canvas_text_origin(command, 30, 16) == expected
+
+
+def test_canvas_unbounded_text_keeps_original_origin():
+    from pynix_gui.canvas import canvas_text_origin
+    assert canvas_text_origin(canvas_text(10, 20, "Hello"), 50, 12) == (10.0, 20.0)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf"), -1])
+def test_canvas_text_placement_rejects_invalid_measurement(invalid):
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(0, 0, "T", width=50, height=30)
+    with pytest.raises(GUIError):
+        canvas_text_origin(command, invalid, 10)
+
+
+def test_canvas_text_placement_handles_long_label_without_clamping():
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(100, 50, "Very long label", width=20, height=10,
+                          align="center", valign="center")
+    assert canvas_text_origin(command, 80, 20) == (70.0, 45.0)
