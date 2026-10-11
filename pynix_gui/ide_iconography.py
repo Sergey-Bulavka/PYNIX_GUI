@@ -31,48 +31,40 @@ ICONS = {
 
 
 def draw_icon(appkit, x, y, name, color, size=20):
-    """Stroke paths in AppKit, with unified scale, cap and join semantics."""
+    """Draw transformed icon paths without modifying the graphics context."""
     if name not in ICONS:
         raise ValueError(f"unknown IDE icon: {name}")
     scale = size / GRID
-    try:
-        color.setStroke()
-        color.setFill()
-        for command in ICONS[name]:
-            kind = command[0]
-            path = appkit.NSBezierPath.bezierPath()
-            if kind == "line":
-                _, x1, y1, x2, y2 = command
-                path.moveToPoint_(appkit.NSMakePoint(x1, y1))
-                path.lineToPoint_(appkit.NSMakePoint(x2, y2))
-            elif kind == "poly":
-                _, points, closed = command
-                path.moveToPoint_(appkit.NSMakePoint(*points[0]))
-                for point in points[1:]:
-                    path.lineToPoint_(appkit.NSMakePoint(*point))
-                if closed:
-                    path.closePath()
-            elif kind == "rect":
-                _, rx, ry, width, height, radius = command
-                path = appkit.NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
-                    appkit.NSMakeRect(rx, ry, width, height), radius, radius)
-            elif kind == "circle":
-                _, cx, cy, radius = command
-                path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
-                    appkit.NSMakeRect(cx-radius, cy-radius, radius*2, radius*2))
-            elif kind == "dot":
-                _, cx, cy, radius = command
-                path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
-                    (cx-radius, cy-radius, radius*2, radius*2))
-                path.fill()
-                continue
-            transform = appkit.NSAffineTransform.transform()
-            transform.scaleBy_(scale)
-            transform.translateXBy_yBy_(x / scale, y / scale)
-            path.transformUsingAffineTransform_(transform)
-            path.setLineWidth_(STROKE * scale)
-            path.setLineCapStyle_(appkit.NSRoundLineCapStyle)
-            path.setLineJoinStyle_(appkit.NSRoundLineJoinStyle)
+    color.setStroke()
+    color.setFill()
+    for command in ICONS[name]:
+        kind = command[0]
+        path = appkit.NSBezierPath.bezierPath()
+        if kind == "line":
+            _, x1, y1, x2, y2 = command
+            path.moveToPoint_(appkit.NSMakePoint(x1, y1))
+            path.lineToPoint_(appkit.NSMakePoint(x2, y2))
+        elif kind == "poly":
+            _, points, closed = command
+            path.moveToPoint_(appkit.NSMakePoint(*points[0]))
+            for point in points[1:]:
+                path.lineToPoint_(appkit.NSMakePoint(*point))
+            if closed:
+                path.closePath()
+        elif kind == "rect":
+            _, rx, ry, width, height, radius = command
+            path = appkit.NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+                appkit.NSMakeRect(rx, ry, width, height), radius, radius)
+        elif kind in ("circle", "dot"):
+            _, cx, cy, radius = command
+            path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
+                appkit.NSMakeRect(cx-radius, cy-radius, radius*2, radius*2))
+        transform = appkit.NSAffineTransform.transform()
+        transform.translateXBy_yBy_(x, y)
+        transform.scaleBy_(scale)
+        path.transformUsingAffineTransform_(transform)
+        path.setLineWidth_(STROKE * scale)
+        if kind == "dot":
+            path.fill()
+        else:
             path.stroke()
-    finally:
-        context.restoreGraphicsState()
