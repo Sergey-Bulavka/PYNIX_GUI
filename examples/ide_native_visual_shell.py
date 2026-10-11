@@ -74,6 +74,7 @@ def native_shell_class(appkit):
         def isFlipped(self):
             return True
 
+        @objc.python_method
         def _fill(self, x, y, w, h, color, radius=0):
             if w <= 0 or h <= 0:
                 return
@@ -84,9 +85,11 @@ def native_shell_class(appkit):
                 appkit.NSBezierPath.bezierPathWithRect_(rect))
             path.fill()
 
+        @objc.python_method
         def _rule(self, x, y, w, h=1):
             self._fill(x, y, w, h, "border")
 
+        @objc.python_method
         def _label(self, x, y, value, *, size=12, color="text",
                    weight="regular", mono=False):
             font_name = ("Menlo" if mono else
@@ -101,6 +104,7 @@ def native_shell_class(appkit):
                 appkit.NSMakePoint(x, y), attrs)
             return appkit.NSString.stringWithString_(value).sizeWithAttributes_(attrs).width
 
+        @objc.python_method
         def _icon(self, x, y, kind, color="subtle"):
             # Compact AppKit vector paths rather than Unicode placeholder glyphs.
             c = _rgb(appkit, color)
@@ -151,6 +155,7 @@ def native_shell_class(appkit):
                 self._label(x, y-2, "›_", size=17, color=color, mono=True)
                 return
 
+        @objc.python_method
         def _chip(self, x, y, width, label, active=False):
             self._fill(x, y, width, 29, "selected" if active else "editor_header", 6)
             self._label(x+12, y+6, label, size=12,
