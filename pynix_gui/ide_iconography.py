@@ -9,6 +9,10 @@ All coordinates are in logical icon pixels. The renderer is backend-independent.
 GRID = 20
 STROKE = 1.6
 ICONS = {
+    "git": (("circle", 5, 3.5, 1.8), ("circle", 15, 10, 1.8), ("circle", 5, 16.5, 1.8), ("line", 5, 5.3, 5, 14.7), ("poly", ((5, 8), (7, 10), (13.2, 10)), False)),
+    "branch": (("circle", 5, 3.5, 1.8), ("circle", 15, 10, 1.8), ("circle", 5, 16.5, 1.8), ("line", 5, 5.3, 5, 14.7), ("poly", ((5, 8), (7, 10), (13.2, 10)), False)),
+    "commit": (("circle", 10, 10, 3), ("line", 10, 1, 10, 7), ("line", 10, 13, 10, 19)),
+    "sync": (("poly", ((16, 7), (13, 4), (10, 3), (6, 4), (4, 7)), False), ("poly", ((16, 13), (14, 16), (10, 17), (6, 16), (4, 13)), False), ("poly", ((12.5, 7), (16, 7), (16, 3.5)), False), ("poly", ((7.5, 13), (4, 13), (4, 16.5)), False)),
     "explorer": (("rect", 3, 2.5, 14, 15, 2), ("line", 6, 7, 14, 7), ("line", 6, 10.5, 14, 10.5), ("line", 6, 14, 11, 14)),
     "search": (("circle", 8.5, 8.5, 5.6), ("line", 12.7, 12.7, 17.2, 17.2)),
     "run": (("poly", ((6, 3.8), (16, 10), (6, 16.2)), True),),
