@@ -68,7 +68,8 @@ class GUICanvasCommand:
             raise GUIError("PYNIX-GUI-011", "GUI canvas command kind is invalid.")
         if type(self.values) is not tuple:
             raise GUIError("PYNIX-GUI-011", "GUI canvas command values are invalid.")
-        if type(self.line_width) not in {int, float} or self.line_width <= 0:
+        if (type(self.line_width) not in {int, float}
+                or not isfinite(self.line_width) or self.line_width <= 0):
             raise GUIError("PYNIX-GUI-011", "GUI canvas line width must be positive.")
         if self.stroke_role is not None:
             _role(self.stroke_role)
@@ -102,7 +103,8 @@ class GUICanvasScene:
             for command in self.commands
         ):
             raise GUIError("PYNIX-GUI-011", "GUI canvas scene commands are invalid.")
-        if self.width <= 0 or self.height <= 0:
+        if (not isfinite(self.width) or not isfinite(self.height)
+                or self.width <= 0 or self.height <= 0):
             raise GUIError("PYNIX-GUI-011", "GUI canvas scene size must be positive.")
 
         seen = set()
