@@ -39,3 +39,41 @@ def test_icon_geometry_is_within_20px_grid(name):
 def test_unknown_icon_rejected_without_appkit():
     with pytest.raises(ValueError, match="unknown IDE icon"):
         draw_icon(None, 0, 0, "not-an-icon", None)
+
+
+def test_vector_painter_executes_without_graphics_context_selectors():
+    class Path:
+        def moveToPoint_(self, value): pass
+        def lineToPoint_(self, value): pass
+        def closePath(self): pass
+        def transformUsingAffineTransform_(self, value): pass
+        def setLineWidth_(self, value): pass
+        def stroke(self): pass
+        def fill(self): pass
+
+    class Bezier:
+        @staticmethod
+        def bezierPath(): return Path()
+        @staticmethod
+        def bezierPathWithRoundedRect_xRadius_yRadius_(*args): return Path()
+        @staticmethod
+        def bezierPathWithOvalInRect_(*args): return Path()
+
+    class Transform:
+        @staticmethod
+        def transform(): return Transform()
+        def translateXBy_yBy_(self, x, y): pass
+        def scaleBy_(self, size): pass
+
+    class FakeAppKit:
+        NSBezierPath = Bezier
+        NSAffineTransform = Transform
+        NSMakePoint = staticmethod(lambda x, y: (x, y))
+        NSMakeRect = staticmethod(lambda x, y, w, h: (x, y, w, h))
+
+    class Color:
+        def setStroke(self): pass
+        def setFill(self): pass
+
+    for name in ICONS:
+        draw_icon(FakeAppKit, 10, 20, name, Color(), 18)
