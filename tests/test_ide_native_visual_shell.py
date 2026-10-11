@@ -46,3 +46,9 @@ def test_native_visual_shell_uses_real_vector_shapes_for_terminal_and_documents(
 def test_native_shell_no_unbounded_tree_index_lookup():
     source = Path(scene.__file__).read_text(encoding="utf-8")
     assert "PROJECT_TREE.index(" not in source
+
+
+def test_native_preview_terminates_after_last_window_closes():
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    assert "applicationShouldTerminateAfterLastWindowClosed_" in source
+    assert "app.setDelegate_(delegate)" in source
