@@ -106,9 +106,9 @@ def native_shell_class(appkit):
             if kind in ("folder", "file"):
                 if kind == "folder":
                     self._fill(x, y+4, 14, 10, "yellow", 2)
-                    self._fill(x+1, y+1, 6, 4, "yellow", 1)
+                    self._fill(x+1, y+3, 6, 4, "#D6B675", 1)
                 else:
-                    self._fill(x+2, y+1, 11, 15, "subtle", 2)
+                    self._fill(x+2, y+1, 11, 15, color, 2)
                     self._fill(x+4, y+5, 7, 1, "sidebar")
                     self._fill(x+4, y+8, 6, 1, "sidebar")
                 return
@@ -147,7 +147,13 @@ def native_shell_class(appkit):
                 ring.stroke()
                 return
             if kind == "terminal":
-                self._label(x, y-2, "›_", size=17, color=color, mono=True)
+                c.setStroke()
+                path = appkit.NSBezierPath.bezierPath()
+                for ax, ay, bx, by in ((x+2,y+4,x+8,y+9),(x+8,y+9,x+2,y+14),(x+10,y+14,x+16,y+14)):
+                    path.moveToPoint_(appkit.NSMakePoint(ax,ay))
+                    path.lineToPoint_(appkit.NSMakePoint(bx,by))
+                path.setLineWidth_(1.6)
+                path.stroke()
                 return
 
         @objc.python_method
@@ -226,12 +232,14 @@ def native_shell_class(appkit):
             # Main editor with flush, integrated tabs
             self._fill(content_x, body_top, content_w, terminal_y-body_top, "editor")
             self._fill(content_x, body_top, content_w, tabs_h, "editor_header")
-            self._fill(content_x, body_top, 158, tabs_h, "selected")
+            self._fill(content_x, body_top, 158, tabs_h, "editor")
             self._fill(content_x, body_top, 158, 2, "accent")
+            self._rule(content_x+158, body_top+7, 1, tabs_h-14)
             self._icon(content_x+15, body_top+11, "file", "accent")
             self._label(content_x+37, body_top+12, "main.pnx", size=12, weight="bold")
             self._label(content_x+137, body_top+10, "×", size=15, color="subtle")
-            self._label(content_x+177, body_top+12, "gui.pnx", size=12, color="faint")
+            self._icon(content_x+177, body_top+11, "file", "faint")
+            self._label(content_x+199, body_top+12, "gui.pnx", size=12, color="faint")
             self._rule(content_x, body_top+tabs_h, content_w)
             self._fill(content_x, body_top+tabs_h, content_w, crumb_h, "editor")
             self._label(content_x+22, body_top+tabs_h+7,
