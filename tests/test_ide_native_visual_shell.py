@@ -35,8 +35,10 @@ def test_native_visual_preview_has_no_appkit_import_at_module_load():
 
 def test_native_visual_shell_uses_real_vector_shapes_for_terminal_and_documents():
     source = Path(scene.__file__).read_text(encoding="utf-8")
-    assert 'if kind == "terminal":' in source
-    assert "NSBezierPath.bezierPath()" in source
+    from pynix_gui.ide_iconography import ICONS
+    assert "terminal" in ICONS
+    assert "pnx" in ICONS
+    assert any(command[0] == "poly" for command in ICONS["terminal"])
     assert 'self._icon(content_x+177' in source
     assert 'self._rule(content_x+158' in source
 
