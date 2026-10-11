@@ -298,3 +298,15 @@ def test_canvas_finite_negative_translation_and_rotation_are_supported():
         rotate=-90,
     )
     assert transform.values == (-25.0, 12.0, -1.0, 1.0, -90.0)
+
+
+def test_canvas_retained_command_rejects_nonfinite_stroke():
+    from pynix_gui.canvas import GUICanvasCommand
+    with pytest.raises(GUIError, match="line width"):
+        GUICanvasCommand("line", (0.0, 0.0, 10.0, 10.0), line_width=float("nan"))
+
+
+def test_canvas_retained_scene_rejects_nonfinite_dimensions():
+    from pynix_gui.canvas import GUICanvasScene
+    with pytest.raises(GUIError, match="size"):
+        GUICanvasScene((), float("inf"), 100)
