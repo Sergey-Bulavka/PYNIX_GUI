@@ -19,16 +19,16 @@ PALETTE = {
     "toolbar": "#1A2330",
     "rail": "#171F2B",
     "sidebar": "#1C2634",
-    "editor": "#111925",
-    "editor_header": "#192331",
-    "terminal": "#192331",
+    "editor": "#151C28",
+    "editor_header": "#202B39",
+    "terminal": "#202B39",
     "status": "#253A52",
-    "border": "#303E50",
+    "border": "#384453",
     "text": "#E3EBF5",
-    "subtle": "#96A7BD",
-    "faint": "#657991",
+    "subtle": "#ACB8C7",
+    "faint": "#8393A8",
     "accent": "#70B7FF",
-    "selected": "#284761",
+    "selected": "#314A63",
     "green": "#95D8AD",
     "yellow": "#F0CC86",
     "purple": "#C6A4FA",
@@ -92,12 +92,7 @@ def native_shell_class(appkit):
         @objc.python_method
         def _label(self, x, y, value, *, size=12, color="text",
                    weight="regular", mono=False):
-            font_name = ("Menlo" if mono else
-                         ("SFProDisplay-Semibold" if weight == "bold" else "Helvetica"))
-            font = appkit.NSFont.fontWithName_size_(font_name, size)
-            if font is None:
-                font = (appkit.NSFont.boldSystemFontOfSize_(size) if weight == "bold"
-                        else appkit.NSFont.systemFontOfSize_(size))
+            font = (appkit.NSFont.monospacedSystemFontOfSize_weight_(size, appkit.NSFontWeightRegular) if mono else (appkit.NSFont.boldSystemFontOfSize_(size) if weight == "bold" else appkit.NSFont.systemFontOfSize_(size)))
             attrs = {appkit.NSFontAttributeName: font,
                      appkit.NSForegroundColorAttributeName: _rgb(appkit, color)}
             appkit.NSString.stringWithString_(value).drawAtPoint_withAttributes_(
@@ -164,6 +159,9 @@ def native_shell_class(appkit):
         def drawRect_(self, dirty):
             w, h = self.bounds().size
             w, h = float(w), float(h)
+            context = appkit.NSGraphicsContext.currentContext()
+            if context is not None:
+                context.setShouldAntialias_(True)
             self._fill(0, 0, w, h, "canvas")
             title_h, toolbar_h, status_h = 47, 43, 27
             body_top, body_bottom = title_h+toolbar_h, h-status_h
@@ -207,8 +205,8 @@ def native_shell_class(appkit):
             self._label(content_x-32, body_top+18, "···", size=14, color="faint")
             self._rule(rail_w, body_top+48, sidebar_w)
             ty=body_top+62
-            for depth,name,kind,selected in PROJECT_TREE:
-                yy=ty + PROJECT_TREE.index((depth,name,kind,selected))*27
+            for index, (depth,name,kind,selected) in enumerate(PROJECT_TREE):
+                yy=ty + index*27
                 xx=rail_w+17+depth*17
                 if selected:
                     self._fill(rail_w+7, yy-3, sidebar_w-14, 25, "selected", 5)
