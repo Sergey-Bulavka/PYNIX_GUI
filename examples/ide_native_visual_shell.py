@@ -14,6 +14,9 @@ import sys
 
 from pynix_gui.ide_iconography import draw_icon
 
+GIT_PREVIEW = "--git" in sys.argv
+GIT_CHANGES = (("M", "src/main.pnx"), ("M", "src/gui.pnx"), ("U", "docs/NOTES.md"))
+
 
 PALETTE = {
     "canvas": "#10151E",
@@ -154,7 +157,7 @@ def native_shell_class(appkit):
                 self._icon(17, body_top+29+i*54, icon_name,
                            "accent" if i == 0 else "subtle")
 
-            # Explorer pane
+            # Explorer pane (or Source Control in --git visual mode)
             self._fill(rail_w, body_top, sidebar_w, body_bottom-body_top, "sidebar")
             self._rule(content_x-1, body_top, 1, body_bottom-body_top)
             self._label(rail_w+16, body_top+18, "EXPLORER", size=11, color="subtle", weight="bold")
@@ -173,10 +176,41 @@ def native_shell_class(appkit):
                 self._label(xx+21, yy+1, name, size=12,
                             color="text" if selected else "subtle",
                             weight="bold" if selected else "regular")
+            if GIT_PREVIEW:
+                # Static Source Control layout: controls are visual until IDE integration.
+                self._fill(rail_w, body_top, sidebar_w, body_bottom-body_top, "sidebar")
+                self._label(rail_w+16, body_top+18, "SOURCE CONTROL", size=11,
+                            color="subtle", weight="bold")
+                self._rule(rail_w+12, body_top+48, sidebar_w-24)
+                self._icon(rail_w+18, body_top+67, "git", "accent")
+                self._label(rail_w+45, body_top+69, "main", size=13, weight="bold")
+                self._label(rail_w+16, body_top+108, "COMMIT MESSAGE",
+                            size=10, color="subtle", weight="bold")
+                self._fill(rail_w+13, body_top+133, sidebar_w-26, 63, "editor", 5)
+                self._label(rail_w+22, body_top+146, "Describe your changes...",
+                            size=11, color="faint")
+                self._fill(rail_w+13, body_top+207, sidebar_w-26, 31, "selected", 5)
+                self._icon(rail_w+24, body_top+213, "commit", "accent")
+                self._label(rail_w+50, body_top+215, "Commit", size=12, weight="bold")
+                self._label(rail_w+16, body_top+269, "CHANGES  (3)",
+                            size=11, color="subtle", weight="bold")
+                for n, (state, filename) in enumerate(GIT_CHANGES):
+                    ry = body_top + 300 + n*30
+                    self._icon(rail_w+17, ry, "pnx" if filename.endswith(".pnx") else "file", "subtle")
+                    self._label(rail_w+43, ry+2, filename, size=11)
+                    self._label(content_x-30, ry+2, state, size=11,
+                                color="green" if state == "U" else "yellow")
+                self._rule(rail_w+13, body_top+414, sidebar_w-26)
+                self._label(rail_w+16, body_top+431, "BRANCHES",
+                            size=11, color="subtle", weight="bold")
+                self._icon(rail_w+17, body_top+458, "git", "accent")
+                self._label(rail_w+43, body_top+460, "main", size=12)
+                self._icon(rail_w+17, body_top+489, "git", "subtle")
+                self._label(rail_w+43, body_top+490, "feature/icon-system-v4", size=11)
             self._rule(rail_w+12, body_bottom-92, sidebar_w-24)
-            self._label(rail_w+16, body_bottom-76, "OUTLINE", color="subtle", size=11, weight="bold")
-            self._label(rail_w+22, body_bottom-48, "ƒ   main()", color="text", size=12)
-            self._label(rail_w+43, body_bottom-28, "message  :  String", color="faint", size=11)
+            self._label(rail_w+16, body_bottom-76, "HISTORY" if GIT_PREVIEW else "OUTLINE", color="subtle", size=11, weight="bold")
+            self._label(rail_w+22, body_bottom-48, "•  Latest commit" if GIT_PREVIEW else "ƒ   main()", color="text", size=12)
+            self._label(rail_w+43, body_bottom-28, "Visual preview only" if GIT_PREVIEW else "message  :  String", color="faint", size=11)
 
             # Main editor with flush, integrated tabs
             self._fill(content_x, body_top, content_w, terminal_y-body_top, "editor")
@@ -234,7 +268,7 @@ def native_shell_class(appkit):
             self._fill(0, body_bottom, w, status_h, "status")
             self._label(17, body_bottom+7, "●  Ready", color="green", size=11)
             self._icon(130, body_bottom+4, "branch", "subtle")
-            self._label(152, body_bottom+7, "main  ·  3 changes", size=11)
+            self._label(152, body_bottom+7, "main  ·  3 changes" if GIT_PREVIEW else "main.pnx", size=11)
             self._label(max(w-365, 310), body_bottom+7,
                         "Ln 11, Col 1    UTF-8    Spaces: 4    PYNIX",
                         color="subtle", size=11)
