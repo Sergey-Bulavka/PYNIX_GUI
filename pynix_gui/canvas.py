@@ -463,8 +463,8 @@ def canvas_viewport(scene, host_width, host_height):
     """Return uniform aspect-fit scale and centered host offset for a scene."""
     if not isinstance(scene, GUICanvasScene):
         raise GUIError("PYNIX-GUI-011", "GUI canvas viewport requires a scene.")
-    width = float(host_width)
-    height = float(host_height)
+    width = _number(host_width, "GUI canvas host width")
+    height = _number(host_height, "GUI canvas host height")
     if width <= 0 or height <= 0:
         return (0.0, 0.0, 0.0)
 
@@ -480,6 +480,10 @@ def hit_test_scene(scene, x, y, host_width, host_height):
     """Return the topmost semantic hit target at host-logical coordinates."""
     if not isinstance(scene, GUICanvasScene):
         raise GUIError("PYNIX-GUI-011", "GUI canvas hit test requires a scene.")
+    host_width = _number(host_width, "GUI canvas host width")
+    host_height = _number(host_height, "GUI canvas host height")
+    x = _number(x, "GUI canvas hit x")
+    y = _number(y, "GUI canvas hit y")
     if host_width <= 0 or host_height <= 0:
         return None
 
