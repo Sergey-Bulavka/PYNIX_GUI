@@ -31,3 +31,16 @@ def test_native_visual_preview_has_no_appkit_import_at_module_load():
     import sys
     if sys.platform != "darwin":
         assert "AppKit" not in sys.modules
+
+
+def test_native_visual_shell_uses_real_vector_shapes_for_terminal_and_documents():
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    assert 'if kind == "terminal":' in source
+    assert "NSBezierPath.bezierPath()" in source
+    assert 'self._icon(content_x+177' in source
+    assert 'self._rule(content_x+158' in source
+
+
+def test_native_shell_no_unbounded_tree_index_lookup():
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    assert "PROJECT_TREE.index(" not in source
