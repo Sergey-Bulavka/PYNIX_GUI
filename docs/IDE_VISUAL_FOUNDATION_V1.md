@@ -49,3 +49,31 @@ Geometry:
 
 ## Deferred
 No full debugger, AI features, plugin marketplace, remote development or parallel Windows-native UI redesign in this gate.
+
+
+## Full-shell preview delivery (2026-10-11)
+The executable `examples.ide_shell_showcase` is the current full graphical shell
+candidate. It provides an application toolbar, native menu bar, activity rail,
+Explorer/Search sidebar, multi-file tab navigation, read-only rich source viewer
+with a provisional line-number gutter, inspector, Problems/Output/Terminal/Debug
+Console tool region, and pinned status bar.
+
+The preview is deliberately independent from the language compiler and IDE
+tooling; menus such as Run state explicitly that no code is executed.
+Selecting source tree entries switches the sample document and opens tabs.
+
+**Acceptance status:** implementation committed, awaiting native screenshot
+verification and all-OS interaction testing. Automated geometry tests use
+1024×640, 1280×800, 1440×900, and 1920×1080 viewports. Static visual layout
+does not imply all commercial editor capabilities exist.
+
+### Remaining product work after shell acceptance
+- Promote provisional gutter into Rich Editor itself, supporting correct scroll
+  synchronization, active-line state, and accessibility.
+- Replace sample explorer with real lazy project tree and filesystem adapters.
+- Connect model-owned editor buffers, dirty tabs, and close/save confirmation.
+- Persist and restore panel docking, splitter sizes, and workspace settings.
+- Add keyboard shortcuts and native menu acceptance.
+- Connect PYNIX IDE language server/tooling, diagnostics, Hover, completion, and
+  execution **after** visual-shell acceptance.
+- Complete macOS screenshots, resize behavior and Windows-native parity.
