@@ -150,7 +150,7 @@ def native_shell_class(appkit):
             self._rule(rail_w-1, body_top, 1, body_bottom-body_top)
             self._fill(3, body_top+18, 3, 38, "accent", 1)
             self._fill(8, body_top+18, 33, 38, "#2A4056", 6)
-            for i, icon_name in enumerate(("explorer", "search", "run", "terminal", "settings")):
+            for i, icon_name in enumerate(("explorer", "search", "git", "run", "terminal", "settings")):
                 self._icon(17, body_top+29+i*54, icon_name,
                            "accent" if i == 0 else "subtle")
 
@@ -233,7 +233,8 @@ def native_shell_class(appkit):
             # Always-visible status strip
             self._fill(0, body_bottom, w, status_h, "status")
             self._label(17, body_bottom+7, "●  Ready", color="green", size=11)
-            self._label(135, body_bottom+7, "main.pnx", size=11)
+            self._icon(130, body_bottom+4, "branch", "subtle")
+            self._label(152, body_bottom+7, "main  ·  3 changes", size=11)
             self._label(max(w-365, 310), body_bottom+7,
                         "Ln 11, Col 1    UTF-8    Spaces: 4    PYNIX",
                         color="subtle", size=11)
