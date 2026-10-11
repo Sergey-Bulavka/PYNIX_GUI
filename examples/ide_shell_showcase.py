@@ -54,12 +54,12 @@ def source_spans(source):
 
 
 def _activity_rail(state):
-    return max_size(column([
+    return column([
         button("shell-activity-explorer", "▤", "primary" if state["activity"] == "Explorer" else "quiet"),
         button("shell-activity-search", "⌕", "primary" if state["activity"] == "Search" else "quiet"),
         button("shell-activity-run", "▶", "quiet"),
         button("shell-activity-settings", "⚙", "quiet"),
-    ], 8), 54, 1200)
+    ], 8)
 
 
 def _sidebar(state):
@@ -99,7 +99,7 @@ def _editor(state):
              text("src", "caption"), text("/", "caption"), text(name, "caption"),
              fill(text("UTF-8", "caption"))], 7),
         fill(row([
-            max_size(gutter, 35, 1500),
+            min_size(gutter, 35, 0),
             fill(rich_editor("shell-editor", source, 0, 0,
                              source_spans(source), read_only=True)),
         ], 6)),
@@ -133,11 +133,11 @@ def build(state):
     center = _editor(state)
     if state["bottom"]:
         center = column([fill(center),
-                         max_size(min_size(_bottom(state), 0, 138), 1800, 175)], 4)
+                         min_size(_bottom(state), 0, 138)], 4)
     if state["sidebar"]:
         workspace = row([
             rail,
-            max_size(min_size(_sidebar(state), 215, 0), 300, 1800),
+            min_size(_sidebar(state), 215, 0),
             fill(center),
         ], 6)
     else:
@@ -153,7 +153,7 @@ def build(state):
             fill(text("Preview metadata", "caption")),
         ], 8)
         workspace = row([fill(workspace),
-                         max_size(min_size(inspector, 195, 0), 260, 1500)], 8)
+                         min_size(inspector, 195, 0)], 8)
     status = status_bar(row([
         text("●  " + state["message"], "caption"),
         fill(text("PYNIX  ·  " + state["active"], "caption")),
