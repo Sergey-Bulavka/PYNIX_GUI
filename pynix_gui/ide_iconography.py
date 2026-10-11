@@ -30,7 +30,7 @@ ICONS = {
 }
 
 
-FILLED_KINDS = {"folder", "folder-open", "file", "pnx"}
+FILLED_KINDS = {"folder", "folder-open"}
 
 
 def draw_icon(appkit, x, y, name, color, size=20):
