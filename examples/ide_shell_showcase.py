@@ -10,6 +10,7 @@ from pynix_gui import (
     rich_editor, row, text, text_span, tree, tree_node, toolbar, status_bar,
     separator, menu, menu_bar, menu_item, search_field,
 )
+from pynix_gui.ide_components import ide_command_bar, ide_editor_tab_strip, ide_tool_window_header, ide_status_strip
 from pynix_gui.backends import default_backend
 
 SOURCES = {
@@ -86,15 +87,11 @@ def _editor(state):
         return column([fill(text("Open a source file from Explorer", "subheading"))], 8)
     name = state["active"]
     source = SOURCES[name]
-    tab_controls = [button("shell-file-" + tab, ("● " if tab == name else "") + tab,
-                           "primary" if tab == name else "quiet") for tab in state["tabs"]]
-    tab_controls.append(button("shell-close-tab", "×", "quiet"))
     # The rich editor renders the code itself. A narrow, noninteractive line-number
     # gutter is used until the public Rich Editor gutter contract is available.
     gutter = column([text(str(i), "caption") for i in range(1, source.count("\n") + 1)], 4)
     return column([
-        row(tab_controls + [fill(text("", "caption"))], 4),
-        separator("horizontal"),
+        ide_editor_tab_strip(state["tabs"], name),
         row([text("PYNIX", "caption"), text("/", "caption"),
              text("src", "caption"), text("/", "caption"), text(name, "caption"),
              fill(text("UTF-8", "caption"))], 7),
@@ -107,28 +104,14 @@ def _editor(state):
 
 
 def _bottom(state):
-    tabs = []
-    for name in ("Problems", "Output", "Terminal", "Debug Console"):
-        slug = name.lower().replace(" ", "-")
-        tabs.append(button("shell-tool-" + slug, name,
-                           "primary" if state["tool_tab"] == name else "quiet"))
     return column([
-        separator("horizontal"),
-        row(tabs + [fill(text("", "caption")),
-                    button("shell-toggle-bottom", "×", "quiet")], 5),
+        ide_tool_window_header(state["tool_tab"]),
         fill(text(state["tool_message"], "body")),
     ], 6)
 
 
 def build(state):
-    top = toolbar(row([
-        text("PYNIX", "titleSmall"),
-        text("IDE", "label"),
-        fill(text("PYNIX  /  Visual workspace", "caption")),
-        button("shell-project", "Open Project", "quiet"),
-        button("shell-toggle-inspector", "Inspector", "quiet"),
-        button("shell-run", "▶ Run", "primary"),
-    ], 8))
+    top = ide_command_bar("PYNIX / Visual workspace")
     rail = _activity_rail(state)
     center = _editor(state)
     if state["bottom"]:
@@ -154,11 +137,7 @@ def build(state):
         ], 8)
         workspace = row([fill(workspace),
                          min_size(inspector, 195, 0)], 8)
-    status = status_bar(row([
-        text("●  " + state["message"], "caption"),
-        fill(text("PYNIX  ·  " + state["active"], "caption")),
-        text("UTF-8   ·   Spaces: 4   ·   Ln 1, Col 1", "caption"),
-    ], 9))
+    status = ide_status_strip(state["message"], state["active"])
     return column([
         top,
         padding(row([
