@@ -4,6 +4,7 @@
 from types import SimpleNamespace
 
 from examples.ide_shell_showcase import SOURCE, build, dispatch
+from pynix_gui.core import validate_view
 
 
 def state():
@@ -15,7 +16,8 @@ def state():
 
 
 def test_ide_shell_builds_all_panels_from_gui_components():
-    assert build(state()) is not None
+    view = build(state())
+    validate_view(view)
 
 
 def test_ide_shell_toggles_panels_without_touching_editor_source():
@@ -25,7 +27,7 @@ def test_ide_shell_toggles_panels_without_touching_editor_source():
     assert current["sidebar"] is False
     assert current["bottom"] is False
     assert current["source"] == SOURCE
-    assert build(current) is not None
+    validate_view(build(current))
 
 
 def test_ide_shell_tool_tab_and_editor_selection():
