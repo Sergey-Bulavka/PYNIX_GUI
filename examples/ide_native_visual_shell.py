@@ -245,9 +245,16 @@ def main():
     if sys.platform != "darwin":
         raise SystemExit("Native design preview currently requires macOS/AppKit")
     import AppKit
-    from Foundation import NSMakeRect
+    import objc
+    from Foundation import NSMakeRect, NSObject
+
+    class IDEPreviewDelegate(NSObject):
+        def applicationShouldTerminateAfterLastWindowClosed_(self, sender):
+            return True
 
     app = AppKit.NSApplication.sharedApplication()
+    delegate = IDEPreviewDelegate.alloc().init()
+    app.setDelegate_(delegate)
     app.setActivationPolicy_(AppKit.NSApplicationActivationPolicyRegular)
     style = (AppKit.NSWindowStyleMaskTitled
              | AppKit.NSWindowStyleMaskClosable
