@@ -215,6 +215,7 @@ def dispatch(state, event):
             state["editor"] = bool(state["tabs"])
             if state["tabs"]:
                 state["active"] = state["tabs"][-1]
+                state["source"] = SOURCES[state["active"]]
         elif target in ("shell-tab", "shell-menu-editor"):
             _open_file(state, state["active"])
         elif target in ("shell-run", "shell-activity-run", "shell-menu-run"):
