@@ -5,7 +5,6 @@
 Paths follow one stroke system and are not copies of third-party product icons.
 All coordinates are in logical icon pixels. The renderer is backend-independent.
 """
-from dataclasses import dataclass
 
 GRID = 20
 STROKE = 1.6
@@ -36,7 +35,10 @@ def draw_icon(appkit, x, y, name, color, size=20):
     if name not in ICONS:
         raise ValueError(f"unknown IDE icon: {name}")
     scale = size / GRID
-    appkit.NSGraphicsContext.saveGraphicsState()
+    context = appkit.NSGraphicsContext.currentContext()
+    if context is None:
+        return
+    context.saveGraphicsState()
     try:
         transform = appkit.NSAffineTransform.transform()
         transform.translateXBy_yBy_(x, y)
@@ -49,23 +51,23 @@ def draw_icon(appkit, x, y, name, color, size=20):
             path = appkit.NSBezierPath.bezierPath()
             if kind == "line":
                 _, x1, y1, x2, y2 = command
-                path.moveToPoint_((x1, y1))
-                path.lineToPoint_((x2, y2))
+                path.moveToPoint_(appkit.NSMakePoint(x1, y1))
+                path.lineToPoint_(appkit.NSMakePoint(x2, y2))
             elif kind == "poly":
                 _, points, closed = command
-                path.moveToPoint_(points[0])
+                path.moveToPoint_(appkit.NSMakePoint(*points[0]))
                 for point in points[1:]:
-                    path.lineToPoint_(point)
+                    path.lineToPoint_(appkit.NSMakePoint(*point))
                 if closed:
                     path.closePath()
             elif kind == "rect":
                 _, rx, ry, width, height, radius = command
                 path = appkit.NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
-                    (rx, ry, width, height), radius, radius)
+                    appkit.NSMakeRect(rx, ry, width, height), radius, radius)
             elif kind == "circle":
                 _, cx, cy, radius = command
                 path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
-                    (cx-radius, cy-radius, radius*2, radius*2))
+                    appkit.NSMakeRect(cx-radius, cy-radius, radius*2, radius*2))
             elif kind == "dot":
                 _, cx, cy, radius = command
                 path = appkit.NSBezierPath.bezierPathWithOvalInRect_(
@@ -77,4 +79,4 @@ def draw_icon(appkit, x, y, name, color, size=20):
             path.setLineJoinStyle_(appkit.NSRoundLineJoinStyle)
             path.stroke()
     finally:
-        appkit.NSGraphicsContext.restoreGraphicsState()
+        context.restoreGraphicsState()
