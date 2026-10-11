@@ -71,13 +71,10 @@ def build(state):
         fill(text(state["tool_message"], "body")),
     ], 8)
     if state["bottom"]:
-        workspace = vertical_split(fill(center), max_size(min_size(tool_area, 140, 80), 400, 240))
+        workspace = vertical_split("shell-workspace", fill(center), tool_area, 650)
     else:
         workspace = fill(center)
-    main = horizontal_split(
-        max_size(min_size(explorer, 200, 100), 340, 270),
-        fill(workspace),
-    ) if state["sidebar"] else fill(workspace)
+    main = horizontal_split("shell-explorer", explorer, fill(workspace), 270) if state["sidebar"] else fill(workspace)
     return padding(column([
         top,
         row([
