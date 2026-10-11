@@ -7,8 +7,9 @@ Deliberately uses sample project data, not live IDE session/tooling services.
 """
 
 from pynix_gui import (
-    GUIRuntime, button, column, fill, horizontal_split, max_size, min_size,
-    padding, rich_editor, row, text, text_span, tree, tree_node, vertical_split,
+    GUIRuntime, button, column, fill, max_size, min_size,
+    padding, rich_editor, row, text, text_span, tree, tree_node,
+    toolbar, status_bar, separator,
 )
 from pynix_gui.backends import default_backend
 
@@ -31,22 +32,22 @@ FILES = [
 
 
 def build(state):
-    top = row([
+    top = toolbar(row([
         text("PYNIX IDE", "titleSmall"),
-        fill(text("  /  Visual Shell Preview", "caption")),
-        button("shell-project", "Project"),
+        fill(text("PYNIX / Visual Workspace", "caption")),
+        button("shell-project", "Open Project"),
         button("shell-run", "Run"),
-    ], 12)
+    ], 12))
     explorer = column([
-        row([text("EXPLORER", "subheading"), fill(text("PYNIX", "caption"))], 8),
+        row([text("EXPLORER", "overline"), fill(text("PYNIX", "caption"))], 8),
         fill(tree("shell-tree", FILES, expanded_ids=state["expanded"],
                   selected_id=state["selected"])),
     ], 8)
     if state["editor"]:
         center = column([
             row([
-                text("main.pnx", "bodyStrong"),
-                fill(text("PYNIX  /  src", "caption")),
+                text("● main.pnx", "bodyStrong"),
+                fill(text("src / main.pnx", "caption")),
                 button("shell-close-tab", "×"),
             ], 8),
             fill(rich_editor(
@@ -66,29 +67,29 @@ def build(state):
             button("shell-output", "Output"),
             button("shell-terminal", "Terminal"),
             fill(text(state["tool_tab"], "caption")),
-            button("shell-toggle-bottom", "Hide panel"),
+            button("shell-toggle-bottom", "×"),
         ], 8),
         fill(text(state["tool_message"], "body")),
     ], 8)
     if state["bottom"]:
-        workspace = column([fill(center), max_size(min_size(tool_area, 0, 170), 2000, 230)], 8)
+        workspace = column([fill(center), max_size(min_size(tool_area, 0, 126), 2000, 170)], 8)
     else:
         workspace = fill(center)
     main = row([max_size(min_size(explorer, 220, 0), 300, 2000), fill(workspace)], 8) if state["sidebar"] else fill(workspace)
-    return padding(column([
+    return column([
         top,
-        row([
+        padding(row([
             button("shell-toggle-sidebar", "Explorer"),
             button("shell-tab", "main.pnx"),
-            fill(text("Project: PYNIX", "caption")),
-        ], 8),
+            fill(text("Project / PYNIX", "caption")),
+        ], 8), 8),
         fill(main),
-        row([
+        status_bar(row([
             text("●  Ready", "caption"),
             fill(text("main.pnx    UTF-8    PYNIX", "caption")),
             text("Ln 1, Col 1", "caption"),
-        ], 12),
-    ], 8), 12)
+        ], 12)),
+    ], 8)
 
 
 def dispatch(state, event):
