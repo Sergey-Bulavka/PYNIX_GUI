@@ -10,7 +10,7 @@ import warnings
 from ._macos_host import MacOSHostBackend
 from ..core import GUIEvent
 from ..commands import GUIDialog, GUIMenu, GUIMenuBar
-from ..canvas import canvas_viewport, hit_test_scene
+from ..canvas import canvas_viewport, canvas_text_origin, hit_test_scene
 from ..design import DARK, LIGHT, RADII, TYPOGRAPHY, button_visual, rgb, surface_color_role
 from ..layout import layout, measure
 
@@ -542,16 +542,10 @@ class MacOSGUIBackend(MacOSHostBackend):
                 }
                 string = appkit.NSString.stringWithString_(value)
                 if len(command.values) == 5:
-                    box_width, box_height = command.values[3:]
                     measured = string.sizeWithAttributes_(attributes)
-                    if command.text_align == "center":
-                        x += (box_width - float(measured.width)) / 2
-                    elif command.text_align == "end":
-                        x += box_width - float(measured.width)
-                    if command.text_valign == "center":
-                        y += (box_height - float(measured.height)) / 2
-                    elif command.text_valign == "bottom":
-                        y += box_height - float(measured.height)
+                    x, y = canvas_text_origin(
+                        command, float(measured.width), float(measured.height)
+                    )
                 string.drawAtPoint_withAttributes_(
                     appkit.NSMakePoint(x, y),
                     attributes,

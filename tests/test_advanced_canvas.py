@@ -260,3 +260,123 @@ def test_adv04_canvas_text_rejects_invalid_alignment_bounds(kwargs):
     with pytest.raises(GUIError) as failure:
         canvas_text(0, 0, "Label", **kwargs)
     assert failure.value.code == "PYNIX-GUI-011"
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_rejects_nonfinite_shape_and_text_coordinates(nonfinite):
+    for build in (
+        lambda: canvas_rect(nonfinite, 0, 40, 30),
+        lambda: canvas_ellipse(0, nonfinite, 40, 30),
+        lambda: canvas_line(0, 0, nonfinite, 10),
+        lambda: canvas_text(0, nonfinite, "Label"),
+        lambda: canvas_path([(0, 0), (nonfinite, 10)]),
+        lambda: canvas_rect(0, 0, nonfinite, 30),
+        lambda: canvas_scene(nonfinite, 100, []),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            build()
+
+
+@pytest.mark.parametrize("nonfinite", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_rejects_nonfinite_transform_and_stroke(nonfinite):
+    for build in (
+        lambda: canvas_transform([], translate_x=nonfinite),
+        lambda: canvas_transform([], scale_y=nonfinite),
+        lambda: canvas_transform([], rotate=nonfinite),
+        lambda: canvas_rect(0, 0, 10, 10, line_width=nonfinite),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            build()
+
+
+def test_canvas_finite_negative_translation_and_rotation_are_supported():
+    transform = canvas_transform(
+        [canvas_rect(0, 0, 10, 10)],
+        translate_x=-25,
+        translate_y=12,
+        scale_x=-1,
+        rotate=-90,
+    )
+    assert transform.values == (-25.0, 12.0, -1.0, 1.0, -90.0)
+
+
+def test_canvas_retained_command_rejects_nonfinite_stroke():
+    from pynix_gui.canvas import GUICanvasCommand
+    with pytest.raises(GUIError, match="line width"):
+        GUICanvasCommand("line", (0.0, 0.0, 10.0, 10.0), line_width=float("nan"))
+
+
+def test_canvas_retained_scene_rejects_nonfinite_dimensions():
+    from pynix_gui.canvas import GUICanvasScene
+    with pytest.raises(GUIError, match="size"):
+        GUICanvasScene((), float("inf"), 100)
+
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_viewport_rejects_nonfinite_host_dimensions(invalid):
+    from pynix_gui.canvas import canvas_viewport
+    for host_width, host_height in ((invalid, 100), (100, invalid)):
+        with pytest.raises(GUIError, match="finite"):
+            canvas_viewport(scene(), host_width, host_height)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf")])
+def test_canvas_hit_test_rejects_nonfinite_coordinates_and_host_dimensions(invalid):
+    from pynix_gui.canvas import hit_test_scene
+    value = canvas_scene(100, 100, [canvas_rect(10, 10, 50, 50, hit_target="shape")])
+    for x, y, width, height in (
+        (invalid, 20, 100, 100),
+        (20, invalid, 100, 100),
+        (20, 20, invalid, 100),
+        (20, 20, 100, invalid),
+    ):
+        with pytest.raises(GUIError, match="finite"):
+            hit_test_scene(value, x, y, width, height)
+
+
+def test_canvas_hit_test_retains_letterbox_and_valid_target_behavior():
+    from pynix_gui.canvas import canvas_viewport, hit_test_scene
+    value = canvas_scene(100, 50, [canvas_rect(0, 0, 100, 50, hit_target="surface")])
+    assert canvas_viewport(value, 200, 200) == (2.0, 0.0, 50.0)
+    assert hit_test_scene(value, 100, 100, 200, 200) == "surface"
+    assert hit_test_scene(value, 100, 20, 200, 200) is None
+
+
+@pytest.mark.parametrize(
+    ("align", "valign", "expected"),
+    [
+        ("start", "top", (100.0, 200.0)),
+        ("center", "center", (135.0, 222.0)),
+        ("end", "bottom", (170.0, 244.0)),
+        ("center", "top", (135.0, 200.0)),
+        ("end", "center", (170.0, 222.0)),
+    ],
+)
+def test_canvas_text_placement_uses_actual_measured_size(align, valign, expected):
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(
+        100, 200, "CENTER", width=100, height=60,
+        align=align, valign=valign,
+    )
+    assert canvas_text_origin(command, 30, 16) == expected
+
+
+def test_canvas_unbounded_text_keeps_original_origin():
+    from pynix_gui.canvas import canvas_text_origin
+    assert canvas_text_origin(canvas_text(10, 20, "Hello"), 50, 12) == (10.0, 20.0)
+
+
+@pytest.mark.parametrize("invalid", [float("nan"), float("inf"), -float("inf"), -1])
+def test_canvas_text_placement_rejects_invalid_measurement(invalid):
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(0, 0, "T", width=50, height=30)
+    with pytest.raises(GUIError):
+        canvas_text_origin(command, invalid, 10)
+
+
+def test_canvas_text_placement_handles_long_label_without_clamping():
+    from pynix_gui.canvas import canvas_text_origin
+    command = canvas_text(100, 50, "Very long label", width=20, height=10,
+                          align="center", valign="center")
+    assert canvas_text_origin(command, 80, 20) == (70.0, 45.0)

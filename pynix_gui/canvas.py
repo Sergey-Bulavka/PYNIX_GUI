@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from math import isfinite
 from collections.abc import Sequence
 
 from .core import GUIError
@@ -14,7 +15,10 @@ from .core import GUIError
 def _number(value, label):
     if type(value) not in {int, float}:
         raise GUIError("PYNIX-GUI-011", f"{label} must be numeric.")
-    return float(value)
+    result = float(value)
+    if not isfinite(result):
+        raise GUIError("PYNIX-GUI-011", f"{label} must be finite.")
+    return result
 
 
 def _positive(value, label):
@@ -64,7 +68,8 @@ class GUICanvasCommand:
             raise GUIError("PYNIX-GUI-011", "GUI canvas command kind is invalid.")
         if type(self.values) is not tuple:
             raise GUIError("PYNIX-GUI-011", "GUI canvas command values are invalid.")
-        if type(self.line_width) not in {int, float} or self.line_width <= 0:
+        if (type(self.line_width) not in {int, float}
+                or not isfinite(self.line_width) or self.line_width <= 0):
             raise GUIError("PYNIX-GUI-011", "GUI canvas line width must be positive.")
         if self.stroke_role is not None:
             _role(self.stroke_role)
@@ -98,7 +103,8 @@ class GUICanvasScene:
             for command in self.commands
         ):
             raise GUIError("PYNIX-GUI-011", "GUI canvas scene commands are invalid.")
-        if self.width <= 0 or self.height <= 0:
+        if (not isfinite(self.width) or not isfinite(self.height)
+                or self.width <= 0 or self.height <= 0):
             raise GUIError("PYNIX-GUI-011", "GUI canvas scene size must be positive.")
 
         seen = set()
@@ -457,8 +463,8 @@ def canvas_viewport(scene, host_width, host_height):
     """Return uniform aspect-fit scale and centered host offset for a scene."""
     if not isinstance(scene, GUICanvasScene):
         raise GUIError("PYNIX-GUI-011", "GUI canvas viewport requires a scene.")
-    width = float(host_width)
-    height = float(host_height)
+    width = _number(host_width, "GUI canvas host width")
+    height = _number(host_height, "GUI canvas host height")
     if width <= 0 or height <= 0:
         return (0.0, 0.0, 0.0)
 
@@ -474,6 +480,10 @@ def hit_test_scene(scene, x, y, host_width, host_height):
     """Return the topmost semantic hit target at host-logical coordinates."""
     if not isinstance(scene, GUICanvasScene):
         raise GUIError("PYNIX-GUI-011", "GUI canvas hit test requires a scene.")
+    host_width = _number(host_width, "GUI canvas host width")
+    host_height = _number(host_height, "GUI canvas host height")
+    x = _number(x, "GUI canvas hit x")
+    y = _number(y, "GUI canvas hit y")
     if host_width <= 0 or host_height <= 0:
         return None
 
@@ -538,3 +548,29 @@ def hit_test_scene(scene, x, y, host_width, host_height):
         return None
 
     return visit(scene.commands, identity)
+
+
+def canvas_text_origin(command, measured_width, measured_height):
+    """Resolve a text command to its drawing origin using measured glyph bounds.
+
+    Both native backends can use this geometry without inventing per-font
+    offsets. Unbounded labels retain their original drawing origin.
+    """
+    if not isinstance(command, GUICanvasCommand) or command.kind != "text":
+        raise GUIError("PYNIX-GUI-011", "Canvas text placement requires a text command.")
+    width = _number(measured_width, "GUI canvas measured text width")
+    height = _number(measured_height, "GUI canvas measured text height")
+    if width < 0 or height < 0:
+        raise GUIError("PYNIX-GUI-011", "Measured canvas text size cannot be negative.")
+    x, y = command.values[:2]
+    if len(command.values) == 5:
+        box_width, box_height = command.values[3:]
+        if command.text_align == "center":
+            x += (box_width - width) / 2
+        elif command.text_align == "end":
+            x += box_width - width
+        if command.text_valign == "center":
+            y += (box_height - height) / 2
+        elif command.text_valign == "bottom":
+            y += box_height - height
+    return x, y
