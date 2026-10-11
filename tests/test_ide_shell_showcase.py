@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from examples.ide_shell_showcase import SOURCE, build, dispatch
 from pynix_gui.core import validate_view
+from pynix_gui.layout import layout
 
 
 def state():
@@ -43,3 +44,21 @@ def test_ide_shell_tool_tab_and_editor_selection():
 
 def test_ide_shell_close_event_stops_loop():
     assert dispatch(state(), SimpleNamespace(kind="CLOSE", target=None)) is False
+
+
+def test_ide_shell_layout_gives_editor_and_explorer_visible_area():
+    scene = build(state())
+    validate_view(scene)
+    laid_out = layout(scene, 1440, 900)
+    found = {}
+    def walk(node):
+        target = getattr(node.view, "target", None)
+        if target:
+            found[target] = node.rect
+        for child in node.children:
+            walk(child)
+    walk(laid_out)
+    assert found["shell-tree"].width >= 180
+    assert found["shell-tree"].height >= 300
+    assert found["shell-editor"].width >= 600
+    assert found["shell-editor"].height >= 300
