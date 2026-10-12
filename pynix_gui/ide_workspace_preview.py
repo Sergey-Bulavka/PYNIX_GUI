@@ -74,51 +74,54 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    heading.className='tree-title';
    heading.textContent='EXPLORER · '+files.length+' FILES';
    tree.appendChild(heading);
-   const project=document.createElement('div');
-   project.className='entry project-root';
-   project.textContent='⌄  '+PROJECT_NAME;
-   tree.appendChild(project);
+   function appendRow(entry, depth, isRoot=false) {
+     const isOpen=expanded.has(entry.path);
+     const line=document.createElement('div');
+     line.className='entry project-entry'+(isRoot?' project-root':'');
+     line.style.paddingLeft=(12+Math.min(depth,12)*16)+'px';
+     if(entry.path===current)line.classList.add('workspace-selected');
+     line.setAttribute('role','button');
+     line.tabIndex=0;
+     line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
+     const chevron=document.createElement('span');
+     chevron.className='project-chevron';
+     if(entry.folder) {
+       chevron.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+       if(!isOpen)chevron.classList.add('collapsed');
+     }
+     line.appendChild(chevron);
+     const glyph=document.createElement('span');
+     const extension=entry.name.split('.').pop().toLowerCase();
+     glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+extension));
+     glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):(extension==='pnx'||extension==='py'?icon['file-code']:icon.file);
+     line.appendChild(glyph);
+     const label=document.createElement('span');
+     label.className='project-label';
+     label.textContent=entry.name;
+     line.appendChild(label);
+     const activate=()=>{
+       if(entry.folder){
+         if(expanded.has(entry.path))expanded.delete(entry.path);
+         else expanded.add(entry.path);
+         renderTree();
+       } else show(entry.path);
+     };
+     line.addEventListener('click',activate);
+     line.addEventListener('keydown',e=>{
+       if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
+     });
+     tree.appendChild(line);
+   }
+   appendRow({name:PROJECT_NAME,path:'',folder:true},0,true);
    function visit(node,depth) {
      const children=[...node.children.values()].sort((a,b)=>
-        Number(b.folder)-Number(a.folder)||a.name.localeCompare(b.name));
-     for(const entry of children) {
-       const line=document.createElement('div');
-       line.className='entry project-entry';
-       line.style.paddingLeft=(11+Math.min(depth,12)*14)+'px';
-       const isOpen=expanded.has(entry.path);
-       if(entry.path===current)line.classList.add('workspace-selected');
-       line.setAttribute('role','button');
-       line.tabIndex=0;
-       line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
-       const chevron=document.createElement('span');
-       chevron.className='project-chevron';
-       chevron.textContent=entry.folder?(isOpen?'⌄':'›'):'';
-       line.appendChild(chevron);
-       const glyph=document.createElement('span');
-       const extension=entry.name.split('.').pop().toLowerCase();
-       glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+extension));
-       glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):(extension==='pnx'||extension==='py'?icon['file-code']:icon.file);
-       line.appendChild(glyph);
-       const label=document.createElement('span');
-       label.className='project-label';
-       label.textContent=entry.name;
-       line.appendChild(label);
-       function activate(){
-         if(entry.folder){
-           if(expanded.has(entry.path))expanded.delete(entry.path);
-           else expanded.add(entry.path);
-           renderTree();
-         } else show(entry.path);
-       }
-       line.addEventListener('click',activate);
-       line.addEventListener('keydown',e=>{
-         if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
-       });
-       tree.appendChild(line);
-       if(entry.folder&&isOpen)visit(entry,depth+1);
+       Number(b.folder)-Number(a.folder)||a.name.localeCompare(b.name));
+     for(const entry of children){
+       appendRow(entry,depth);
+       if(entry.folder&&expanded.has(entry.path))visit(entry,depth+1);
      }
    }
-   visit(root,0);
+   if(expanded.has(''))visit(root,1);
  }
  function renderCode(text) {
    code.replaceChildren();
