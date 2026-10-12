@@ -60,6 +60,8 @@ def main() -> None:
     # instead of a miniature IDE embedded inside the icon gallery.
     parser = argparse.ArgumentParser(description="PYNIX IDE V4 preview")
     parser.add_argument("--project", type=Path, help="Read-only source project to explore")
+    parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
+    parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
     args = parser.parse_args()
     document = PREVIEW_PATH.read_text(encoding="utf-8")
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
@@ -77,6 +79,11 @@ def main() -> None:
         session = WorkspaceSession(project_path)
         document = attach_workspace(document, session)
         document = attach_git_snapshot(document, read_git_snapshot(session.root))
+        if args.diagnostics:
+            from pynix_gui.ide_tooling_diagnostics import read_diagnostics
+            from pynix_gui.ide_workspace_preview import attach_diagnostics
+            compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
+            document = attach_diagnostics(document, read_diagnostics(session.root, compiler_python))
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
