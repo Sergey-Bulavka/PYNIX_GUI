@@ -70,7 +70,25 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const coloredSource=document.createElement('pre');
  coloredSource.className='pynix-edit-highlight';
  coloredSource.setAttribute('aria-hidden','true');
- editLayer.append(coloredSource,editorInput);
+ const gutter=document.createElement('pre');
+ gutter.className='pynix-edit-gutter';
+ gutter.setAttribute('aria-hidden','true');
+ editLayer.append(gutter,coloredSource,editorInput);
+ const cursorStatus=document.createElement('span');
+ cursorStatus.className='pynix-cursor-status';
+ document.querySelector('.bottom')?.appendChild(cursorStatus);
+ function updateCursor(){
+   if(!current)return;
+   const before=editorInput.value.slice(0,editorInput.selectionStart);
+   const line=before.split('\\n').length;
+   const column=before.length-before.lastIndexOf('\\n');
+   cursorStatus.textContent='Ln '+line+', Col '+column;
+   const file=byName.get(current);
+   if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
+ }
+ editorInput.addEventListener('click',updateCursor);
+ editorInput.addEventListener('keyup',updateCursor);
+ editorInput.addEventListener('select',updateCursor);
  code.parentElement.appendChild(editLayer);
  function escapeCode(v){return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
  function recolorSource(){
@@ -85,10 +103,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      last=token.lastIndex;
    }
    coloredSource.innerHTML=html+escapeCode(value.slice(last))+'\\n';
+   const count=value.split('\\n').length;
+   gutter.textContent=Array.from({length:count},(_,i)=>String(i+1)).join('\\n');
    coloredSource.scrollTop=editorInput.scrollTop;
    coloredSource.scrollLeft=editorInput.scrollLeft;
+   gutter.scrollTop=editorInput.scrollTop;
  }
- editorInput.addEventListener('scroll',()=>{coloredSource.scrollTop=editorInput.scrollTop;coloredSource.scrollLeft=editorInput.scrollLeft;});
+ editorInput.addEventListener('scroll',()=>{coloredSource.scrollTop=editorInput.scrollTop;coloredSource.scrollLeft=editorInput.scrollLeft;gutter.scrollTop=editorInput.scrollTop;updateCursor();});
  const editButton=document.createElement('button');
  editButton.type='button';
  editButton.textContent='Edit';
@@ -118,11 +139,17 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      editorInput.value=file.text;
      recolorSource();
      editorInput.focus();
+     editorInput.setSelectionRange(file.cursorStart||0,file.cursorEnd??file.cursorStart??0);
+     editorInput.scrollTop=file.scrollTop||0;
+     editorInput.scrollLeft=file.scrollLeft||0;
+     recolorSource();
+     updateCursor();
    }
  }
  editorInput.addEventListener('input',()=>{
    persistBuffer();
    recolorSource();
+   updateCursor();
    const file=byName.get(current);
    saveButton.disabled=!file?.dirty;
    renderTabs();
