@@ -246,6 +246,25 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
  outline:1px solid rgba(255,208,127,.9);
  outline-offset:-1px;
 }
+
+/* V4.25 editor navigation tools and project results. */
+.workspace-mode .pynix-replace-bar input{width:150px}
+.workspace-mode .pynix-replace-bar button,.workspace-mode .pynix-project-find-bar button{width:auto;min-width:40px;padding:0 7px}
+.workspace-mode .pynix-go-bar input{width:100px}
+.workspace-mode .pynix-project-results{
+ position:absolute;z-index:20;top:48px;right:10px;width:min(570px,80%);
+ max-height:65%;overflow:auto;border:1px solid #405773;border-radius:8px;
+ padding:8px;background:#172438;box-shadow:0 8px 22px rgba(0,0,0,.4);
+}
+.workspace-mode .pynix-project-result-head{color:#c8d9eb;font-size:12px;padding:7px 8px}
+.workspace-mode .pynix-project-result{
+ display:block;width:100%;text-align:left;padding:7px 9px;margin:2px 0;
+ border:0;border-radius:5px;background:transparent;color:#c9d7ea;
+ font:12px/1.4 ui-monospace,Menlo,monospace;cursor:pointer;
+ overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+}
+.workspace-mode .pynix-project-result:hover{background:#304565}
+.workspace-mode .pynix-project-results[hidden]{display:none!important}
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
