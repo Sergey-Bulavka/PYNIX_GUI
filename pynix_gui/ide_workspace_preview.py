@@ -143,6 +143,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    code.replaceChildren();
    file.text.split('\\n').forEach((line, i) => {
      const row = document.createElement('div');
+     row.className='source-line';
+     row.dataset.line=String(i+1);
      const gutter = document.createElement('span');
      gutter.className = 'ln';
      gutter.textContent = String(i + 1);
@@ -176,8 +178,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      tabs.appendChild(tab);
    }
    renderCode(byName.get(name));
+   document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
+ document.addEventListener('pynix:navigate', event=>{
+   const target=event.detail||{};
+   if(!byName.has(target.source))return;
+   show(target.source);
+   const rows=[...code.querySelectorAll('.source-line')];
+   const selected=rows[Math.max(0,Number(target.line||1)-1)];
+   if(selected){
+     selected.scrollIntoView({block:'center'});
+     selected.classList.add('source-line-target');
+   }
+ });
  const explorerControl=document.querySelectorAll('.rail-item')[0];
  explorerControl?.addEventListener('click',()=>renderTree());
  explorerControl?.addEventListener('keydown',e=>{
