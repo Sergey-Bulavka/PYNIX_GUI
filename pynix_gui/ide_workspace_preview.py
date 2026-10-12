@@ -58,6 +58,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const byName = new Map(files.map(file => [file.name, file]));
  const openTabs = [];
  let current = null;
+ let selectedPath = null;
  const expanded = new Set(['']);
  const icon = {
   "folder": "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' > <path d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z' /> </svg> ",
@@ -105,7 +106,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const line=document.createElement('div');
      line.className='entry project-entry'+(isRoot?' project-root':'');
      line.style.paddingLeft=(12+Math.min(depth,12)*16)+'px';
-     if(entry.path===current)line.classList.add('workspace-selected');
+     if(entry.path===selectedPath)line.classList.add('workspace-selected');
      line.setAttribute('role','button');
      line.tabIndex=0;
      line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
@@ -133,22 +134,28 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
          renderTree();
        } else show(entry.path);
      };
-     let activatedByPointer=false;
-     line.addEventListener('pointerdown',e=>{
-       if(e.button!==0)return;
-       activatedByPointer=true;
-       e.preventDefault();
-       activate();
-     });
-     // WKWebView can deliver click without pointerdown on the first
-     // window-activation press. Do not require a second click.
-     line.addEventListener('click',e=>{
-       if(e.button!==0||activatedByPointer)return;
-       e.preventDefault();
-       activate();
-     });
+     if(entry.folder){
+       // Folder disclosure remains a single-click action.
+       line.addEventListener('click',e=>{
+         if(e.button!==0)return;
+         activate();
+       });
+     } else {
+       // A single click selects a file; only a double click opens its tab.
+       line.addEventListener('click',e=>{
+         if(e.button!==0)return;
+         selectedPath=entry.path;
+         renderTree();
+       });
+       line.addEventListener('dblclick',e=>{
+         if(e.button!==0)return;
+         selectedPath=entry.path;
+         show(entry.path);
+       });
+     }
      line.addEventListener('keydown',e=>{
-       if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
+       if(e.key==='Enter'){e.preventDefault();activate()}
+       if(e.key===' '){e.preventDefault();if(entry.folder)activate();else {selectedPath=entry.path;renderTree()}}
      });
      tree.appendChild(line);
    }
@@ -192,6 +199,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if (!byName.has(name)) return;
    if (!openTabs.includes(name)) openTabs.push(name);
    current = name;
+   selectedPath = name;
    const segments=name.split('/');
    for(let i=1;i<segments.length;i++)expanded.add(segments.slice(0,i).join('/'));
    tabs.replaceChildren();
