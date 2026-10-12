@@ -160,6 +160,15 @@ def main() -> None:
                 session.update(source, content)
                 session.save(source)
                 response["saved"] = True
+                from pynix_gui.ide_tooling_diagnostics import read_diagnostics
+                snapshot = read_diagnostics(session.root, compiler_python)
+                response["diagnostics"] = [
+                    {"source": problem.source, "line": problem.line,
+                     "column": problem.column, "code": problem.code,
+                     "message": problem.message}
+                    for problem in snapshot.problems
+                ]
+                response["diagnostic_error"] = snapshot.error
             except (OSError, UnicodeError, ValueError) as error:
                 response["error"] = str(error)
             serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
