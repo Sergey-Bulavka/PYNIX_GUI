@@ -54,3 +54,29 @@ def test_project_boundary_rejects_symlink_escape(tmp_path):
 def test_missing_project_rejected(tmp_path):
     with pytest.raises(WorkspaceError):
         WorkspaceSession(tmp_path / "nonexistent")
+
+
+def test_atomic_save_updates_saved_snapshot(tmp_path):
+    file = tmp_path / "main.pnx"
+    file.write_text("old", encoding="utf-8")
+    session = WorkspaceSession(tmp_path)
+    session.open("main.pnx")
+    session.update("main.pnx", "new content")
+    assert session.documents["main.pnx"].dirty
+    saved = session.save("main.pnx")
+    assert file.read_text(encoding="utf-8") == "new content"
+    assert not saved.dirty
+    assert list(tmp_path.glob(".pynix-save-*")) == []
+
+
+def test_external_disk_changes_block_save(tmp_path):
+    file = tmp_path / "main.pnx"
+    file.write_text("original", encoding="utf-8")
+    session = WorkspaceSession(tmp_path)
+    session.open("main.pnx")
+    session.update("main.pnx", "editor change")
+    file.write_text("external change", encoding="utf-8")
+    with pytest.raises(WorkspaceError, match="changed on disk"):
+        session.save("main.pnx")
+    assert file.read_text(encoding="utf-8") == "external change"
+    assert session.documents["main.pnx"].dirty
