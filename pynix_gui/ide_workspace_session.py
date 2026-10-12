@@ -58,6 +58,23 @@ class WorkspaceSession:
                     return found
         return found
 
+    def list_directories(self, *, limit: int = 10000) -> list[str]:
+        """List directory nodes independently from file/content preview limits."""
+        import os
+        found: list[str] = []
+        for directory, dirs, _files in os.walk(self.root, followlinks=False):
+            dirs[:] = sorted(d for d in dirs if not (Path(directory) / d).is_symlink())
+            for name in dirs:
+                path = Path(directory) / name
+                found.append(path.relative_to(self.root).as_posix())
+                if len(found) >= limit:
+                    return found
+            # Show but do not recursively scan environments, caches or Git metadata.
+            dirs[:] = [d for d in dirs if d not in {
+                ".git", ".venv", "__pycache__", "node_modules", ".worktrees",
+            }]
+        return found
+
     def open(self, relative: str) -> WorkspaceDocument:
         if relative not in self.documents:
             path = self.resolve_file(relative)
