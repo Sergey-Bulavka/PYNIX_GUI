@@ -33,7 +33,8 @@ def test_binary_and_oversized_documents_skipped(tmp_path):
     (tmp_path / "fine.pnx").write_text("working")
     result = workspace_bootstrap(WorkspaceSession(tmp_path), max_bytes=1000)
     assert "fine.pnx" in result
-    assert "huge.pnx" not in result
+    assert '"name": "huge.pnx"' in result
+    assert '"unloaded": true' in result
     assert "binary.pnx" not in result
 
 
@@ -114,3 +115,26 @@ def test_v4_generated_project_javascript_parses_with_node_if_available(tmp_path)
     proc = subprocess.run([node, "--check", "-"], input=match.group(1),
                           text=True, capture_output=True, timeout=10)
     assert proc.returncode == 0, proc.stderr
+
+
+def test_explorer_includes_empty_and_unscanned_directory_nodes(tmp_path):
+    (tmp_path / "empty").mkdir()
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "main.pnx").write_text("function main()")
+    (tmp_path / ".venv").mkdir()
+    (tmp_path / ".venv" / "lib").mkdir()
+    result = workspace_bootstrap(WorkspaceSession(tmp_path), max_files=1)
+    assert '"empty"' in result
+    assert '".venv"' in result
+    assert '"src"' in result
+    assert '"FOLDER_PAYLOAD"' not in result
+    assert "const folders = " in result
+
+
+def test_explorer_file_metadata_survives_preview_content_limit(tmp_path):
+    (tmp_path / "one.pnx").write_text("first")
+    (tmp_path / "two.pnx").write_text("second")
+    result = workspace_bootstrap(WorkspaceSession(tmp_path), max_files=1)
+    assert '"one.pnx"' in result
+    assert '"two.pnx"' in result
+    assert '"unloaded": true' in result
