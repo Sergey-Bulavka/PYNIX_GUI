@@ -76,3 +76,24 @@ def test_v43_header_escapes_project_title(tmp_path):
         WorkspaceSession(project))
     assert "Example &amp; Project" in output
     assert "PROJECT_NAME_PAYLOAD" not in output
+
+
+def test_v43_root_and_nested_folders_share_disclosure_renderer(tmp_path):
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "main.pnx").write_text("hello", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function appendRow(entry, depth, isRoot=false)" in js
+    assert "appendRow({name:PROJECT_NAME,path:'',folder:true},0,true)" in js
+    assert "appendRow(entry,depth)" in js
+    assert "project-chevron" in js
+    assert "chevron.classList.add('collapsed')" in js
+    assert "chevron.textContent=" not in js
+
+
+def test_v43_disclosure_and_glyph_slots_have_fixed_geometry():
+    preview = (Path(__file__).resolve().parents[1] / "examples" /
+               "icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".workspace-mode .project-entry{height:32px;display:flex;align-items:center;" in preview
+    assert ".workspace-mode .project-chevron{width:16px;min-width:16px;height:16px;" in preview
+    assert ".workspace-mode .project-glyph{width:20px;height:20px;" in preview
+    assert ".workspace-mode .project-chevron.collapsed svg{transform:rotate(-90deg)}" in preview
