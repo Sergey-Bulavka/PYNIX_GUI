@@ -7,6 +7,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
+import os
+import tempfile
 
 
 class WorkspaceError(ValueError):
@@ -97,6 +99,40 @@ class WorkspaceSession:
             raise WorkspaceError("Document is not open")
         doc = self.documents[relative]
         doc.text = text
+        return doc
+
+    def save(self, relative: str) -> WorkspaceDocument:
+        """Atomically persist an open document without overwriting external edits."""
+        doc = self.documents.get(relative)
+        if doc is None:
+            raise WorkspaceError("Document is not open")
+        path = self.resolve_file(relative)
+        try:
+            disk_text = path.read_text(encoding="utf-8")
+        except (OSError, UnicodeError) as exc:
+            raise WorkspaceError("Cannot read file before saving") from exc
+        if disk_text != doc.saved_text:
+            raise WorkspaceError("File changed on disk; reload or resolve conflict")
+        if not doc.dirty:
+            return doc
+        temp_name = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w", encoding="utf-8", newline="",
+                dir=path.parent, prefix=".pynix-save-", delete=False,
+            ) as output:
+                temp_name = output.name
+                output.write(doc.text)
+                output.flush()
+                os.fsync(output.fileno())
+            os.chmod(temp_name, path.stat().st_mode & 0o777)
+            os.replace(temp_name, path)
+        except OSError as exc:
+            raise WorkspaceError("Failed to save document") from exc
+        finally:
+            if temp_name and os.path.exists(temp_name):
+                os.unlink(temp_name)
+        doc.saved_text = doc.text
         return doc
 
     def close(self, relative: str, *, discard: bool = False) -> None:
