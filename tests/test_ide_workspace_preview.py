@@ -53,7 +53,7 @@ def test_v43_nested_tree_and_selection_binding(tmp_path):
     assert "function buildTree()" in js
     assert "function visit(node,depth)" in js
     assert "expanded.add(segments.slice(0,i).join('/'))" in js
-    assert "entry.path===current" in js
+    assert "entry.path===selectedPath" in js
     assert "src/ui/view.pnx" in js
     assert "folder-open" in js
     assert "file-code" in js
@@ -144,7 +144,7 @@ def test_single_pointer_press_and_lazy_file_open_bridge(tmp_path):
     (tmp_path / "first.pnx").write_text("first")
     (tmp_path / "second.pnx").write_text("second")
     bootstrap = workspace_bootstrap(WorkspaceSession(tmp_path), max_files=1)
-    assert "line.addEventListener('pointerdown'" in bootstrap
+    assert "line.addEventListener('dblclick'" in bootstrap
     assert "if(e.button!==0)return" in bootstrap
     assert "window.webkit?.messageHandlers?.pynixFileOpen" in bootstrap
     assert "window.pynixReceiveFile=function(payload)" in bootstrap
