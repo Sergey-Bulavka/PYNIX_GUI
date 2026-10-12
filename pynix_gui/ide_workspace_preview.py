@@ -73,7 +73,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const gutter=document.createElement('pre');
  gutter.className='pynix-edit-gutter';
  gutter.setAttribute('aria-hidden','true');
- editLayer.append(gutter,coloredSource,editorInput);
+ const activeLine=document.createElement('div');
+ activeLine.className='pynix-active-line';
+ editLayer.append(gutter,activeLine,coloredSource,editorInput);
  const cursorStatus=document.createElement('span');
  cursorStatus.className='pynix-cursor-status';
  document.querySelector('.bottom')?.appendChild(cursorStatus);
@@ -83,7 +85,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const line=before.split('\\n').length;
    const column=before.length-before.lastIndexOf('\\n');
    cursorStatus.textContent='Ln '+line+', Col '+column;
-   editLayer.style.setProperty('--active-line',String(line-1));
+   activeLine.style.transform='translateY('+(15+(line-1)*21.45-editorInput.scrollTop)+'px)';
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
