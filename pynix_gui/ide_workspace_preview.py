@@ -45,10 +45,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  let current = null;
  const expanded = new Set(['']);
  const icon = {
-   folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 5h6l2 3h10v11H3z"/></svg>',
-   file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 2h10l5 5v15H5zM15 2v5h5"/></svg>',
-   code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 2h10l5 5v15H5zM15 2v5h5M10 12l-2 3 2 3m5-6 2 3-2 3"/></svg>'
- };
+  "folder": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" > <path d=\"M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z\" /> </svg> ",
+  "folder-open": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" > <path d=\"m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2\" /> </svg> ",
+  "file": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" > <path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\" /> <path d=\"M14 2v5a1 1 0 0 0 1 1h5\" /> </svg> ",
+  "file-code": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" > <path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\" /> <path d=\"M14 2v5a1 1 0 0 0 1 1h5\" /> <path d=\"M10 12.5 8 15l2 2.5\" /> <path d=\"m14 12.5 2 2.5-2 2.5\" /> </svg> "
+};
  function buildTree() {
    const root = {children: new Map(), path:'', folder:true};
    for(const file of files) {
@@ -96,7 +97,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        const glyph=document.createElement('span');
        const extension=entry.name.split('.').pop().toLowerCase();
        glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+extension));
-       glyph.innerHTML=entry.folder?icon.folder:(extension==='pnx'||extension==='py'?icon.code:icon.file);
+       glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):(extension==='pnx'||extension==='py'?icon['file-code']:icon.file);
        line.appendChild(glyph);
        const label=document.createElement('span');
        label.className='project-label';
