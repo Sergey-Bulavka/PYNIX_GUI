@@ -29,3 +29,15 @@ def test_python_icon_uses_upstream_original_vector_not_hand_drawn_path():
     assert "linearGradient" in source
     assert 'viewBox=\'0 0 128 128\'' in source
     assert "M12 2C6 2" not in source
+
+
+def test_python_svg_is_valid_javascript_template_literal():
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    start = src.index("if(type==='python') return ")
+    end = src.index("if(type==='markdown')", start)
+    statement = src[start:end]
+    assert "return `<svg " in statement
+    assert "</svg>`;" in statement
+    assert statement.count("`") == 2
+    assert "xmlns='http://www.w3.org/2000/svg'" in statement
