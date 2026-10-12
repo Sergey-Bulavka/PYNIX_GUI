@@ -289,3 +289,13 @@ def test_v420_per_file_undo_redo_and_automatic_indents(tmp_path):
     assert "editorInput.addEventListener('beforeinput'" in js
     assert "restoreHistory(e.shiftKey?'redo':'undo')" in js
     assert "pushUndo(byName.get(current))" in js
+
+
+def test_fixed_height_custom_caret_is_independent_of_native_webkit_caret(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "pynix-custom-caret" in js
+    assert "editorInput.wrap='off'" in js
+    assert "customCaret.style.transform=" in js
+    assert "document.activeElement!==editorInput" in js
+    assert "measure.style.font=metrics.font" in js
