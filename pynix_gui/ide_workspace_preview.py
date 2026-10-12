@@ -15,14 +15,23 @@ from .ide_file_icons import file_icon_type
 def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
                         max_bytes: int = 100_000) -> str:
     records = []
-    for name in session.list_files(limit=max_files):
+    folders = session.list_directories()
+    loaded = 0
+    for name in session.list_files(limit=10000):
         if not name.lower().endswith((".pnx", ".py", ".md", ".json", ".toml", ".txt")):
             continue
         try:
             path = session.resolve_file(name)
             if path.stat().st_size > max_bytes:
+                records.append({"name": name, "text": "", "tokens": None,
+                                "icon": file_icon_type(name), "unloaded": True})
+                continue
+            if loaded >= max_files:
+                records.append({"name": name, "text": "", "tokens": None,
+                                "icon": file_icon_type(name), "unloaded": True})
                 continue
             doc = session.open(name)
+            loaded += 1
         except (OSError, ValueError):
             continue
         records.append({"name": name, "text": doc.text,
@@ -30,6 +39,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
                         "icon": file_icon_type(name)})
     session.documents.clear()
     session.active = None
+    folder_payload = json.dumps(folders, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     payload = json.dumps(records, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     # This script is appended after the gallery's own scripts, so the initial
     # design preview retains its independent, self-contained state.
@@ -37,6 +47,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
 (() => {
  const files = PAYLOAD;
  const PROJECT_NAME = PROJECT_NAME_PAYLOAD;
+ const folders = FOLDER_PAYLOAD;
  const workspace = document.body.classList.contains('workspace-mode');
  if (!workspace || !files.length) return;
  const tree = document.querySelector('.tree');
@@ -67,13 +78,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  function buildTree() {
    const root = {children: new Map(), path:'', folder:true};
-   for(const file of files) {
+   for(const path of [...folders, ...files.map(file=>file.name)]) {
      let node = root;
-     const pieces = file.name.split('/');
+     const pieces = path.split('/');
      pieces.forEach((part, i) => {
        const key = pieces.slice(0,i+1).join('/');
        if(!node.children.has(part))
-         node.children.set(part, {name:part,path:key,folder:i<pieces.length-1,children:new Map()});
+         node.children.set(part, {name:part,path:key,folder:i<pieces.length-1 || folders.includes(key),children:new Map()});
        node=node.children.get(part);
      });
    }
@@ -177,7 +188,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      tab.addEventListener('click', () => show(fileName));
      tabs.appendChild(tab);
    }
-   renderCode(byName.get(name));
+   if(byName.get(name).unloaded){
+     code.replaceChildren();
+     const info=document.createElement('div');
+     info.className='source-unloaded';
+     info.textContent='File is listed but its contents are not loaded in this read-only preview.';
+     code.appendChild(info);
+   } else renderCode(byName.get(name));
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
@@ -203,7 +220,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  show(files[0].name);
 })();
-</script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PAYLOAD", payload)
+</script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
