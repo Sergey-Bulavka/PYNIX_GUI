@@ -85,7 +85,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const line=before.split('\\n').length;
    const column=before.length-before.lastIndexOf('\\n');
    cursorStatus.textContent='Ln '+line+', Col '+column;
-   activeLine.style.transform='translateY('+(15+(line-1)*21.45-editorInput.scrollTop)+'px)';
+   const metrics=getComputedStyle(editorInput);
+   const lineHeight=parseFloat(metrics.lineHeight);
+   const topPadding=parseFloat(metrics.paddingTop);
+   activeLine.style.height=lineHeight+'px';
+   activeLine.style.transform='translateY('+(topPadding+(line-1)*lineHeight-editorInput.scrollTop)+'px)';
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
@@ -111,6 +115,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      else if(/^\\d/.test(t))kind='number';
      else if(words.has(t))kind='keyword';
      else if(types.has(t))kind='type';
+     else if(['print','input','len','range','str','int','float'].includes(t))kind='builtin';
+     else if(/^[A-Za-z_]/.test(t)&&/^\\s*\\(/.test(value.slice(token.lastIndex)))kind='call';
      else if(['true','false','none','null'].includes(t))kind='constant';
      html+='<span class="pynix-edit-'+kind+'">'+escapeCode(t)+'</span>';
      last=token.lastIndex;
