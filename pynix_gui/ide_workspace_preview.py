@@ -269,6 +269,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    navigateFind(1,true);
  }
  function closeFind(){
+   replaceBar.hidden=true;
    searchBar.hidden=true;
    recolorSource();
    editorInput.focus();
@@ -290,6 +291,77 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(e.key==='Escape'&&!searchBar.hidden&&document.activeElement===editorInput){
      e.preventDefault();closeFind();
    }
+ });
+ const replaceBar=document.createElement('div');
+ replaceBar.className='pynix-find-bar pynix-replace-bar';
+ replaceBar.hidden=true;
+ const replaceInput=document.createElement('input');
+ replaceInput.placeholder='Replace with';
+ replaceInput.setAttribute('aria-label','Replacement text');
+ const replaceOne=document.createElement('button');
+ replaceOne.type='button';replaceOne.textContent='Replace';
+ const replaceAll=document.createElement('button');
+ replaceAll.type='button';replaceAll.textContent='All';
+ replaceBar.append(replaceInput,replaceOne,replaceAll);
+ document.querySelector('.workspace-toolbar')?.appendChild(replaceBar);
+ function openReplace(){
+   openFind();
+   replaceBar.hidden=false;
+   findInput.focus();
+ }
+ function replaceCurrent(){
+   const matches=findMatches();
+   if(!matches.length)return;
+   const pos=matches[Math.max(0,findIndex)];
+   pushUndo(byName.get(current));
+   editorInput.setRangeText(replaceInput.value,pos,pos+findInput.value.length,'end');
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   navigateFind(1,true);
+   findInput.focus();
+ }
+ function replaceEvery(){
+   const matches=findMatches();
+   if(!matches.length)return;
+   pushUndo(byName.get(current));
+   let text=editorInput.value;
+   for(let i=matches.length-1;i>=0;i--){
+     const pos=matches[i];
+     text=text.slice(0,pos)+replaceInput.value+text.slice(pos+findInput.value.length);
+   }
+   editorInput.value=text;
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   navigateFind(1,true);
+   findInput.focus();
+ }
+ replaceOne.addEventListener('click',replaceCurrent);
+ replaceAll.addEventListener('click',replaceEvery);
+ const goBar=document.createElement('div');
+ goBar.className='pynix-find-bar pynix-go-bar';goBar.hidden=true;
+ const goInput=document.createElement('input');
+ goInput.type='number';goInput.min='1';goInput.placeholder='Go to line';
+ const goButton=document.createElement('button');
+ goButton.type='button';goButton.textContent='Go';
+ goBar.append(goInput,goButton);
+ document.querySelector('.workspace-toolbar')?.appendChild(goBar);
+ function goToLine(line){
+   const lines=editorInput.value.split('\\n');
+   const number=Math.max(1,Math.min(lines.length,Number(line)||1));
+   const offset=lines.slice(0,number-1).reduce((n,item)=>n+item.length+1,0);
+   editorInput.focus();editorInput.setSelectionRange(offset,offset);
+   const height=parseFloat(getComputedStyle(editorInput).lineHeight);
+   editorInput.scrollTop=Math.max(0,(number-1)*height-editorInput.clientHeight/2);
+   updateCursor();
+ }
+ goButton.addEventListener('click',()=>{goToLine(goInput.value);goBar.hidden=true;});
+ goInput.addEventListener('keydown',e=>{
+   if(e.key==='Enter'){e.preventDefault();goToLine(goInput.value);goBar.hidden=true;}
+   if(e.key==='Escape'){e.preventDefault();goBar.hidden=true;editorInput.focus();}
+ });
+ document.addEventListener('keydown',e=>{
+   if(!(e.metaKey||e.ctrlKey)||e.altKey&&e.key.toLowerCase()!=='f')return;
+   const key=e.key.toLowerCase();
+   if(key==='f'&&e.altKey&&!e.shiftKey){e.preventDefault();openReplace();}
+   else if(key==='l'&&!e.shiftKey){e.preventDefault();goBar.hidden=false;goInput.focus();goInput.select();}
  });
  const diagnosticsStatus=document.createElement('span');
  diagnosticsStatus.className='pynix-diagnostics-status';
