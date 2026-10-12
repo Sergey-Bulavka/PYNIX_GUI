@@ -71,3 +71,31 @@ def test_v41_gallery_stays_separate_from_workspace():
     assert ".workspace-mode .layout>.section{display:none}" in html
     assert ".workspace-mode .editor-tabs{display:flex}" in html
     assert "One family" in html
+
+
+def test_v41_right_rail_is_nested_inside_editor_workspace():
+    from html.parser import HTMLParser
+
+    class Hierarchy(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.stack = []
+            self.ancestors = {}
+        def handle_starttag(self, tag, attrs):
+            if tag != "div":
+                return
+            cls = dict(attrs).get("class", "")
+            for name in ("ide", "editor", "right-tools", "terminal-resizer", "integrated-terminal"):
+                if name in cls.split():
+                    self.ancestors[name] = list(self.stack)
+            self.stack.append(cls)
+        def handle_endtag(self, tag):
+            if tag == "div" and self.stack:
+                self.stack.pop()
+
+    parser = Hierarchy()
+    parser.feed(app.PREVIEW_PATH.read_text(encoding="utf-8"))
+    assert "ide" in parser.ancestors["editor"]
+    assert "ide" in parser.ancestors["right-tools"]
+    assert "ide" not in parser.ancestors["terminal-resizer"]
+    assert "ide" not in parser.ancestors["integrated-terminal"]
