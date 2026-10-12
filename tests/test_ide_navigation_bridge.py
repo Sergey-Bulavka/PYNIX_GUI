@@ -62,3 +62,23 @@ def test_pyobjc_file_request_is_normalized():
     src = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text()
     assert "request = dict(request)" in src
     assert "source = request.get(\"source\")" in src
+
+
+def test_webkit_numeric_bridge_normalizes_objective_c_number_like_values():
+    from pynix_gui.ide_navigation_bridge import normalize_webkit_request
+    class ObjCNumber:
+        def __int__(self): return 4
+        def __str__(self): return "4"
+    raw = {"command":"definition","source":"examples/hello.pnx",
+           "line":ObjCNumber(),"column":ObjCNumber()}
+    normalized = normalize_webkit_request(raw)
+    assert validate_request(normalized,{"examples/hello.pnx"}) == (
+        "definition","examples/hello.pnx",4,4)
+
+
+def test_webkit_numeric_bridge_rejects_bad_positions():
+    from pynix_gui.ide_navigation_bridge import normalize_webkit_request
+    with pytest.raises(ValueError):
+        normalize_webkit_request({"line":"nan","column":1})
+    with pytest.raises(ValueError):
+        normalize_webkit_request({"line":True,"column":1})
