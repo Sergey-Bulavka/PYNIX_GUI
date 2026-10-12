@@ -26,7 +26,7 @@ def main() -> None:
     import WebKit
     from Foundation import NSObject, NSURL
     from pynix_gui.ide_navigation_bridge import (
-        attach_navigation_controls, validate_request, result_script,
+        attach_navigation_controls, normalize_webkit_request, validate_request, result_script,
     )
 
     class PreviewDelegate(NSObject):
@@ -107,7 +107,7 @@ def main() -> None:
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             try:
                 command, source, line, column = validate_request(
-                    dict(message.body()), available_sources)
+                    normalize_webkit_request(message.body()), available_sources)
                 result = query_navigation(session.root, compiler_python, command,
                                           source, line, column)
             except (ValueError, TypeError) as exc:
