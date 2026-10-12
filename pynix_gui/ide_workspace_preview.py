@@ -185,9 +185,8 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
 
 def attach_git_snapshot(html_source: str, snapshot) -> str:
     """Replace the mock Source Control with the actual read-only Git snapshot."""
-    if not snapshot.available:
-        return html_source
     payload = json.dumps({
+        "available": snapshot.available,
         "branch": snapshot.branch,
         "changes": [{"status": item.status, "path": item.path} for item in snapshot.changes],
         "history": list(snapshot.history),
@@ -207,6 +206,10 @@ def attach_git_snapshot(html_source: str, snapshot) -> str:
    if (!rail.classList.contains('active')) return;
    tree.replaceChildren();
    setText(tree,'tree-title','SOURCE CONTROL');
+   if(!data.available){
+     setText(tree,'git-hint','No Git repository at this project root');
+     return;
+   }
    setText(tree,'git-branch-title','Branch · '+data.branch);
    setText(tree,'git-section-label','CHANGES ('+data.changes.length+')');
    if(!data.changes.length) setText(tree,'git-change','Working tree clean');
