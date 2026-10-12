@@ -95,7 +95,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    activeLine.style.transform='translateY('+(topPadding+(line-1)*lineHeight-editorInput.scrollTop)+'px)';
    const colIndex=before.length-before.lastIndexOf('\\n')-1;
    const measure=document.createElement('span');
-   measure.style.cssText='position:absolute;visibility:hidden;white-space:pre;font:inherit';
+   measure.style.cssText='position:absolute;visibility:hidden;white-space:pre';
+   measure.style.font=metrics.font;
+   measure.style.letterSpacing=metrics.letterSpacing;
    measure.textContent='0000000000';
    editorInput.parentElement.appendChild(measure);
    const advance=measure.getBoundingClientRect().width/10;
