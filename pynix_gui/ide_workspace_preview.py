@@ -75,7 +75,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  gutter.setAttribute('aria-hidden','true');
  const activeLine=document.createElement('div');
  activeLine.className='pynix-active-line';
- editLayer.append(gutter,activeLine,coloredSource,editorInput);
+ const customCaret=document.createElement('div');
+ customCaret.className='pynix-custom-caret';
+ customCaret.setAttribute('aria-hidden','true');
+ editLayer.append(gutter,activeLine,coloredSource,editorInput,customCaret);
  const cursorStatus=document.createElement('span');
  cursorStatus.className='pynix-cursor-status';
  document.querySelector('.bottom')?.appendChild(cursorStatus);
@@ -90,10 +93,24 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const topPadding=parseFloat(metrics.paddingTop);
    activeLine.style.height=lineHeight+'px';
    activeLine.style.transform='translateY('+(topPadding+(line-1)*lineHeight-editorInput.scrollTop)+'px)';
+   const colIndex=before.length-before.lastIndexOf('\\n')-1;
+   const measure=document.createElement('span');
+   measure.style.cssText='position:absolute;visibility:hidden;white-space:pre;font:inherit';
+   measure.textContent='0000000000';
+   editorInput.parentElement.appendChild(measure);
+   const advance=measure.getBoundingClientRect().width/10;
+   measure.remove();
+   const left=parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
+   const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop+(lineHeight-14)/2;
+   customCaret.style.transform='translate('+left+'px,'+top+'px)';
+   customCaret.hidden=editorInput.selectionStart!==editorInput.selectionEnd||document.activeElement!==editorInput;
+
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
  editorInput.addEventListener('click',updateCursor);
+ editorInput.addEventListener('focus',updateCursor);
+ editorInput.addEventListener('blur',()=>{customCaret.hidden=true;});
  editorInput.addEventListener('keyup',updateCursor);
  editorInput.addEventListener('select',updateCursor);
  code.parentElement.appendChild(editLayer);
