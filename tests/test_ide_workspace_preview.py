@@ -298,4 +298,5 @@ def test_fixed_height_custom_caret_is_independent_of_native_webkit_caret(tmp_pat
     assert "editorInput.wrap='off'" in js
     assert "customCaret.style.transform=" in js
     assert "document.activeElement!==editorInput" in js
-    assert "measure.style.font=metrics.font" in js
+    assert "measure.style.fontFamily=metrics.fontFamily" in js
+    assert "measure.style.fontSize=metrics.fontSize" in js
