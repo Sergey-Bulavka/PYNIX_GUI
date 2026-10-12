@@ -170,3 +170,22 @@ def test_single_click_selects_and_double_click_opens_file(tmp_path):
     assert "if(entry.path===selectedPath)" in js
     assert "line.addEventListener('pointerdown'" not in js
     assert "if(entry.folder){" in js
+
+
+def test_native_editor_has_caret_save_and_dirty_tracking(tmp_path):
+    (tmp_path / "main.pnx").write_text("main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "pynix-source-input" in js
+    assert "editorInput.addEventListener('input'" in js
+    assert "file.dirty=file.text!==file.savedText" in js
+    assert "window.webkit?.messageHandlers?.pynixFileSave" in js
+    assert "window.pynixSaveResult=payload" in js
+    assert "e.metaKey||e.ctrlKey" in js
+
+
+def test_native_save_host_uses_session_guard(tmp_path):
+    source = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text()
+    assert "class FileSaveHandler(NSObject)" in source
+    assert "session.update(source, content)" in source
+    assert "session.save(source)" in source
+    assert 'pynixFileSave' in source
