@@ -36,7 +36,7 @@ def read_diagnostics(project_root: Path, compiler_python: Path, *,
         return DiagnosticSnapshot((), "Compiler Python executable not found")
     try:
         completed = subprocess.run(
-            [str(executable), "-m", "compiler", "tooling", "diagnostics", str(manifest)],
+            [str(executable), "-m", "compiler", "tooling", "diagnostics", str(root)],
             cwd=root, capture_output=True, text=True, timeout=timeout, check=False,
         )
         if completed.returncode:
