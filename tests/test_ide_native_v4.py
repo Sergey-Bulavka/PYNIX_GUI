@@ -99,3 +99,17 @@ def test_v41_right_rail_is_nested_inside_editor_workspace():
     assert "ide" in parser.ancestors["right-tools"]
     assert "ide" not in parser.ancestors["terminal-resizer"]
     assert "ide" not in parser.ancestors["integrated-terminal"]
+
+
+def test_native_window_accepts_first_mouse_click():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "class FirstClickWebView(WebKit.WKWebView):" in source
+    assert "def acceptsFirstMouse_(self, event):" in source
+    assert "view = FirstClickWebView.alloc()" in source
+    assert "window.makeFirstResponder_(view)" in source
+
+
+def test_workspace_controls_use_single_click_events():
+    source = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    assert "addEventListener('click'" in source
+    assert "addEventListener('dblclick'" not in source
