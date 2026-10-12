@@ -59,6 +59,71 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const openTabs = [];
  let current = null;
  let selectedPath = null;
+ // Native editor uses a textarea for real caret, selection, IME and Undo/Redo.
+ const editorInput=document.createElement('textarea');
+ editorInput.className='pynix-source-input';
+ editorInput.spellcheck=false;
+ editorInput.setAttribute('aria-label','PYNIX source editor');
+ editorInput.hidden=true;
+ code.parentElement.appendChild(editorInput);
+ const editButton=document.createElement('button');
+ editButton.type='button';
+ editButton.textContent='Edit';
+ editButton.className='nav-action pynix-edit-toggle';
+ document.querySelector('.workspace-toolbar')?.appendChild(editButton);
+ const saveButton=document.createElement('button');
+ saveButton.type='button';saveButton.textContent='Save';
+ saveButton.className='nav-action pynix-save-action';
+ document.querySelector('.workspace-toolbar')?.appendChild(saveButton);
+ let editing=false;
+ function persistBuffer(){
+   if(!editing || !current)return;
+   const file=byName.get(current);
+   if(!file || file.unloaded)return;
+   file.text=editorInput.value;
+   file.dirty=file.text!==file.savedText;
+ }
+ function updateEditingView(){
+   const file=current?byName.get(current):null;
+   const available=!!file&&!file.unloaded;
+   editorInput.hidden=!editing||!available;
+   code.hidden=editing&&available;
+   editButton.textContent=editing?'Preview':'Edit';
+   saveButton.disabled=!available||!file.dirty;
+   if(editing&&available){
+     editorInput.value=file.text;
+     editorInput.focus();
+   }
+ }
+ editorInput.addEventListener('input',()=>{
+   persistBuffer();
+   const file=byName.get(current);
+   saveButton.disabled=!file?.dirty;
+   for(const tab of tabs.children){
+     const path=openTabs.find(name=>name.split('/').pop()===tab.textContent.replace(/\\s*\\*$/,''));
+     if(path&&byName.get(path)?.dirty)tab.title='Unsaved changes';
+   }
+ });
+ editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
+ function saveSource(){
+   persistBuffer();
+   const file=current?byName.get(current):null;
+   if(!file||file.unloaded||!file.dirty)return;
+   const bridge=window.webkit?.messageHandlers?.pynixFileSave;
+   if(!bridge){window.alert('Native file saving is unavailable');return;}
+   bridge.postMessage({source:current,text:file.text});
+ }
+ saveButton.addEventListener('click',saveSource);
+ editorInput.addEventListener('keydown',e=>{
+   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveSource()}
+ });
+ window.pynixSaveResult=payload=>{
+   const file=payload?.source?byName.get(payload.source):null;
+   if(!file)return;
+   if(payload.error){window.alert('Save failed: '+payload.error);return;}
+   if(payload.saved){file.savedText=file.text;file.dirty=false;if(current===payload.source)updateEditingView();}
+ };
+
  const expanded = new Set(['']);
  const icon = {
   "folder": "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' > <path d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z' /> </svg> ",
@@ -197,6 +262,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  function show(name) {
    if (!byName.has(name)) return;
+   persistBuffer();
    if (!openTabs.includes(name)) openTabs.push(name);
    current = name;
    selectedPath = name;
@@ -212,6 +278,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      tabs.appendChild(tab);
    }
    const file=byName.get(name);
+   if(file.savedText===undefined && !file.unloaded)file.savedText=file.text;
    if(file.unloaded){
      code.replaceChildren();
      const info=document.createElement('div');
@@ -222,6 +289,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      if(bridge)bridge.postMessage({source:name});
      else info.textContent='File contents unavailable outside the native IDE.';
    } else renderCode(file);
+   updateEditingView();
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
@@ -239,9 +307,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      return;
    }
    file.text=payload.text;
+   file.savedText=payload.text;
+   file.dirty=false;
    file.tokens=payload.tokens||null;
    file.unloaded=false;
-   if(current===payload.source)renderCode(file);
+   if(current===payload.source){renderCode(file);updateEditingView();}
  };
  document.addEventListener('pynix:navigate', event=>{
    const target=event.detail||{};
