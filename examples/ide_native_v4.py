@@ -116,9 +116,33 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 result_script(result, command), None)
 
+    class FileOpenHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_syntax_highlight import highlight_document
+            request = message.body()
+            source = request.get("source") if isinstance(request, dict) else None
+            response = {"source": source}
+            try:
+                if not isinstance(source, str) or source not in available_sources:
+                    raise ValueError("File is not part of the indexed project")
+                file_path = session.resolve_file(source)
+                if file_path.stat().st_size > 1_000_000:
+                    raise ValueError("File is too large for this preview")
+                text = file_path.read_text(encoding="utf-8")
+                response["text"] = text
+                response["tokens"] = highlight_document(text) if source.endswith(".pnx") else None
+            except (OSError, UnicodeError, ValueError) as error:
+                response["error"] = str(error)
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixReceiveFile(" + serialized + ");", None)
+
+    file_open_handler = FileOpenHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
+    controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
     document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
