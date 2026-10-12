@@ -136,6 +136,20 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close svg{
  display:block;width:15px;height:15px;
 }
+
+/* V4.17 source editor gutters use identical metrics and scroll offsets. */
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{
+ position:absolute;inset:0 auto 0 0;z-index:1;box-sizing:border-box;
+ width:59px;height:100%;margin:0;padding:15px 10px 15px 0;
+ text-align:right;overflow:hidden;pointer-events:none;
+ font:13px/1.65 ui-monospace,SFMono-Regular,Menlo,monospace;
+ white-space:pre;color:#69809b;background:#111923;
+}
+.workspace-mode .pynix-edit-layer .pynix-source-input,
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight{
+ padding-left:69px!important;
+}
+.workspace-mode .pynix-cursor-status{margin-left:auto;margin-right:20px;white-space:nowrap;font-size:11px;color:#c8d7ea}
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
