@@ -9,6 +9,7 @@ import json
 
 from .ide_workspace_session import WorkspaceSession
 from .ide_syntax_highlight import highlight_document
+from .ide_file_icons import file_icon_type
 
 
 def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
@@ -25,7 +26,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
         except (OSError, ValueError):
             continue
         records.append({"name": name, "text": doc.text,
-                        "tokens": highlight_document(doc.text) if name.endswith(".pnx") else None})
+                        "tokens": highlight_document(doc.text) if name.endswith(".pnx") else None,
+                        "icon": file_icon_type(name)})
     session.documents.clear()
     session.active = None
     payload = json.dumps(records, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
@@ -52,6 +54,17 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
   "file": "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' > <path d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z' /> <path d='M14 2v5a1 1 0 0 0 1 1h5' /> </svg> ",
   "file-code": "<svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' > <path d='M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z' /> <path d='M14 2v5a1 1 0 0 0 1 1h5' /> <path d='M10 12.5 8 15l2 2.5' /> <path d='m14 12.5 2 2.5-2 2.5' /> </svg> "
 };
+ function fileIconMarkup(type) {
+   // Common SVG glyphs stay consistent with our approved Lucide family.
+   if(type==='python') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#3776ab" d="M12 2C6 2 6 5 6 8v2h8v1H4c-3 0-3 2-3 5s1 5 4 5h3v-4c0-3 2-4 5-4h4c3 0 5-2 5-5s-2-6-6-6zm-3 3a1.3 1.3 0 1 1 0 2.6A1.3 1.3 0 0 1 9 5Z"/><path fill="#ffd43b" d="M12 22c6 0 6-3 6-6v-2h-8v-1h10c3 0 3-2 3-5s-1-5-4-5h-3v4c0 3-2 4-5 4H7c-3 0-5 2-5 5s2 6 6 6zm3-3a1.3 1.3 0 1 1 0-2.6A1.3 1.3 0 0 1 15 19Z"/></svg>';
+   if(type==='markdown') return '<span class="file-mark file-mark-md">M↓</span>';
+   if(type==='pynix') return '<span class="file-mark file-mark-pnx">PN</span>';
+   if(type==='json') return '<span class="file-mark file-mark-json">{ }</span>';
+   if(type==='settings') return '<span class="file-mark file-mark-settings">⚙</span>';
+   if(type==='image') return '<span class="file-mark file-mark-image">▧</span>';
+   if(type==='terminal') return '<span class="file-mark file-mark-terminal">›_</span>';
+   return type==='code'?icon['file-code']:icon.file;
+ }
  function buildTree() {
    const root = {children: new Map(), path:'', folder:true};
    for(const file of files) {
@@ -94,8 +107,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      line.appendChild(chevron);
      const glyph=document.createElement('span');
      const extension=entry.name.split('.').pop().toLowerCase();
-     glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+extension));
-     glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):(extension==='pnx'||extension==='py'?icon['file-code']:icon.file);
+     const fileType=byName.get(entry.path)?.icon || 'file';
+     glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+fileType));
+     glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):fileIconMarkup(fileType);
      line.appendChild(glyph);
      const label=document.createElement('span');
      label.className='project-label';
