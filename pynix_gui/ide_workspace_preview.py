@@ -168,13 +168,56 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      updateCursor();
    }
  }
+ // Explicit history is needed because setRangeText and document switches do not
+ // reliably participate in WebKit's native textarea undo manager.
+ const undoLimit=200;
+ let applyingHistory=false;
+ function historyState(){
+   return {text:editorInput.value,start:editorInput.selectionStart,end:editorInput.selectionEnd};
+ }
+ function pushUndo(file){
+   if(!file||applyingHistory)return;
+   const state=historyState();
+   const undo=file.undoStack||(file.undoStack=[]);
+   if(undo.length&&undo[undo.length-1].text===state.text)return;
+   undo.push(state);
+   if(undo.length>undoLimit)undo.shift();
+   file.redoStack=[];
+ }
+ function restoreHistory(direction){
+   const file=current?byName.get(current):null;
+   if(!file)return;
+   const from=direction==='undo'?'undoStack':'redoStack';
+   const to=direction==='undo'?'redoStack':'undoStack';
+   const stack=file[from]||[];
+   if(!stack.length)return;
+   const state=stack.pop();
+   (file[to]||(file[to]=[])).push(historyState());
+   applyingHistory=true;
+   editorInput.value=state.text;
+   editorInput.setSelectionRange(state.start,state.end);
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   applyingHistory=false;
+ }
+ editorInput.addEventListener('beforeinput',e=>{
+   if(e.isComposing||applyingHistory)return;
+   if(e.inputType==='historyUndo'||e.inputType==='historyRedo'){
+     e.preventDefault();
+     restoreHistory(e.inputType==='historyUndo'?'undo':'redo');
+     return;
+   }
+   if(e.inputType?.startsWith('insert')||e.inputType?.startsWith('delete'))
+     pushUndo(byName.get(current));
+ });
  function replaceSelection(text, start, end){
+   pushUndo(byName.get(current));
    editorInput.focus();
    editorInput.setRangeText(text,start,end,'end');
    editorInput.dispatchEvent(new Event('input',{bubbles:true}));
    updateCursor();
  }
  function indentSelectedLines(outdent){
+   pushUndo(byName.get(current));
    const value=editorInput.value;
    const start=editorInput.selectionStart,end=editorInput.selectionEnd;
    const lineStart=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
@@ -200,6 +243,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  editorInput.addEventListener('keydown',e=>{
+   if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key.toLowerCase()==='z'){
+     e.preventDefault();
+     restoreHistory(e.shiftKey?'redo':'undo');
+     return;
+   }
    if(e.key==='Tab'){
      e.preventDefault();
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
