@@ -97,16 +97,16 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const colIndex=before.length-before.lastIndexOf('\\n')-1;
    const measure=document.createElement('span');
    measure.style.cssText='position:absolute;visibility:hidden;white-space:pre';
-   measure.style.font=metrics.font;
+   measure.style.fontFamily=metrics.fontFamily;
+   measure.style.fontSize=metrics.fontSize;
+   measure.style.fontWeight=metrics.fontWeight;
+   measure.style.fontStyle=metrics.fontStyle;
    measure.style.letterSpacing=metrics.letterSpacing;
    measure.textContent='0000000000';
    editorInput.parentElement.appendChild(measure);
    const advance=measure.getBoundingClientRect().width/10;
    measure.remove();
-   // WebKit places the textarea insertion point on the leading edge of
-   // selectionStart. Our mirror was one glyph ahead after mouse selection.
-   const visibleColumn=Math.max(0,colIndex-1);
-   const left=parseFloat(metrics.paddingLeft)+visibleColumn*advance-editorInput.scrollLeft;
+   const left=parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
    const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop;
    customCaret.style.height=lineHeight+'px';
    customCaret.style.transform='translate('+left+'px,'+top+'px)';
