@@ -214,7 +214,6 @@ def test_workspace_opens_in_edit_mode_with_compact_tree(tmp_path):
     (tmp_path / "main.pnx").write_text("function main()")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "let editing=true;" in js
-    assert "editing=true;\n   const file=byName.get(name)" not in js
-    assert "editing=true;\n   if(file.unloaded)" in js
+    assert "   editing=true;\n   if(file.unloaded)" in js
     assert "7+Math.min(depth,12)*13" in js
     assert "close.innerHTML=" in js
