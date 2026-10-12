@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Native macOS V4 design review window, displaying the approved SVG assets.
+"""Native macOS V4 workspace window, displaying the approved SVG assets.
 
 Unlike the older AppKit canvas, WKWebView renders the original Lucide/Octicons
 SVG markup. This remains a visual acceptance prototype, not the IDE backend.
@@ -43,14 +43,17 @@ def main() -> None:
         AppKit.NSBackingStoreBuffered,
         False,
     )
-    window.setTitle_("PYNIX IDE — Visual Shell V4")
+    window.setTitle_("PYNIX IDE — Workspace V4")
     window.setMinSize_(AppKit.NSMakeSize(1030, 680))
 
     view = WebKit.WKWebView.alloc().initWithFrame_(window.contentView().bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
-    # Explicit local access scope; no network URLs or Git operations required.
-    view.loadFileURL_allowingReadAccessToURL_(url, url.URLByDeletingLastPathComponent())
+    # Reuse the same approved vector artwork, but display a full-size IDE workspace
+    # instead of a miniature IDE embedded inside the icon gallery.
+    document = PREVIEW_PATH.read_text(encoding="utf-8")
+    document = document.replace("<body>", '<body class="workspace-mode">', 1)
+    view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
     app.activateIgnoringOtherApps_(True)
