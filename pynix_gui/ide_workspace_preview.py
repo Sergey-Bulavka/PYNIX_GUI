@@ -8,6 +8,7 @@ import html
 import json
 
 from .ide_workspace_session import WorkspaceSession
+from .ide_syntax_highlight import highlight_document
 
 
 def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
@@ -23,7 +24,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
             doc = session.open(name)
         except (OSError, ValueError):
             continue
-        records.append({"name": name, "text": doc.text})
+        records.append({"name": name, "text": doc.text,
+                        "tokens": highlight_document(doc.text) if name.endswith(".pnx") else None})
     session.documents.clear()
     session.active = None
     payload = json.dumps(records, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
@@ -123,16 +125,23 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
    if(expanded.has(''))visit(root,1);
  }
- function renderCode(text) {
+ function renderCode(file) {
    code.replaceChildren();
-   text.split('\\n').forEach((line, i) => {
+   file.text.split('\\n').forEach((line, i) => {
      const row = document.createElement('div');
      const gutter = document.createElement('span');
      gutter.className = 'ln';
      gutter.textContent = String(i + 1);
      row.appendChild(gutter);
      const content = document.createElement('span');
-     content.textContent = line;
+     if(file.tokens && file.tokens[i]) {
+       for(const token of file.tokens[i]){
+         const span=document.createElement('span');
+         span.className='pnx-token pnx-'+token.kind;
+         span.textContent=token.text;
+         content.appendChild(span);
+       }
+     } else content.textContent=line;
      row.appendChild(content);
      code.appendChild(row);
    });
@@ -152,7 +161,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      tab.addEventListener('click', () => show(fileName));
      tabs.appendChild(tab);
    }
-   renderCode(byName.get(name).text);
+   renderCode(byName.get(name));
    renderTree();
  }
  const explorerControl=document.querySelectorAll('.rail-item')[0];
