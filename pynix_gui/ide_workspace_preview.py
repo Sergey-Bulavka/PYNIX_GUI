@@ -83,6 +83,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const line=before.split('\\n').length;
    const column=before.length-before.lastIndexOf('\\n');
    cursorStatus.textContent='Ln '+line+', Col '+column;
+   editLayer.style.setProperty('--active-line',String(line-1));
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
@@ -129,6 +130,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  saveButton.type='button';saveButton.textContent='Save';
  saveButton.className='nav-action pynix-save-action';
  document.querySelector('.workspace-toolbar')?.appendChild(saveButton);
+ const diagnosticsStatus=document.createElement('span');
+ diagnosticsStatus.className='pynix-diagnostics-status';
+ document.querySelector('.bottom')?.appendChild(diagnosticsStatus);
  let editing=true;
  function persistBuffer(){
    if(!editing || !current)return;
@@ -209,6 +213,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    recolorSource();
    updateCursor();
    const file=byName.get(current);
+   if(file?.dirty)diagnosticsStatus.textContent='Diagnostics require save';
    saveButton.disabled=!file?.dirty;
    renderTabs();
  });
@@ -229,7 +234,25 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=payload?.source?byName.get(payload.source):null;
    if(!file)return;
    if(payload.error){window.alert('Save failed: '+payload.error);return;}
-   if(payload.saved){file.savedText=file.text;file.dirty=false;renderTabs();if(current===payload.source)updateEditingView();}
+   if(payload.saved){
+     file.savedText=file.text;file.dirty=false;renderTabs();
+     if(current===payload.source){
+       updateEditingView();
+       const diagnostics=payload.diagnostics||[];
+       const local=diagnostics.filter(item=>item.source===payload.source||item.source?.endsWith('/'+payload.source));
+       diagnosticsStatus.textContent=payload.diagnostic_error||('Problems: '+local.length);
+       const panel=document.querySelector('.terminal-console');
+       if(panel){
+         panel.replaceChildren();
+         for(const item of local){
+           const entry=document.createElement('div');
+           entry.className='navigation-result';
+           entry.textContent=(item.line||1)+':'+(item.column||1)+' '+(item.code||'')+' '+item.message;
+           panel.appendChild(entry);
+         }
+       }
+     }
+   }
  };
 
  const expanded = new Set(['']);
