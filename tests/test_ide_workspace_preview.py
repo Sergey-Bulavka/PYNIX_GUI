@@ -189,3 +189,22 @@ def test_native_save_host_uses_session_guard(tmp_path):
     assert "session.update(source, content)" in source
     assert "session.save(source)" in source
     assert 'pynixFileSave' in source
+
+
+def test_editor_tabs_can_close_and_reload_sources(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function renderTabs()" in js
+    assert "close.setAttribute('aria-label','Close '+fileName)" in js
+    assert "Discard unsaved changes" in js
+    assert "file.unloaded=true" in js
+    assert "line.addEventListener('dblclick'" in js
+
+
+def test_editor_has_live_syntax_overlay(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function recolorSource()" in js
+    assert "pynix-edit-highlight" in js
+    assert "recolorSource();" in js
+    assert "caret" not in js or "editorInput" in js
