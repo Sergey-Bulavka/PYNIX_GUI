@@ -152,6 +152,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    renderCode(byName.get(name).text);
    renderTree();
  }
+ const explorerControl=document.querySelectorAll('.rail-item')[0];
+ explorerControl?.addEventListener('click',()=>renderTree());
+ explorerControl?.addEventListener('keydown',e=>{
+   if(e.key==='Enter'||e.key===' ')queueMicrotask(()=>renderTree());
+ });
  const sourceControl = document.querySelectorAll('.rail-item')[2];
  sourceControl?.addEventListener('click', () => {
    // Source Control remains the visual-only demonstration mode.
@@ -164,4 +169,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
     if "</body>" not in html_source:
         raise ValueError("Missing HTML body")
+    # The project caption is data, not HTML; escape before inserting.
+    escaped_name = html.escape(session.root.name)
+    html_source = html_source.replace("PYNIX</b> / Icon System",
+                                      "PYNIX</b> / " + escaped_name, 1)
+    html_source = html_source.replace("⑂ feature/icon-system-v4",
+                                      "Project · read-only", 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
