@@ -24,6 +24,8 @@ def test_diagnostics_reads_public_tooling_v1(monkeypatch, tmp_path):
     assert result.error == ""
     assert result.problems == (Problem("src/main.pnx", 3, 5, "E123", "Unknown name"),)
     assert captured["cmd"][2:5] == ["compiler", "tooling", "diagnostics"]
+    assert captured["cmd"][5] == str(tmp_path.resolve())
+    assert not captured["cmd"][5].endswith(".toml")
 
 
 def test_unavailable_compiler_is_nonfatal(tmp_path):
@@ -43,3 +45,21 @@ def test_native_window_exposes_explicit_diagnostics_mode():
     assert '"--diagnostics"' in src
     assert '"--compiler-python"' in src
     assert "attach_diagnostics" in src
+
+
+def test_tooling_target_is_project_not_manifest(tmp_path, monkeypatch):
+    import json
+    from types import SimpleNamespace
+    (tmp_path / "pynix.toml").write_text("[project]\\n", encoding="utf-8")
+    executable = tmp_path / "python"
+    executable.write_text("")
+    called = []
+    def run(command, **kwargs):
+        called.append(command)
+        return SimpleNamespace(returncode=0, stdout=json.dumps({
+            "protocol": "pynix-tooling", "version": 1,
+            "kind": "diagnostics", "diagnostics": []}))
+    monkeypatch.setattr("pynix_gui.ide_tooling_diagnostics.subprocess.run", run)
+    result = read_diagnostics(tmp_path, executable)
+    assert not result.error
+    assert called[0][-1] == str(tmp_path.resolve())
