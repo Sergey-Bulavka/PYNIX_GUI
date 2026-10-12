@@ -300,3 +300,16 @@ def test_fixed_height_custom_caret_is_independent_of_native_webkit_caret(tmp_pat
     assert "document.activeElement!==editorInput" in js
     assert "measure.style.fontFamily=metrics.fontFamily" in js
     assert "measure.style.fontSize=metrics.fontSize" in js
+
+
+def test_v423_find_in_editor_shortcuts_and_navigation(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "pynix-find-bar" in js
+    assert "function findMatches()" in js
+    assert "function navigateFind(step=1,reset=false)" in js
+    assert "function openFind()" in js
+    assert "function closeFind()" in js
+    assert "findInput.addEventListener('keydown'" in js
+    assert "e.shiftKey?-1:1" in js
+    assert "findIndex=-1" in js
