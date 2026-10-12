@@ -142,11 +142,37 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixReceiveFile(" + serialized + ");", None)
 
+    class FileSaveHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            request = dict(message.body())
+            source = request.get("source")
+            content = request.get("text")
+            response = {"source": source}
+            try:
+                if not isinstance(source, str) or source not in available_sources:
+                    raise ValueError("Source is outside the indexed project")
+                if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
+                    raise ValueError("Source content exceeds the editor limit")
+                # Preserve the session's original disk snapshot for conflict checks.
+                if source not in session.documents:
+                    session.open(source)
+                session.update(source, content)
+                session.save(source)
+                response["saved"] = True
+            except (OSError, UnicodeError, ValueError) as error:
+                response["error"] = str(error)
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixSaveResult(" + serialized + ");", None)
+
+    file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
+    controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
