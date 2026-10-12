@@ -121,7 +121,11 @@ def main() -> None:
             import json
             from pynix_gui.ide_syntax_highlight import highlight_document
             request = message.body()
-            source = request.get("source") if isinstance(request, dict) else None
+            try:
+                request = dict(request)
+            except (TypeError, ValueError):
+                request = {}
+            source = request.get("source")
             response = {"source": source}
             try:
                 if not isinstance(source, str) or source not in available_sources:
