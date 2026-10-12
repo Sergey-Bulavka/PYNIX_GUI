@@ -28,7 +28,7 @@ def test_attach_workspace_replaces_only_body_end(tmp_path):
 
 
 def test_binary_and_oversized_documents_skipped(tmp_path):
-    (tmp_path / "binary.pnx").write_bytes(b"\\xff")
+    (tmp_path / "binary.pnx").write_bytes(bytes([0xff]))
     (tmp_path / "huge.pnx").write_text("x" * 1001)
     (tmp_path / "fine.pnx").write_text("working")
     result = workspace_bootstrap(WorkspaceSession(tmp_path), max_bytes=1000)
@@ -62,7 +62,7 @@ def test_v43_nested_tree_and_selection_binding(tmp_path):
 def test_v43_uses_original_vector_assets_and_restores_explorer(tmp_path):
     (tmp_path / "main.pnx").write_text("hello", encoding="utf-8")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
-    assert 'xmlns=\\\"http://www.w3.org/2000/svg\\\"' in js
+    assert "xmlns='http://www.w3.org/2000/svg'" in js
     assert "explorerControl?.addEventListener('click'" in js
     assert "function renderTree()" in js
 
