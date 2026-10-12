@@ -157,7 +157,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  show(files[0].name);
 })();
-</script>""".replace("PAYLOAD", payload).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False))
+</script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
