@@ -43,10 +43,13 @@ def navigation_controls() -> str:
  if(!code||!tabs||!output||!toolbar)return;
  const handler=window.webkit?.messageHandlers?.pynixNavigation;
  let source=window.pynixActiveSource||null, line=1, column=1;
- document.addEventListener('pynix:file-opened', e=>{source=e.detail.source;line=1;column=1});
+ let ready=!!code.querySelector('.source-line');
+ document.addEventListener('pynix:file-opened', e=>{source=e.detail.source;line=1;column=1;ready=!!code.querySelector('.source-line')});
+ document.addEventListener('pynix:file-ready', e=>{if(source===e.detail.source){ready=true;line=1;column=1}});
  code.addEventListener('click', e=>{
    const row=e.target.closest('.source-line');
    if(!row)return;
+   ready=true;
    line=Number(row.dataset.line);
    const label=row.querySelector('.source-text');
    const caret=document.caretRangeFromPoint?.(e.clientX,e.clientY);
@@ -72,6 +75,7 @@ def navigation_controls() -> str:
        window.pynixNavigationResult({command,result:{error:'Open a PYNIX source file first'}});
        return;
      }
+     if(!ready){window.pynixNavigationResult({command,result:{error:'Wait for the source file to finish loading, then click a symbol.'}});return;}
      if(!handler){window.pynixNavigationResult({command,result:{error:'Native navigation bridge unavailable'}});return;}
      handler.postMessage({command,source,line,column});
    });
