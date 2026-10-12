@@ -42,7 +42,7 @@ def navigation_controls() -> str:
  const toolbar=document.querySelector('.workspace-toolbar');
  if(!code||!tabs||!output||!toolbar)return;
  const handler=window.webkit?.messageHandlers?.pynixNavigation;
- let source=null, line=1, column=1;
+ let source=window.pynixActiveSource||null, line=1, column=1;
  document.addEventListener('pynix:file-opened', e=>{source=e.detail.source;line=1;column=1});
  code.addEventListener('click', e=>{
    const row=e.target.closest('.source-line');
