@@ -133,9 +133,19 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
          renderTree();
        } else show(entry.path);
      };
+     let activatedByPointer=false;
      line.addEventListener('pointerdown',e=>{
        if(e.button!==0)return;
-       e.preventDefault();activate();
+       activatedByPointer=true;
+       e.preventDefault();
+       activate();
+     });
+     // WKWebView can deliver click without pointerdown on the first
+     // window-activation press. Do not require a second click.
+     line.addEventListener('click',e=>{
+       if(e.button!==0||activatedByPointer)return;
+       e.preventDefault();
+       activate();
      });
      line.addEventListener('keydown',e=>{
        if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
