@@ -277,3 +277,15 @@ def test_edit_lexer_distinguishes_comments_and_calls(tmp_path):
     assert "t.startsWith('//')||t.startsWith('#')" in js
     assert "kind='call'" in js
     assert "kind='builtin'" in js
+
+
+def test_v420_per_file_undo_redo_and_automatic_indents(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function pushUndo(file)" in js
+    assert "function restoreHistory(direction)" in js
+    assert "undoLimit=200" in js
+    assert "file.redoStack=[]" in js
+    assert "editorInput.addEventListener('beforeinput'" in js
+    assert "restoreHistory(e.shiftKey?'redo':'undo')" in js
+    assert "pushUndo(byName.get(current))" in js
