@@ -63,6 +63,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const editorInput=document.createElement('textarea');
  editorInput.className='pynix-source-input';
  editorInput.spellcheck=false;
+ editorInput.wrap='off';
  editorInput.setAttribute('aria-label','PYNIX source editor');
  editorInput.hidden=true;
  const editLayer=document.createElement('div');
