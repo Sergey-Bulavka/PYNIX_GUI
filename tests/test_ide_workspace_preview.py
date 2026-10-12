@@ -160,10 +160,13 @@ def test_mac_host_has_bounded_lazy_source_reader():
     assert 'window.pynixReceiveFile(' in src
 
 
-def test_first_click_fallback_is_not_double_activation(tmp_path):
+def test_single_click_selects_and_double_click_opens_file(tmp_path):
     (tmp_path / "main.pnx").write_text("function main()")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
-    assert "let activatedByPointer=false" in js
-    assert "line.addEventListener('pointerdown'" in js
-    assert "line.addEventListener('click'" in js
-    assert "if(e.button!==0||activatedByPointer)return" in js
+    assert "let selectedPath = null" in js
+    assert "selectedPath=entry.path;\n         renderTree();" in js
+    assert "line.addEventListener('dblclick'" in js
+    assert "selectedPath=entry.path;\n         show(entry.path);" in js
+    assert "if(entry.path===selectedPath)" in js
+    assert "line.addEventListener('pointerdown'" not in js
+    assert "if(entry.folder){" in js
