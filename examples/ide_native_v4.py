@@ -59,8 +59,11 @@ def main() -> None:
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
     if args.project is not None:
         from pynix_gui.ide_workspace_session import WorkspaceSession
-        from pynix_gui.ide_workspace_preview import attach_workspace
-        document = attach_workspace(document, WorkspaceSession(args.project))
+        from pynix_gui.ide_workspace_preview import attach_workspace, attach_git_snapshot
+        from pynix_gui.ide_git_snapshot import read_git_snapshot
+        session = WorkspaceSession(args.project)
+        document = attach_workspace(document, session)
+        document = attach_git_snapshot(document, read_git_snapshot(session.root))
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
