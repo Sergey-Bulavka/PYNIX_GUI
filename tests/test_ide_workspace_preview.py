@@ -97,3 +97,20 @@ def test_v43_disclosure_and_glyph_slots_have_fixed_geometry():
     assert ".workspace-mode .project-chevron{width:16px;min-width:16px;height:16px;" in preview
     assert ".workspace-mode .project-glyph{width:20px;height:20px;" in preview
     assert ".workspace-mode .project-chevron.collapsed svg{transform:rotate(-90deg)}" in preview
+
+
+def test_v4_generated_project_javascript_parses_with_node_if_available(tmp_path):
+    import re
+    import shutil
+    import subprocess
+    import pytest
+    node = shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js unavailable; JS syntax validation requires a JavaScript engine")
+    (tmp_path / "main.pnx").write_text("print('test')", encoding="utf-8")
+    source = workspace_bootstrap(WorkspaceSession(tmp_path))
+    match = re.fullmatch(r"<script>\\s*(.*?)\\s*</script>", source, re.S)
+    assert match is not None
+    proc = subprocess.run([node, "--check", "-"], input=match.group(1),
+                          text=True, capture_output=True, timeout=10)
+    assert proc.returncode == 0, proc.stderr
