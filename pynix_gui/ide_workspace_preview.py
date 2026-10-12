@@ -181,3 +181,47 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
     html_source = html_source.replace("▾ main.pnx", "▾ Project files", 1)
     html_source = html_source.replace("⑂ main · 1 modified", "Project · read-only", 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
+
+
+def attach_git_snapshot(html_source: str, snapshot) -> str:
+    """Replace the mock Source Control with the actual read-only Git snapshot."""
+    if not snapshot.available:
+        return html_source
+    payload = json.dumps({
+        "branch": snapshot.branch,
+        "changes": [{"status": item.status, "path": item.path} for item in snapshot.changes],
+        "history": list(snapshot.history),
+    }, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    script = """<script>
+(() => {
+ const data = GIT_PAYLOAD;
+ if (!document.body.classList.contains('workspace-mode')) return;
+ const rail = document.querySelectorAll('.rail-item')[2];
+ const tree = document.querySelector('.tree');
+ if (!rail || !tree) return;
+ const setText = (parent, cls, value) => {
+   const el = document.createElement('div');
+   el.className = cls; el.textContent = value; parent.appendChild(el);
+ };
+ function render() {
+   if (!rail.classList.contains('active')) return;
+   tree.replaceChildren();
+   setText(tree,'tree-title','SOURCE CONTROL');
+   setText(tree,'git-branch-title','Branch · '+data.branch);
+   setText(tree,'git-section-label','CHANGES ('+data.changes.length+')');
+   if(!data.changes.length) setText(tree,'git-change','Working tree clean');
+   for(const change of data.changes)
+     setText(tree,'git-change',change.status+'  '+change.path);
+   setText(tree,'git-section-label','HISTORY');
+   for(const entry of data.history) setText(tree,'git-change',entry);
+   setText(tree,'git-hint','Read-only Git status · no Git command will run');
+ }
+ rail.addEventListener('click',()=>queueMicrotask(render));
+ rail.addEventListener('keydown',e=>{
+   if(e.key==='Enter'||e.key===' ')queueMicrotask(render);
+ });
+})();
+</script>""".replace("GIT_PAYLOAD", payload)
+    if "</body>" not in html_source:
+        raise ValueError("Missing HTML body")
+    return html_source.replace("</body>", script + "</body>", 1)
