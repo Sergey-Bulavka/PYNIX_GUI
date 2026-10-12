@@ -103,7 +103,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    editorInput.parentElement.appendChild(measure);
    const advance=measure.getBoundingClientRect().width/10;
    measure.remove();
-   const left=parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
+   // WebKit places the textarea insertion point on the leading edge of
+   // selectionStart. Our mirror was one glyph ahead after mouse selection.
+   const visibleColumn=Math.max(0,colIndex-1);
+   const left=parseFloat(metrics.paddingLeft)+visibleColumn*advance-editorInput.scrollLeft;
    const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop;
    customCaret.style.height=lineHeight+'px';
    customCaret.style.transform='translate('+left+'px,'+top+'px)';
