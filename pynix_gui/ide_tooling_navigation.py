@@ -33,6 +33,11 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
             detail = (result.stderr or result.stdout or "").strip()
             if len(detail) > 1200:
                 detail = detail[-1200:]
+            if "source does not belong to the compiled project" in detail:
+                return {"error": ("Selected file is outside the compiled module graph. "
+                                  "The project entry is defined by pynix.toml; "
+                                  "open a module imported by that entry or use a "
+                                  "separate PYNIX project manifest for this example.")}
             return {"error": ("Compiler tooling failed: " + detail) if detail
                     else f"Compiler tooling exited with code {result.returncode}"}
         data = json.loads(result.stdout)
