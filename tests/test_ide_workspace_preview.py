@@ -228,3 +228,34 @@ def test_editable_gutter_and_cursor_are_kept_per_file(tmp_path):
     assert "file.scrollTop=editorInput.scrollTop" in js
     assert "editorInput.setSelectionRange(" in js
     assert "gutter.scrollTop=editorInput.scrollTop" in js
+
+
+def test_v418_editor_lexer_comments_and_strings_are_atomic(tmp_path):
+    (tmp_path / "main.pnx").write_text('// 123 comment\\nfunction main()')
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "t.startsWith('//')||t.startsWith('#')" in js
+    assert "kind='comment'" in js
+    assert "kind='string'" in js
+    assert "kind='type'" in js
+    assert "kind='constant'" in js
+    assert "last=token.lastIndex" in js
+
+
+def test_v418_indent_and_selected_line_shortcuts(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function indentSelectedLines(outdent)" in js
+    assert "if(e.key==='Tab')" in js
+    assert "e.shiftKey" in js
+    assert "e.key==='Enter'" in js
+    assert "setRangeText(" in js
+    assert "pynix-active-line" in js
+
+
+def test_v418_refresh_diagnostics_only_after_save(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "Diagnostics require save" in js
+    assert "payload.diagnostics||[]" in js
+    native=(Path(__file__).resolve().parents[1]/"examples"/"ide_native_v4.py").read_text()
+    assert "snapshot = read_diagnostics(session.root, compiler_python)" in native
