@@ -49,3 +49,16 @@ def test_native_navigation_arguments_present():
     source=(Path(__file__).resolve().parents[1]/"examples"/"ide_native_v4.py").read_text()
     for flag in ("--nav-command","--nav-source","--nav-line","--nav-column"):
         assert flag in source
+
+
+def test_navigation_outside_compiled_module_graph_is_actionable(monkeypatch, tmp_path):
+    (tmp_path / "example.pnx").write_text("function main()")
+    executable = tmp_path / "python"
+    executable.write_text("")
+    monkeypatch.setattr("pynix_gui.ide_tooling_navigation.subprocess.run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=1, stdout="", stderr=(
+                "Tooling definition source does not belong to the compiled project")))
+    result = query_navigation(tmp_path, executable, "definition", "example.pnx", 1, 10)
+    assert "pynix.toml" in result["error"]
+    assert "module graph" in result["error"]
