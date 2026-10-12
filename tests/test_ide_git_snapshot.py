@@ -35,7 +35,9 @@ def test_non_repo_does_not_show_fake_git_changes(tmp_path):
     assert not snapshot.available
     assert not snapshot.changes
     source = "<body>original</body>"
-    assert attach_git_snapshot(source, snapshot) == source
+    result = attach_git_snapshot(source, snapshot)
+    assert "No Git repository at this project root" in result
+    assert "Initial project" not in result
 
 
 def test_git_message_is_script_safe(tmp_path):
