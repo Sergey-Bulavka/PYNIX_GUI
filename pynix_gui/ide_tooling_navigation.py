@@ -30,7 +30,11 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
             cwd=root, capture_output=True, text=True, timeout=timeout, check=False,
         )
         if result.returncode:
-            return {"error": "Compiler tooling query failed"}
+            detail = (result.stderr or result.stdout or "").strip()
+            if len(detail) > 1200:
+                detail = detail[-1200:]
+            return {"error": ("Compiler tooling failed: " + detail) if detail
+                    else f"Compiler tooling exited with code {result.returncode}"}
         data = json.loads(result.stdout)
         if (not isinstance(data, dict) or data.get("protocol") != "pynix-tooling"
             or data.get("version") != 1 or data.get("kind") != KINDS[command]):
