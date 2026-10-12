@@ -297,3 +297,45 @@ def attach_diagnostics(html_source: str, snapshot) -> str:
     if "</body>" not in html_source:
         raise ValueError("Missing HTML body")
     return html_source.replace("</body>", script+"</body>", 1)
+
+
+def attach_navigation(html_source: str, result: dict, command: str) -> str:
+    """Attach explicitly queried language navigation to a read-only output pane."""
+    payload = json.dumps({"command": command, "result": result},
+                         ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    script = """<script>
+(() => {
+ const payload = NAV_PAYLOAD;
+ if(!document.body.classList.contains('workspace-mode')) return;
+ const tabs = document.querySelector('.terminal-tabs');
+ const panel = document.querySelector('.terminal-console');
+ const output = [...tabs.children].find(el=>el.textContent.trim()==='OUTPUT');
+ if(!output || !panel)return;
+ output.addEventListener('click', () => {
+   panel.replaceChildren();
+   const print=(value)=>{
+     const row=document.createElement('div');
+     row.className='navigation-result';
+     row.textContent=value;
+     panel.appendChild(row);
+   };
+   const result=payload.result;
+   if(result.error){print(result.error);return;}
+   print('PYNIX tooling · '+payload.command);
+   if(payload.command==='definition'){
+     const d=result.definition;
+     print(d?((d.qualifiedName||d.name||'')+' · '+d.source+':'+(d.start?.line||1)):'No definition at this position');
+   } else if(payload.command==='references'){
+     print('References: '+(result.references||[]).length);
+     for(const ref of (result.references||[]).slice(0,200))
+       print(ref.source+':'+(ref.start?.line||1)+':'+(ref.start?.column||1));
+   } else if(payload.command==='type-at'){
+     const e=result.expression;
+     print(e?JSON.stringify(e):'No expression at this position');
+   }
+ });
+})();
+</script>""".replace("NAV_PAYLOAD", payload)
+    if "</body>" not in html_source:
+        raise ValueError("Missing HTML body")
+    return html_source.replace("</body>", script+"</body>", 1)
