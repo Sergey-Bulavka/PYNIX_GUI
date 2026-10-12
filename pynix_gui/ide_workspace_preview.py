@@ -156,6 +156,54 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      updateCursor();
    }
  }
+ function replaceSelection(text, start, end){
+   editorInput.focus();
+   editorInput.setRangeText(text,start,end,'end');
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   updateCursor();
+ }
+ function indentSelectedLines(outdent){
+   const value=editorInput.value;
+   const start=editorInput.selectionStart,end=editorInput.selectionEnd;
+   const lineStart=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
+   const effectiveEnd=end>lineStart&&value[end-1]==='\\n'?end-1:end;
+   const lineEndIndex=value.indexOf('\\n',effectiveEnd);
+   const lineEnd=lineEndIndex<0?value.length:lineEndIndex;
+   const block=value.slice(lineStart,lineEnd);
+   const pieces=block.split('\\n');
+   let firstRemoved=0,totalDelta=0;
+   const adjusted=pieces.map((line,i)=>{
+     if(outdent){
+       const removed=line.startsWith('\\t')?1:(line.match(/^ {1,4}/)?.[0].length||0);
+       if(i===0)firstRemoved=removed;
+       totalDelta-=removed;
+       return line.slice(removed);
+     }
+     totalDelta+=4;
+     return '    '+line;
+   }).join('\\n');
+   editorInput.setRangeText(adjusted,lineStart,lineEnd,'preserve');
+   editorInput.setSelectionRange(Math.max(lineStart,start+(outdent?-firstRemoved:4)),Math.max(lineStart,end+totalDelta));
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   updateCursor();
+ }
+ editorInput.addEventListener('keydown',e=>{
+   if(e.key==='Tab'){
+     e.preventDefault();
+     const start=editorInput.selectionStart,end=editorInput.selectionEnd;
+     if(e.shiftKey||editorInput.value.slice(start,end).includes('\\n')){
+       indentSelectedLines(e.shiftKey);
+     }else{
+       replaceSelection('    ',start,end);
+     }
+   } else if(e.key==='Enter'&&!e.isComposing){
+     e.preventDefault();
+     const start=editorInput.selectionStart,end=editorInput.selectionEnd;
+     const prefix=editorInput.value.slice(editorInput.value.lastIndexOf('\\n',start-1)+1,start);
+     const indent=prefix.match(/^[ \\t]*/)?.[0]||'';
+     replaceSelection('\\n'+indent,start,end);
+   }
+ });
  editorInput.addEventListener('input',()=>{
    persistBuffer();
    recolorSource();
