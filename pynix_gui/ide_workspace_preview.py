@@ -32,6 +32,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
     return """<script>
 (() => {
  const files = PAYLOAD;
+ const PROJECT_NAME = PROJECT_NAME_PAYLOAD;
  const workspace = document.body.classList.contains('workspace-mode');
  if (!workspace || !files.length) return;
  const tree = document.querySelector('.tree');
@@ -42,27 +43,81 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const byName = new Map(files.map(file => [file.name, file]));
  const openTabs = [];
  let current = null;
- function escapeText(s) {
-   const el = document.createElement('span');
-   el.textContent = s;
-   return el.innerHTML;
- }
- function renderTree() {
-   tree.innerHTML = '<div class="tree-title">PROJECT FILES <span>···</span></div>';
-   for (const file of files) {
-     const line = document.createElement('div');
-     line.className = 'entry';
-     line.tabIndex = 0;
-     line.setAttribute('role', 'button');
-     line.setAttribute('aria-label', 'Open ' + file.name);
-     line.textContent = '◇  ' + file.name;
-     if (file.name === current) line.classList.add('workspace-selected');
-     line.addEventListener('click', () => show(file.name));
-     line.addEventListener('keydown', e => {
-       if(e.key === 'Enter'){e.preventDefault();show(file.name)}
+ const expanded = new Set(['']);
+ const icon = {
+   folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 5h6l2 3h10v11H3z"/></svg>',
+   file: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 2h10l5 5v15H5zM15 2v5h5"/></svg>',
+   code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M5 2h10l5 5v15H5zM15 2v5h5M10 12l-2 3 2 3m5-6 2 3-2 3"/></svg>'
+ };
+ function buildTree() {
+   const root = {children: new Map(), path:'', folder:true};
+   for(const file of files) {
+     let node = root;
+     const pieces = file.name.split('/');
+     pieces.forEach((part, i) => {
+       const key = pieces.slice(0,i+1).join('/');
+       if(!node.children.has(part))
+         node.children.set(part, {name:part,path:key,folder:i<pieces.length-1,children:new Map()});
+       node=node.children.get(part);
      });
-     tree.appendChild(line);
    }
+   return root;
+ }
+ const root=buildTree();
+ function renderTree() {
+   // Preserve the source-control panel while it is selected.
+   const rails=[...document.querySelectorAll('.rail-item')];
+   if(rails[2]?.classList.contains('active'))return;
+   tree.replaceChildren();
+   const heading=document.createElement('div');
+   heading.className='tree-title';
+   heading.textContent='EXPLORER · '+files.length+' FILES';
+   tree.appendChild(heading);
+   const project=document.createElement('div');
+   project.className='entry project-root';
+   project.textContent='⌄  '+PROJECT_NAME;
+   tree.appendChild(project);
+   function visit(node,depth) {
+     const children=[...node.children.values()].sort((a,b)=>
+        Number(b.folder)-Number(a.folder)||a.name.localeCompare(b.name));
+     for(const entry of children) {
+       const line=document.createElement('div');
+       line.className='entry project-entry';
+       line.style.paddingLeft=(11+Math.min(depth,12)*14)+'px';
+       const isOpen=expanded.has(entry.path);
+       if(entry.path===current)line.classList.add('workspace-selected');
+       line.setAttribute('role','button');
+       line.tabIndex=0;
+       line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
+       const chevron=document.createElement('span');
+       chevron.className='project-chevron';
+       chevron.textContent=entry.folder?(isOpen?'⌄':'›'):'';
+       line.appendChild(chevron);
+       const glyph=document.createElement('span');
+       const extension=entry.name.split('.').pop().toLowerCase();
+       glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+extension));
+       glyph.innerHTML=entry.folder?icon.folder:(extension==='pnx'||extension==='py'?icon.code:icon.file);
+       line.appendChild(glyph);
+       const label=document.createElement('span');
+       label.className='project-label';
+       label.textContent=entry.name;
+       line.appendChild(label);
+       function activate(){
+         if(entry.folder){
+           if(expanded.has(entry.path))expanded.delete(entry.path);
+           else expanded.add(entry.path);
+           renderTree();
+         } else show(entry.path);
+       }
+       line.addEventListener('click',activate);
+       line.addEventListener('keydown',e=>{
+         if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
+       });
+       tree.appendChild(line);
+       if(entry.folder&&isOpen)visit(entry,depth+1);
+     }
+   }
+   visit(root,0);
  }
  function renderCode(text) {
    code.replaceChildren();
@@ -82,6 +137,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if (!byName.has(name)) return;
    if (!openTabs.includes(name)) openTabs.push(name);
    current = name;
+   const segments=name.split('/');
+   for(let i=1;i<segments.length;i++)expanded.add(segments.slice(0,i).join('/'));
    tabs.replaceChildren();
    for (const fileName of openTabs) {
      const tab = document.createElement('button');
@@ -100,7 +157,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  show(files[0].name);
 })();
-</script>""".replace("PAYLOAD", payload)
+</script>""".replace("PAYLOAD", payload).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False))
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
