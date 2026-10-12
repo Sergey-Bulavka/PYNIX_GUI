@@ -251,3 +251,49 @@ def attach_git_snapshot(html_source: str, snapshot) -> str:
     if "</body>" not in html_source:
         raise ValueError("Missing HTML body")
     return html_source.replace("</body>", script + "</body>", 1)
+
+
+def attach_diagnostics(html_source: str, snapshot) -> str:
+    """Present compiler-provided problems; never execute code from diagnostics."""
+    payload = json.dumps({
+        "error": snapshot.error,
+        "problems": [{"source": p.source, "line": p.line, "column": p.column,
+                      "code": p.code, "message": p.message}
+                     for p in snapshot.problems],
+    }, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    script = """<script>
+(() => {
+ const data = PROBLEMS_PAYLOAD;
+ if(!document.body.classList.contains('workspace-mode'))return;
+ const tabs = document.querySelector('.terminal-tabs');
+ const consoleArea = document.querySelector('.terminal-console');
+ if(!tabs || !consoleArea)return;
+ const problemsTab = [...tabs.children].find(el=>el.textContent.trim()==='PROBLEMS');
+ const terminalTab = [...tabs.children].find(el=>el.textContent.trim()==='TERMINAL');
+ if(!problemsTab || !terminalTab)return;
+ const original = consoleArea.innerHTML;
+ const displayProblems = () => {
+   for(const child of tabs.children)child.classList.remove('active-tool-tab');
+   problemsTab.classList.add('active-tool-tab');
+   consoleArea.replaceChildren();
+   const message = text => {
+     const row=document.createElement('div');
+     row.className='diagnostic-row';row.textContent=text;
+     consoleArea.appendChild(row);
+   };
+   if(data.error)message(data.error);
+   else if(!data.problems.length)message('No compiler diagnostics');
+   for(const problem of data.problems)
+     message(problem.source+':'+problem.line+':'+problem.column+'  '+
+             problem.code+'  '+problem.message);
+ };
+ problemsTab.addEventListener('click', displayProblems);
+ terminalTab.addEventListener('click', () => {
+   for(const child of tabs.children)child.classList.remove('active-tool-tab');
+   consoleArea.innerHTML=original;
+ });
+})();
+</script>""".replace("PROBLEMS_PAYLOAD", payload)
+    if "</body>" not in html_source:
+        raise ValueError("Missing HTML body")
+    return html_source.replace("</body>", script+"</body>", 1)
