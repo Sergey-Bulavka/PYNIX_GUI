@@ -63,11 +63,18 @@ def main() -> None:
     args = parser.parse_args()
     document = PREVIEW_PATH.read_text(encoding="utf-8")
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
-    if args.project is not None:
+    project_path = args.project
+    if project_path is None:
+        candidate = PREVIEW_PATH.resolve().parents[2] / "PYNIX"
+        if candidate.is_dir():
+            project_path = candidate
+        else:
+            raise SystemExit("No project selected. Run with --project /path/to/PYNIX")
+    if project_path is not None:
         from pynix_gui.ide_workspace_session import WorkspaceSession
         from pynix_gui.ide_workspace_preview import attach_workspace, attach_git_snapshot
         from pynix_gui.ide_git_snapshot import read_git_snapshot
-        session = WorkspaceSession(args.project)
+        session = WorkspaceSession(project_path)
         document = attach_workspace(document, session)
         document = attach_git_snapshot(document, read_git_snapshot(session.root))
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
