@@ -11,6 +11,25 @@ from pathlib import Path
 COMMANDS = frozenset(("definition", "references", "type-at"))
 
 
+def normalize_webkit_request(value: object) -> dict:
+    """Convert PyObjC NSDictionary/NSNumber values to ordinary Python types."""
+    if not hasattr(value, "items"):
+        raise ValueError("Invalid navigation request")
+    request = dict(value)
+    for key in ("line", "column"):
+        raw = request.get(key)
+        if isinstance(raw, bool):
+            raise ValueError("Invalid source position")
+        try:
+            number = int(raw)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError("Invalid source position") from exc
+        if str(raw) not in (str(number), str(float(number))):
+            raise ValueError("Invalid source position")
+        request[key] = number
+    return request
+
+
 def validate_request(value: object, available: set[str]) -> tuple[str, str, int, int]:
     if not isinstance(value, dict):
         raise ValueError("Invalid navigation request")
