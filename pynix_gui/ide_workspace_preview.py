@@ -133,7 +133,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
          renderTree();
        } else show(entry.path);
      };
-     line.addEventListener('click',activate);
+     line.addEventListener('pointerdown',e=>{
+       if(e.button!==0)return;
+       e.preventDefault();activate();
+     });
      line.addEventListener('keydown',e=>{
        if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}
      });
@@ -161,6 +164,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      gutter.textContent = String(i + 1);
      row.appendChild(gutter);
      const content = document.createElement('span');
+     content.className='source-text';
+     content.tabIndex=0;
      if(file.tokens && file.tokens[i]) {
        for(const token of file.tokens[i]){
          const span=document.createElement('span');
@@ -188,16 +193,38 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      tab.addEventListener('click', () => show(fileName));
      tabs.appendChild(tab);
    }
-   if(byName.get(name).unloaded){
+   const file=byName.get(name);
+   if(file.unloaded){
      code.replaceChildren();
      const info=document.createElement('div');
      info.className='source-unloaded';
-     info.textContent='File is listed but its contents are not loaded in this read-only preview.';
+     info.textContent='Loading '+name+'...';
      code.appendChild(info);
-   } else renderCode(byName.get(name));
+     const bridge=window.webkit?.messageHandlers?.pynixFileOpen;
+     if(bridge)bridge.postMessage({source:name});
+     else info.textContent='File contents unavailable outside the native IDE.';
+   } else renderCode(file);
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
+ window.pynixReceiveFile=function(payload){
+   if(!payload || !byName.has(payload.source))return;
+   const file=byName.get(payload.source);
+   if(payload.error){
+     if(current===payload.source){
+       code.replaceChildren();
+       const message=document.createElement('div');
+       message.className='source-unloaded';
+       message.textContent=payload.error;
+       code.appendChild(message);
+     }
+     return;
+   }
+   file.text=payload.text;
+   file.tokens=payload.tokens||null;
+   file.unloaded=false;
+   if(current===payload.source)renderCode(file);
+ };
  document.addEventListener('pynix:navigate', event=>{
    const target=event.detail||{};
    if(!byName.has(target.source))return;
