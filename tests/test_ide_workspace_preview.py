@@ -323,3 +323,14 @@ def test_find_navigation_does_not_steal_search_focus(tmp_path):
     assert "editorInput.setSelectionRange(at,at+findInput.value.length)" in part
     assert "findInput.focus()" in js
     assert "findInput.addEventListener('keydown'" in js
+
+
+def test_find_matches_are_decorated_in_source_highlight_without_focus_change(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function decorateFindMatches()" in js
+    assert "document.createTreeWalker(coloredSource,NodeFilter.SHOW_TEXT)" in js
+    assert "pynix-find-current" in js
+    assert "pynix-find-match" in js
+    assert "recolorSource();" in js.split("function navigateFind(step=1,reset=false)", 1)[1].split("function openFind()", 1)[0]
+    assert "editorInput.focus()" not in js.split("function navigateFind(step=1,reset=false)", 1)[1].split("function openFind()", 1)[0]
