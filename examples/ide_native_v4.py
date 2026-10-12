@@ -30,6 +30,12 @@ def main() -> None:
         def applicationShouldTerminateAfterLastWindowClosed_(self, sender):
             return True
 
+    class FirstClickWebView(WebKit.WKWebView):
+        """Forward the first click even when the macOS window is inactive."""
+
+        def acceptsFirstMouse_(self, event):
+            return True
+
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
     app.setDelegate_(delegate)
@@ -47,7 +53,7 @@ def main() -> None:
     window.setTitle_("PYNIX IDE — Workspace V4")
     window.setMinSize_(AppKit.NSMakeSize(1030, 680))
 
-    view = WebKit.WKWebView.alloc().initWithFrame_(window.contentView().bounds())
+    view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
@@ -67,6 +73,7 @@ def main() -> None:
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
+    window.makeFirstResponder_(view)
     app.activateIgnoringOtherApps_(True)
     app.run()
 
