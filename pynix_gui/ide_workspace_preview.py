@@ -211,14 +211,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      findIndex=(findIndex+step+matches.length)%matches.length;
    }
    const at=matches[findIndex];
-   editorInput.focus();
+   // Keep keyboard focus in the search field; only mark the match in the editor.
    editorInput.setSelectionRange(at,at+findInput.value.length);
    const before=editorInput.value.slice(0,at);
    const line=before.split('\\n').length-1;
    const height=parseFloat(getComputedStyle(editorInput).lineHeight);
    editorInput.scrollTop=Math.max(0,line*height-editorInput.clientHeight/2);
    findCount.textContent=(findIndex+1)+' / '+matches.length;
-   updateCursor();
+   // Do not call updateCursor here: it updates the visual editor caret.
  }
  function openFind(){
    if(!current||byName.get(current)?.unloaded)return;
@@ -237,8 +237,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(e.key==='Escape'){e.preventDefault();closeFind();}
    if(e.key==='Enter'){e.preventDefault();navigateFind(e.shiftKey?-1:1);}
  });
- findNext.addEventListener('click',()=>navigateFind(1));
- findPrevious.addEventListener('click',()=>navigateFind(-1));
+ findNext.addEventListener('click',()=>{navigateFind(1);findInput.focus();});
+ findPrevious.addEventListener('click',()=>{navigateFind(-1);findInput.focus();});
  findClose.addEventListener('click',closeFind);
  document.addEventListener('keydown',e=>{
    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){
