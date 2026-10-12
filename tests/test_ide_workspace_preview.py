@@ -158,3 +158,12 @@ def test_mac_host_has_bounded_lazy_source_reader():
     assert 'session.resolve_file(source)' in src
     assert 'pynixFileOpen' in src
     assert 'window.pynixReceiveFile(' in src
+
+
+def test_first_click_fallback_is_not_double_activation(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "let activatedByPointer=false" in js
+    assert "line.addEventListener('pointerdown'" in js
+    assert "line.addEventListener('click'" in js
+    assert "if(e.button!==0||activatedByPointer)return" in js
