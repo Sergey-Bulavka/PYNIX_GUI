@@ -92,6 +92,16 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-editor-tab-close svg{width:16px;height:16px}
 .workspace-mode .pynix-editor-tab-close:hover{background:#43556b;color:#ffffff;opacity:1}
 .workspace-mode .pynix-editor-tab.active .pynix-editor-tab-close{color:#d4e1ef}
+
+/* V4.11: tab controls override legacy global .editor-tabs button rules. */
+.workspace-mode .editor-tabs{gap:5px;padding:5px 8px;min-height:43px;align-items:center}
+.workspace-mode .editor-tabs .pynix-editor-tab{display:inline-flex;align-items:center;flex:0 0 auto;width:max-content;max-width:310px;height:32px;min-height:32px;padding:0 5px 0 10px;gap:5px;border:1px solid transparent;border-radius:7px;background:transparent}
+.workspace-mode .editor-tabs .pynix-editor-tab.active{background:#253448;border-color:#42526a}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{display:block;min-width:0;max-width:255px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 0;background:transparent;border:0;border-radius:0;color:#c2d0df;font-size:12px;font-weight:500;line-height:20px}
+.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-label{color:#f0f5fb}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{display:flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;margin:0;background:transparent;border:0;border-radius:5px;color:#a9b7ca;opacity:1}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close svg{display:block;width:15px;height:15px;stroke-width:2}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close:hover{background:#46576d;color:#fff}
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
