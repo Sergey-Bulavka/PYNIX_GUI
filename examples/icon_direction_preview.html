@@ -224,6 +224,15 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 @media (prefers-reduced-motion:reduce){
  .workspace-mode .pynix-edit-layer .pynix-custom-caret.pynix-caret-blink{animation:none}
 }
+
+/* V4.23 in-editor find bar */
+.workspace-mode .pynix-find-bar{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:3px 7px;border:1px solid #3c4e66;border-radius:7px;background:#1b293b;min-width:0}
+.workspace-mode .pynix-find-bar[hidden]{display:none!important}
+.workspace-mode .pynix-find-bar input{width:190px;min-width:80px;height:25px;padding:3px 8px;border:1px solid #4b617c;border-radius:5px;color:#e6efff;background:#111b2b;outline:none;font-size:12px}
+.workspace-mode .pynix-find-bar input:focus{border-color:#77a7e8}
+.workspace-mode .pynix-find-bar button{width:25px;height:25px;padding:0;border:0;border-radius:4px;background:transparent;color:#c9d8eb;cursor:pointer}
+.workspace-mode .pynix-find-bar button:hover{background:#334a67}
+.workspace-mode .pynix-find-count{font-size:11px;color:#bdcbe0;white-space:nowrap;min-width:52px;text-align:center}
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
