@@ -175,6 +175,44 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixSaveResult(" + serialized + ");", None)
 
+    class ProjectSearchHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            try:
+                request = dict(message.body())
+                query = request.get("query", "")
+                if not isinstance(query, str) or not 0 < len(query) <= 200:
+                    raise ValueError("Search query must be 1–200 characters")
+                matches = []
+                needle = query.casefold()
+                for source in sorted(available_sources):
+                    if len(matches) >= 300:
+                        break
+                    if not source.endswith((".pnx", ".py", ".html", ".css", ".js", ".json", ".md")):
+                        continue
+                    file_path = session.resolve_file(source)
+                    if file_path.stat().st_size > 512_000:
+                        continue
+                    try:
+                        content = file_path.read_text(encoding="utf-8")
+                    except (OSError, UnicodeDecodeError):
+                        continue
+                    for lineno, line in enumerate(content.splitlines(), 1):
+                        index = line.casefold().find(needle)
+                        if index < 0:
+                            continue
+                        matches.append({"source": source, "line": lineno, "column": index + 1,
+                                        "preview": line.strip()[:180]})
+                        if len(matches) >= 300:
+                            break
+                response = {"query": query, "matches": matches, "truncated": len(matches) == 300}
+            except (ValueError, OSError) as exc:
+                response = {"error": str(exc), "matches": []}
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixProjectSearchResult(" + serialized + ");", None)
+
+    project_search_handler = ProjectSearchHandler.alloc().init()
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
@@ -182,6 +220,7 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
+    controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
