@@ -10,6 +10,7 @@ Run: python -m examples.ide_native_v4
 from __future__ import annotations
 
 import sys
+import argparse
 from pathlib import Path
 
 PREVIEW_PATH = Path(__file__).with_name("icon_direction_preview.html")
@@ -51,8 +52,15 @@ def main() -> None:
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
+    parser = argparse.ArgumentParser(description="PYNIX IDE V4 preview")
+    parser.add_argument("--project", type=Path, help="Read-only source project to explore")
+    args = parser.parse_args()
     document = PREVIEW_PATH.read_text(encoding="utf-8")
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
+    if args.project is not None:
+        from pynix_gui.ide_workspace_session import WorkspaceSession
+        from pynix_gui.ide_workspace_preview import attach_workspace
+        document = attach_workspace(document, WorkspaceSession(args.project))
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
