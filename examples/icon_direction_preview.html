@@ -69,6 +69,15 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .project-glyph.file-json,.workspace-mode .project-glyph.file-toml{color:#ccb6ed}
 .workspace-mode .project-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .workspace-mode .project-root{font-weight:650;color:#dce8f7}
+
+/* V4.3 unified disclosure geometry: root and all folders share one SVG and slots. */
+.workspace-mode .project-entry{height:32px;display:flex;align-items:center;gap:8px}
+.workspace-mode .project-chevron{width:16px;min-width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:0;line-height:0;color:#b9cce0}
+.workspace-mode .project-chevron svg{display:block;width:12px;height:12px;flex:none;transform-origin:center;transition:transform 90ms ease}
+.workspace-mode .project-chevron.collapsed svg{transform:rotate(-90deg)}
+.workspace-mode .project-glyph{width:20px;height:20px;flex:0 0 20px;display:flex;align-items:center;justify-content:center}
+.workspace-mode .project-glyph svg{width:17px;height:17px;display:block}
+.workspace-mode .project-root{font-weight:650}
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
