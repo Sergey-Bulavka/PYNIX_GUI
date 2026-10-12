@@ -93,78 +93,48 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-editor-tab-close:hover{background:#43556b;color:#ffffff;opacity:1}
 .workspace-mode .pynix-editor-tab.active .pynix-editor-tab-close{color:#d4e1ef}
 
-/* V4.11: tab controls override legacy global .editor-tabs button rules. */
-.workspace-mode .editor-tabs{gap:5px;padding:5px 8px;min-height:43px;align-items:center}
-.workspace-mode .editor-tabs .pynix-editor-tab{display:inline-flex;align-items:center;flex:0 0 auto;width:max-content;max-width:310px;height:32px;min-height:32px;padding:0 5px 0 10px;gap:5px;border:1px solid transparent;border-radius:7px;background:transparent}
-.workspace-mode .editor-tabs .pynix-editor-tab.active{background:#253448;border-color:#42526a}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{display:block;min-width:0;max-width:255px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px 0;background:transparent;border:0;border-radius:0;color:#c2d0df;font-size:12px;font-weight:500;line-height:20px}
-.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-label{color:#f0f5fb}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{display:flex;align-items:center;justify-content:center;flex:0 0 22px;width:22px;height:22px;min-width:22px;min-height:22px;padding:0;margin:0;background:transparent;border:0;border-radius:5px;color:#a9b7ca;opacity:1}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close svg{display:block;width:15px;height:15px;stroke-width:2}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close:hover{background:#46576d;color:#fff}
-
-/* V4.12: non-overlapping tabs; close action visible for active tab only. */
-.workspace-mode .editor-tabs{display:flex;align-items:center;gap:4px;overflow-x:auto;overflow-y:hidden;min-width:0;scrollbar-width:thin}
-.workspace-mode .editor-tabs .pynix-editor-tab{position:relative;box-sizing:border-box;flex:0 0 auto;max-width:320px;min-width:0;margin:0;overflow:hidden;isolation:isolate;z-index:0;border:1px solid transparent;border-radius:7px}
-.workspace-mode .editor-tabs .pynix-editor-tab.active{z-index:1;border-color:#44638d;background:#253a59}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{flex:0 1 auto;max-width:270px;text-overflow:ellipsis;overflow:hidden}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{display:none;flex:0 0 22px}
-.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-close{display:flex}
-
-/* V4.13 stable tab footprint with non-interactive reserved close slot. */
-.workspace-mode .editor-tabs .pynix-editor-tab{border-right:0!important;overflow:hidden}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{border-right:0!important}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{display:flex!important;visibility:hidden;pointer-events:none;flex:0 0 22px;width:22px;min-width:22px;border:0!important;border-right:0!important}
-.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-close{visibility:visible;pointer-events:auto}
-
-/* V4.14: remove ALL inherited tab separators, including button borders. */
-.workspace-mode .editor-tabs .pynix-editor-tab{border:0!important;box-shadow:none!important}
-.workspace-mode .editor-tabs .pynix-editor-tab.active{border:0!important;outline:1px solid #44638d;outline-offset:-1px}
-.workspace-mode .editor-tabs .pynix-editor-tab button,
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label,
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{border:0!important;border-left:0!important;border-right:0!important;box-shadow:none!important}
-.workspace-mode .editor-tabs .pynix-editor-tab button::before,
-.workspace-mode .editor-tabs .pynix-editor-tab button::after{border:0!important;box-shadow:none!important}
-
-/* V4.15: one-space visual gap between tab title and close icon. */
-.workspace-mode .editor-tabs .pynix-editor-tab{gap:4px!important;padding-right:5px!important}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{flex:0 1 auto!important;max-width:none!important;width:auto!important;margin:0!important;padding:0!important}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{margin:0!important;padding:0!important;flex:0 0 18px!important;width:18px!important;min-width:18px!important}
-
-/* V4.16 — intrinsic title width; stable 18px close slot. No stretched label. */
+/* V4 tabs: one cascade, fixed-height row, intrinsic title plus close slot. */
+.workspace-mode .editor-tabs{
+ display:flex;align-items:center;align-content:center;gap:5px;
+ flex:0 0 43px;height:43px;min-height:43px;max-height:43px;
+ padding:0 8px;overflow-x:auto;overflow-y:hidden;box-sizing:border-box;
+}
 .workspace-mode .editor-tabs .pynix-editor-tab{
- display:inline-grid!important;
- grid-template-columns:minmax(0,max-content) 18px!important;
- column-gap:4px!important;
- justify-content:start!important;
- align-items:center!important;
- width:fit-content!important;
- min-width:0!important;
- max-width:320px!important;
+ display:inline-flex;align-items:center;justify-content:flex-start;
+ flex:0 0 auto;align-self:center;box-sizing:border-box;
+ width:max-content;max-width:330px;height:33px;min-height:33px;max-height:33px;
+ margin:0;padding:0 8px;gap:4px;border:0;border-radius:7px;
+ background:transparent;white-space:nowrap;
+}
+.workspace-mode .editor-tabs .pynix-editor-tab.active{
+ background:#253a59;outline:1px solid #44638d;outline-offset:-1px;
+}
+.workspace-mode .editor-tabs .pynix-editor-tab button{
+ position:static;display:flex;align-items:center;justify-content:center;
+ box-sizing:border-box;flex:none;margin:0;padding:0;
+ border:0;border-radius:0;background:transparent;box-shadow:none;
+ line-height:20px;height:22px;min-height:22px;max-height:22px;
 }
 .workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{
- display:block!important;
- box-sizing:content-box!important;
- flex:none!important;
- justify-self:start!important;
- width:max-content!important;
- min-width:0!important;
- max-width:270px!important;
- text-align:left!important;
- overflow:hidden!important;
- text-overflow:ellipsis!important;
- padding:0!important;
- margin:0!important;
+ display:block;flex:0 1 auto;width:auto;min-width:0;max-width:275px;
+ height:22px;padding:0;margin:0;line-height:22px;
+ text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ color:#b8c9dc;font-size:12px;font-weight:500;
 }
+.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-label{color:#f0f5fb}
 .workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{
- box-sizing:border-box!important;
- justify-self:start!important;
- flex:none!important;
- width:18px!important;
- min-width:18px!important;
- max-width:18px!important;
- margin:0!important;
- padding:0!important;
+ flex:0 0 18px;width:18px;min-width:18px;max-width:18px;
+ height:22px;border:0;border-radius:4px;
+ visibility:hidden;pointer-events:none;color:#afbed0;
+}
+.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-close{
+ visibility:visible;pointer-events:auto;
+}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close:hover{
+ color:#fff;background:#405671;
+}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close svg{
+ display:block;width:15px;height:15px;
 }
 </style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
