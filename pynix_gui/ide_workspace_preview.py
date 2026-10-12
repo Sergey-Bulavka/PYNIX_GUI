@@ -65,7 +65,30 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  editorInput.spellcheck=false;
  editorInput.setAttribute('aria-label','PYNIX source editor');
  editorInput.hidden=true;
- code.parentElement.appendChild(editorInput);
+ const editLayer=document.createElement('div');
+ editLayer.className='pynix-edit-layer';
+ const coloredSource=document.createElement('pre');
+ coloredSource.className='pynix-edit-highlight';
+ coloredSource.setAttribute('aria-hidden','true');
+ editLayer.append(coloredSource,editorInput);
+ code.parentElement.appendChild(editLayer);
+ function escapeCode(v){return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+ function recolorSource(){
+   const value=editorInput.value;
+   const token=/#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|\\b(?:function|let|const|var|return|if|else|while|for|import|from|class|true|false|none|fn|end)\\b|\\b\\d+(?:\\.\\d+)?\\b/g;
+   let html='',last=0,match;
+   while((match=token.exec(value))){
+     html+=escapeCode(value.slice(last,match.index));
+     const t=match[0];
+     const kind=t[0]==='#'?'comment':t[0]==='"'||t[0]==="'"?'string':/^\\d/.test(t)?'number':'keyword';
+     html+='<span class="pynix-edit-'+kind+'">'+escapeCode(t)+'</span>';
+     last=token.lastIndex;
+   }
+   coloredSource.innerHTML=html+escapeCode(value.slice(last))+'\\n';
+   coloredSource.scrollTop=editorInput.scrollTop;
+   coloredSource.scrollLeft=editorInput.scrollLeft;
+ }
+ editorInput.addEventListener('scroll',()=>{coloredSource.scrollTop=editorInput.scrollTop;coloredSource.scrollLeft=editorInput.scrollLeft;});
  const editButton=document.createElement('button');
  editButton.type='button';
  editButton.textContent='Edit';
@@ -86,17 +109,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  function updateEditingView(){
    const file=current?byName.get(current):null;
    const available=!!file&&!file.unloaded;
+   editLayer.hidden=!editing||!available;
    editorInput.hidden=!editing||!available;
    code.hidden=editing&&available;
    editButton.textContent=editing?'Preview':'Edit';
    saveButton.disabled=!available||!file.dirty;
    if(editing&&available){
      editorInput.value=file.text;
+     recolorSource();
      editorInput.focus();
    }
  }
  editorInput.addEventListener('input',()=>{
    persistBuffer();
+   recolorSource();
    const file=byName.get(current);
    saveButton.disabled=!file?.dirty;
    renderTabs();
