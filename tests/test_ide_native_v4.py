@@ -113,3 +113,11 @@ def test_workspace_controls_use_single_click_events():
     source = app.PREVIEW_PATH.read_text(encoding="utf-8")
     assert "addEventListener('click'" in source
     assert "addEventListener('dblclick'" not in source
+
+
+def test_default_launch_never_silently_uses_demo_tree():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert 'candidate = PREVIEW_PATH.resolve().parents[2] / "PYNIX"' in source
+    assert 'project_path = args.project' in source
+    assert 'raise SystemExit("No project selected.' in source
+    assert 'session = WorkspaceSession(project_path)' in source
