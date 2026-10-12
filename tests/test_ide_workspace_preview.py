@@ -42,3 +42,37 @@ def test_native_v4_supports_explicit_project_argument():
               "ide_native_v4.py").read_text(encoding="utf-8")
     assert '"--project"' in source
     assert "attach_workspace" in source
+
+
+def test_v43_nested_tree_and_selection_binding(tmp_path):
+    (tmp_path / "src" / "ui").mkdir(parents=True)
+    (tmp_path / "src" / "main.pnx").write_text("main()", encoding="utf-8")
+    (tmp_path / "src" / "ui" / "view.pnx").write_text("view()", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function buildTree()" in js
+    assert "function visit(node,depth)" in js
+    assert "expanded.add(segments.slice(0,i).join('/'))" in js
+    assert "entry.path===current" in js
+    assert "src/ui/view.pnx" in js
+    assert "folder-open" in js
+    assert "file-code" in js
+    assert "project-glyph" in js
+
+
+def test_v43_uses_original_vector_assets_and_restores_explorer(tmp_path):
+    (tmp_path / "main.pnx").write_text("hello", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert 'xmlns=\\\"http://www.w3.org/2000/svg\\\"' in js
+    assert "explorerControl?.addEventListener('click'" in js
+    assert "function renderTree()" in js
+
+
+def test_v43_header_escapes_project_title(tmp_path):
+    project = tmp_path / "Example & Project"
+    project.mkdir()
+    (project / "main.pnx").write_text("ok", encoding="utf-8")
+    output = attach_workspace(
+        "<body><b>PYNIX</b> / Icon System</body>",
+        WorkspaceSession(project))
+    assert "Example &amp; Project" in output
+    assert "PROJECT_NAME_PAYLOAD" not in output
