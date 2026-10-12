@@ -259,3 +259,21 @@ def test_v418_refresh_diagnostics_only_after_save(tmp_path):
     assert "payload.diagnostics||[]" in js
     native=(Path(__file__).resolve().parents[1]/"examples"/"ide_native_v4.py").read_text()
     assert "snapshot = read_diagnostics(session.root, compiler_python)" in native
+
+
+def test_active_line_uses_computed_font_metrics(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "const metrics=getComputedStyle(editorInput)" in js
+    assert "parseFloat(metrics.lineHeight)" in js
+    assert "parseFloat(metrics.paddingTop)" in js
+    assert "(line-1)*lineHeight-editorInput.scrollTop" in js
+    assert "21.45" not in js
+
+
+def test_edit_lexer_distinguishes_comments_and_calls(tmp_path):
+    (tmp_path / "main.pnx").write_text("// number 123\\nfunction main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "t.startsWith('//')||t.startsWith('#')" in js
+    assert "kind='call'" in js
+    assert "kind='builtin'" in js
