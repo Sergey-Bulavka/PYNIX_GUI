@@ -788,6 +788,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
+ let pendingNavigation=null;
+ function selectNavigationLocation(target){
+   if(current!==target.source)return;
+   const lines=editorInput.value.split('\\n');
+   const line=Math.max(1,Math.min(lines.length,Number(target.line)||1));
+   const col=Math.max(1,Number(target.column)||1);
+   const offset=lines.slice(0,line-1).reduce((total,item)=>total+item.length+1,0)
+       +Math.min(lines[line-1].length,col-1);
+   editorInput.focus();
+   editorInput.setSelectionRange(offset,offset);
+   const rowHeight=parseFloat(getComputedStyle(editorInput).lineHeight);
+   editorInput.scrollTop=Math.max(0,(line-1)*rowHeight-editorInput.clientHeight/2);
+   updateCursor();
+ }
  window.pynixReceiveFile=function(payload){
    if(!payload || !byName.has(payload.source))return;
    const file=byName.get(payload.source);
@@ -806,17 +820,22 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    file.dirty=false;
    file.tokens=payload.tokens||null;
    file.unloaded=false;
-   if(current===payload.source){renderCode(file);updateEditingView();}
+   if(current===payload.source){
+     renderCode(file);updateEditingView();
+     if(pendingNavigation?.source===payload.source){
+       selectNavigationLocation(pendingNavigation);
+       pendingNavigation=null;
+     }
+   }
  };
- document.addEventListener('pynix:navigate', event=>{
+ document.addEventListener('pynix:navigate',event=>{
    const target=event.detail||{};
    if(!byName.has(target.source))return;
+   pendingNavigation=target;
    show(target.source);
-   const rows=[...code.querySelectorAll('.source-line')];
-   const selected=rows[Math.max(0,Number(target.line||1)-1)];
-   if(selected){
-     selected.scrollIntoView({block:'center'});
-     selected.classList.add('source-line-target');
+   if(!byName.get(target.source).unloaded){
+     selectNavigationLocation(target);
+     pendingNavigation=null;
    }
  });
  const explorerControl=document.querySelectorAll('.rail-item')[0];
