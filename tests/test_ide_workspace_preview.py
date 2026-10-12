@@ -334,3 +334,24 @@ def test_find_matches_are_decorated_in_source_highlight_without_focus_change(tmp
     assert "pynix-find-match" in js
     assert "recolorSource();" in js.split("function navigateFind(step=1,reset=false)", 1)[1].split("function openFind()", 1)[0]
     assert "editorInput.focus()" not in js.split("function navigateFind(step=1,reset=false)", 1)[1].split("function openFind()", 1)[0]
+
+
+def test_v425_replace_and_go_to_line_controls(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "function openReplace()" in js
+    assert "function replaceCurrent()" in js
+    assert "function replaceEvery()" in js
+    assert "pushUndo(byName.get(current))" in js
+    assert "function goToLine(line)" in js
+    assert "goInput.addEventListener('keydown'" in js
+
+
+def test_v425_project_search_navigates_after_lazy_open(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "pynixProjectSearch" in js
+    assert "window.pynixProjectSearchResult=payload=>" in js
+    assert "let pendingNavigation=null" in js
+    assert "selectNavigationLocation(pendingNavigation)" in js
+    assert "document.dispatchEvent(new CustomEvent('pynix:navigate'" in js
