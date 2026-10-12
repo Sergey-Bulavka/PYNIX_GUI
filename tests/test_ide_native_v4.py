@@ -46,3 +46,28 @@ def test_native_v4_workspace_resizes_instead_of_centering_gallery():
     assert ".workspace-mode .layout{display:block;max-width:none;" in html
     assert ".workspace-mode .tree{width:clamp(" in html
     assert ".workspace-mode .layout>.section{display:none}" in html
+
+
+def test_v41_workspace_has_professional_panels_and_resizers():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    for expected in ("workspace-toolbar", "editor-tabs", "right-tools",
+                     "tree-resizer", "terminal-resizer", "--explorer-width",
+                     "--terminal-height", "setPointerCapture",
+                     "data-file=\"gui.pnx\"", "data-file=\"tooling.pnx\""):
+        assert expected in html
+
+
+def test_v41_resize_controls_are_keyboard_accessible():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    assert 'aria-orientation="vertical"' in html
+    assert 'aria-orientation="horizontal"' in html
+    assert 'tabindex="0"' in html
+    assert "ArrowRight" in html
+    assert "ArrowUp" in html
+
+
+def test_v41_gallery_stays_separate_from_workspace():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    assert ".workspace-mode .layout>.section{display:none}" in html
+    assert ".workspace-mode .editor-tabs{display:flex}" in html
+    assert "One family" in html
