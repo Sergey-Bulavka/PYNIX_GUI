@@ -98,7 +98,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  saveButton.type='button';saveButton.textContent='Save';
  saveButton.className='nav-action pynix-save-action';
  document.querySelector('.workspace-toolbar')?.appendChild(saveButton);
- let editing=false;
+ let editing=true;
  function persistBuffer(){
    if(!editing || !current)return;
    const file=byName.get(current);
@@ -126,10 +126,6 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=byName.get(current);
    saveButton.disabled=!file?.dirty;
    renderTabs();
-   for(const tab of tabs.children){
-     const path=openTabs.find(name=>name.split('/').pop()===tab.textContent.replace(/\\s*\\*$/,''));
-     if(path&&byName.get(path)?.dirty)tab.title='Unsaved changes';
-   }
  });
  editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
  function saveSource(){
@@ -197,7 +193,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const isOpen=expanded.has(entry.path);
      const line=document.createElement('div');
      line.className='entry project-entry'+(isRoot?' project-root':'');
-     line.style.paddingLeft=(12+Math.min(depth,12)*16)+'px';
+     line.style.paddingLeft=(7+Math.min(depth,12)*13)+'px';
      if(entry.path===selectedPath)line.classList.add('workspace-selected');
      line.setAttribute('role','button');
      line.tabIndex=0;
@@ -299,7 +295,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      label.addEventListener('click',()=>show(fileName));
      const close=document.createElement('button');
      close.type='button';
-     close.textContent='×';
+     close.innerHTML='<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
      close.className='pynix-editor-tab-close';
      close.setAttribute('aria-label','Close '+fileName);
      close.addEventListener('click',()=>{
@@ -313,7 +309,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
          const next=openTabs[Math.min(index,openTabs.length-1)];
          if(next){show(next);return;}
          code.replaceChildren();
-         editing=false;
+         editing=true;
          updateEditingView();
        }
        renderTabs();renderTree();
@@ -333,6 +329,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    renderTabs();
    const file=byName.get(name);
    if(file.savedText===undefined && !file.unloaded)file.savedText=file.text;
+   editing=true;
    if(file.unloaded){
      code.replaceChildren();
      const info=document.createElement('div');
