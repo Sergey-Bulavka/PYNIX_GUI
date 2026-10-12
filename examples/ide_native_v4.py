@@ -62,6 +62,10 @@ def main() -> None:
     parser.add_argument("--project", type=Path, help="Read-only source project to explore")
     parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
     parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
+    parser.add_argument("--nav-command", choices=("definition", "references", "type-at"))
+    parser.add_argument("--nav-source", help="Relative .pnx path for navigation")
+    parser.add_argument("--nav-line", type=int, default=1)
+    parser.add_argument("--nav-column", type=int, default=1)
     args = parser.parse_args()
     document = PREVIEW_PATH.read_text(encoding="utf-8")
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
@@ -84,6 +88,15 @@ def main() -> None:
             from pynix_gui.ide_workspace_preview import attach_diagnostics
             compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
             document = attach_diagnostics(document, read_diagnostics(session.root, compiler_python))
+        if args.nav_command:
+            if not args.nav_source:
+                parser.error("--nav-command requires --nav-source")
+            from pynix_gui.ide_tooling_navigation import query_navigation
+            from pynix_gui.ide_workspace_preview import attach_navigation
+            compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
+            result = query_navigation(session.root, compiler_python, args.nav_command,
+                                      args.nav_source, args.nav_line, args.nav_column)
+            document = attach_navigation(document, result, args.nav_command)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
