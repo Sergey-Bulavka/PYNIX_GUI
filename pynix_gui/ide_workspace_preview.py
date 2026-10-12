@@ -363,6 +363,59 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(key==='f'&&e.altKey&&!e.shiftKey){e.preventDefault();openReplace();}
    else if(key==='l'&&!e.shiftKey){e.preventDefault();goBar.hidden=false;goInput.focus();goInput.select();}
  });
+ const projectFindBar=document.createElement('div');
+ projectFindBar.className='pynix-find-bar pynix-project-find-bar';
+ projectFindBar.hidden=true;
+ const projectFindInput=document.createElement('input');
+ projectFindInput.type='search';projectFindInput.placeholder='Search entire project';
+ const projectFindButton=document.createElement('button');
+ projectFindButton.type='button';projectFindButton.textContent='Search';
+ const projectFindClose=document.createElement('button');
+ projectFindClose.type='button';projectFindClose.textContent='×';
+ projectFindBar.append(projectFindInput,projectFindButton,projectFindClose);
+ document.querySelector('.workspace-toolbar')?.appendChild(projectFindBar);
+ const projectResults=document.createElement('div');
+ projectResults.className='pynix-project-results';
+ projectResults.hidden=true;
+ document.querySelector('.editor')?.appendChild(projectResults);
+ function runProjectFind(){
+   const query=projectFindInput.value.trim();
+   if(!query)return;
+   projectResults.hidden=false;
+   projectResults.textContent='Searching project…';
+   const bridge=window.webkit?.messageHandlers?.pynixProjectSearch;
+   if(bridge)bridge.postMessage({query});
+   else projectResults.textContent='Project search requires the macOS native IDE';
+ }
+ projectFindButton.addEventListener('click',runProjectFind);
+ projectFindInput.addEventListener('keydown',e=>{
+   if(e.key==='Enter'){e.preventDefault();runProjectFind();}
+   if(e.key==='Escape'){e.preventDefault();projectFindBar.hidden=true;projectResults.hidden=true;editorInput.focus();}
+ });
+ projectFindClose.addEventListener('click',()=>{projectFindBar.hidden=true;projectResults.hidden=true;editorInput.focus();});
+ document.addEventListener('keydown',e=>{
+   if((e.metaKey||e.ctrlKey)&&e.shiftKey&&e.key.toLowerCase()==='f'){
+     e.preventDefault();projectFindBar.hidden=false;projectFindInput.focus();projectFindInput.select();
+   }
+ });
+ window.pynixProjectSearchResult=payload=>{
+   projectResults.replaceChildren();
+   if(payload.error){projectResults.textContent=payload.error;return;}
+   const head=document.createElement('div');
+   head.className='pynix-project-result-head';
+   head.textContent=(payload.matches||[]).length+' results'+(payload.truncated?' (first 300)':'');
+   projectResults.appendChild(head);
+   for(const item of payload.matches||[]){
+     const entry=document.createElement('button');
+     entry.type='button';entry.className='pynix-project-result';
+     entry.textContent=item.source+':'+item.line+'  '+item.preview;
+     entry.addEventListener('click',()=>{
+       projectResults.hidden=true;projectFindBar.hidden=true;
+       document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
+     });
+     projectResults.appendChild(entry);
+   }
+ };
  const diagnosticsStatus=document.createElement('span');
  diagnosticsStatus.className='pynix-diagnostics-status';
  document.querySelector('.bottom')?.appendChild(diagnosticsStatus);
