@@ -99,6 +99,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    persistBuffer();
    const file=byName.get(current);
    saveButton.disabled=!file?.dirty;
+   renderTabs();
    for(const tab of tabs.children){
      const path=openTabs.find(name=>name.split('/').pop()===tab.textContent.replace(/\\s*\\*$/,''));
      if(path&&byName.get(path)?.dirty)tab.title='Unsaved changes';
@@ -121,7 +122,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=payload?.source?byName.get(payload.source):null;
    if(!file)return;
    if(payload.error){window.alert('Save failed: '+payload.error);return;}
-   if(payload.saved){file.savedText=file.text;file.dirty=false;if(current===payload.source)updateEditingView();}
+   if(payload.saved){file.savedText=file.text;file.dirty=false;renderTabs();if(current===payload.source)updateEditingView();}
  };
 
  const expanded = new Set(['']);
@@ -260,6 +261,41 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      code.appendChild(row);
    });
  }
+ function renderTabs(){
+   tabs.replaceChildren();
+   for(const fileName of openTabs){
+     const file=byName.get(fileName);
+     const wrap=document.createElement('div');
+     wrap.className='pynix-editor-tab'+(fileName===current?' active':'');
+     const label=document.createElement('button');
+     label.type='button';
+     label.textContent=fileName.split('/').pop()+(file?.dirty?' *':'');
+     label.addEventListener('click',()=>show(fileName));
+     const close=document.createElement('button');
+     close.type='button';
+     close.textContent='×';
+     close.className='pynix-editor-tab-close';
+     close.setAttribute('aria-label','Close '+fileName);
+     close.addEventListener('click',()=>{
+       persistBuffer();
+       if(file?.dirty&&!window.confirm('Discard unsaved changes to '+fileName+'?'))return;
+       const index=openTabs.indexOf(fileName);
+       openTabs.splice(index,1);
+       if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;}
+       if(current===fileName){
+         current=null;
+         const next=openTabs[Math.min(index,openTabs.length-1)];
+         if(next){show(next);return;}
+         code.replaceChildren();
+         editing=false;
+         updateEditingView();
+       }
+       renderTabs();renderTree();
+     });
+     wrap.append(label,close);
+     tabs.appendChild(wrap);
+   }
+ }
  function show(name) {
    if (!byName.has(name)) return;
    persistBuffer();
@@ -268,15 +304,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    selectedPath = name;
    const segments=name.split('/');
    for(let i=1;i<segments.length;i++)expanded.add(segments.slice(0,i).join('/'));
-   tabs.replaceChildren();
-   for (const fileName of openTabs) {
-     const tab = document.createElement('button');
-     tab.type = 'button';
-     tab.className = fileName === name ? 'active' : '';
-     tab.textContent = fileName.split('/').pop();
-     tab.addEventListener('click', () => show(fileName));
-     tabs.appendChild(tab);
-   }
+   renderTabs();
    const file=byName.get(name);
    if(file.savedText===undefined && !file.unloaded)file.savedText=file.text;
    if(file.unloaded){
