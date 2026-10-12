@@ -217,3 +217,14 @@ def test_workspace_opens_in_edit_mode_with_compact_tree(tmp_path):
     assert "   editing=true;\n   if(file.unloaded)" in js
     assert "7+Math.min(depth,12)*13" in js
     assert "close.innerHTML=" in js
+
+
+def test_editable_gutter_and_cursor_are_kept_per_file(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()\n    return 1\n")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "pynix-edit-gutter" in js
+    assert "cursorStatus.textContent='Ln '" in js
+    assert "file.cursorStart=editorInput.selectionStart" in js
+    assert "file.scrollTop=editorInput.scrollTop" in js
+    assert "editorInput.setSelectionRange(" in js
+    assert "gutter.scrollTop=editorInput.scrollTop" in js
