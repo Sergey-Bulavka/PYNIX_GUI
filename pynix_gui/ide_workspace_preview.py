@@ -165,6 +165,91 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  saveButton.type='button';saveButton.textContent='Save';
  saveButton.className='nav-action pynix-save-action';
  document.querySelector('.workspace-toolbar')?.appendChild(saveButton);
+ const searchBar=document.createElement('div');
+ searchBar.className='pynix-find-bar';
+ searchBar.hidden=true;
+ const findInput=document.createElement('input');
+ findInput.type='search';
+ findInput.placeholder='Find in file';
+ findInput.setAttribute('aria-label','Find in current file');
+ const findCount=document.createElement('span');
+ findCount.className='pynix-find-count';
+ const findPrevious=document.createElement('button');
+ findPrevious.type='button';findPrevious.textContent='↑';findPrevious.title='Previous match (Shift+Enter)';
+ const findNext=document.createElement('button');
+ findNext.type='button';findNext.textContent='↓';findNext.title='Next match (Enter)';
+ const findClose=document.createElement('button');
+ findClose.type='button';findClose.textContent='×';findClose.title='Close search (Esc)';
+ searchBar.append(findInput,findCount,findPrevious,findNext,findClose);
+ document.querySelector('.workspace-toolbar')?.appendChild(searchBar);
+ let findIndex=-1;
+ function findMatches(){
+   const needle=findInput.value.toLocaleLowerCase();
+   const text=editorInput.value.toLocaleLowerCase();
+   const positions=[];
+   if(!needle)return positions;
+   let offset=0;
+   while((offset=text.indexOf(needle,offset))>=0){
+     positions.push(offset);
+     offset+=needle.length;
+     if(positions.length>=10000)break;
+   }
+   return positions;
+ }
+ function navigateFind(step=1,reset=false){
+   const matches=findMatches();
+   if(!matches.length){
+     findCount.textContent=findInput.value?'0 matches':'';
+     findIndex=-1;
+     return;
+   }
+   if(reset){
+     const caret=editorInput.selectionStart;
+     findIndex=matches.findIndex(position=>position>=caret);
+     if(findIndex<0)findIndex=0;
+   }else{
+     findIndex=(findIndex+step+matches.length)%matches.length;
+   }
+   const at=matches[findIndex];
+   editorInput.focus();
+   editorInput.setSelectionRange(at,at+findInput.value.length);
+   const before=editorInput.value.slice(0,at);
+   const line=before.split('\\n').length-1;
+   const height=parseFloat(getComputedStyle(editorInput).lineHeight);
+   editorInput.scrollTop=Math.max(0,line*height-editorInput.clientHeight/2);
+   findCount.textContent=(findIndex+1)+' / '+matches.length;
+   updateCursor();
+ }
+ function openFind(){
+   if(!current||byName.get(current)?.unloaded)return;
+   searchBar.hidden=false;
+   const selected=editorInput.value.slice(editorInput.selectionStart,editorInput.selectionEnd);
+   if(selected&&!selected.includes('\\n'))findInput.value=selected;
+   findInput.focus();findInput.select();
+   navigateFind(1,true);
+ }
+ function closeFind(){
+   searchBar.hidden=true;
+   editorInput.focus();
+ }
+ findInput.addEventListener('input',()=>navigateFind(1,true));
+ findInput.addEventListener('keydown',e=>{
+   if(e.key==='Escape'){e.preventDefault();closeFind();}
+   if(e.key==='Enter'){e.preventDefault();navigateFind(e.shiftKey?-1:1);}
+ });
+ findNext.addEventListener('click',()=>navigateFind(1));
+ findPrevious.addEventListener('click',()=>navigateFind(-1));
+ findClose.addEventListener('click',closeFind);
+ document.addEventListener('keydown',e=>{
+   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='f'){
+     if(document.activeElement===editorInput||document.activeElement===findInput){
+       e.preventDefault();openFind();
+     }
+   }
+   if(e.key==='Escape'&&!searchBar.hidden&&document.activeElement===editorInput){
+     e.preventDefault();closeFind();
+   }
+ });
  const diagnosticsStatus=document.createElement('span');
  diagnosticsStatus.className='pynix-diagnostics-status';
  document.querySelector('.bottom')?.appendChild(diagnosticsStatus);
@@ -518,6 +603,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const segments=name.split('/');
    for(let i=1;i<segments.length;i++)expanded.add(segments.slice(0,i).join('/'));
    renderTabs();
+   searchBar.hidden=true;
+   findIndex=-1;
    const file=byName.get(name);
    if(file.savedText===undefined && !file.unloaded)file.savedText=file.text;
    editing=true;
