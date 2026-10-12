@@ -138,3 +138,23 @@ def test_explorer_file_metadata_survives_preview_content_limit(tmp_path):
     assert '"one.pnx"' in result
     assert '"two.pnx"' in result
     assert '"unloaded": true' in result
+
+
+def test_single_pointer_press_and_lazy_file_open_bridge(tmp_path):
+    (tmp_path / "first.pnx").write_text("first")
+    (tmp_path / "second.pnx").write_text("second")
+    bootstrap = workspace_bootstrap(WorkspaceSession(tmp_path), max_files=1)
+    assert "line.addEventListener('pointerdown'" in bootstrap
+    assert "if(e.button!==0)return" in bootstrap
+    assert "window.webkit?.messageHandlers?.pynixFileOpen" in bootstrap
+    assert "window.pynixReceiveFile=function(payload)" in bootstrap
+    assert '"unloaded": true' in bootstrap
+
+
+def test_mac_host_has_bounded_lazy_source_reader():
+    src = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text()
+    assert 'class FileOpenHandler(NSObject)' in src
+    assert 'source not in available_sources' in src
+    assert 'session.resolve_file(source)' in src
+    assert 'pynixFileOpen' in src
+    assert 'window.pynixReceiveFile(' in src
