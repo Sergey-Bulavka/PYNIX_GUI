@@ -47,3 +47,18 @@ def test_native_host_installs_real_webkit_handler():
     assert 'addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")' in code
     assert "validate_request(" in code
     assert "query_navigation(" in code
+
+
+def test_navigation_waits_for_lazy_file_to_be_ready():
+    from pynix_gui.ide_navigation_bridge import navigation_controls
+    javascript = navigation_controls()
+    assert "pynix:file-ready" in javascript
+    assert "if(!ready)" in javascript
+    assert "Wait for the source file to finish loading" in javascript
+
+
+def test_pyobjc_file_request_is_normalized():
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text()
+    assert "request = dict(request)" in src
+    assert "source = request.get(\"source\")" in src
