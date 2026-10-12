@@ -109,7 +109,7 @@ def test_v4_generated_project_javascript_parses_with_node_if_available(tmp_path)
         pytest.skip("Node.js unavailable; JS syntax validation requires a JavaScript engine")
     (tmp_path / "main.pnx").write_text("print('test')", encoding="utf-8")
     source = workspace_bootstrap(WorkspaceSession(tmp_path))
-    match = re.fullmatch(r"<script>\\s*(.*?)\\s*</script>", source, re.S)
+    match = re.fullmatch(r"<script>\s*(.*?)\s*</script>", source, re.S)
     assert match is not None
     proc = subprocess.run([node, "--check", "-"], input=match.group(1),
                           text=True, capture_output=True, timeout=10)
