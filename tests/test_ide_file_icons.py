@@ -20,3 +20,12 @@ def test_project_preview_has_icon_metadata(tmp_path):
     assert '"icon": "pynix"' in source
     assert '"icon": "markdown"' in source
     assert "fileIconMarkup(fileType)" in source
+
+
+def test_python_icon_uses_upstream_original_vector_not_hand_drawn_path():
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[1] / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "python-original-a" in source
+    assert "linearGradient" in source
+    assert 'viewBox=\'0 0 128 128\'' in source
+    assert "M12 2C6 2" not in source
