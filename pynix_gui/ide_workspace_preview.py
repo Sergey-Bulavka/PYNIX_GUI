@@ -149,6 +149,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      last=token.lastIndex;
    }
    coloredSource.innerHTML=html+escapeCode(value.slice(last))+'\\n';
+   decorateFindMatches();
    const count=value.split('\\n').length;
    gutter.textContent=Array.from({length:count},(_,i)=>String(i+1)).join('\\n');
    coloredSource.scrollTop=editorInput.scrollTop;
@@ -196,11 +197,49 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
    return positions;
  }
+ function decorateFindMatches(){
+   if(searchBar.hidden||!findInput.value)return;
+   const matches=findMatches();
+   if(!matches.length)return;
+   const selected=matches[findIndex];
+   const length=findInput.value.length;
+   const walker=document.createTreeWalker(coloredSource,NodeFilter.SHOW_TEXT);
+   const nodes=[];
+   let node,offset=0;
+   while((node=walker.nextNode())){
+     nodes.push({node,start:offset,end:offset+node.textContent.length});
+     offset+=node.textContent.length;
+   }
+   for(const entry of nodes){
+     const overlaps=[];
+     for(let i=0;i<matches.length;i++){
+       const start=matches[i],end=start+length;
+       if(end<=entry.start)continue;
+       if(start>=entry.end)break;
+       overlaps.push({start:Math.max(0,start-entry.start),end:Math.min(entry.end-entry.start,end-entry.start),active:start===selected});
+     }
+     if(!overlaps.length)continue;
+     const fragment=document.createDocumentFragment();
+     const original=entry.node.textContent;
+     let pos=0;
+     for(const item of overlaps){
+       if(item.start>pos)fragment.appendChild(document.createTextNode(original.slice(pos,item.start)));
+       const mark=document.createElement('span');
+       mark.className=item.active?'pynix-find-current':'pynix-find-match';
+       mark.textContent=original.slice(item.start,item.end);
+       fragment.appendChild(mark);
+       pos=item.end;
+     }
+     if(pos<original.length)fragment.appendChild(document.createTextNode(original.slice(pos)));
+     entry.node.replaceWith(fragment);
+   }
+ }
  function navigateFind(step=1,reset=false){
    const matches=findMatches();
    if(!matches.length){
      findCount.textContent=findInput.value?'0 matches':'';
      findIndex=-1;
+     recolorSource();
      return;
    }
    if(reset){
@@ -218,6 +257,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const height=parseFloat(getComputedStyle(editorInput).lineHeight);
    editorInput.scrollTop=Math.max(0,line*height-editorInput.clientHeight/2);
    findCount.textContent=(findIndex+1)+' / '+matches.length;
+   recolorSource();
    // Do not call updateCursor here: it updates the visual editor caret.
  }
  function openFind(){
@@ -230,6 +270,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  function closeFind(){
    searchBar.hidden=true;
+   recolorSource();
    editorInput.focus();
  }
  findInput.addEventListener('input',()=>navigateFind(1,true));
