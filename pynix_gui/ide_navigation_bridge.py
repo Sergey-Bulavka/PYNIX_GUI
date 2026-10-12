@@ -48,14 +48,14 @@ def navigation_controls() -> str:
    const row=e.target.closest('.source-line');
    if(!row)return;
    line=Number(row.dataset.line);
-   const label=row.lastElementChild;
-   if(label){
-     const range=document.createRange();
-     const selection=window.getSelection();
-     if(selection?.rangeCount && label.contains(selection.anchorNode)){
-       column=Math.max(1,selection.anchorOffset+1);
-     } else column=1;
-   }
+   const label=row.querySelector('.source-text');
+   const caret=document.caretRangeFromPoint?.(e.clientX,e.clientY);
+   if(label && caret && label.contains(caret.startContainer)){
+     const preceding=document.createRange();
+     preceding.selectNodeContents(label);
+     preceding.setEnd(caret.startContainer,caret.startOffset);
+     column=preceding.toString().length+1;
+   } else column=1;
    code.querySelectorAll('.source-line-target').forEach(el=>el.classList.remove('source-line-target'));
    row.classList.add('source-line-target');
    const status=document.querySelector('.bottom');
