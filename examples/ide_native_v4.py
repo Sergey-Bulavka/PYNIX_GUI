@@ -25,6 +25,9 @@ def main() -> None:
     import AppKit
     import WebKit
     from Foundation import NSObject, NSURL
+    from pynix_gui.ide_navigation_bridge import (
+        attach_navigation_controls, validate_request, result_script,
+    )
 
     class PreviewDelegate(NSObject):
         def applicationShouldTerminateAfterLastWindowClosed_(self, sender):
@@ -97,6 +100,26 @@ def main() -> None:
             result = query_navigation(session.root, compiler_python, args.nav_command,
                                       args.nav_source, args.nav_line, args.nav_column)
             document = attach_navigation(document, result, args.nav_command)
+    from pynix_gui.ide_tooling_navigation import query_navigation
+    compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
+    available_sources = set(session.list_files(limit=5000))
+    class NavigationHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            try:
+                command, source, line, column = validate_request(
+                    dict(message.body()), available_sources)
+                result = query_navigation(session.root, compiler_python, command,
+                                          source, line, column)
+            except (ValueError, TypeError) as exc:
+                command = "definition"
+                result = {"error": str(exc)}
+            view.evaluateJavaScript_completionHandler_(
+                result_script(result, command), None)
+
+    navigation_handler = NavigationHandler.alloc().init()
+    controller = view.configuration().userContentController()
+    controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
+    document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
     window.makeKeyAndOrderFront_(None)
