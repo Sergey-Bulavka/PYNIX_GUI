@@ -313,3 +313,13 @@ def test_v423_find_in_editor_shortcuts_and_navigation(tmp_path):
     assert "findInput.addEventListener('keydown'" in js
     assert "e.shiftKey?-1:1" in js
     assert "findIndex=-1" in js
+
+
+def test_find_navigation_does_not_steal_search_focus(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    part = js.split("function navigateFind(step=1,reset=false)", 1)[1].split("function openFind()", 1)[0]
+    assert "editorInput.focus()" not in part
+    assert "editorInput.setSelectionRange(at,at+findInput.value.length)" in part
+    assert "findInput.focus()" in js
+    assert "findInput.addEventListener('keydown'" in js
