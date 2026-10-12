@@ -104,8 +104,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const advance=measure.getBoundingClientRect().width/10;
    measure.remove();
    const left=parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
-   const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop+(lineHeight-14)/2;
+   const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop;
+   customCaret.style.height=lineHeight+'px';
    customCaret.style.transform='translate('+left+'px,'+top+'px)';
+   customCaret.classList.remove('pynix-caret-blink');
+   void customCaret.offsetWidth;
+   customCaret.classList.add('pynix-caret-blink');
    customCaret.hidden=editorInput.selectionStart!==editorInput.selectionEnd||document.activeElement!==editorInput;
 
    const file=byName.get(current);
