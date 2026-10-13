@@ -88,3 +88,13 @@ def test_folding_has_accessible_toolbar_controls():
     assert "unfoldButton.textContent='Unfold'" in source
     assert "file.foldedLines=new Set()" in source
     assert "editing=false;updateEditingView();renderCode(file);" in source
+
+
+def test_option_click_places_secondary_carets_without_wrapped_text():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "editorInput.wrap='off'" in source
+    assert "editorInput.addEventListener('pointerdown',event=>{" in source
+    assert "if(!event.altKey){file.extraSelections=[];return;}" in source
+    assert "ctx.measureText('0000000000').width/10" in source
+    assert "event.preventDefault();" in source
+    assert "if(position===previous.start&&previous.start===previous.end)return;" in source
