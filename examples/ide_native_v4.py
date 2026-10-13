@@ -228,6 +228,10 @@ def main() -> None:
                         if float(revision) == whole:
                             revision = whole
                     core_reader.update_source(source, content, revision)
+                    core_state = core_reader.read_source(source)
+                    if (core_state["content"] != content
+                            or core_state["revision"] != revision):
+                        raise CoreSnapshotError("Core source diverged before save")
                 # Preserve the session's original disk snapshot for conflict checks.
                 if source not in session.documents:
                     session.open(source)
