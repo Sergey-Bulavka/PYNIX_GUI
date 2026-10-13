@@ -38,6 +38,9 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Project manifest missing")
         if not self.compiler_python.is_file():
             raise CoreSnapshotError("Compiler interpreter missing")
+        # A previous process leaves an EOF sentinel in its response queue.
+        # Each start must consume replies only from its own subprocess.
+        self._lines = queue.Queue()
         self._temporary = tempfile.TemporaryDirectory(prefix="pynix-ide-core-")
         try:
             root = Path(self._temporary.name)
