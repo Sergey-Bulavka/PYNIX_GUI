@@ -712,7 +712,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
  function prepareNativeSave(source,content){
-   if(coreRecovering||pendingCoreClose.has(source)||pendingNativeSaves.has(source))return null;
+   if(coreRecovering||pendingCoreClose.has(source))return null;
+   if(pendingNativeSaves.has(source))return null;
    // A save is a synchronization barrier: cancel obsolete deferred editor sends
    // and allocate a newer revision for the exact bytes being saved.
    cancelCoreBufferSync(source);
