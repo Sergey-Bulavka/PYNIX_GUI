@@ -148,9 +148,31 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const words=new Set(['function','module','import','from','as','let','var','const','if','else','elif','while','for','in','return','break','continue','and','or','not','class','interface','type','enum','match','case','try','catch','finally','raise','public','private','async','await']);
    const types=new Set(['Int','Float','Bool','String','Void','Any','List','Map']);
    const matching=matchingBracketPositions(value,editorInput.selectionStart);
+   const secondary=byName.get(current)?.extraSelections||[];
+   function decorateSegment(segment,at){
+     const end=at+segment.length;
+     const stops=new Set([at,end]);
+     for(const range of secondary){
+       if(range.start>=at&&range.start<=end)stops.add(range.start);
+       if(range.end>=at&&range.end<=end)stops.add(range.end);
+     }
+     const edges=[...stops].sort((a,b)=>a-b);
+     let result='';
+     for(let i=0;i<edges.length;i++){
+       const left=edges[i];
+       if(secondary.some(range=>range.start===left&&range.end===left))
+         result+='<span class="pynix-secondary-caret"></span>';
+       if(i+1>=edges.length)break;
+       const right=edges[i+1];
+       const selected=secondary.some(range=>range.start<=left&&range.end>=right&&range.end>range.start);
+       const text=escapeCode(value.slice(left,right));
+       result+=selected?'<span class="pynix-secondary-selection">'+text+'</span>':text;
+     }
+     return result;
+   }
    let html='',last=0,match;
    while((match=token.exec(value))){
-     html+=escapeCode(value.slice(last,match.index));
+     html+=decorateSegment(value.slice(last,match.index),last);
      const t=match[0];
      let kind='plain';
      if(t.startsWith('//')||t.startsWith('#'))kind='comment';
@@ -162,10 +184,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      else if(['print','input','len','range','str','int','float'].includes(t))kind='builtin';
      else if(/^[A-Za-z_]/.test(t)&&/^\\s*\\(/.test(value.slice(token.lastIndex)))kind='call';
      else if(['true','false','none','null'].includes(t))kind='constant';
-     html+='<span class="pynix-edit-'+kind+'">'+escapeCode(t)+'</span>';
+     html+='<span class="pynix-edit-'+kind+'">'+decorateSegment(t,match.index)+'</span>';
      last=token.lastIndex;
    }
-   coloredSource.innerHTML=html+escapeCode(value.slice(last))+'\\n';
+   coloredSource.innerHTML=html+decorateSegment(value.slice(last),last)+'\\n';
    decorateFindMatches();
    const count=value.split('\\n').length;
    gutter.textContent=Array.from({length:count},(_,i)=>String(i+1)).join('\\n');
