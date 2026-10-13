@@ -165,6 +165,20 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixReceiveFile(" + serialized + ");", None)
 
+    class CoreBufferHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            if core_reader is None:
+                return
+            try:
+                request = dict(message.body())
+                source = request.get("source")
+                content = request.get("text")
+                if not isinstance(source, str) or source not in available_sources:
+                    raise ValueError("Unindexed source")
+                core_reader.update_source(source, content)
+            except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
+                print("IDE Core buffer mirror:", exc, file=sys.stderr)
+
     class FileSaveHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -235,6 +249,7 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixProjectSearchResult(" + serialized + ");", None)
 
+    core_buffer_handler = CoreBufferHandler.alloc().init()
     project_search_handler = ProjectSearchHandler.alloc().init()
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
@@ -242,6 +257,7 @@ def main() -> None:
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
+    controller.addScriptMessageHandler_name_(core_buffer_handler, "pynixCoreBuffer")
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
