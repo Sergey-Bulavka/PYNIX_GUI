@@ -32,3 +32,13 @@ def test_recovery_click_is_delegated_before_late_native_indicator_insertion():
     assert "recoverCoreBuffers();" in preview
     assert "coreIndicator.addEventListener('click'" not in preview
     assert 'document.replace("</body>", indicator + "</body>", 1)' in native
+
+
+def test_recovery_handler_accepts_pyobjc_iterable_arrays():
+    native = (ROOT / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    handler = native.split("class CoreRecoveryHandler(NSObject):", 1)[1].split(
+        "class CoreCloseHandler(NSObject):", 1)[0]
+    assert 'hasattr(entries, "__iter__")' in handler
+    assert 'isinstance(entries, (str, bytes, dict))' in handler
+    assert 'buffers.append({"source": entry.get("source")' in handler
+    assert 'core_reader.restart_with_buffers(buffers)' in handler
