@@ -793,7 +793,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    });
  }
  let pendingCloseAfterSave=null;
+ function cancelCoreBufferSync(name){
+   if(coreSyncTimers.has(name)){
+     clearTimeout(coreSyncTimers.get(name));
+     coreSyncTimers.delete(name);
+   }
+ }
  function closeTabNow(name){
+   cancelCoreBufferSync(name);
    const index=openTabs.indexOf(name);
    if(index<0)return;
    openTabs.splice(index,1);
@@ -867,6 +874,17 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  function show(name) {
    if (!byName.has(name)) return;
    persistBuffer();
+   if(current && current!==name && byName.get(current)?.dirty && current.endsWith('.pnx')){
+     // Flush the previous tab's pending buffer before opening another Core source.
+     const source=current;
+     if(coreSyncTimers.has(source)){
+       clearTimeout(coreSyncTimers.get(source));
+       coreSyncTimers.delete(source);
+       const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
+       const revision=coreRevisions.get(source);
+       if(bridge&&revision)bridge.postMessage({source,text:byName.get(source).text,revision});
+     }
+   }
    if (!openTabs.includes(name)) openTabs.push(name);
    current = name;
    selectedPath = name;
