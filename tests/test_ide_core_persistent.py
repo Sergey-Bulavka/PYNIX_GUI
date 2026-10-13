@@ -180,3 +180,14 @@ def test_save_is_a_versioned_core_barrier_before_atomic_disk_write():
     before_save = app[app.index("class FileSaveHandler"):app.index("class ProjectSearchHandler")]
     assert before_save.index("core_reader.update_source(source, content, revision)") < before_save.index("session.save(source)")
     assert "CoreSnapshotError" in before_save
+
+
+def test_editor_keeps_caret_selection_and_scroll_per_tab():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "file.cursorStart=editorInput.selectionStart;" in js
+    assert "file.cursorEnd=editorInput.selectionEnd;" in js
+    assert "file.scrollTop=editorInput.scrollTop;" in js
+    assert "file.scrollLeft=editorInput.scrollLeft;" in js
+    assert "editorInput.addEventListener('select',()=>persistBuffer());" in js
+    assert "editorInput.setSelectionRange(file.cursorStart||0,file.cursorEnd??file.cursorStart??0);" in js
