@@ -716,6 +716,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      revision=(coreRevisions.get(source)||0)+1;
      coreRevisions.set(source,revision);
    }
+   pendingNativeSaves.set(source,{revision,text:content});
    return {source,text:content,revision};
  }
  function saveSource(){
@@ -752,9 +753,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  editorInput.addEventListener('keydown',e=>{
    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveSource()}
  });
+ const pendingNativeSaves=new Map();
  window.pynixSaveResult=payload=>{
-   const file=payload?.source?byName.get(payload.source):null;
-   if(!file)return;
+   const source=payload?.source;
+   const pending=pendingNativeSaves.get(source);
+   if(!pending)return;
+   if(Number.isInteger(payload.revision)&&payload.revision!==pending.revision)return;
+   pendingNativeSaves.delete(source);
+   const file=byName.get(source);
+   if(!file||!openTabs.includes(source))return;
    if(payload.error){
      pendingCloseAfterSave=null;
      // Never discard a dirty buffer or silently close the tab on save failure.
@@ -765,7 +772,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      return;
    }
    if(payload.saved){
-     file.savedText=typeof payload.savedText==='string'?payload.savedText:file.text;
+     file.savedText=typeof payload.savedText==='string'?payload.savedText:pending.text;
+     if(Number.isInteger(pending.revision)&&file.text===pending.text
+         &&(coreRevisions.get(source)||0)===pending.revision){
+       file.coreRevision=pending.revision;
+       file.coreDirty=false;
+       coreConfirmedRevisions.set(source,pending.revision);
+     }
      file.dirty=file.text!==file.savedText;
      renderTabs();
      if(pendingCloseAfterSave===payload.source){
