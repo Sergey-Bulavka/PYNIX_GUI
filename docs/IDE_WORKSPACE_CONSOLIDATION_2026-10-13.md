@@ -187,3 +187,28 @@ Never copy over current V4 files from old branches.
 The safest next step is focused testing and reviewing actual diffs for these
 areas before archiving diverged references. No branch deletion, file deletion,
 or re-merge has been performed during triage.
+
+## Source cleanup decision: retain regression fixtures (2026-10-13)
+
+Inspected `examples/ide_shell_showcase.py` and
+`tests/test_ide_shell_showcase.py`: the example is deliberately visual-only,
+but its tests exercise the GUI toolkit's controlled panel state, tabs,
+tree, layout sizing and menu model. It is **not** a redundant launch target.
+
+Inspected `examples/ide_native_visual_shell.py` and
+`tests/test_ide_native_visual_shell.py`: they preserve native AppKit icon,
+palette, static Git panel and window lifecycle acceptance expectations.
+Keep them as named regression fixtures, not as the current IDE.
+
+`examples/adv_01_commands_smoke.py` is a general PYNIX_GUI menu smoke,
+not an obsolete IDE executable; retain it.
+
+**Concrete cleanup:** `scripts/run_ide_workspace.sh` is now the single
+documented V4 preview launcher, with a project argument and explicit optional
+compiler interpreter. Tests in `tests/test_ide_launch_contract.py`
+guard this entry point and the historically required examples.
+
+No source files were deleted: existing tests establish that these older
+examples retain useful acceptance roles. The next retirement gate is to
+replace their assertions with tests of the official application *before*
+removing any fixture, not after.
