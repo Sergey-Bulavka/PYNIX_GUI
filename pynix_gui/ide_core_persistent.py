@@ -160,6 +160,19 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Core save acknowledgment is inconsistent")
         return snapshot
 
+    def close_source(self, source: str) -> bool:
+        """Close a clean Core document; dirty documents are refused by Core."""
+        if (not isinstance(source, str) or not source.endswith(".pnx")
+                or not (self.project / source).resolve().is_relative_to(self.project)
+                or not (self.project / source).is_file()):
+            raise CoreSnapshotError("Invalid source close")
+        result = self.request({"command": "closeSource", "source": source})
+        value = result.get("value")
+        if (result.get("kind") != "sourceClosed" or not isinstance(value, dict)
+                or value.get("source") != source or not isinstance(value.get("closed"), bool)):
+            raise CoreSnapshotError("Invalid Core close result")
+        return value["closed"]
+
     def discard_source(self, source: str) -> dict:
         if (not isinstance(source, str) or not source.endswith(".pnx")
                 or not (self.project / source).resolve().is_relative_to(self.project)
