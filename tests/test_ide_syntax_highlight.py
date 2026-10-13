@@ -23,4 +23,5 @@ def test_editor_uses_safe_text_content():
     src = (root/'pynix_gui'/'ide_workspace_preview.py').read_text()
     assert 'highlight_document(doc.text)' in src
     assert "span.textContent=token.text" in src
-    assert 'renderCode(byName.get(name));' in src
+    assert 'if(current===payload.source){' in src
+    assert 'renderCode(file);updateEditingView();' in src
