@@ -145,8 +145,10 @@ def test_switch_flushes_pending_revisions_and_discard_cancels_pending():
     assert "function cancelCoreBufferSync(name)" in src
     assert "if(coreSyncTimers.has(source))" in src
     assert "coreRevisions.get(source)" in src
-    assert "pynixCoreDiscard" in src
+    assert "closeTabNow(name,true);" in src
+    assert "bridge.postMessage({source:name,discard});" in src
     assert "core_reader.discard_source(source)" in app
+    assert app.index("core_reader.discard_source(source)") < app.index("core_reader.close_source(source)")
 
 
 def test_core_revision_acknowledgment_ignores_stale_callbacks():
