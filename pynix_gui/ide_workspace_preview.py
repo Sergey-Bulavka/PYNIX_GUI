@@ -837,7 +837,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      item.addEventListener('click',handler);actions.appendChild(item);return item;
    };
    const cancel=button('Cancel',dismiss);
-   button('Don’t Save',()=>{dismiss();closeTabNow(name);});
+   button('Don’t Save',()=>{
+     dismiss();
+     cancelCoreBufferSync(name);
+     const bridge=window.webkit?.messageHandlers?.pynixCoreDiscard;
+     if(bridge&&name.endsWith('.pnx'))bridge.postMessage({source:name});
+     closeTabNow(name);
+   });
    button('Save',()=>{
      if(current!==name){dismiss();show(name);}
      const selected=byName.get(name);
