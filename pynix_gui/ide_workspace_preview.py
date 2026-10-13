@@ -543,6 +543,42 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      projectResults.appendChild(entry);
    }
  };
+ const diagnosticsButton=document.createElement('button');
+ diagnosticsButton.type='button';
+ diagnosticsButton.className='nav-action pynix-diagnostics-action';
+ diagnosticsButton.textContent='Problems';
+ diagnosticsButton.title='Run saved-project compiler diagnostics';
+ document.querySelector('.workspace-toolbar')?.appendChild(diagnosticsButton);
+ diagnosticsButton.addEventListener('click',()=>{
+   const bridge=window.webkit?.messageHandlers?.pynixDiagnostics;
+   const status=document.querySelector('.pynix-diagnostics-status');
+   if(status)status.textContent='Checking saved project…';
+   if(bridge)bridge.postMessage({});
+   else if(status)status.textContent='Compiler diagnostics require native IDE';
+ });
+ window.pynixLiveDiagnosticsResult=payload=>{
+   const status=document.querySelector('.pynix-diagnostics-status');
+   const tabs=document.querySelector('.terminal-tabs');
+   const panel=document.querySelector('.terminal-console');
+   const problems=Array.isArray(payload?.problems)?payload.problems:[];
+   if(status)status.textContent=payload?.error?'Diagnostics: '+payload.error:
+      'Problems: '+problems.length+' (saved project)';
+   if(!tabs||!panel)return;
+   const problemsTab=[...tabs.children].find(item=>item.textContent.trim()==='PROBLEMS');
+   problemsTab?.click();
+   panel.replaceChildren();
+   if(payload?.error){panel.textContent=String(payload.error);return;}
+   if(!problems.length){panel.textContent='No compiler problems in saved project';return;}
+   for(const item of problems.slice(0,200)){
+     const row=document.createElement('button');
+     row.type='button';row.className='navigation-result nav-location';
+     row.textContent=(item.source||'')+':'+(item.line||1)+':'+(item.column||1)+
+       ' '+(item.code||'')+' '+(item.message||'');
+     row.addEventListener('click',()=>document.dispatchEvent(
+       new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line||1}})));
+     panel.appendChild(row);
+   }
+ };
  const diagnosticsStatus=document.createElement('span');
  diagnosticsStatus.className='pynix-diagnostics-status';
  document.querySelector('.bottom')?.appendChild(diagnosticsStatus);
