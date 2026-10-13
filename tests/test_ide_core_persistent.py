@@ -438,3 +438,23 @@ def test_native_core_close_ack_is_required_before_tab_is_unloaded():
     assert "if(reply?.closed){finishTabClose(source);return;}" in close
     assert "function finishTabClose(name){" in close
     assert "if(!reply?.closed)" in close
+
+
+def test_pynix_file_open_uses_core_authoritative_text_and_revision():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    handler = native.split("class FileOpenHandler(NSObject):", 1)[1].split(
+        "class CoreBufferHandler(NSObject):", 1)[0]
+    assert "core_reader.open_source(source)" in handler
+    assert "state = core_reader.read_source(source)" in handler
+    assert 'text = state["content"]' in handler
+    assert 'response["revision"] = state["revision"]' in handler
+    assert 'response["dirty"] = state["dirty"]' in handler
+    assert 'response["savedText"] = file_path.read_text(encoding="utf-8")' in handler
+    callback = preview.split("window.pynixReceiveFile=function(payload){", 1)[1].split(
+        "document.addEventListener('pynix:navigate'", 1)[0]
+    assert "file.text=payload.text;" in callback
+    assert "file.dirty=payload.dirty===true;" in callback
+    assert "coreConfirmedRevisions.set(payload.source,payload.revision)" in callback
+    assert "file.coreRevision=payload.revision;" in callback
