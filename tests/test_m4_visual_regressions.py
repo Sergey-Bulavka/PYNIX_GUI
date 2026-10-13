@@ -26,3 +26,11 @@ def test_explorer_hover_does_not_mimic_another_selected_row():
     assert ".workspace-mode .project-entry:not(.workspace-selected):hover{background:transparent}" in html
     assert ".workspace-mode .project-entry:hover{background:#1e3046}" not in html
     assert ".workspace-mode .project-entry.workspace-selected:hover{background:#223f5e}" in html
+
+
+def test_legacy_fifth_entry_demo_highlight_does_not_bleed_into_explorer():
+    html = (ROOT / "examples" / "icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".entry:nth-of-type(5){background:#1d3048}" in html
+    assert ".workspace-mode .tree .project-entry:not(.workspace-selected){background:transparent}" in html
+    assert html.index(".workspace-mode .tree .project-entry:not(.workspace-selected)") > html.index(
+        ".entry:nth-of-type(5){background:#1d3048}")
