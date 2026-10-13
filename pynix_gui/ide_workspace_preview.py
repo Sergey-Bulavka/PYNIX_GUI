@@ -717,8 +717,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const edits=ranges.map(item=>{
      const from=inputType==='deleteContentBackward'&&item.start===item.end
        ?Math.max(0,item.start-1):item.start;
-     const replacement=inputType==='deleteContentBackward'?'':data;
-     return {from,to:item.end,replacement,primary:item===primary};
+     const closing={'(' : ')','[' : ']','{' : '}', '"':'"', "'":"'"};
+     const replacement=inputType==='deleteContentBackward'?'':
+       inputType==='insertPair'?data+value.slice(item.start,item.end)+closing[data]:data;
+     return {from,to:item.end,replacement,primary:item===primary,
+       caretAdvance:inputType==='insertPair'?1+(item.end-item.start):replacement.length};
    });
    pushUndo(file);
    let text=value;
@@ -728,7 +731,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const next=[];
    for(let i=0;i<edits.length;i++){
      const edit=edits[i];
-     const position=edit.from+delta+edit.replacement.length;
+     const position=edit.from+delta+edit.caretAdvance;
      if(i===ranges.indexOf(primary))primaryAt=position;
      else next.push({start:position,end:position});
      delta+=edit.replacement.length-(edit.to-edit.from);
@@ -831,6 +834,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
      if(Object.prototype.hasOwnProperty.call(pairs,e.key)){
        e.preventDefault();
+       if(editMultipleSelections('insertPair',e.key))return;
        const selected=editorInput.value.slice(start,end);
        replaceSelection(e.key+selected+pairs[e.key],start,end);
        editorInput.setSelectionRange(start+1,start+1+selected.length);
