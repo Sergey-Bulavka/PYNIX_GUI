@@ -579,6 +579,24 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      restoreHistory(e.shiftKey?'redo':'undo');
      return;
    }
+   if(!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.isComposing){
+     const pairs={'(' : ')','[' : ']','{' : '}'};
+     const start=editorInput.selectionStart,end=editorInput.selectionEnd;
+     if(Object.prototype.hasOwnProperty.call(pairs,e.key)){
+       e.preventDefault();
+       const selected=editorInput.value.slice(start,end);
+       replaceSelection(e.key+selected+pairs[e.key],start,end);
+       editorInput.setSelectionRange(start+1,start+1+selected.length);
+       updateCursor();
+       return;
+     }
+     if([')',']','}'].includes(e.key)&&start===end&&editorInput.value[start]===e.key){
+       e.preventDefault();
+       editorInput.setSelectionRange(start+1,start+1);
+       updateCursor();
+       return;
+     }
+   }
    if(e.key==='Tab'){
      e.preventDefault();
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
