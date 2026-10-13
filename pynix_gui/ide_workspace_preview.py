@@ -134,11 +134,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const candidate=caret>0&&pairs[value[caret-1]]?caret-1:caret;
    const symbol=value[candidate];
    if(!pairs[symbol])return new Set();
+   // Ignore structural punctuation occurring inside quoted literals/comments.
+   const masked=new Uint8Array(value.length);
+   const ignored=/(?:\\/\\/[^\\n]*|#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*')/g;
+   let token;
+   while((token=ignored.exec(value))){
+     for(let j=token.index;j<ignored.lastIndex;j++)masked[j]=1;
+   }
+   if(masked[candidate])return new Set();
    const open='([{'.includes(symbol);
    const direction=open?1:-1;
    const match=pairs[symbol];
    let depth=0;
    for(let pos=candidate;pos>=0&&pos<value.length;pos+=direction){
+     if(masked[pos])continue;
      if(value[pos]===symbol)depth++;
      else if(value[pos]===match&&--depth===0)return new Set([candidate,pos]);
    }
