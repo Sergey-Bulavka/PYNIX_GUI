@@ -12,8 +12,8 @@ These rules apply to the standalone PYNIX GUI toolkit.
 8. New substantial capabilities require a Design Gate before implementation.
 9. Use coherent implementation batches with grouped focused tests, then subsystem regression and native acceptance.
 10. Do not weaken the PYNIX language surface merely because runtime code now lives in a separate repository.
-11. PYNIX and PYNIX_GUI version independently. Current GUI component version is 0.1.0-dev.
-12. PYNIX_IDE remains paused until the GUI product completion gate is met.
+11. PYNIX and PYNIX_GUI version independently. Refer to README and package metadata for the current GUI component version.
+12. PYNIX_IDE integration experiments, including Workspace V4, may proceed as acceptance work. This does not mean the GUI product completion gate or Windows interactive parity is accepted.
 13. Project mottos: "Complex ideas. Simple solutions." and "Complex inside. Simple outside."
 14. Treat Tree, Table, menus, dialogs, tooltips, docking, drag/drop, Canvas 2D, richer editor/content, vector/raster resources, and cross-platform backend parity as product work, not IDE-specific hacks.
 15. GPU/3D, WebView, arbitrary CSS, and raw native handles require separate Design Gates.
