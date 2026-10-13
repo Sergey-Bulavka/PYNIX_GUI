@@ -169,16 +169,25 @@ def main() -> None:
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             if core_reader is None:
                 return
+            import json
+            request = {}
+            reply = {"source": None, "revision": None, "ok": False}
             try:
                 request = dict(message.body())
                 source = request.get("source")
                 content = request.get("text")
+                revision = request.get("revision")
+                reply.update(source=source, revision=revision)
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
-                revision = request.get("revision")
                 core_reader.update_source(source, content, revision)
+                reply["ok"] = True
             except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
+                reply["error"] = str(exc)[:180]
                 print("IDE Core buffer mirror:", exc, file=sys.stderr)
+            serialized = json.dumps(reply, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixCoreBufferResult(" + serialized + ");", None)
 
     class CoreDiscardHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
