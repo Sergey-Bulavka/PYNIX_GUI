@@ -127,6 +127,20 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Core editor buffer differs from V4")
         return snapshot
 
+    def acknowledge_saved_source(self, source: str, content: str) -> dict:
+        if (not isinstance(source, str) or not source.endswith(".pnx")
+                or not (self.project / source).resolve().is_relative_to(self.project)
+                or not (self.project / source).is_file()
+                or not isinstance(content, str)):
+            raise CoreSnapshotError("Invalid saved source acknowledgment")
+        result = self.request({"command": "ackSavedSource", "source": source, "content": content})
+        snapshot = result.get("value")
+        if result.get("kind") != "snapshot" or not isinstance(snapshot, dict):
+            raise CoreSnapshotError("Invalid Core save acknowledgment")
+        if snapshot.get("activeSourceDirty") or snapshot.get("activeSourceContent") != content:
+            raise CoreSnapshotError("Core save acknowledgment is inconsistent")
+        return snapshot
+
     def close(self):
         process = self._process
         self._process = None
