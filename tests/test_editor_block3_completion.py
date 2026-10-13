@@ -69,3 +69,32 @@ def test_project_symbol_completion_uses_public_compiler_protocol():
     assert "window.pynixProjectSymbolsResult=packet=>" in preview
     assert "compilerSymbols,...identifiers" in preview
     assert "completionButton.textContent='Complete'" in preview
+
+
+
+def test_semantic_rename_requires_core_preflight_and_preserves_disk():
+    source = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (ROOT / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    refactor = (ROOT / "pynix_gui/ide_semantic_rename.py").read_text(encoding="utf-8")
+    assert "window.pynixSemanticRenamePlan=packet=>" in source
+    assert "semanticRenameButton.textContent='Rename Symbol'" in source
+    assert "file.text!==item.before||file.savedText!==item.before" in source
+    assert "const revision=Math.max(coreRevisions.get(item.source)||0" in source
+    assert 'controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")' in native
+    assert 'state["dirty"] or state["content"] != entry["before"]' in native
+    assert "entry[\"coreRevision\"] = state[\"revision\"]" in native
+    assert 'def plan_semantic_rename(' in refactor
+    assert 'return {"symbol": old_name' in refactor
+
+
+def test_block3_test_runner_isolated_and_has_cross_file_rename(tmp_path):
+    import subprocess
+    runner = ROOT / "scripts" / "test_editor_block3.sh"
+    source = runner.read_text(encoding="utf-8")
+    assert "mktemp -d" in source
+    assert 'cat > "$PROJECT/src/util.pnx"' in source
+    assert "press F2" in source
+    assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in source
+    assert "rm -rf" not in source
+    result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
