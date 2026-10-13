@@ -24,7 +24,6 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
     ide_repo = Path(ide_repo).resolve()
     project = Path(project).resolve()
     compiler_python = Path(compiler_python).resolve()
-    compiler_root = compiler_python.parent.parent.parent if compiler_python.parent.name == "bin" else None
     if not (ide_repo / "src" / "ide_session.pnx").is_file():
         raise CoreSnapshotError("Official IDE Core repository is unavailable")
     if not (project / "pynix.toml").is_file():
@@ -32,7 +31,9 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
     if not compiler_python.is_file():
         raise CoreSnapshotError("PYNIX compiler interpreter is unavailable")
     if source is not None:
-        if not source.endswith(".pnx") or not source or (project / source).resolve().is_relative_to(project) is False or not (project / source).is_file():
+        if (not source or not source.endswith(".pnx")
+                or not (project / source).resolve().is_relative_to(project)
+                or not (project / source).is_file()):
             raise CoreSnapshotError("Source must be a PYNIX file inside project")
     with tempfile.TemporaryDirectory(prefix="pynix-ide-read-") as work:
         root = Path(work)
