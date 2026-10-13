@@ -564,8 +564,22 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      replaceSelection('\\n'+indent,start,end);
    }
  });
+ let coreSyncTimer=null;
+ function scheduleCoreBufferSync(){
+   if(coreSyncTimer!==null)clearTimeout(coreSyncTimer);
+   if(!current||!current.endsWith('.pnx'))return;
+   const source=current;
+   const content=editorInput.value;
+   const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
+   if(!bridge)return;
+   coreSyncTimer=setTimeout(()=>{
+     coreSyncTimer=null;
+     bridge.postMessage({source,text:content});
+   },400);
+ }
  editorInput.addEventListener('input',()=>{
    persistBuffer();
+   scheduleCoreBufferSync();
    recolorSource();
    updateCursor();
    const file=byName.get(current);
