@@ -91,13 +91,15 @@ The native File/Edit/Navigate menu is installed by
 actions. The menu foundation in `pynix_gui/commands.py` remains the general
 GUI toolkit contract and must not be replaced by an IDE-specific version.
 
-Launch from this branch on macOS:
+Launch from this branch on macOS using the canonical script:
 
 ```bash
-./.venv/bin/python -m examples.ide_native_v4 \
-  --project /Users/morphey/PycharmProjects/PYNIX \
+bash scripts/run_ide_workspace.sh /Users/morphey/PycharmProjects/PYNIX \
   --compiler-python /Users/morphey/PycharmProjects/PYNIX/.venv/bin/python
 ```
+
+This script is the **active workspace preview launcher**; it does not replace
+PYNIX_IDE's official application entry point.
 
 The old `examples/ide_native_visual_shell.py` is a historical visual
 prototype; `examples/adv_01_commands_smoke.py` is an essential menu regression
