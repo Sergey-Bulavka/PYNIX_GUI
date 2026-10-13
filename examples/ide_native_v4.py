@@ -119,6 +119,21 @@ def main() -> None:
     from pynix_gui.ide_tooling_navigation import query_navigation
     compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
     available_sources = set(session.list_files(limit=5000))
+    class DiagnosticsHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_tooling_diagnostics import read_diagnostics
+            snapshot = read_diagnostics(session.root, compiler_python)
+            response = {
+                "error": snapshot.error,
+                "problems": [{"source": p.source, "line": p.line,
+                              "column": p.column, "code": p.code, "message": p.message}
+                             for p in snapshot.problems],
+            }
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixLiveDiagnosticsResult(" + serialized + ");", None)
+
     class NavigationHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             try:
@@ -365,8 +380,10 @@ def main() -> None:
     project_search_handler = ProjectSearchHandler.alloc().init()
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
+    diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
+    controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
     controller.addScriptMessageHandler_name_(core_buffer_handler, "pynixCoreBuffer")
