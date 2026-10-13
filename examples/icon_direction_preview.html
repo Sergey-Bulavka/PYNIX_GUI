@@ -252,7 +252,7 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-replace-bar button,.workspace-mode .pynix-project-find-bar button{width:auto;min-width:40px;padding:0 7px}
 .workspace-mode .pynix-go-bar input{width:100px}
 .workspace-mode .pynix-project-results{
- position:absolute;z-index:20;top:48px;right:10px;width:min(570px,80%);
+ position:fixed;z-index:100;top:0;left:0;width:min(570px,calc(100vw - 16px));
  max-height:65%;overflow:auto;border:1px solid #405773;border-radius:8px;
  padding:8px;background:#172438;box-shadow:0 8px 22px rgba(0,0,0,.4);
 }
