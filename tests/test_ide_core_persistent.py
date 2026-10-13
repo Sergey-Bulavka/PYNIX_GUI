@@ -256,3 +256,18 @@ def test_save_requires_authoritative_core_readback_before_disk_write():
         block.index("core_reader.read_source(source)"))
     assert block.index("core_reader.read_source(source)") < block.index("session.save(source)")
     assert "Core source diverged before save" in block
+
+
+def test_editor_sync_verifies_core_readback_and_tracks_tab_dirty_state():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    handler = native.split("class CoreBufferHandler(NSObject):", 1)[1].split(
+        "class CoreDiscardHandler(NSObject):", 1)[0]
+    assert handler.index("core_reader.update_source(source, content, revision)") < (
+        handler.index("core_reader.read_source(source)"))
+    assert 'state["revision"] != revision or state["content"] != content' in handler
+    assert 'reply["dirty"] = state["dirty"]' in handler
+    assert "file.coreRevision=revision" in preview
+    assert "file.coreDirty=reply.dirty===true" in preview
+    assert "if(revision<(coreRevisions.get(source)||0))return;" in preview
