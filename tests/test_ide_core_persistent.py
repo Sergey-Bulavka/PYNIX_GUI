@@ -190,7 +190,10 @@ def test_editor_keeps_caret_selection_and_scroll_per_tab():
     assert "file.scrollTop=editorInput.scrollTop;" in js
     assert "file.scrollLeft=editorInput.scrollLeft;" in js
     assert "editorInput.addEventListener('select',()=>persistBuffer());" in js
-    assert "editorInput.setSelectionRange(file.cursorStart||0,file.cursorEnd??file.cursorStart??0);" in js
+    assert "const start=file.cursorStart??0;" in js
+    assert "const end=file.cursorEnd??start;" in js
+    assert "editorInput.setSelectionRange(start,end);" in js
+    assert "if(restoringEditor||!editing||!current)return;" in js
 
 
 def test_webkit_restoration_suppresses_deferred_selection_and_scroll_events():
