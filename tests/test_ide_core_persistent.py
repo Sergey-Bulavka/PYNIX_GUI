@@ -393,6 +393,7 @@ def test_recovery_does_not_overwrite_unsaved_editor_buffers():
     preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     recovery = preview.split("window.pynixCoreRecoveryResult=reply=>{", 1)[1].split(
         "const coreIndicator=", 1)[0]
-    assert "file.text=" not in recovery
+    assert "file.text===item.content" in recovery
+    assert not __import__("re").search(r"file\.text\s*=(?!=)", recovery)
     assert "file.savedText=" not in recovery
     assert "file.dirty=" not in recovery
