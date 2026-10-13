@@ -143,6 +143,19 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Core save acknowledgment is inconsistent")
         return snapshot
 
+    def discard_source(self, source: str) -> dict:
+        if (not isinstance(source, str) or not source.endswith(".pnx")
+                or not (self.project / source).resolve().is_relative_to(self.project)
+                or not (self.project / source).is_file()):
+            raise CoreSnapshotError("Invalid source discard")
+        result = self.request({"command": "discardSource", "source": source})
+        snapshot = result.get("value")
+        if result.get("kind") != "snapshot" or not isinstance(snapshot, dict):
+            raise CoreSnapshotError("Invalid Core discard acknowledgment")
+        if snapshot.get("activeSourceDirty"):
+            raise CoreSnapshotError("Core discard did not clear dirty state")
+        return snapshot
+
     def close(self):
         process = self._process
         self._process = None
