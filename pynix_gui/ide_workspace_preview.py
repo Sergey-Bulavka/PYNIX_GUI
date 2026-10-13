@@ -691,6 +691,44 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!completionBox.hidden)offerCompletion();
  });
  editorInput.addEventListener('blur',()=>closeCompletion());
+ const renameButton=document.createElement('button');
+ renameButton.type='button';renameButton.className='nav-action pynix-rename-action';
+ renameButton.textContent='Rename Local';
+ document.querySelector('.workspace-toolbar')?.appendChild(renameButton);
+ function selectedIdentifier(){
+   const value=editorInput.value;
+   let start=editorInput.selectionStart,end=editorInput.selectionEnd;
+   if(start===end){
+     while(start>0&&/[A-Za-z0-9_]/.test(value[start-1]))start--;
+     while(end<value.length&&/[A-Za-z0-9_]/.test(value[end]))end++;
+   }
+   const word=value.slice(start,end);
+   return /^[A-Za-z_][A-Za-z0-9_]*$/.test(word)?word:null;
+ }
+ function renameLocalIdentifier(){
+   if(!current||!editing||editorInput.hidden)return;
+   const old=selectedIdentifier();
+   if(!old){window.alert('Select a PYNIX identifier to rename');return;}
+   const replacement=window.prompt('Rename occurrences in CURRENT file (textual, not semantic):',old);
+   if(replacement===null||replacement===old)return;
+   if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(replacement)){
+     window.alert('New name must be a valid identifier');return;
+   }
+   const expression=new RegExp('\\\\b'+old+'\\\\b','g');
+   const matches=[...editorInput.value.matchAll(expression)];
+   if(!matches.length)return;
+   if(!window.confirm('Replace '+matches.length+' textual occurrences of '+old+
+       ' in '+current+'? This includes strings/comments. Use Undo to revert.'))return;
+   pushUndo(byName.get(current));
+   editorInput.value=editorInput.value.replace(expression,replacement);
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+ }
+ renameButton.addEventListener('click',renameLocalIdentifier);
+ editorInput.addEventListener('keydown',event=>{
+   if(event.key==='F2'&&!event.metaKey&&!event.ctrlKey&&!event.altKey){
+     event.preventDefault();renameLocalIdentifier();
+   }
+ });
  function historyState(){
    const file=current?byName.get(current):null;
    return {text:editorInput.value,start:editorInput.selectionStart,end:editorInput.selectionEnd,
