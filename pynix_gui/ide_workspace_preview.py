@@ -662,6 +662,23 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  editorInput.addEventListener('keydown',e=>{
+   if((e.metaKey||e.ctrlKey)&&e.key==='/'){
+     e.preventDefault();
+     const start=editorInput.selectionStart,end=editorInput.selectionEnd;
+     const value=editorInput.value;
+     const begin=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
+     let finish=value.indexOf('\\n',end);
+     if(finish<0)finish=value.length;
+     const lines=value.slice(begin,finish).split('\\n');
+     const uncomment=lines.every(line=>!line.trim()||line.trimStart().startsWith('//'));
+     const changed=lines.map(line=>{
+       if(!line.trim())return line;
+       return uncomment?line.replace(/^(\\s*)\\/\\/ ?/,'$1'):line.replace(/^(\\s*)/,'$1// ');
+     }).join('\\n');
+     replaceSelection(changed,begin,finish);
+     editorInput.setSelectionRange(begin,begin+changed.length);
+     return;
+   }
    if(e.metaKey&&!e.altKey&&e.key.toLowerCase()==='d'){
      e.preventDefault();addNextOccurrence();return;
    }
@@ -674,7 +691,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      return;
    }
    if(!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.isComposing){
-     const pairs={'(' : ')','[' : ']','{' : '}'};
+     const pairs={'(' : ')','[' : ']','{' : '}', '"':'"', "'":"'"};
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
      if(Object.prototype.hasOwnProperty.call(pairs,e.key)){
        e.preventDefault();
@@ -684,7 +701,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        updateCursor();
        return;
      }
-     if([')',']','}'].includes(e.key)&&start===end&&editorInput.value[start]===e.key){
+     if([')',']','}', '"', "'"].includes(e.key)&&start===end&&editorInput.value[start]===e.key){
        e.preventDefault();
        editorInput.setSelectionRange(start+1,start+1);
        updateCursor();
