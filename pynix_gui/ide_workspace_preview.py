@@ -660,6 +660,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  completionButton.addEventListener('click',()=>{
    if(!current||!editing||editorInput.hidden)return;
    editorInput.focus();
+   window.webkit?.messageHandlers?.pynixProjectSymbols?.postMessage({});
    offerCompletion();
  });
  const completionBox=document.createElement('div');
@@ -667,6 +668,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  completionBox.hidden=true;
  completionBox.setAttribute('role','listbox');
  editLayer.appendChild(completionBox);
+ let compilerSymbols=[];
+ window.pynixProjectSymbolsResult=packet=>{
+   if(Array.isArray(packet?.symbols))
+     compilerSymbols=packet.symbols.filter(item=>item&&typeof item.name==='string')
+       .map(item=>item.name).slice(0,1200);
+   if(!completionBox.hidden)offerCompletion();
+ };
  let completionChoices=[];
  let completionIndex=0;
  let completionRange=null;
@@ -705,7 +713,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!range){closeCompletion();return;}
    const source=editorInput.value;
    const identifiers=source.match(/\\b[A-Za-z_][A-Za-z0-9_]*\\b/g)||[];
-   const choices=[...new Set([...completionKeywords,...identifiers])]
+   const choices=[...new Set([...completionKeywords,...compilerSymbols,...identifiers])]
      .filter(word=>word.startsWith(range.prefix)&&word!==range.prefix)
      .sort((a,b)=>a.localeCompare(b)).slice(0,30);
    if(!choices.length){closeCompletion();return;}
@@ -727,7 +735,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  editorInput.addEventListener('keydown',event=>{
    if(event.ctrlKey&&!event.metaKey&&event.code==='Space'&&!event.altKey){
-     event.preventDefault();offerCompletion();return;
+     event.preventDefault();
+     window.webkit?.messageHandlers?.pynixProjectSymbols?.postMessage({});
+     offerCompletion();return;
    }
    if(completionBox.hidden)return;
    if(event.key==='Escape'){event.preventDefault();closeCompletion();return;}
