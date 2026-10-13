@@ -625,9 +625,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  window.pynixSaveResult=payload=>{
    const file=payload?.source?byName.get(payload.source):null;
    if(!file)return;
-   if(payload.error){window.alert('Save failed: '+payload.error);return;}
+   if(payload.error){pendingCloseAfterSave=null;window.alert('Save failed: '+payload.error);return;}
    if(payload.saved){
      file.savedText=file.text;file.dirty=false;renderTabs();
+     if(pendingCloseAfterSave===payload.source){
+       pendingCloseAfterSave=null;closeTabNow(payload.source);return;
+     }
      if(current===payload.source){
        updateEditingView();
        const diagnostics=payload.diagnostics||[];
@@ -783,6 +786,58 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      code.appendChild(row);
    });
  }
+ let pendingCloseAfterSave=null;
+ function closeTabNow(name){
+   const index=openTabs.indexOf(name);
+   if(index<0)return;
+   openTabs.splice(index,1);
+   const file=byName.get(name);
+   if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;}
+   if(current===name){
+     current=null;
+     const next=openTabs[Math.min(index,openTabs.length-1)];
+     if(next){show(next);return;}
+     code.replaceChildren();editing=true;updateEditingView();
+   }
+   renderTabs();renderTree();
+ }
+ function requestCloseTab(name){
+   persistBuffer();
+   const file=byName.get(name);
+   if(!file?.dirty){closeTabNow(name);return;}
+   if(document.querySelector('.pynix-unsaved-overlay'))return;
+   const overlay=document.createElement('div');
+   overlay.className='pynix-unsaved-overlay';
+   const dialog=document.createElement('div');
+   dialog.className='pynix-unsaved-dialog';
+   dialog.setAttribute('role','dialog');
+   dialog.setAttribute('aria-modal','true');
+   dialog.setAttribute('aria-label','Unsaved changes');
+   const prompt=document.createElement('p');
+   prompt.textContent='Save changes to '+name+' before closing?';
+   const actions=document.createElement('div');
+   actions.className='pynix-unsaved-actions';
+   const dismiss=()=>overlay.remove();
+   const button=(text,handler)=>{
+     const item=document.createElement('button');
+     item.type='button';item.textContent=text;
+     item.addEventListener('click',handler);actions.appendChild(item);return item;
+   };
+   const cancel=button('Cancel',dismiss);
+   button('Don’t Save',()=>{dismiss();closeTabNow(name);});
+   button('Save',()=>{
+     if(current!==name){dismiss();show(name);}
+     const selected=byName.get(name);
+     if(!selected?.dirty){closeTabNow(name);return;}
+     const bridge=window.webkit?.messageHandlers?.pynixFileSave;
+     if(!bridge){window.alert('Native file saving is unavailable');return;}
+     pendingCloseAfterSave=name;
+     dismiss();bridge.postMessage({source:name,text:selected.text});
+   });
+   dialog.append(prompt,actions);overlay.appendChild(dialog);
+   document.body.appendChild(overlay);cancel.focus();
+   overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}});
+ }
  function renderTabs(){
    tabs.replaceChildren();
    for(const fileName of openTabs){
@@ -798,22 +853,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      close.innerHTML='<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
      close.className='pynix-editor-tab-close';
      close.setAttribute('aria-label','Close '+fileName);
-     close.addEventListener('click',()=>{
-       persistBuffer();
-       if(file?.dirty&&!window.confirm('Discard unsaved changes to '+fileName+'?'))return;
-       const index=openTabs.indexOf(fileName);
-       openTabs.splice(index,1);
-       if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;}
-       if(current===fileName){
-         current=null;
-         const next=openTabs[Math.min(index,openTabs.length-1)];
-         if(next){show(next);return;}
-         code.replaceChildren();
-         editing=true;
-         updateEditingView();
-       }
-       renderTabs();renderTree();
-     });
+     close.addEventListener('click',()=>requestCloseTab(fileName));
      wrap.append(label,close);
      tabs.appendChild(wrap);
    }
