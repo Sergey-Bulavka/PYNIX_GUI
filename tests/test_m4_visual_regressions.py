@@ -19,3 +19,10 @@ def test_explorer_active_and_selected_are_distinct():
     assert "line.classList.add('workspace-active')" not in script
     assert ".workspace-mode .project-entry.workspace-selected{background:" in html
     assert "box-shadow:none" in html
+
+
+def test_explorer_hover_does_not_mimic_another_selected_row():
+    html = (ROOT / "examples" / "icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".workspace-mode .project-entry:not(.workspace-selected):hover{background:transparent}" in html
+    assert ".workspace-mode .project-entry:hover{background:#1e3046}" not in html
+    assert ".workspace-mode .project-entry.workspace-selected:hover{background:#223f5e}" in html
