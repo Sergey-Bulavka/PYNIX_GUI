@@ -583,6 +583,28 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    bridge.postMessage({source:current,text:file.text});
  }
  saveButton.addEventListener('click',saveSource);
+ // Native menu forwards to the same handlers used by toolbar and keyboard.
+ window.pynixMenuCommand=command=>{
+   const nav=label=>[...document.querySelectorAll('.workspace-toolbar .nav-action')]
+     .find(button=>button.textContent.trim()===label)?.click();
+   switch(command){
+     case 'file.save': saveSource(); break;
+     case 'edit.find': openFind(); break;
+     case 'edit.replace': openReplace(); break;
+     case 'edit.findProject':
+       projectFindBar.hidden=false;
+       projectFindInput.focus();projectFindInput.select();
+       positionProjectResults();
+       break;
+     case 'edit.goToLine':
+       goBar.hidden=false;goInput.focus();goInput.select();
+       break;
+     case 'navigate.definition': nav('Definition'); break;
+     case 'navigate.references': nav('References'); break;
+     case 'navigate.type': nav('Type'); break;
+   }
+ };
+
  editorInput.addEventListener('keydown',e=>{
    if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='s'){e.preventDefault();saveSource()}
  });
