@@ -22,3 +22,13 @@ def test_native_indicator_exposes_only_its_own_core_pid():
     native = (ROOT / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
     assert "core_reader._process.pid" in native
     assert "PID {core_reader._process.pid}" in native
+
+
+def test_recovery_click_is_delegated_before_late_native_indicator_insertion():
+    preview = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (ROOT / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert "document.addEventListener('click',event=>{" in preview
+    assert "event.target?.closest?.('.pynix-core-bridge-indicator')" in preview
+    assert "recoverCoreBuffers();" in preview
+    assert "coreIndicator.addEventListener('click'" not in preview
+    assert 'document.replace("</body>", indicator + "</body>", 1)' in native
