@@ -861,6 +861,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  function closeTabNow(name){
    cancelCoreBufferSync(name);
+   if(name.endsWith('.pnx')){
+     window.webkit?.messageHandlers?.pynixCoreClose?.postMessage({source:name});
+   }
    const index=openTabs.indexOf(name);
    if(index<0)return;
    openTabs.splice(index,1);
