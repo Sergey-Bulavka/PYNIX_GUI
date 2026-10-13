@@ -299,7 +299,7 @@ def main() -> None:
                     for problem in snapshot.problems
                 ]
                 response["diagnostic_error"] = snapshot.error
-            except (OSError, UnicodeError, ValueError) as error:
+            except (OSError, UnicodeError, ValueError, CoreSnapshotError) as error:
                 response["error"] = str(error)
             serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
             view.evaluateJavaScript_completionHandler_(
