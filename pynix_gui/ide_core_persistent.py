@@ -186,6 +186,46 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Core discard did not clear dirty state")
         return snapshot
 
+    def restart_with_buffers(self, buffers: list[dict]) -> dict:
+        """Restart a failed Core and replay unsaved editor snapshots in memory.
+
+        The caller retains its editor buffers; no disk writes occur here.
+        Reject the entire replay before stopping Core if any entry is malformed.
+        """
+        if not isinstance(buffers, list) or len(buffers) > 120:
+            raise CoreSnapshotError("Invalid recovery buffer list")
+        seen = set()
+        validated = []
+        for item in buffers:
+            if not isinstance(item, dict):
+                raise CoreSnapshotError("Invalid recovery entry")
+            source = item.get("source")
+            content = item.get("content")
+            revision = item.get("revision")
+            if (not isinstance(source, str) or source in seen
+                    or not source.endswith(".pnx")
+                    or not (self.project / source).resolve().is_relative_to(self.project)
+                    or not (self.project / source).is_file()
+                    or not isinstance(content, str)
+                    or len(content.encode("utf-8")) > 1_000_000
+                    or not isinstance(revision, int) or isinstance(revision, bool)
+                    or revision < 1):
+                raise CoreSnapshotError("Invalid recovery buffer")
+            seen.add(source)
+            validated.append((source, content, revision))
+        self.close()
+        try:
+            self.start()
+            for source, content, revision in validated:
+                self.update_source(source, content, revision)
+                state = self.read_source(source)
+                if state["content"] != content or state["revision"] != revision:
+                    raise CoreSnapshotError("Recovery replay differs from editor")
+            return {"restored": len(validated)}
+        except Exception:
+            self.close()
+            raise
+
     def close(self):
         process = self._process
         self._process = None
