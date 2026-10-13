@@ -110,3 +110,54 @@ These counts show that **blind deletion would risk losing unique work**.
 They do not establish whether the latest active branch already contains the
 changes; compare against the integration branch, not just main, before any
 archive/deletion. No remote branches have been deleted.
+
+## Complete GUI branch ancestry audit against feature/icon-system-v4
+
+GitHub compare results for **26 other branches** (27 branches including the
+active V4). Ahead means commits in the compared branch absent from V4 by
+ancestry, not necessarily unique functional behavior; cherry-picked changes
+may already be equivalent.
+
+| Branch | Ahead of V4 | Behind V4 | Classification |
+| --- | ---: | ---: | --- |
+| `feature/ide-native-visual-shell-v3` | 0 | 178 | Contained in V4 |
+| `feature/ide-design-system-v2` | 0 | 203 | Contained in V4 |
+| `feature/ide-visual-foundation-v1` | 0 | 207 | Contained in V4 |
+| `feature/real-project-explorer-v1` | 0 | 246 | Contained in V4 |
+| `feature/project-explorer-lazy-tree-v2` | 0 | 233 | Contained in V4 |
+| `feature/commercial-gui-quality-pass` | 0 | 222 | Contained in V4 |
+| `main` | 0 | 221 | Contained in V4 |
+| `fix/macos-menu-keyboard-shortcuts` | 2 | 277 | Diverged; inspect |
+| `feature/commercial-gallery-discovery-pass` | 5 | 279 | Diverged; inspect |
+| `feature/workspace-responsive-visual-accessibility` | 7 | 278 | Diverged; inspect |
+| `feature/advanced-components-quality-v1` | 3 | 274 | Diverged; inspect |
+| `feature/ecosystem-integration-foundation` | 1 | 270 | Diverged; inspect |
+| `feature/file-manager-interaction-v2` | 15 | 271 | Diverged; inspect |
+| `feature/responsive-content-v1` | 11 | 275 | Diverged; inspect |
+| `feature/responsive-workspace-v2-auto-resize` | 11 | 276 | Diverged; inspect |
+| `feature/stability-release-readiness` | 6 | 273 | Diverged; inspect |
+| `feature/text-layout-v2-native-pass` | 6 | 282 | Diverged; inspect |
+| `feature/text-layout-v3-overflow` | 7 | 281 | Diverged; inspect |
+| `feature/text-layout-v4-height-for-width` | 30 | 280 | Diverged; inspect |
+| `feature/text-metrics-snapshot-v1` | 7 | 283 | Diverged; inspect |
+| `feature/tree-explorer-visual-quality-v1` | 53 | 272 | Diverged; inspect |
+| `fix/canvas-text-alignment` | 6 | 288 | Diverged; inspect |
+| `fix/macos-label-glyph-overhang` | 3 | 284 | Diverged; inspect |
+| `fix/macos-property-text-native-width` | 1 | 285 | Diverged; inspect |
+| `fix/property-row-label-clipping` | 3 | 286 | Diverged; inspect |
+| `fix/text-intrinsic-width` | 4 | 287 | Diverged; inspect |
+
+**Seven historical refs have zero ahead commits** (including main). They can
+be candidates for archiving once branch ownership, open PRs and default branch
+safety are checked. The other nineteen are not verified duplicates. Do not
+force-merge them or delete them based only on these numbers.
+
+### Safe eventual cleanup
+
+- Preserve the active V4 branch and the default `main` branch.
+- Prefer preserving historical tags before pruning remote feature refs.
+- Compare diverged branches by patch equivalence, tests and dependency impact.
+- Keep standalone acceptance examples when they are needed by documented
+  regression or platform gates, even if the UI is visually superseded.
+- Only delete branches after a second read confirms the exact target ref and
+  the repository owner approves the final classification.
