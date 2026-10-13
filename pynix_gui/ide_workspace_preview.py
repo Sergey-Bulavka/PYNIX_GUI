@@ -607,13 +607,24 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    renderTabs();
  });
  editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
+ function prepareNativeSave(source,content){
+   // A save is a synchronization barrier: cancel obsolete deferred editor sends
+   // and allocate a newer revision for the exact bytes being saved.
+   cancelCoreBufferSync(source);
+   let revision=null;
+   if(source.endsWith('.pnx')){
+     revision=(coreRevisions.get(source)||0)+1;
+     coreRevisions.set(source,revision);
+   }
+   return {source,text:content,revision};
+ }
  function saveSource(){
    persistBuffer();
    const file=current?byName.get(current):null;
    if(!file||file.unloaded||!file.dirty)return;
    const bridge=window.webkit?.messageHandlers?.pynixFileSave;
    if(!bridge){window.alert('Native file saving is unavailable');return;}
-   bridge.postMessage({source:current,text:file.text});
+   bridge.postMessage(prepareNativeSave(current,file.text));
  }
  saveButton.addEventListener('click',saveSource);
  // Native menu forwards to the same handlers used by toolbar and keyboard.
@@ -867,7 +878,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const bridge=window.webkit?.messageHandlers?.pynixFileSave;
      if(!bridge){window.alert('Native file saving is unavailable');return;}
      pendingCloseAfterSave=name;
-     dismiss();bridge.postMessage({source:name,text:selected.text});
+     dismiss();bridge.postMessage(prepareNativeSave(name,selected.text));
    });
    dialog.append(prompt,actions);overlay.appendChild(dialog);
    document.body.appendChild(overlay);cancel.focus();
