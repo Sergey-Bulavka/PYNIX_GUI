@@ -101,10 +101,10 @@ def main() -> None:
             result = query_navigation(session.root, compiler_python, args.nav_command,
                                       args.nav_source, args.nav_line, args.nav_column)
             document = attach_navigation(document, result, args.nav_command)
+    from pynix_gui.ide_core_read_bridge import CoreSnapshotError
     core_reader = None
     if args.ide_core:
         from pynix_gui.ide_core_persistent import PersistentCoreReader
-        from pynix_gui.ide_core_read_bridge import CoreSnapshotError
         from html import escape
         compiler_for_core = args.compiler_python or (session.root / ".venv" / "bin" / "python")
         try:
