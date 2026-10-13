@@ -651,6 +651,17 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  // reliably participate in WebKit's native textarea undo manager.
  const undoLimit=200;
  let applyingHistory=false;
+ const completionButton=document.createElement('button');
+ completionButton.type='button';
+ completionButton.className='nav-action pynix-completion-action';
+ completionButton.textContent='Complete';
+ completionButton.title='Suggest keywords and identifiers in the current source (Ctrl+Space)';
+ document.querySelector('.workspace-toolbar')?.appendChild(completionButton);
+ completionButton.addEventListener('click',()=>{
+   if(!current||!editing||editorInput.hidden)return;
+   editorInput.focus();
+   offerCompletion();
+ });
  const completionBox=document.createElement('div');
  completionBox.className='pynix-completion-popup';
  completionBox.hidden=true;
@@ -715,8 +726,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    replaceSelection(word,range.start,range.end);
  }
  editorInput.addEventListener('keydown',event=>{
-   if((event.ctrlKey&&!event.metaKey||event.metaKey&&!event.ctrlKey)&&
-     event.code==='Space'&&!event.altKey){
+   if(event.ctrlKey&&!event.metaKey&&event.code==='Space'&&!event.altKey){
      event.preventDefault();offerCompletion();return;
    }
    if(completionBox.hidden)return;
