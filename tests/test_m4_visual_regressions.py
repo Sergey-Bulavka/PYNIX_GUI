@@ -40,7 +40,7 @@ def test_editor_bracket_pairs_wrap_selection_and_skip_existing_closer():
     preview = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     editor = preview.split("editorInput.addEventListener('keydown',e=>{", 1)[1].split(
         "const coreSyncTimers=", 1)[0]
-    assert "const pairs={'(' : ')','[' : ']','{' : '}'};" in editor
+    assert "const pairs={'(' : ')','[' : ']','{' : '}'," in editor
     assert "e.key+selected+pairs[e.key]" in editor
     assert "editorInput.setSelectionRange(start+1,start+1+selected.length)" in editor
     assert "editorInput.value[start]===e.key" in editor
