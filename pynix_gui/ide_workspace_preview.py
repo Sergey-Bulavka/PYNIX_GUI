@@ -755,7 +755,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  window.pynixSaveResult=payload=>{
    const file=payload?.source?byName.get(payload.source):null;
    if(!file)return;
-   if(payload.error){pendingCloseAfterSave=null;window.alert('Save failed: '+payload.error);return;}
+   if(payload.error){
+     pendingCloseAfterSave=null;
+     // Never discard a dirty buffer or silently close the tab on save failure.
+     file.coreSyncError=String(payload.error);
+     const indicator=document.querySelector('.pynix-core-bridge-indicator');
+     if(indicator)indicator.textContent='IDE Core: save failed — '+String(payload.error);
+     window.alert('Save failed: '+payload.error);
+     return;
+   }
    if(payload.saved){
      file.savedText=typeof payload.savedText==='string'?payload.savedText:file.text;
      file.dirty=file.text!==file.savedText;
