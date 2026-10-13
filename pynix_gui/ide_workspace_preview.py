@@ -585,6 +585,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  let editing=true;
  let restoringEditor=false;
  let editorRestoreEpoch=0;
+ window.pynixHasUnsavedSource=source=>{
+   const file=byName.get(source);
+   if(!file)return false;
+   if(source===current&&editing&&!editorInput.hidden)
+     return editorInput.value!==file.savedText;
+   return file.text!==file.savedText;
+ };
  function persistBuffer(){
    if(restoringEditor||!editing||!current)return;
    const file=byName.get(current);
