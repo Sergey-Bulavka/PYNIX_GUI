@@ -118,11 +118,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
- editorInput.addEventListener('click',updateCursor);
- editorInput.addEventListener('focus',updateCursor);
+ editorInput.addEventListener('click',()=>{updateCursor();recolorSource();});
+ editorInput.addEventListener('focus',()=>{updateCursor();recolorSource();});
  editorInput.addEventListener('blur',()=>{customCaret.hidden=true;});
- editorInput.addEventListener('keyup',updateCursor);
- editorInput.addEventListener('select',updateCursor);
+ editorInput.addEventListener('keyup',()=>{updateCursor();recolorSource();});
+ editorInput.addEventListener('select',()=>{updateCursor();recolorSource();});
  code.parentElement.appendChild(editLayer);
  function escapeCode(v){return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
  function matchingBracketPositions(value,caret){
