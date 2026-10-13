@@ -519,7 +519,8 @@ def test_recovery_is_fenced_from_inflight_save_and_close():
         recovery.index("persistBuffer();"))
     prepare = preview.split("function prepareNativeSave(source,content){", 1)[1].split(
         "function saveSource(){", 1)[0]
-    assert "if(coreRecovering||pendingCoreClose.has(source)||pendingNativeSaves.has(source))return null;" in prepare
+    assert "if(coreRecovering||pendingCoreClose.has(source))return null;" in prepare
+    assert "if(pendingNativeSaves.has(source))return null;" in prepare
     close = preview.split("function closeTabNow(name,discard=false){", 1)[1].split(
         "window.pynixCoreCloseResult=reply=>{", 1)[0]
     assert "if(coreRecovering){" in close
