@@ -10,6 +10,7 @@ def test_smart_enter_and_automatic_brace_pairs():
     source = SCRIPT.read_text(encoding="utf-8")
     assert "const opens=prefix.trimEnd().endsWith('{');" in source
     assert "if(opens&&next==='}')" in source
+    assert "const pnxBlock=/^(?:function|if|elif|else|for|while" in source
     assert "const pairs={'(' : ')','[' : ']','{' : '}'" in source
     assert "editorInput.setSelectionRange(start+1,start+1+selected.length)" in source
 
