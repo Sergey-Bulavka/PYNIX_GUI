@@ -69,3 +69,29 @@ def test_v4_publishes_unsaved_buffers_on_input():
     assert 'pynixCoreBuffer' in js
     assert 'core_reader.update_source(source, content)' in native
     assert '"pynixCoreBuffer"' in native
+
+
+def test_core_clean_baseline_requires_confirmed_ack(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    target = project / "src" / "main.pnx"
+    target.write_text("saved text", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    sent = []
+    reader._process = SimpleNamespace(
+        poll=lambda: None,
+        stdin=SimpleNamespace(write=sent.append, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "snapshot", "value": {
+        "activeSourceContent": "saved text", "activeSourceDirty": False,
+    }})
+    snapshot = reader.acknowledge_saved_source("src/main.pnx", "saved text")
+    assert snapshot["activeSourceDirty"] is False
+    assert '"command": "ackSavedSource"' in sent[0]
+    assert target.read_text(encoding="utf-8") == "saved text"
+
+
+def test_native_save_waits_for_v4_disk_write_before_core_ack():
+    source = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text(
+        encoding="utf-8")
+    assert source.index("session.save(source)") < source.index(
+        "core_reader.acknowledge_saved_source(source, content)")
