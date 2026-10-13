@@ -373,3 +373,26 @@ def test_core_recovery_bridge_keeps_live_editor_text():
     assert "coreIndicator.addEventListener('click',recoverCoreBuffers)" in preview
     assert "buffers.push({source,content:file.text,revision});" in preview
     assert "self._lines = queue.Queue()" in adapter
+
+
+def test_recovery_ack_resyncs_inactive_tabs_edited_during_restart():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    recovery = preview.split("window.pynixCoreRecoveryResult=reply=>{", 1)[1].split(
+        "const coreIndicator=", 1)[0]
+    assert "const replay=coreRecoverySnapshot||[];" in recovery
+    assert "coreConfirmedRevisions.set(item.source,item.revision)" in recovery
+    assert "file.text===item.content" in recovery
+    assert "sendCoreRevision(item.source,file.text,revision);" in recovery
+    assert "source===current" not in recovery
+    assert "file.coreSyncError=error;" in recovery
+
+
+def test_recovery_does_not_overwrite_unsaved_editor_buffers():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    recovery = preview.split("window.pynixCoreRecoveryResult=reply=>{", 1)[1].split(
+        "const coreIndicator=", 1)[0]
+    assert "file.text=" not in recovery
+    assert "file.savedText=" not in recovery
+    assert "file.dirty=" not in recovery
