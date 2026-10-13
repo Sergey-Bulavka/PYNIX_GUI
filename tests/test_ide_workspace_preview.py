@@ -53,7 +53,8 @@ def test_v43_nested_tree_and_selection_binding(tmp_path):
     assert "function buildTree()" in js
     assert "function visit(node,depth)" in js
     assert "expanded.add(segments.slice(0,i).join('/'))" in js
-    assert "entry.path===selectedPath" in js
+    assert "entry.path===(selectedPath??current)" in js
+    assert "line.classList.add('workspace-selected')" in js
     assert "src/ui/view.pnx" in js
     assert "folder-open" in js
     assert "file-code" in js
