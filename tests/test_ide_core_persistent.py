@@ -158,3 +158,11 @@ def test_core_revision_acknowledgment_ignores_stale_callbacks():
     assert "coreConfirmedRevisions.set(source,revision)" in js
     assert 'reply["ok"] = True' in native
     assert '"window.pynixCoreBufferResult(" + serialized + ");"' in native
+
+
+def test_wkwebview_numeric_revision_is_normalized_at_native_boundary():
+    app = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text(
+        encoding="utf-8")
+    assert 'hasattr(revision, "integerValue")' in app
+    assert 'revision = whole' in app
+    assert 'core_reader.update_source(source, content, revision)' in app
