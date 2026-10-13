@@ -199,6 +199,18 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixCoreBufferResult(" + serialized + ");", None)
 
+    class CoreCloseHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            if core_reader is None:
+                return
+            try:
+                source = dict(message.body()).get("source")
+                if not isinstance(source, str) or source not in available_sources:
+                    raise ValueError("Unindexed source")
+                core_reader.close_source(source)
+            except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
+                print("IDE Core close mirror:", exc, file=sys.stderr)
+
     class CoreDiscardHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             if core_reader is None:
