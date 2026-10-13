@@ -155,6 +155,8 @@ def main() -> None:
                     text = state["content"]
                     response["revision"] = state["revision"]
                     response["dirty"] = state["dirty"]
+                    if state["dirty"]:
+                        response["savedText"] = file_path.read_text(encoding="utf-8")
                 else:
                     text = file_path.read_text(encoding="utf-8")
                 response["text"] = text
