@@ -566,6 +566,22 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  const coreSyncTimers=new Map();
  const coreRevisions=new Map();
+ const coreConfirmedRevisions=new Map();
+ window.pynixCoreBufferResult=reply=>{
+   const source=reply?.source;
+   const revision=reply?.revision;
+   if(typeof source!=='string'||!Number.isInteger(revision))return;
+   if(!byName.has(source))return;
+   if(revision<(coreRevisions.get(source)||0))return;
+   const status=document.querySelector('.pynix-core-bridge-indicator');
+   if(!status)return;
+   if(reply.ok){
+     coreConfirmedRevisions.set(source,revision);
+     status.textContent='IDE Core: synced (revision '+revision+')';
+   }else{
+     status.textContent='IDE Core: sync error — '+String(reply.error||'Unknown error');
+   }
+ };
  function scheduleCoreBufferSync(){
    if(!current||!current.endsWith('.pnx'))return;
    const source=current;
