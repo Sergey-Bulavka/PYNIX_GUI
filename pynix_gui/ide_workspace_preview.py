@@ -669,10 +669,16 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  completionBox.setAttribute('role','listbox');
  editLayer.appendChild(completionBox);
  let compilerSymbols=[];
+ const compilerSymbolKinds=new Map();
  window.pynixProjectSymbolsResult=packet=>{
-   if(Array.isArray(packet?.symbols))
+   if(Array.isArray(packet?.symbols)){
+     compilerSymbolKinds.clear();
      compilerSymbols=packet.symbols.filter(item=>item&&typeof item.name==='string')
-       .map(item=>item.name).slice(0,1200);
+       .slice(0,1200).map(item=>{
+         if(typeof item.kind==='string')compilerSymbolKinds.set(item.name,item.kind);
+         return item.name;
+       });
+   }
    if(!completionBox.hidden)offerCompletion();
  };
  let completionChoices=[];
@@ -700,7 +706,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const item=document.createElement('button');
      item.type='button';
      item.className='pynix-completion-option'+(i===completionIndex?' selected':'');
-     item.textContent=word;
+     const kind=compilerSymbolKinds.get(word)||
+       (completionKeywords.includes(word)?'keyword':'local');
+     item.textContent=word+'  ·  '+kind;
+     item.title=kind==='local'?'Identifier in current source':'PYNIX '+kind;
      item.setAttribute('role','option');
      item.setAttribute('aria-selected',i===completionIndex?'true':'false');
      item.addEventListener('mousedown',event=>event.preventDefault());
