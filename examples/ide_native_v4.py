@@ -211,8 +211,7 @@ def main() -> None:
                 payload = dict(message.body())
                 entries = payload.get("buffers")
                 # PyObjC may bridge a JavaScript Array as NSArray, not list/tuple.
-                from collections.abc import Sequence
-                if not isinstance(entries, Sequence) or isinstance(entries, (str, bytes)):
+                if isinstance(entries, (str, bytes, dict)) or not hasattr(entries, "__iter__"):
                     raise ValueError("Invalid recovery request")
                 buffers = []
                 for entry in entries:
