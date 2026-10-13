@@ -708,6 +708,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
  function prepareNativeSave(source,content){
+   if(pendingNativeSaves.has(source))return null;
    // A save is a synchronization barrier: cancel obsolete deferred editor sends
    // and allocate a newer revision for the exact bytes being saved.
    cancelCoreBufferSync(source);
@@ -725,7 +726,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!file||file.unloaded||!file.dirty)return;
    const bridge=window.webkit?.messageHandlers?.pynixFileSave;
    if(!bridge){window.alert('Native file saving is unavailable');return;}
-   bridge.postMessage(prepareNativeSave(current,file.text));
+   const request=prepareNativeSave(current,file.text);
+   if(request)bridge.postMessage(request);
  }
  saveButton.addEventListener('click',saveSource);
  // Native menu forwards to the same handlers used by toolbar and keyboard.
@@ -758,7 +760,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const source=payload?.source;
    const pending=pendingNativeSaves.get(source);
    if(!pending)return;
-   if(Number.isInteger(payload.revision)&&payload.revision!==pending.revision)return;
+   if(payload.revision!==pending.revision)return;
    pendingNativeSaves.delete(source);
    const file=byName.get(source);
    if(!file||!openTabs.includes(source))return;
@@ -953,7 +955,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    cancelCoreBufferSync(name);
    const bridge=window.webkit?.messageHandlers?.pynixCoreClose;
    if(name.endsWith('.pnx')&&bridge){
-     pendingCoreClose.set(name,{discard,revision:coreRevisions.get(name)||0});
+     const file=byName.get(name);
+     pendingCoreClose.set(name,{discard,revision:coreRevisions.get(name)||0,text:file?.text});
      bridge.postMessage({source:name,discard});
      return;
    }
@@ -966,8 +969,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    pendingCoreClose.delete(source);
    const file=byName.get(source);
    // A user may have edited the document while Core was closing it.
-   if((coreRevisions.get(source)||0)!==pending.revision||file?.dirty&&!pending.discard){
+   if((coreRevisions.get(source)||0)!==pending.revision||file?.text!==pending.text||file?.dirty&&!pending.discard){
      if(!reply?.closed)window.alert('IDE Core refused to close '+source+': '+String(reply?.error||'Document changed'));
+     else if(file)file.coreSyncError='Document changed while Core was closing; recover Core before continuing';
      return;
    }
    if(reply?.closed){finishTabClose(source);return;}
@@ -1023,7 +1027,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const bridge=window.webkit?.messageHandlers?.pynixFileSave;
      if(!bridge){window.alert('Native file saving is unavailable');return;}
      pendingCloseAfterSave=name;
-     dismiss();bridge.postMessage(prepareNativeSave(name,selected.text));
+     dismiss();
+     const request=prepareNativeSave(name,selected.text);
+     if(request)bridge.postMessage(request);
+     else pendingCloseAfterSave=null;
    });
    dialog.append(prompt,actions);overlay.appendChild(dialog);
    document.body.appendChild(overlay);cancel.focus();
