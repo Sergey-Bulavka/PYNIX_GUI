@@ -110,7 +110,7 @@ def main() -> None:
         try:
             core_reader = PersistentCoreReader(args.ide_core, session.root, compiler_for_core)
             core_snapshot = core_reader.start()
-            core_status = "IDE Core: connected (persistent, buffer sync)"
+            core_status = f"IDE Core: connected (PID {core_reader._process.pid}, buffer sync)"
         except (CoreSnapshotError, OSError) as exc:
             core_reader = None
             core_status = "IDE Core: " + str(exc)[:180]
