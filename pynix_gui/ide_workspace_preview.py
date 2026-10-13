@@ -564,18 +564,21 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      replaceSelection('\\n'+indent,start,end);
    }
  });
- let coreSyncTimer=null;
+ const coreSyncTimers=new Map();
+ const coreRevisions=new Map();
  function scheduleCoreBufferSync(){
-   if(coreSyncTimer!==null)clearTimeout(coreSyncTimer);
    if(!current||!current.endsWith('.pnx'))return;
    const source=current;
    const content=editorInput.value;
    const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
    if(!bridge)return;
-   coreSyncTimer=setTimeout(()=>{
-     coreSyncTimer=null;
-     bridge.postMessage({source,text:content});
-   },400);
+   if(coreSyncTimers.has(source))clearTimeout(coreSyncTimers.get(source));
+   const revision=(coreRevisions.get(source)||0)+1;
+   coreRevisions.set(source,revision);
+   coreSyncTimers.set(source,setTimeout(()=>{
+     coreSyncTimers.delete(source);
+     bridge.postMessage({source,text:content,revision});
+   },400));
  }
  editorInput.addEventListener('input',()=>{
    persistBuffer();
