@@ -24,3 +24,33 @@ def test_completion_ui_has_explicit_hidden_state_and_accessibility():
     assert "item.setAttribute('role','option')" in source
     assert ".pynix-completion-popup[hidden]{display:none!important}" in html
     assert "completionBox.appendChild(item)" in source
+
+
+
+def test_local_rename_requires_confirmation_and_preserves_undo():
+    source = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "function selectedIdentifier()" in source
+    assert "function renameLocalIdentifier()" in source
+    assert "Rename occurrences in CURRENT file (textual, not semantic)" in source
+    assert "window.confirm('Replace '+matches.length+' textual occurrences" in source
+    assert "pushUndo(byName.get(current));" in source
+    assert "editorInput.dispatchEvent(new Event('input',{bubbles:true}))" in source
+
+
+def test_on_demand_compiler_problems_are_navigable():
+    source = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (ROOT / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    assert "window.pynixLiveDiagnosticsResult=payload=>" in source
+    assert 'bridge.postMessage({});' in source
+    assert "new CustomEvent('pynix:navigate'" in source
+    assert 'controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")' in native
+    assert "read_diagnostics(session.root, compiler_python)" in native
+
+
+def test_compiler_navigation_uses_live_editor_and_rejects_stale_buffer():
+    bridge = (ROOT / "pynix_gui/ide_navigation_bridge.py").read_text(encoding="utf-8")
+    source = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "editor.value.slice(0,editor.selectionStart)" in bridge
+    assert "window.pynixHasUnsavedSource?.(source)" in bridge
+    assert "Save changes before querying compiler navigation" in bridge
+    assert "window.pynixHasUnsavedSource=source=>" in source
