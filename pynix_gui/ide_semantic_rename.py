@@ -48,6 +48,8 @@ def _read_source(root: Path, source: object, originals: dict[str, str]) -> tuple
             raise RenamePlanError("Cannot read rename source") from exc
         if len(originals[relative].encode("utf-8")) > 1_000_000:
             raise RenamePlanError("Rename source exceeds 1 MB")
+        if sum(len(value.encode("utf-8")) for value in originals.values()) > 2_000_000:
+            raise RenamePlanError("Rename plan exceeds 2 MB of source")
     return relative, originals[relative]
 
 
