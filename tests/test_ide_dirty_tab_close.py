@@ -20,3 +20,12 @@ def test_explorer_uses_arrow_cursor_and_unsaved_dialog_is_visible():
     assert "cursor:default!important" in source
     assert ".workspace-mode .pynix-unsaved-overlay" in source
     assert "z-index:100000" in source
+
+
+def test_save_ack_preserves_newer_unsaved_edits():
+    js = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (ROOT / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert 'response["savedText"] = content' in native
+    assert "file.savedText=typeof payload.savedText==='string'?payload.savedText:file.text" in js
+    assert "file.dirty=file.text!==file.savedText" in js
+    assert "if(!file.dirty){closeTabNow(payload.source);return;}" in js
