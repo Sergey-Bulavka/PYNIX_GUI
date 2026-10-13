@@ -125,13 +125,29 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  editorInput.addEventListener('select',updateCursor);
  code.parentElement.appendChild(editLayer);
  function escapeCode(v){return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+ function matchingBracketPositions(value,caret){
+   const pairs={'(':')','[':']','{':'}',')':'(',']':'[','}':'{'};
+   const candidate=caret>0&&pairs[value[caret-1]]?caret-1:caret;
+   const symbol=value[candidate];
+   if(!pairs[symbol])return new Set();
+   const open='([{'.includes(symbol);
+   const direction=open?1:-1;
+   const match=pairs[symbol];
+   let depth=0;
+   for(let pos=candidate;pos>=0&&pos<value.length;pos+=direction){
+     if(value[pos]===symbol)depth++;
+     else if(value[pos]===match&&--depth===0)return new Set([candidate,pos]);
+   }
+   return new Set([candidate]);
+ }
  function recolorSource(){
    const value=editorInput.value;
    // The lexer consumes one token at a time. Strings/comments are atomic:
    // numbers inside // comments, # comments or quoted strings stay in that color.
-   const token=/(?:\\/\\/[^\\n]*|#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|\\b[A-Za-z_][A-Za-z_0-9]*\\b|\\b\\d+(?:\\.\\d+)?\\b)/g;
+   const token=/(?:\\/\\/[^\\n]*|#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|[(){}\\[\\]]|\\b[A-Za-z_][A-Za-z_0-9]*\\b|\\b\\d+(?:\\.\\d+)?\\b)/g;
    const words=new Set(['function','module','import','from','as','let','var','const','if','else','elif','while','for','in','return','break','continue','and','or','not','class','interface','type','enum','match','case','try','catch','finally','raise','public','private','async','await']);
    const types=new Set(['Int','Float','Bool','String','Void','Any','List','Map']);
+   const matching=matchingBracketPositions(value,editorInput.selectionStart);
    let html='',last=0,match;
    while((match=token.exec(value))){
      html+=escapeCode(value.slice(last,match.index));
@@ -140,6 +156,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      if(t.startsWith('//')||t.startsWith('#'))kind='comment';
      else if(t[0]==='"'||t[0]==="'")kind='string';
      else if(/^\\d/.test(t))kind='number';
+     else if(matching.has(match.index))kind='bracket-match';
      else if(words.has(t))kind='keyword';
      else if(types.has(t))kind='type';
      else if(['print','input','len','range','str','int','float'].includes(t))kind='builtin';
