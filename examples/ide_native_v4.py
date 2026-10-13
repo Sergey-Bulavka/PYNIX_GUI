@@ -187,6 +187,10 @@ def main() -> None:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
                 core_reader.update_source(source, content, revision)
+                state = core_reader.read_source(source)
+                if state["revision"] != revision or state["content"] != content:
+                    raise CoreSnapshotError("Core readback differs from editor revision")
+                reply["dirty"] = state["dirty"]
                 reply["ok"] = True
             except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
                 reply["error"] = str(exc)[:180]
