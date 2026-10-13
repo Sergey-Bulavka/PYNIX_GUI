@@ -608,6 +608,89 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  // reliably participate in WebKit's native textarea undo manager.
  const undoLimit=200;
  let applyingHistory=false;
+ const completionBox=document.createElement('div');
+ completionBox.className='pynix-completion-popup';
+ completionBox.hidden=true;
+ completionBox.setAttribute('role','listbox');
+ editLayer.appendChild(completionBox);
+ let completionChoices=[];
+ let completionIndex=0;
+ let completionRange=null;
+ const completionKeywords=['function','import','module','let','const','if','else','elif','for','while',
+   'return','break','continue','class','interface','type','enum','match','case',
+   'try','catch','finally','true','false','none'];
+ function closeCompletion(){
+   completionBox.hidden=true;
+   completionChoices=[];
+   completionRange=null;
+ }
+ function completionPrefix(){
+   if(!current||!editing||editorInput.hidden||
+     editorInput.selectionStart!==editorInput.selectionEnd)return null;
+   const end=editorInput.selectionStart;
+   const before=editorInput.value.slice(0,end);
+   const match=before.match(/[A-Za-z_][A-Za-z0-9_]*$/);
+   return {start:match?end-match[0].length:end,end,prefix:match?match[0]:''};
+ }
+ function paintCompletion(){
+   completionBox.replaceChildren();
+   completionChoices.forEach((word,i)=>{
+     const item=document.createElement('button');
+     item.type='button';
+     item.className='pynix-completion-option'+(i===completionIndex?' selected':'');
+     item.textContent=word;
+     item.setAttribute('role','option');
+     item.setAttribute('aria-selected',i===completionIndex?'true':'false');
+     item.addEventListener('mousedown',event=>event.preventDefault());
+     item.addEventListener('click',()=>applyCompletion(i));
+     completionBox.appendChild(item);
+   });
+ }
+ function offerCompletion(){
+   const range=completionPrefix();
+   if(!range){closeCompletion();return;}
+   const source=editorInput.value;
+   const identifiers=source.match(/\\b[A-Za-z_][A-Za-z0-9_]*\\b/g)||[];
+   const choices=[...new Set([...completionKeywords,...identifiers])]
+     .filter(word=>word.startsWith(range.prefix)&&word!==range.prefix)
+     .sort((a,b)=>a.localeCompare(b)).slice(0,30);
+   if(!choices.length){closeCompletion();return;}
+   completionRange=range;
+   completionChoices=choices;
+   completionIndex=0;
+   paintCompletion();
+   completionBox.hidden=false;
+ }
+ function applyCompletion(index){
+   const range=completionRange,word=completionChoices[index];
+   if(!range||!word||!current)return;
+   if(editorInput.selectionStart!==range.end||editorInput.selectionEnd!==range.end||
+       editorInput.value.slice(range.start,range.end)!==range.prefix){
+     closeCompletion();return;
+   }
+   closeCompletion();
+   replaceSelection(word,range.start,range.end);
+ }
+ editorInput.addEventListener('keydown',event=>{
+   if((event.ctrlKey&&!event.metaKey||event.metaKey&&!event.ctrlKey)&&
+     event.code==='Space'&&!event.altKey){
+     event.preventDefault();offerCompletion();return;
+   }
+   if(completionBox.hidden)return;
+   if(event.key==='Escape'){event.preventDefault();closeCompletion();return;}
+   if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+     event.preventDefault();
+     completionIndex=(completionIndex+(event.key==='ArrowDown'?1:-1)+completionChoices.length)%completionChoices.length;
+     paintCompletion();return;
+   }
+   if(event.key==='Tab'||event.key==='Enter'){
+     event.preventDefault();applyCompletion(completionIndex);
+   }
+ },true);
+ editorInput.addEventListener('input',()=>{
+   if(!completionBox.hidden)offerCompletion();
+ });
+ editorInput.addEventListener('blur',()=>closeCompletion());
  function historyState(){
    const file=current?byName.get(current):null;
    return {text:editorInput.value,start:editorInput.selectionStart,end:editorInput.selectionEnd,
