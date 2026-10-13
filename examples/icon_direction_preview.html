@@ -272,7 +272,22 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 }
 .workspace-mode .pynix-project-result:hover{background:#304565}
 .workspace-mode .pynix-project-results[hidden]{display:none!important}
-</style></head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
+</style>
+<style>
+.workspace-mode .tree,
+.workspace-mode .tree *,
+.workspace-mode .activity-bar,
+.workspace-mode .activity-bar * {cursor:default!important;}
+.workspace-mode .tree-resizer,
+.workspace-mode .tree-resizer * {cursor:col-resize!important;}
+.workspace-mode .pynix-unsaved-overlay{position:fixed;inset:0;z-index:100000;background:rgba(5,12,22,.67);display:flex;align-items:center;justify-content:center}
+.workspace-mode .pynix-unsaved-dialog{min-width:370px;max-width:min(90vw,550px);padding:22px;border:1px solid #49617d;border-radius:10px;background:#1d2b3c;box-shadow:0 20px 60px #0009;color:#e3eefb;font:14px system-ui}
+.workspace-mode .pynix-unsaved-dialog p{margin:0 0 22px;overflow-wrap:anywhere}
+.workspace-mode .pynix-unsaved-actions{display:flex;justify-content:flex-end;gap:10px}
+.workspace-mode .pynix-unsaved-actions button{background:#293c52;border:1px solid #4c6785;border-radius:6px;color:#e5efff;padding:8px 12px;cursor:pointer}
+.workspace-mode .pynix-unsaved-actions button:last-child{background:#266199;border-color:#468ac5}
+</style>
+</head><body><header><div><h1><b>PYNIX</b> / Icon System</h1><small>Direction Study · unified asset vocabulary · October 2026</small></div><div class="chip">NEW DESIGN FOUNDATION</div></header><div class="workspace-toolbar"><strong>PYNIX</strong><span class="current-branch">⑂ feature/icon-system-v4</span><span>▾ main.pnx</span><span class="toolbar-spacer"></span><button class="run-control" type="button" title="Visual preview; does not execute code">▷ Run</button><button type="button" title="Visual preview">⚙</button></div><main class="layout"><div class="section"><div class="card"><h2>01 / In-context IDE preview</h2><div class="ide"><div class="rail"><div class="rail-item active"><svg class="rail-icon" aria-hidden="true"
   xmlns="http://www.w3.org/2000/svg"
   width="20"
   height="20"
