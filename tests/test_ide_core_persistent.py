@@ -397,3 +397,21 @@ def test_recovery_does_not_overwrite_unsaved_editor_buffers():
     assert not __import__("re").search(r"file\.text\s*=(?!=)", recovery)
     assert "file.savedText=" not in recovery
     assert "file.dirty=" not in recovery
+
+
+def test_core_save_failures_return_to_editor_and_keep_dirty_tab_open():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    handler = native.split("class FileSaveHandler(NSObject):", 1)[1].split(
+        "class ProjectSearchHandler(NSObject):", 1)[0]
+    callback = preview.split("window.pynixSaveResult=payload=>{", 1)[1].split(
+        "const expanded =", 1)[0]
+    assert "except (OSError, UnicodeError, ValueError, CoreSnapshotError) as error:" in handler
+    assert 'response["error"] = str(error)' in handler
+    error_handler = callback.split("if(payload.error){", 1)[1].split("if(payload.saved){", 1)[0]
+    assert "pendingCloseAfterSave=null;" in error_handler
+    assert "file.coreSyncError=String(payload.error);" in error_handler
+    assert "file.dirty=false" not in error_handler
+    assert "closeTabNow(" not in error_handler
+    assert "file.text=" not in error_handler
