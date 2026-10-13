@@ -214,6 +214,31 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  editButton.textContent='Edit';
  editButton.className='nav-action pynix-edit-toggle';
  document.querySelector('.workspace-toolbar')?.appendChild(editButton);
+ const foldButton=document.createElement('button');
+ foldButton.type='button';foldButton.className='nav-action pynix-fold-action';
+ foldButton.textContent='Fold';
+ const unfoldButton=document.createElement('button');
+ unfoldButton.type='button';unfoldButton.className='nav-action pynix-unfold-action';
+ unfoldButton.textContent='Unfold';
+ document.querySelector('.workspace-toolbar')?.append(foldButton,unfoldButton);
+ foldButton.addEventListener('click',()=>{
+   persistBuffer();
+   const file=current?byName.get(current):null;
+   if(!file||file.unloaded)return;
+   const line=editorInput.value.slice(0,editorInput.selectionStart).split('\\n').length-1;
+   const ranges=foldableLines(file.text);
+   const candidates=[...ranges].filter(([start,end])=>start<=line&&end>=line);
+   const header=candidates.length?candidates[candidates.length-1][0]:null;
+   if(header===null)return;
+   (file.foldedLines||(file.foldedLines=new Set())).add(header);
+   editing=false;updateEditingView();renderCode(file);
+ });
+ unfoldButton.addEventListener('click',()=>{
+   const file=current?byName.get(current):null;
+   if(!file)return;
+   file.foldedLines=new Set();
+   renderCode(file);
+ });
  const saveButton=document.createElement('button');
  saveButton.type='button';saveButton.textContent='Save';
  saveButton.className='nav-action pynix-save-action';
