@@ -14,7 +14,8 @@ def test_native_workspace_remains_resizable_below_legacy_minimum():
 def test_explorer_active_and_selected_are_distinct():
     script = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     html = (ROOT / "examples" / "icon_direction_preview.html").read_text(encoding="utf-8")
-    assert "entry.path===current)line.classList.add('workspace-active')" in script
-    assert "entry.path===selectedPath&&entry.path!==current" in script
-    assert ".workspace-mode .project-entry.workspace-active{background:" in html
-    assert ".workspace-mode .project-entry.workspace-selected:not(.workspace-active)" in html
+    assert "entry.path===(selectedPath??current)" in script
+    assert "line.classList.add('workspace-selected')" in script
+    assert "line.classList.add('workspace-active')" not in script
+    assert ".workspace-mode .project-entry.workspace-selected{background:" in html
+    assert "box-shadow:none" in html
