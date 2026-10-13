@@ -147,3 +147,14 @@ def test_switch_flushes_pending_revisions_and_discard_cancels_pending():
     assert "coreRevisions.get(source)" in src
     assert "pynixCoreDiscard" in src
     assert "core_reader.discard_source(source)" in app
+
+
+def test_core_revision_acknowledgment_ignores_stale_callbacks():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert "window.pynixCoreBufferResult=reply=>" in js
+    assert "if(revision<(coreRevisions.get(source)||0))return;" in js
+    assert "coreConfirmedRevisions.set(source,revision)" in js
+    assert 'reply["ok"] = True' in native
+    assert '"window.pynixCoreBufferResult(" + serialized + ");"' in native
