@@ -14,7 +14,7 @@ MENU_GROUPS = (
     ("File", (("file.save", "Save", "s", False),)),
     ("Edit", (
         ("edit.find", "Find in File", "f", False),
-        ("edit.replace", "Replace in File", "", False),
+        ("edit.replace", "Replace in File", "f", False),
         ("edit.findProject", "Find in Project", "f", True),
         ("edit.goToLine", "Go to Line", "l", False),
     )),
@@ -66,6 +66,8 @@ def install_native_workspace_menu(app, webview, appkit):
                 mask = appkit.NSEventModifierFlagCommand
                 if shift:
                     mask |= appkit.NSEventModifierFlagShift
+                if command == "edit.replace":
+                    mask |= appkit.NSEventModifierFlagOption
                 item.setKeyEquivalentModifierMask_(mask)
             submenu.addItem_(item)
         parent = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(title, None, "")
