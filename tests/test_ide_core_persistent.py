@@ -294,7 +294,8 @@ def test_core_close_clean_source_and_native_tab_lifecycle(tmp_path):
     preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     assert 'core_reader.close_source(source)' in native
     assert '"pynixCoreClose"' in native
-    assert "pynixCoreClose?.postMessage({source:name})" in preview
+    assert "bridge.postMessage({source:name,discard});" in preview
+    assert "window.pynixCoreCloseResult=reply=>" in preview
 
 
 def test_late_core_and_file_responses_cannot_resurrect_closed_tabs():
@@ -304,7 +305,7 @@ def test_late_core_and_file_responses_cannot_resurrect_closed_tabs():
         "function scheduleCoreBufferSync()", 1)[0]
     load = preview.split("window.pynixReceiveFile=function(payload){", 1)[1].split(
         "document.addEventListener('pynix:navigate'", 1)[0]
-    close = preview.split("function closeTabNow(name){", 1)[1].split(
+    close = preview.split("function closeTabNow(name,discard=false){", 1)[1].split(
         "function requestCloseTab(name){", 1)[0]
     assert "!openTabs.includes(source)" in core
     assert "revision!==(coreRevisions.get(source)||0)" in core
@@ -415,3 +416,23 @@ def test_core_save_failures_return_to_editor_and_keep_dirty_tab_open():
     assert "file.dirty=false" not in error_handler
     assert "closeTabNow(" not in error_handler
     assert "file.text=" not in error_handler
+
+
+def test_native_core_close_ack_is_required_before_tab_is_unloaded():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    handler = native.split("class CoreCloseHandler(NSObject):", 1)[1].split(
+        "class CoreDiscardHandler(NSObject):", 1)[0]
+    assert "core_reader.discard_source(source)" in handler
+    assert handler.index("core_reader.discard_source(source)") < handler.index(
+        "core_reader.close_source(source)")
+    assert 'response["closed"] = True' in handler
+    assert "window.pynixCoreCloseResult(" in handler
+    close = preview.split("function closeTabNow(name,discard=false){", 1)[1].split(
+        "function requestCloseTab(name){", 1)[0]
+    assert "pendingCoreClose.set(name" in close
+    assert "bridge.postMessage({source:name,discard});" in close
+    assert "if(reply?.closed){finishTabClose(source);return;}" in close
+    assert "function finishTabClose(name){" in close
+    assert "if(!reply?.closed)" in close
