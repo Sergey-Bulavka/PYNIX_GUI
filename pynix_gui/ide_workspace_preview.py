@@ -627,9 +627,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!file)return;
    if(payload.error){pendingCloseAfterSave=null;window.alert('Save failed: '+payload.error);return;}
    if(payload.saved){
-     file.savedText=file.text;file.dirty=false;renderTabs();
+     file.savedText=typeof payload.savedText==='string'?payload.savedText:file.text;
+     file.dirty=file.text!==file.savedText;
+     renderTabs();
      if(pendingCloseAfterSave===payload.source){
-       pendingCloseAfterSave=null;closeTabNow(payload.source);return;
+       pendingCloseAfterSave=null;
+       if(!file.dirty){closeTabNow(payload.source);return;}
      }
      if(current===payload.source){
        updateEditingView();
