@@ -142,7 +142,7 @@ def main() -> None:
             except (TypeError, ValueError):
                 request = {}
             source = request.get("source")
-            response = {"source": source}
+            response = {"source": source, "revision": request.get("revision")}
             try:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("File is not part of the indexed project")
