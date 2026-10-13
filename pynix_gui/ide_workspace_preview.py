@@ -119,9 +119,34 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
- editorInput.addEventListener('pointerdown',()=>{
+ editorInput.addEventListener('pointerdown',event=>{
    const file=current?byName.get(current):null;
-   if(file)file.extraSelections=[];
+   if(!file)return;
+   if(!event.altKey){file.extraSelections=[];return;}
+   // Monospaced, unwrapped text permits deterministic Option+Click caret offsets.
+   event.preventDefault();
+   const rect=editorInput.getBoundingClientRect();
+   const style=getComputedStyle(editorInput);
+   const height=parseFloat(style.lineHeight)||21;
+   const top=parseFloat(style.paddingTop)||0;
+   const left=parseFloat(style.paddingLeft)||0;
+   const canvas=document.createElement('canvas');
+   const ctx=canvas.getContext('2d');
+   ctx.font=style.font;
+   const advance=ctx.measureText('0000000000').width/10||8;
+   const row=Math.max(0,Math.floor((event.clientY-rect.top-top+editorInput.scrollTop)/height));
+   const column=Math.max(0,Math.round((event.clientX-rect.left-left+editorInput.scrollLeft)/advance));
+   const lines=editorInput.value.split('\\n');
+   const line=Math.min(row,lines.length-1);
+   const position=lines.slice(0,line).reduce((sum,value)=>sum+value.length+1,0)
+     +Math.min(column,lines[line].length);
+   const previous={start:editorInput.selectionStart,end:editorInput.selectionEnd};
+   const extras=file.extraSelections||(file.extraSelections=[]);
+   if(!extras.some(item=>item.start===previous.start&&item.end===previous.end))
+     extras.push(previous);
+   editorInput.focus();
+   editorInput.setSelectionRange(position,position);
+   recolorSource();updateCursor();
  });
  editorInput.addEventListener('click',()=>{updateCursor();recolorSource();});
  editorInput.addEventListener('focus',()=>{updateCursor();recolorSource();});
