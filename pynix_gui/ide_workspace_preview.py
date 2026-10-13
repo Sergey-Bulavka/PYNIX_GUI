@@ -521,7 +521,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const undoLimit=200;
  let applyingHistory=false;
  function historyState(){
-   return {text:editorInput.value,start:editorInput.selectionStart,end:editorInput.selectionEnd};
+   const file=current?byName.get(current):null;
+   return {text:editorInput.value,start:editorInput.selectionStart,end:editorInput.selectionEnd,
+     extraSelections:(file?.extraSelections||[]).map(item=>({...item}))};
  }
  function pushUndo(file){
    if(!file||applyingHistory)return;
@@ -543,12 +545,81 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    (file[to]||(file[to]=[])).push(historyState());
    applyingHistory=true;
    editorInput.value=state.text;
+   file.extraSelections=state.extraSelections||[];
    editorInput.setSelectionRange(state.start,state.end);
    editorInput.dispatchEvent(new Event('input',{bubbles:true}));
    applyingHistory=false;
  }
+ function addNextOccurrence(){
+   const file=current?byName.get(current):null;
+   if(!file)return;
+   let start=editorInput.selectionStart,end=editorInput.selectionEnd;
+   const value=editorInput.value;
+   if(start===end){
+     while(start>0&&/[A-Za-z0-9_]/.test(value[start-1]))start--;
+     while(end<value.length&&/[A-Za-z0-9_]/.test(value[end]))end++;
+     if(start===end)return;
+     editorInput.setSelectionRange(start,end);
+     return;
+   }
+   const word=value.slice(start,end);
+   if(!word||word.includes('\\n'))return;
+   const extras=file.extraSelections||(file.extraSelections=[]);
+   const used=[...extras,{start,end}];
+   let pos=value.indexOf(word,end),wrapped=false;
+   while(pos!==-1){
+     if(!used.some(item=>pos<item.end&&pos+word.length>item.start))break;
+     pos=value.indexOf(word,pos+word.length);
+   }
+   if(pos<0){
+     wrapped=true;
+     pos=value.indexOf(word,0);
+     while(pos!==-1&&used.some(item=>pos<item.end&&pos+word.length>item.start))
+       pos=value.indexOf(word,pos+word.length);
+   }
+   if(pos<0)return;
+   extras.push({start,end});
+   editorInput.setSelectionRange(pos,pos+word.length);
+   cursorStatus.textContent='Multiple selections: '+(extras.length+1);
+ }
+ function editMultipleSelections(inputType,data){
+   const file=current?byName.get(current):null;
+   const extras=file?.extraSelections||[];
+   if(!extras.length)return false;
+   const value=editorInput.value;
+   const primary={start:editorInput.selectionStart,end:editorInput.selectionEnd};
+   const ranges=[...extras,primary].sort((a,b)=>a.start-b.start);
+   if(ranges.some((item,i)=>i>0&&item.start<ranges[i-1].end))return false;
+   const edits=ranges.map(item=>{
+     const from=inputType==='deleteContentBackward'&&item.start===item.end
+       ?Math.max(0,item.start-1):item.start;
+     const replacement=inputType==='deleteContentBackward'?'':data;
+     return {from,to:item.end,replacement,primary:item===primary};
+   });
+   pushUndo(file);
+   let text=value;
+   for(const edit of [...edits].reverse())
+     text=text.slice(0,edit.from)+edit.replacement+text.slice(edit.to);
+   let delta=0,primaryAt=0;
+   const next=[];
+   for(let i=0;i<edits.length;i++){
+     const edit=edits[i];
+     const position=edit.from+delta+edit.replacement.length;
+     if(i===ranges.indexOf(primary))primaryAt=position;
+     else next.push({start:position,end:position});
+     delta+=edit.replacement.length-(edit.to-edit.from);
+   }
+   file.extraSelections=next;
+   editorInput.value=text;
+   editorInput.setSelectionRange(primaryAt,primaryAt);
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+   return true;
+ }
  editorInput.addEventListener('beforeinput',e=>{
    if(e.isComposing||applyingHistory)return;
+   if((e.inputType==='insertText'&&typeof e.data==='string')||e.inputType==='deleteContentBackward'){
+     if(editMultipleSelections(e.inputType,e.data||'')){e.preventDefault();return;}
+   }
    if(e.inputType==='historyUndo'||e.inputType==='historyRedo'){
      e.preventDefault();
      restoreHistory(e.inputType==='historyUndo'?'undo':'redo');
@@ -591,6 +662,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  editorInput.addEventListener('keydown',e=>{
+   if(e.metaKey&&!e.altKey&&e.key.toLowerCase()==='d'){
+     e.preventDefault();addNextOccurrence();return;
+   }
+   if(e.key==='Escape'&&byName.get(current)?.extraSelections?.length){
+     e.preventDefault();byName.get(current).extraSelections=[];updateCursor();return;
+   }
    if((e.metaKey||e.ctrlKey)&&!e.altKey&&e.key.toLowerCase()==='z'){
      e.preventDefault();
      restoreHistory(e.shiftKey?'redo':'undo');
