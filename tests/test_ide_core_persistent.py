@@ -458,3 +458,23 @@ def test_pynix_file_open_uses_core_authoritative_text_and_revision():
     assert "file.dirty=payload.dirty===true;" in callback
     assert "coreConfirmedRevisions.set(payload.source,payload.revision)" in callback
     assert "file.coreRevision=payload.revision;" in callback
+
+
+def test_save_reply_is_bound_to_exact_editor_revision_and_preserves_new_edits():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    handler = native.split("class FileSaveHandler(NSObject):", 1)[1].split(
+        "class ProjectSearchHandler(NSObject):", 1)[0]
+    assert 'response = {"source": source, "revision": request.get("revision")}' in handler
+    assert "const pendingNativeSaves=new Map();" in preview
+    assert "pendingNativeSaves.set(source,{revision,text:content});" in preview
+    callback = preview.split("window.pynixSaveResult=payload=>{", 1)[1].split(
+        "const expanded =", 1)[0]
+    assert "if(!pending)return;" in callback
+    assert "payload.revision!==pending.revision" in callback
+    assert "pendingNativeSaves.delete(source);" in callback
+    assert "file.savedText=typeof payload.savedText==='string'?payload.savedText:pending.text;" in callback
+    assert "file.dirty=file.text!==file.savedText;" in callback
+    assert "file.text===pending.text" in callback
+    assert "coreConfirmedRevisions.set(source,pending.revision);" in callback
