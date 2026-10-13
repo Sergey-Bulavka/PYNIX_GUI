@@ -118,6 +118,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
  }
+ editorInput.addEventListener('pointerdown',()=>{
+   const file=current?byName.get(current):null;
+   if(file)file.extraSelections=[];
+ });
  editorInput.addEventListener('click',()=>{updateCursor();recolorSource();});
  editorInput.addEventListener('focus',()=>{updateCursor();recolorSource();});
  editorInput.addEventListener('blur',()=>{customCaret.hidden=true;});
@@ -683,8 +687,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      restoreHistory(e.inputType==='historyUndo'?'undo':'redo');
      return;
    }
-   if(e.inputType?.startsWith('insert')||e.inputType?.startsWith('delete'))
-     pushUndo(byName.get(current));
+   if(e.inputType?.startsWith('insert')||e.inputType?.startsWith('delete')){
+     const file=byName.get(current);
+     if(file?.extraSelections?.length)file.extraSelections=[];
+     pushUndo(file);
+   }
  });
  function replaceSelection(text, start, end){
    pushUndo(byName.get(current));
