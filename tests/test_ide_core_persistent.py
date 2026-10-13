@@ -478,3 +478,29 @@ def test_save_reply_is_bound_to_exact_editor_revision_and_preserves_new_edits():
     assert "file.dirty=file.text!==file.savedText;" in callback
     assert "file.text===pending.text" in callback
     assert "coreConfirmedRevisions.set(source,pending.revision);" in callback
+
+
+def test_serialized_native_saves_do_not_replace_inflight_revision():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    save = preview.split("function prepareNativeSave(source,content){", 1)[1].split(
+        "saveButton.addEventListener('click',saveSource);", 1)[0]
+    assert "if(pendingNativeSaves.has(source))return null;" in save
+    assert "pendingNativeSaves.set(source,{revision,text:content});" in save
+    assert "if(request)bridge.postMessage(request);" in save
+    reply = preview.split("window.pynixSaveResult=payload=>{", 1)[1].split(
+        "const expanded =", 1)[0]
+    assert "if(payload.revision!==pending.revision)return;" in reply
+    assert reply.index("if(payload.revision!==pending.revision)return;") < reply.index(
+        "pendingNativeSaves.delete(source);")
+
+
+def test_core_close_rejects_completion_after_inflight_text_changes():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    close = preview.split("function closeTabNow(name,discard=false){", 1)[1].split(
+        "function finishTabClose(name){", 1)[0]
+    assert "text:file?.text" in close
+    assert "file?.text!==pending.text" in close
+    assert "if(reply?.closed){finishTabClose(source);return;}" in close
+    assert "recover Core before continuing" in close
