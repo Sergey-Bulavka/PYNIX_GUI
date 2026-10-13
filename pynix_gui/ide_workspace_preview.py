@@ -626,6 +626,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  function recoverCoreBuffers(){
    const bridge=window.webkit?.messageHandlers?.pynixCoreRecover;
    if(!bridge||coreRecovering)return;
+   if(pendingNativeSaves.size||pendingCoreClose.size){
+     window.alert('Wait for pending Save or Close before restoring IDE Core');
+     return;
+   }
    persistBuffer();
    const buffers=[];
    for(const source of openTabs){
@@ -708,7 +712,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  });
  editButton.addEventListener('click',()=>{persistBuffer();editing=!editing;updateEditingView();if(!editing&&current)renderCode(byName.get(current))});
  function prepareNativeSave(source,content){
-   if(pendingNativeSaves.has(source))return null;
+   if(coreRecovering||pendingCoreClose.has(source)||pendingNativeSaves.has(source))return null;
    // A save is a synchronization barrier: cancel obsolete deferred editor sends
    // and allocate a newer revision for the exact bytes being saved.
    cancelCoreBufferSync(source);
@@ -951,6 +955,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  const pendingCoreClose=new Map();
  function closeTabNow(name,discard=false){
+   if(coreRecovering){window.alert('Wait for IDE Core recovery before closing a tab');return;}
    if(!openTabs.includes(name)||pendingCoreClose.has(name))return;
    cancelCoreBufferSync(name);
    const bridge=window.webkit?.messageHandlers?.pynixCoreClose;
