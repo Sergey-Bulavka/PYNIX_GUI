@@ -112,6 +112,21 @@ class PersistentCoreReader:
             raise CoreSnapshotError("Invalid IDE Core source response")
         return result["value"]
 
+    def update_source(self, source: str, content: str) -> dict:
+        if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
+            raise CoreSnapshotError("Invalid source content")
+        if (not isinstance(source, str) or not source.endswith(".pnx")
+                or not (self.project / source).resolve().is_relative_to(self.project)
+                or not (self.project / source).is_file()):
+            raise CoreSnapshotError("Invalid project source")
+        result = self.request({"command": "updateSource", "source": source, "content": content})
+        snapshot = result.get("value")
+        if result.get("kind") != "snapshot" or not isinstance(snapshot, dict):
+            raise CoreSnapshotError("Invalid Core edit acknowledgment")
+        if snapshot.get("activeSourceContent") != content:
+            raise CoreSnapshotError("Core editor buffer differs from V4")
+        return snapshot
+
     def close(self):
         process = self._process
         self._process = None
