@@ -42,6 +42,8 @@ const structural = 'function a(){ print("}") }';
 const open = structural.indexOf('{');
 const close = structural.lastIndexOf('}');
 if (!matchingBracketPositions(structural,open).has(close)) process.exit(11);
+if (!matchingBracketPositions('(){',2).has(2)) process.exit(14);
+if (!matchingBracketPositions('()',2).has(0)) process.exit(15);
 const comment = '// { ignored';
 if (matchingBracketPositions(comment,comment.indexOf('{')).size) process.exit(12);
 const lines = 'function main()\\n    print(1)\\n    return 1\\nprint(2)';
