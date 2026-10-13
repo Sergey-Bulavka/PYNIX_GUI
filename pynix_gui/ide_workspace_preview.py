@@ -132,7 +132,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const left=parseFloat(style.paddingLeft)||0;
    const canvas=document.createElement('canvas');
    const ctx=canvas.getContext('2d');
-   ctx.font=style.font;
+   ctx.font=style.fontSize+' '+style.fontFamily;
    const advance=ctx.measureText('0000000000').width/10||8;
    const row=Math.max(0,Math.floor((event.clientY-rect.top-top+editorInput.scrollTop)/height));
    const column=Math.max(0,Math.round((event.clientX-rect.left-left+editorInput.scrollLeft)/advance));
@@ -141,6 +141,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const position=lines.slice(0,line).reduce((sum,value)=>sum+value.length+1,0)
      +Math.min(column,lines[line].length);
    const previous={start:editorInput.selectionStart,end:editorInput.selectionEnd};
+   if(position===previous.start&&previous.start===previous.end)return;
    const extras=file.extraSelections||(file.extraSelections=[]);
    if(!extras.some(item=>item.start===previous.start&&item.end===previous.end))
      extras.push(previous);
