@@ -448,7 +448,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!file || file.unloaded)return;
    file.text=editorInput.value;
    file.dirty=file.text!==file.savedText;
+   file.cursorStart=editorInput.selectionStart;
+   file.cursorEnd=editorInput.selectionEnd;
+   file.scrollTop=editorInput.scrollTop;
+   file.scrollLeft=editorInput.scrollLeft;
  }
+ editorInput.addEventListener('keyup',()=>persistBuffer());
+ editorInput.addEventListener('mouseup',()=>persistBuffer());
+ editorInput.addEventListener('select',()=>persistBuffer());
+ editorInput.addEventListener('scroll',()=>persistBuffer());
  function updateEditingView(){
    const file=current?byName.get(current):null;
    const available=!!file&&!file.unloaded;
