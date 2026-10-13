@@ -270,7 +270,7 @@ def test_editor_sync_verifies_core_readback_and_tracks_tab_dirty_state():
     assert 'reply["dirty"] = state["dirty"]' in handler
     assert "file.coreRevision=revision" in preview
     assert "file.coreDirty=reply.dirty===true" in preview
-    assert "if(revision<(coreRevisions.get(source)||0))return;" in preview
+    assert "if(revision!==(coreRevisions.get(source)||0))return;" in preview
 
 
 def test_core_close_clean_source_and_native_tab_lifecycle(tmp_path):
@@ -295,3 +295,21 @@ def test_core_close_clean_source_and_native_tab_lifecycle(tmp_path):
     assert 'core_reader.close_source(source)' in native
     assert '"pynixCoreClose"' in native
     assert "pynixCoreClose?.postMessage({source:name})" in preview
+
+
+def test_late_core_and_file_responses_cannot_resurrect_closed_tabs():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    core = preview.split("window.pynixCoreBufferResult=reply=>{", 1)[1].split(
+        "function scheduleCoreBufferSync()", 1)[0]
+    load = preview.split("window.pynixReceiveFile=function(payload){", 1)[1].split(
+        "document.addEventListener('pynix:navigate'", 1)[0]
+    close = preview.split("function closeTabNow(name){", 1)[1].split(
+        "function requestCloseTab(name){", 1)[0]
+    assert "!openTabs.includes(source)" in core
+    assert "revision!==(coreRevisions.get(source)||0)" in core
+    assert "file.coreSyncError=null" in core
+    assert "file.coreSyncError=String(reply.error||'Unknown error')" in core
+    assert "!openTabs.includes(payload.source)" in load
+    assert "if(!file.unloaded||file.dirty)return;" in load
+    assert "if(!openTabs.includes(name))return;" in close
