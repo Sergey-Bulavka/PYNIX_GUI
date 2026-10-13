@@ -966,15 +966,46 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
    if(expanded.has(''))visit(root,1);
  }
+ function foldableLines(text){
+   const lines=text.split('\\n');
+   const positions=new Map();
+   for(let i=0;i<lines.length-1;i++){
+     if(!lines[i].trim()||lines[i].trimStart().startsWith('//'))continue;
+     const base=lines[i].match(/^[ \\t]*/)[0].replaceAll('\\t','    ').length;
+     let end=i+1;
+     while(end<lines.length){
+       if(!lines[end].trim()){end++;continue;}
+       const depth=lines[end].match(/^[ \\t]*/)[0].replaceAll('\\t','    ').length;
+       if(depth<=base)break;
+       end++;
+     }
+     if(end>i+2)positions.set(i,end-1);
+   }
+   return positions;
+ }
  function renderCode(file) {
    code.replaceChildren();
+   const foldable=foldableLines(file.text);
+   const folded=file.foldedLines||(file.foldedLines=new Set());
+   let hiddenThrough=-1;
    file.text.split('\\n').forEach((line, i) => {
+     if(i<=hiddenThrough)return;
+     if(folded.has(i)&&foldable.has(i))hiddenThrough=foldable.get(i);
      const row = document.createElement('div');
      row.className='source-line';
      row.dataset.line=String(i+1);
      const gutter = document.createElement('span');
      gutter.className = 'ln';
      gutter.textContent = String(i + 1);
+     if(foldable.has(i)){
+       gutter.classList.add('pynix-fold-control');
+       gutter.title=folded.has(i)?'Expand block':'Collapse block';
+       gutter.textContent=(folded.has(i)?'▸ ':'▾ ')+(i+1);
+       gutter.addEventListener('click',()=>{
+         if(folded.has(i))folded.delete(i);else folded.add(i);
+         renderCode(file);
+       });
+     }
      row.appendChild(gutter);
      const content = document.createElement('span');
      content.className='source-text';
