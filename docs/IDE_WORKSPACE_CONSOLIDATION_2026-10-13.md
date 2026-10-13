@@ -212,3 +212,17 @@ No source files were deleted: existing tests establish that these older
 examples retain useful acceptance roles. The next retirement gate is to
 replace their assertions with tests of the official application *before*
 removing any fixture, not after.
+
+## Official IDE migration decision (2026-10-13)
+
+The cross-repository Design Gate is now in
+`PYNIX_IDE/docs/WORKSPACE_V4_INTEGRATION_DESIGN_GATE.md`.
+It confirms that `ide_workspace_session.py` and
+`PYNIX_IDE/src/ide_session.pnx` are separate document owners. Migration must
+establish the official IDE Core as the single owner before enabling writes
+through a new frontend adapter. In particular, preserve V4's atomic save and
+external-change protection while replacing its prototype session.
+
+This is a migration decision, **not** a claim that V4 has been merged into
+PYNIX_IDE. Keep the existing GUI regression examples and V4 launcher working
+throughout the transition.
