@@ -32,7 +32,8 @@ def test_local_rename_requires_confirmation_and_preserves_undo():
     assert "function selectedIdentifier()" in source
     assert "function renameLocalIdentifier()" in source
     assert "Rename occurrences in CURRENT file (textual, not semantic)" in source
-    assert "window.confirm('Replace '+matches.length+' textual occurrences" in source
+    assert "window.confirm('Replace '+matches.length+' code identifiers named" in source
+    assert ".filter(match=>match[0]===old)" in source
     assert "pushUndo(byName.get(current));" in source
     assert "editorInput.dispatchEvent(new Event('input',{bubbles:true}))" in source
 
