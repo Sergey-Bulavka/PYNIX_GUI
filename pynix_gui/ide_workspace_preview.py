@@ -786,13 +786,17 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(replacement)){
      window.alert('New name must be a valid identifier');return;
    }
-   const expression=new RegExp('\\\\b'+old+'\\\\b','g');
-   const matches=[...editorInput.value.matchAll(expression)];
+   const lexer=/(?:\\/\\/[^\\n]*|#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|[A-Za-z_][A-Za-z_0-9]*)/g;
+   const matches=[...editorInput.value.matchAll(lexer)]
+     .filter(match=>match[0]===old).map(match=>match.index);
    if(!matches.length)return;
-   if(!window.confirm('Replace '+matches.length+' textual occurrences of '+old+
-       ' in '+current+'? This includes strings/comments. Use Undo to revert.'))return;
+   if(!window.confirm('Replace '+matches.length+' code identifiers named '+old+
+       ' in '+current+'? Scope shadowing is not analyzed. Undo is available.'))return;
    pushUndo(byName.get(current));
-   editorInput.value=editorInput.value.replace(expression,replacement);
+   let changed=editorInput.value;
+   for(const index of [...matches].reverse())
+     changed=changed.slice(0,index)+replacement+changed.slice(index+old.length);
+   editorInput.value=changed;
    editorInput.dispatchEvent(new Event('input',{bubbles:true}));
  }
  renameButton.addEventListener('click',renameLocalIdentifier);
