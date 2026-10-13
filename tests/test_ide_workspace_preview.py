@@ -196,7 +196,10 @@ def test_editor_tabs_can_close_and_reload_sources(tmp_path):
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "function renderTabs()" in js
     assert "close.setAttribute('aria-label','Close '+fileName)" in js
-    assert "Discard unsaved changes" in js
+    assert "Save changes to " in js
+    assert "button('Don’t Save'" in js
+    assert "button('Cancel'" in js
+    assert "button('Save'" in js
     assert "file.unloaded=true" in js
     assert "line.addEventListener('dblclick'" in js
 
