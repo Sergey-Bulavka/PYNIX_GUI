@@ -119,6 +119,15 @@ def main() -> None:
     from pynix_gui.ide_tooling_navigation import query_navigation
     compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
     available_sources = set(session.list_files(limit=5000))
+    class SymbolsHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_tooling_symbols import read_symbols
+            result = read_symbols(session.root, compiler_python)
+            serialized = json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixProjectSymbolsResult(" + serialized + ");", None)
+
     class DiagnosticsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -380,9 +389,11 @@ def main() -> None:
     project_search_handler = ProjectSearchHandler.alloc().init()
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
+    symbols_handler = SymbolsHandler.alloc().init()
     diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
+    controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
     controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
