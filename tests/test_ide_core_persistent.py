@@ -117,3 +117,33 @@ def test_v4_tracks_revisions_per_source():
     assert "const coreRevisions=new Map();" in js
     assert "coreRevisions.set(source,revision)" in js
     assert "bridge.postMessage({source,text:content,revision})" in js
+
+
+def test_discard_source_clears_only_core_mirror(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    original = project / "src" / "main.pnx"
+    original.write_text("untouched", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    outgoing = []
+    reader._process = SimpleNamespace(
+        poll=lambda: None,
+        stdin=SimpleNamespace(write=outgoing.append, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "snapshot", "value": {
+        "activeSourceContent": "untouched", "activeSourceDirty": False,
+    }})
+    response = reader.discard_source("src/main.pnx")
+    assert response["activeSourceDirty"] is False
+    assert '"command": "discardSource"' in outgoing[0]
+    assert original.read_text(encoding="utf-8") == "untouched"
+
+
+def test_switch_flushes_pending_revisions_and_discard_cancels_pending():
+    root = Path(__file__).resolve().parents[1]
+    src = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    app = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert "function cancelCoreBufferSync(name)" in src
+    assert "if(coreSyncTimers.has(source))" in src
+    assert "coreRevisions.get(source)" in src
+    assert "pynixCoreDiscard" in src
+    assert "core_reader.discard_source(source)" in app
