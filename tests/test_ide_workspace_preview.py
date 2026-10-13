@@ -355,3 +355,15 @@ def test_v425_project_search_navigates_after_lazy_open(tmp_path):
     assert "let pendingNavigation=null" in js
     assert "selectNavigationLocation(pendingNavigation)" in js
     assert "document.dispatchEvent(new CustomEvent('pynix:navigate'" in js
+
+
+def test_v425_project_results_are_positioned_below_search_and_escape_closes(tmp_path):
+    (tmp_path / "main.pnx").write_text("function main()")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "document.body.appendChild(projectResults)" in js
+    assert "function positionProjectResults()" in js
+    assert "projectFindBar.getBoundingClientRect()" in js
+    assert "rect.bottom+7" in js
+    assert "function closeProjectFind()" in js
+    assert "e.stopImmediatePropagation();closeProjectFind()" in js
+    assert "if(projectFindBar.hidden)return;" in js
