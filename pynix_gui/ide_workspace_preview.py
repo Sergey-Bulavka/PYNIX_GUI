@@ -857,7 +857,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const line=document.createElement('div');
      line.className='entry project-entry'+(isRoot?' project-root':'');
      line.style.paddingLeft=(7+Math.min(depth,12)*13)+'px';
-     if(entry.path===selectedPath)line.classList.add('workspace-selected');
+     if(!entry.folder&&entry.path===current)line.classList.add('workspace-active');
+     if(entry.path===selectedPath&&entry.path!==current)line.classList.add('workspace-selected');
      line.setAttribute('role','button');
      line.tabIndex=0;
      line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
