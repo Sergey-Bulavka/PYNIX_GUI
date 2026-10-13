@@ -54,7 +54,7 @@ def main() -> None:
         False,
     )
     window.setTitle_("PYNIX IDE — Workspace V4")
-    window.setMinSize_(AppKit.NSMakeSize(1030, 680))
+    window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
     view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
