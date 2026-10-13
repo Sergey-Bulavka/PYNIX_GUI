@@ -166,3 +166,17 @@ def test_wkwebview_numeric_revision_is_normalized_at_native_boundary():
     assert 'hasattr(revision, "integerValue")' in app
     assert 'revision = whole' in app
     assert 'core_reader.update_source(source, content, revision)' in app
+
+
+def test_save_is_a_versioned_core_barrier_before_atomic_disk_write():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    app = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert "function prepareNativeSave(source,content)" in js
+    assert "cancelCoreBufferSync(source);" in js
+    assert "coreRevisions.set(source,revision);" in js
+    assert "bridge.postMessage(prepareNativeSave(current,file.text));" in js
+    assert "bridge.postMessage(prepareNativeSave(name,selected.text));" in js
+    before_save = app[app.index("class FileSaveHandler"):app.index("class ProjectSearchHandler")]
+    assert before_save.index("core_reader.update_source(source, content, revision)") < before_save.index("session.save(source)")
+    assert "CoreSnapshotError" in before_save
