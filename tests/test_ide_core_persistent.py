@@ -271,3 +271,27 @@ def test_editor_sync_verifies_core_readback_and_tracks_tab_dirty_state():
     assert "file.coreRevision=revision" in preview
     assert "file.coreDirty=reply.dirty===true" in preview
     assert "if(revision<(coreRevisions.get(source)||0))return;" in preview
+
+
+def test_core_close_clean_source_and_native_tab_lifecycle(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    target = project / "src" / "main.pnx"
+    target.write_text("saved", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    outgoing = []
+    reader._process = SimpleNamespace(
+        poll=lambda: None,
+        stdin=SimpleNamespace(write=outgoing.append, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "sourceClosed", "value": {
+        "source": "src/main.pnx", "closed": True,
+    }})
+    assert reader.close_source("src/main.pnx") is True
+    assert '"command": "closeSource"' in outgoing[0]
+    assert target.read_text(encoding="utf-8") == "saved"
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert 'core_reader.close_source(source)' in native
+    assert '"pynixCoreClose"' in native
+    assert "pynixCoreClose?.postMessage({source:name})" in preview
