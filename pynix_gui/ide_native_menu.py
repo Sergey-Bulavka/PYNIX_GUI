@@ -14,7 +14,7 @@ MENU_GROUPS = (
     ("File", (("file.save", "Save", "s", False),)),
     ("Edit", (
         ("edit.find", "Find in File", "f", False),
-        ("edit.replace", "Replace in File", "f", True),
+        ("edit.replace", "Replace in File", "", False),
         ("edit.findProject", "Find in Project", "f", True),
         ("edit.goToLine", "Go to Line", "l", False),
     )),
