@@ -55,3 +55,21 @@ def test_preview_folding_keeps_original_editor_buffer():
     assert "gutter.addEventListener('click'" in render
     assert "file.text.split" in render
     assert ".pynix-fold-control{" in html
+
+
+def test_vertical_multicarets_and_current_cursor_count():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "function addVerticalCaret(direction)" in source
+    assert "e.metaKey&&e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)" in source
+    assert "addVerticalCaret(e.key==='ArrowUp'?-1:1)" in source
+    assert "extraCount?' · '+(extraCount+1)+' cursors'" in source
+
+
+def test_multiselection_visualization_and_pointer_exit():
+    source = SCRIPT.read_text(encoding="utf-8")
+    html = HTML.read_text(encoding="utf-8")
+    assert "function decorateSegment(segment,at)" in source
+    assert "pynix-secondary-selection" in source
+    assert "pynix-secondary-caret" in source
+    assert "file.extraSelections=[];" in source
+    assert ".workspace-mode .pynix-secondary-selection{" in html
