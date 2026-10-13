@@ -197,6 +197,11 @@ def main() -> None:
                 session.update(source, content)
                 session.save(source)
                 response["saved"] = True
+                if core_reader is not None and source.endswith(".pnx"):
+                    try:
+                        core_reader.acknowledge_saved_source(source, content)
+                    except CoreSnapshotError as exc:
+                        print("IDE Core save baseline mirror:", exc, file=sys.stderr)
                 from pynix_gui.ide_tooling_diagnostics import read_diagnostics
                 snapshot = read_diagnostics(session.root, compiler_python)
                 response["diagnostics"] = [
