@@ -278,6 +278,8 @@ def main() -> None:
                     raise ValueError("Source is outside the indexed project")
                 if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
                     raise ValueError("Source content exceeds the editor limit")
+                if args.ide_core is not None and source.endswith(".pnx") and core_reader is None:
+                    raise CoreSnapshotError("IDE Core is unavailable; cannot save .pnx. Preserve editor text and restore Core.")
                 # Core is the authoritative in-memory buffer for .pnx saves.
                 # Reconcile this exact revision before the V4 atomic disk write.
                 if core_reader is not None and source.endswith(".pnx"):
