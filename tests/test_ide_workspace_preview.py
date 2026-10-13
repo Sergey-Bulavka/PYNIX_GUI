@@ -167,8 +167,7 @@ def test_single_click_selects_and_double_click_opens_file(tmp_path):
     assert "selectedPath=entry.path;\n         renderTree();" in js
     assert "line.addEventListener('dblclick'" in js
     assert "selectedPath=entry.path;\n         show(entry.path);" in js
-    assert "if(!entry.folder&&entry.path===current)line.classList.add('workspace-active');" in js
-    assert "if(entry.path===selectedPath&&entry.path!==current)line.classList.add('workspace-selected');" in js
+    assert "if(!entry.folder&&entry.path===(selectedPath??current))line.classList.add('workspace-selected');" in js
     assert "line.addEventListener('pointerdown'" not in js
     assert "if(entry.folder){" in js
 
