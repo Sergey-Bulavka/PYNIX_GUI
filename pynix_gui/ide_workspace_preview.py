@@ -801,8 +801,86 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  renameButton.addEventListener('click',renameLocalIdentifier);
  editorInput.addEventListener('keydown',event=>{
-   if(event.key==='F2'&&!event.metaKey&&!event.ctrlKey&&!event.altKey){
-     event.preventDefault();renameLocalIdentifier();
+   // F2 is reserved for compiler-backed Rename Symbol; Shift+F2 uses Rename Local.
+ });
+ const semanticRenameButton=document.createElement('button');
+ semanticRenameButton.type='button';
+ semanticRenameButton.className='nav-action pynix-semantic-rename';
+ semanticRenameButton.textContent='Rename Symbol';
+ semanticRenameButton.title='Compiler-verified cross-file rename (F2); review unsaved buffers before saving';
+ document.querySelector('.workspace-toolbar')?.appendChild(semanticRenameButton);
+ function requestSemanticRename(){
+   if(!current||!current.endsWith('.pnx')||!editing||editorInput.hidden)return;
+   persistBuffer();
+   if([...byName.values()].some(file=>file.dirty)){
+     window.alert('Save all modified files before semantic rename.');return;
+   }
+   if(coreRecovering){
+     window.alert('Restore IDE Core before semantic rename.');return;
+   }
+   const symbol=selectedIdentifier();
+   if(!symbol){window.alert('Place the caret on a PYNIX symbol');return;}
+   const newName=window.prompt('Rename resolved symbol throughout the project:',symbol);
+   if(newName===null||newName===symbol)return;
+   if(!/^[A-Za-z_][A-Za-z_0-9]*$/.test(newName)){
+     window.alert('New name must be a PYNIX identifier');return;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixSemanticRename;
+   if(!bridge){window.alert('Compiler rename requires the native IDE');return;}
+   const before=editorInput.value.slice(0,editorInput.selectionStart);
+   const line=before.split('\\n').length;
+   const column=before.length-before.lastIndexOf('\\n');
+   bridge.postMessage({source:current,line,column,newName});
+ }
+ window.pynixSemanticRenamePlan=packet=>{
+   if(packet?.error){window.alert('Rename unavailable: '+packet.error);return;}
+   const changes=packet?.files;
+   if(!Array.isArray(changes)||!changes.length||changes.length>100)return;
+   persistBuffer();
+   // Preflight every document BEFORE changing any editor buffers.
+   if(changes.some(item=>{
+     const file=byName.get(item?.source);
+     return !file||file.unloaded||typeof item.before!=='string'||typeof item.after!=='string'||
+       file.text!==item.before||file.savedText!==item.before||
+       (current===item.source&&editorInput.value!==item.before);
+   })){
+     window.alert('Rename aborted: open all affected sources and save changes, then retry.');return;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
+   if(!bridge||coreRecovering){
+     window.alert('Rename requires an available IDE Core buffer bridge.');return;
+   }
+   if(!window.confirm('Rename '+packet.symbol+' → '+packet.newName+' in '+
+       changes.length+' file(s), '+packet.occurrences+' verified occurrences? '+
+       'Changes remain UNSAVED. Review every tab and save manually.'))return;
+   for(const item of changes){
+     const file=byName.get(item.source);
+     const undo=file.undoStack||(file.undoStack=[]);
+     undo.push({text:item.before,start:file.cursorStart||0,end:file.cursorEnd||0,extraSelections:[]});
+     if(undo.length>undoLimit)undo.shift();
+     file.redoStack=[];
+     file.text=item.after;
+     file.dirty=true;
+     file.extraSelections=[];
+     if(!openTabs.includes(item.source))openTabs.push(item.source);
+     cancelCoreBufferSync(item.source);
+     const revision=(coreRevisions.get(item.source)||0)+1;
+     coreRevisions.set(item.source,revision);
+     bridge.postMessage({source:item.source,text:item.after,revision});
+   }
+   renderTabs();
+   if(current&&byName.has(current)){
+     updateEditingView();
+     recolorSource();
+     updateCursor();
+   }
+   diagnosticsStatus.textContent='Rename pending: review and save '+changes.length+' affected file(s)';
+ };
+ semanticRenameButton.addEventListener('click',requestSemanticRename);
+ editorInput.addEventListener('keydown',event=>{
+   if(event.key==='F2'&&!event.altKey&&!event.metaKey&&!event.ctrlKey){
+     event.preventDefault();
+     if(event.shiftKey)renameLocalIdentifier();else requestSemanticRename();
    }
  });
  function historyState(){
