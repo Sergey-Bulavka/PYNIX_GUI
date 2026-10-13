@@ -53,5 +53,10 @@ def test_v4_integrates_core_snapshot_without_replacing_editor():
     root = Path(__file__).resolve().parents[1]
     source = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
     assert 'parser.add_argument("--ide-core"' in source
-    assert "read_core_snapshot(args.ide_core, session.root, compiler_for_core)" in source
-    assert "IDE Core: connected (read-only)" in source
+    assert "PersistentCoreReader(args.ide_core, session.root, compiler_for_core)" in source
+    assert "core_reader.start()" in source
+    assert "IDE Core: connected (persistent, read-only)" in source
+    assert "core_reader.open_source(source)" in source
+    assert "core_reader.close()" in source
+    assert "session.save(source)" in source
+    assert "read_core_snapshot(args.ide_core" not in source
