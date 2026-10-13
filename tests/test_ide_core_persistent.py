@@ -39,3 +39,33 @@ def test_v4_releases_persistent_core_and_does_not_delegate_saves():
     assert "core_reader.open_source(source)" in src
     assert "core_reader.close()" in src
     assert "session.save(source)" in src
+
+
+def test_unsaved_buffer_mirrored_without_disk_write(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "src").mkdir()
+    source = project / "src" / "main.pnx"
+    source.write_text("original", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    written = []
+    reader._process = SimpleNamespace(poll=lambda: None, stdin=SimpleNamespace(
+        write=written.append, flush=lambda: None))
+    content = "function main()\\n    print(\\\"updated\\\")\\n"
+    reader._lines.put({"ok": True, "kind": "snapshot", "value": {
+        "activeSourceContent": content, "activeSourceDirty": True,
+    }})
+    result = reader.update_source("src/main.pnx", content)
+    assert result["activeSourceDirty"] is True
+    assert '"command": "updateSource"' in written[0]
+    assert source.read_text(encoding="utf-8") == "original"
+
+
+def test_v4_publishes_unsaved_buffers_on_input():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert 'scheduleCoreBufferSync();' in js
+    assert 'pynixCoreBuffer' in js
+    assert 'core_reader.update_source(source, content)' in native
+    assert '"pynixCoreBuffer"' in native
