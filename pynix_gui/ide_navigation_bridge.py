@@ -61,6 +61,7 @@ def navigation_controls() -> str:
  const toolbar=document.querySelector('.workspace-toolbar');
  if(!code||!tabs||!output||!toolbar)return;
  const handler=window.webkit?.messageHandlers?.pynixNavigation;
+ const editor=document.querySelector('.pynix-source-input');
  let source=window.pynixActiveSource||null, line=1, column=1;
  let ready=!!code.querySelector('.source-line');
  document.addEventListener('pynix:file-opened', e=>{source=e.detail.source;line=1;column=1;ready=!!code.querySelector('.source-line')});
@@ -90,6 +91,14 @@ def navigation_controls() -> str:
    button.textContent=label;
    button.title='Query compiler at selected file and code position';
    button.addEventListener('click',()=>{
+     const live=window.pynixActiveSource||source;
+     if(editor&&!editor.hidden&&live&&live.endsWith('.pnx')){
+       source=live;
+       const before=editor.value.slice(0,editor.selectionStart);
+       line=before.split('\\n').length;
+       column=before.length-before.lastIndexOf('\\n');
+       ready=true;
+     }
      if(!source || !source.endsWith('.pnx')) {
        window.pynixNavigationResult({command,result:{error:'Open a PYNIX source file first'}});
        return;
