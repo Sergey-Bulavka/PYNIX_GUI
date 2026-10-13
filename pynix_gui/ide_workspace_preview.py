@@ -158,7 +158,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  function escapeCode(v){return v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
  function matchingBracketPositions(value,caret){
    const pairs={'(':')','[':']','{':'}',')':'(',']':'[','}':'{'};
-   const candidate=caret>0&&pairs[value[caret-1]]?caret-1:caret;
+   const candidate=pairs[value[caret]]?caret:
+     (caret>0&&pairs[value[caret-1]]?caret-1:caret);
    const symbol=value[candidate];
    if(!pairs[symbol])return new Set();
    // Ignore structural punctuation occurring inside quoted literals/comments.
