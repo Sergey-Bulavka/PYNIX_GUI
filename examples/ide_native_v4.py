@@ -199,6 +199,36 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixCoreBufferResult(" + serialized + ");", None)
 
+    class CoreRecoveryHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            result = {"ok": False}
+            try:
+                if core_reader is None:
+                    raise CoreSnapshotError("IDE Core was not connected at startup")
+                payload = dict(message.body())
+                entries = payload.get("buffers")
+                if not isinstance(entries, (list, tuple)):
+                    raise ValueError("Invalid recovery request")
+                buffers = []
+                for entry in entries:
+                    entry = dict(entry)
+                    revision = entry.get("revision")
+                    if not isinstance(revision, bool) and hasattr(revision, "integerValue"):
+                        whole = int(revision.integerValue())
+                        if float(revision) == whole:
+                            revision = whole
+                    buffers.append({"source": entry.get("source"),
+                                    "content": entry.get("content"), "revision": revision})
+                result.update(core_reader.restart_with_buffers(buffers))
+                result["ok"] = True
+            except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
+                result["error"] = str(exc)[:180]
+                print("IDE Core recovery:", exc, file=sys.stderr)
+            serialized = json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixCoreRecoveryResult(" + serialized + ");", None)
+
     class CoreCloseHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             if core_reader is None:
@@ -312,6 +342,7 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixProjectSearchResult(" + serialized + ");", None)
 
+    core_recovery_handler = CoreRecoveryHandler.alloc().init()
     core_close_handler = CoreCloseHandler.alloc().init()
     core_discard_handler = CoreDiscardHandler.alloc().init()
     core_buffer_handler = CoreBufferHandler.alloc().init()
@@ -325,6 +356,7 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(core_buffer_handler, "pynixCoreBuffer")
     controller.addScriptMessageHandler_name_(core_discard_handler, "pynixCoreDiscard")
     controller.addScriptMessageHandler_name_(core_close_handler, "pynixCoreClose")
+    controller.addScriptMessageHandler_name_(core_recovery_handler, "pynixCoreRecover")
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
