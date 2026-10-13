@@ -119,6 +119,23 @@ def main() -> None:
     from pynix_gui.ide_tooling_navigation import query_navigation
     compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
     available_sources = set(session.list_files(limit=5000))
+    class SemanticRenameHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_semantic_rename import plan_semantic_rename, RenamePlanError
+            try:
+                request = normalize_webkit_request(message.body())
+                _, source, line, column = validate_request(
+                    {**request, "command": "references"}, available_sources)
+                new_name = request.get("newName")
+                result = plan_semantic_rename(
+                    session.root, compiler_python, source, line, column, new_name)
+            except (ValueError, TypeError, RenamePlanError, OSError) as exc:
+                result = {"error": str(exc)}
+            serialized = json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixSemanticRenamePlan(" + serialized + ");", None)
+
     class SymbolsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -389,10 +406,12 @@ def main() -> None:
     project_search_handler = ProjectSearchHandler.alloc().init()
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
+    semantic_rename_handler = SemanticRenameHandler.alloc().init()
     symbols_handler = SymbolsHandler.alloc().init()
     diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
+    controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
     controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
