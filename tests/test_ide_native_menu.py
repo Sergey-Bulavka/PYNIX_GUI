@@ -31,8 +31,17 @@ def test_every_native_command_is_wired_to_existing_web_actions():
 
 def test_native_menu_has_no_duplicate_keyboard_chords():
     chords = [
-        (key, shift)
+        (key, shift, command == "edit.replace")
         for _, items in MENU_GROUPS
-        for _, _, key, shift in items if key
+        for command, _, key, shift in items if key
     ]
     assert len(chords) == len(set(chords))
+
+
+def test_replace_uses_native_command_option_f():
+    menu = {command: (key, shift) for _, items in MENU_GROUPS
+            for command, _, key, shift in items}
+    assert menu["edit.replace"] == ("f", False)
+    source = Path(__import__("pynix_gui.ide_native_menu", fromlist=["__file__"]).__file__).read_text(encoding="utf-8")
+    assert 'if command == "edit.replace":' in source
+    assert "mask |= appkit.NSEventModifierFlagOption" in source
