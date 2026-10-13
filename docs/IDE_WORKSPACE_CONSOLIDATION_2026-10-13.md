@@ -244,5 +244,9 @@ not the authoritative editor model. Do not infer full session synchronization.
 Acceptance: run `tests/test_ide_core_persistent.py`,
 `tests/test_ide_core_read_bridge.py`, V4 tests, then launch with
 `--ide-core`. The expected indicator is
-`IDE Core: connected (persistent, read-only)`. Confirm file open and
+`IDE Core: connected (persistent, buffer sync)`. Confirm file open and
 window close on macOS. Native runtime behavior is still pending verification.
+
+## M3 in-memory buffer mirroring
+
+V4 posts debounced (`400ms`) `.pnx` source edits to `pynixCoreBuffer`. The native handler validates project membership and forwards to the persistent `updateSource` command; Core calls `IdeSession.replaceSourceContent` and returns `workspaceReadSnapshot`. The Python bridge verifies acknowledged content. **This is not an authoritative editing model yet.** Disk saves and conflict protection remain with V4, and edits to other text formats are not mirrored. Verify host compiler test before release. Changes not yet tested on macOS.
