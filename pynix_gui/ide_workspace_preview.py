@@ -608,6 +608,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!status)return;
    if(reply.ok){
      coreConfirmedRevisions.set(source,revision);
+     const file=byName.get(source);
+     if(file){file.coreRevision=revision;file.coreDirty=reply.dirty===true;}
      status.textContent='IDE Core: synced (revision '+revision+')';
    }else{
      status.textContent='IDE Core: sync error — '+String(reply.error||'Unknown error');
