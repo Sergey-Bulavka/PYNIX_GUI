@@ -11,22 +11,24 @@ source = "src"
 entry = "main.pnx"
 TOML
 cat > "$PROJECT/src/main.pnx" <<'PNX'
-function helper()
-    return 7
+import util
 
 function main()
-    let result = helper()
+    let result = util.helper()
     print(result)
 PNX
-cat > "$PROJECT/src/notes.pnx" <<'PNX'
-function secondary()
-    return 1
+cat > "$PROJECT/src/util.pnx" <<'PNX'
+public function helper()
+    return 7
+
+function check()
+    return helper()
 PNX
 echo "BLOCK 3 ISOLATED PROJECT: $PROJECT"
 echo "1. Open src/main.pnx and type 'fun'; click Complete or press Ctrl+Space."
 echo "2. Verify keyword/function suggestions and accept one using Tab or Enter; Undo."
-echo "3. Save the file, select helper() call. Try Definition, References and Type."
-echo "4. Rename Local (F2) is textual current-file-only; try it and undo."
+echo "3. Save main.pnx, select util.helper() call. Try Definition, References and Type."
+echo "4. Place caret on helper in util.helper(), press F2, rename to renamedHelper."\necho "   Confirm; inspect main.pnx and util.pnx tabs. Both must be unsaved until Cmd+S."\necho "   Save both, confirm names in both sources. Shift+F2 tests conservative Rename Local."
 echo "5. Click Problems with valid saved code; check compiler reports zero issues."
 echo "6. Introduce a syntax error, Save, click Problems, and inspect the error."
 echo "7. Restore the code, Save, click Problems; error should disappear."
