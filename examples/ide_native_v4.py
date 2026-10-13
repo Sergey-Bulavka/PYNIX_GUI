@@ -231,15 +231,26 @@ def main() -> None:
 
     class CoreCloseHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
-            if core_reader is None:
-                return
+            import json
+            request = dict(message.body())
+            source = request.get("source")
+            discard = request.get("discard") is True
+            response = {"source": source, "closed": False}
             try:
-                source = dict(message.body()).get("source")
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
-                core_reader.close_source(source)
+                if core_reader is not None and source.endswith(".pnx"):
+                    if discard:
+                        core_reader.discard_source(source)
+                    if not core_reader.close_source(source):
+                        raise CoreSnapshotError("IDE Core refused to close dirty document")
+                response["closed"] = True
             except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
-                print("IDE Core close mirror:", exc, file=sys.stderr)
+                response["error"] = str(exc)[:180]
+                print("IDE Core close:", exc, file=sys.stderr)
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixCoreCloseResult(" + serialized + ");", None)
 
     class CoreDiscardHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
