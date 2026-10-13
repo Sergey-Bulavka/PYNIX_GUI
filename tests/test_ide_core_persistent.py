@@ -206,3 +206,53 @@ def test_webkit_restoration_suppresses_deferred_selection_and_scroll_events():
     assert "editorRestoreEpoch" in source
     assert "requestAnimationFrame(()=>{" in source
     assert "if(epoch===editorRestoreEpoch&&current===source)restoringEditor=false;" in source
+
+
+def test_core_authoritative_source_readback(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    target = project / "src" / "main.pnx"
+    target.write_text("original", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    writes = []
+    reader._process = SimpleNamespace(
+        poll=lambda: None,
+        stdin=SimpleNamespace(write=writes.append, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "sourceState", "value": {
+        "source": "src/main.pnx", "content": "unsaved",
+        "dirty": True, "revision": 4,
+    }})
+    state = reader.read_source("src/main.pnx")
+    assert state == {
+        "source": "src/main.pnx", "content": "unsaved",
+        "dirty": True, "revision": 4,
+    }
+    assert '"command": "readSource"' in writes[0]
+    assert target.read_text(encoding="utf-8") == "original"
+
+
+def test_core_readback_rejects_invalid_revision(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    (project / "src" / "main.pnx").write_text("disk", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    reader._process = SimpleNamespace(
+        poll=lambda: None, stdin=SimpleNamespace(
+            write=lambda value: None, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "sourceState", "value": {
+        "source": "src/main.pnx", "content": "disk",
+        "dirty": False, "revision": "5",
+    }})
+    with pytest.raises(CoreSnapshotError, match="source state"):
+        reader.read_source("src/main.pnx")
+
+
+def test_save_requires_authoritative_core_readback_before_disk_write():
+    app = (Path(__file__).resolve().parents[1] / "examples" /
+           "ide_native_v4.py").read_text(encoding="utf-8")
+    block = app.split("class FileSaveHandler(NSObject):", 1)[1].split(
+        "class ProjectSearchHandler(NSObject):", 1)[0]
+    assert block.index("core_reader.update_source(source, content, revision)") < (
+        block.index("core_reader.read_source(source)"))
+    assert block.index("core_reader.read_source(source)") < block.index("session.save(source)")
+    assert "Core source diverged before save" in block
