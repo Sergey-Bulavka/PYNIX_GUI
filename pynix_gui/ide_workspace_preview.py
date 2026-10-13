@@ -617,6 +617,49 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      status.textContent='IDE Core: sync error — '+String(reply.error||'Unknown error');
    }
  };
+ let coreRecovering=false;
+ function recoverCoreBuffers(){
+   const bridge=window.webkit?.messageHandlers?.pynixCoreRecover;
+   if(!bridge||coreRecovering)return;
+   persistBuffer();
+   const buffers=[];
+   for(const source of openTabs){
+     const file=byName.get(source);
+     if(!source.endsWith('.pnx')||!file||file.unloaded)continue;
+     cancelCoreBufferSync(source);
+     const revision=(coreRevisions.get(source)||0)+1;
+     coreRevisions.set(source,revision);
+     buffers.push({source,content:file.text,revision});
+   }
+   coreRecovering=true;
+   const status=document.querySelector('.pynix-core-bridge-indicator');
+   if(status)status.textContent='IDE Core: restoring '+buffers.length+' buffers...';
+   bridge.postMessage({buffers});
+ }
+ window.pynixCoreRecoveryResult=reply=>{
+   coreRecovering=false;
+   const status=document.querySelector('.pynix-core-bridge-indicator');
+   if(!status)return;
+   if(reply?.ok){
+     // Editing may have continued while replay was running.
+     // Never overwrite live buffers; newly changed revisions sync separately.
+     status.textContent='IDE Core: restored '+reply.restored+' buffers';
+     for(const source of openTabs){
+       const file=byName.get(source);
+       if(source.endsWith('.pnx')&&file&&!file.unloaded&&!coreSyncTimers.has(source)
+           &&(file.coreRevision||0)!==(coreRevisions.get(source)||0)
+           &&source===current){
+         scheduleCoreBufferSync();
+       }
+     }
+   }else status.textContent='IDE Core: recovery failed — '+String(reply?.error||'Unknown error');
+ };
+ const coreIndicator=document.querySelector('.pynix-core-bridge-indicator');
+ if(coreIndicator){
+   coreIndicator.title='Click to restart IDE Core and restore open buffers';
+   coreIndicator.style.cursor='pointer';
+   coreIndicator.addEventListener('click',recoverCoreBuffers);
+ }
  function scheduleCoreBufferSync(){
    if(!current||!current.endsWith('.pnx'))return;
    const source=current;
