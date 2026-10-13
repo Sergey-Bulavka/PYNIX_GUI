@@ -550,6 +550,42 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    editorInput.dispatchEvent(new Event('input',{bubbles:true}));
    applyingHistory=false;
  }
+ function duplicateCurrentLine(){
+   const value=editorInput.value,start=editorInput.selectionStart;
+   const begin=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
+   let end=value.indexOf('\\n',start);
+   if(end<0)end=value.length;
+   const source=value.slice(begin,end);
+   pushUndo(byName.get(current));
+   editorInput.setRangeText('\\n'+source,end,end,'end');
+   editorInput.setSelectionRange(end+1+(start-begin),end+1+(start-begin));
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+ }
+ function moveCurrentLine(direction){
+   const value=editorInput.value,start=editorInput.selectionStart;
+   const begin=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
+   let end=value.indexOf('\\n',start);
+   if(end<0)end=value.length;
+   const line=value.slice(begin,end),offset=start-begin;
+   if(direction<0){
+     if(begin===0)return;
+     const previousStart=value.lastIndexOf('\\n',Math.max(0,begin-2))+1;
+     const previous=value.slice(previousStart,begin-1);
+     pushUndo(byName.get(current));
+     editorInput.setRangeText(line+'\\n'+previous,previousStart,end,'end');
+     editorInput.setSelectionRange(previousStart+offset,previousStart+offset);
+   }else{
+     if(end>=value.length)return;
+     let nextEnd=value.indexOf('\\n',end+1);
+     if(nextEnd<0)nextEnd=value.length;
+     const next=value.slice(end+1,nextEnd);
+     pushUndo(byName.get(current));
+     editorInput.setRangeText(next+'\\n'+line,begin,nextEnd,'end');
+     const position=begin+next.length+1+offset;
+     editorInput.setSelectionRange(position,position);
+   }
+   editorInput.dispatchEvent(new Event('input',{bubbles:true}));
+ }
  function addNextOccurrence(){
    const file=current?byName.get(current):null;
    if(!file)return;
@@ -662,6 +698,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  editorInput.addEventListener('keydown',e=>{
+   if(e.metaKey&&e.shiftKey&&!e.altKey&&e.key.toLowerCase()==='d'){
+     e.preventDefault();duplicateCurrentLine();return;
+   }
+   if(e.altKey&&!e.metaKey&&!e.ctrlKey&&['ArrowUp','ArrowDown'].includes(e.key)){
+     e.preventDefault();moveCurrentLine(e.key==='ArrowUp'?-1:1);return;
+   }
    if((e.metaKey||e.ctrlKey)&&e.key==='/'){
      e.preventDefault();
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
