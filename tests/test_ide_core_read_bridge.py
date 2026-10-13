@@ -55,7 +55,7 @@ def test_v4_integrates_core_snapshot_without_replacing_editor():
     assert 'parser.add_argument("--ide-core"' in source
     assert "PersistentCoreReader(args.ide_core, session.root, compiler_for_core)" in source
     assert "core_reader.start()" in source
-    assert "IDE Core: connected (persistent, read-only)" in source
+    assert "IDE Core: connected (persistent, buffer sync)" in source
     assert "core_reader.open_source(source)" in source
     assert "core_reader.close()" in source
     assert "session.save(source)" in source
