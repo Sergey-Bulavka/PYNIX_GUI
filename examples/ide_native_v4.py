@@ -159,7 +159,7 @@ def main() -> None:
                 text = file_path.read_text(encoding="utf-8")
                 response["text"] = text
                 response["tokens"] = highlight_document(text) if source.endswith(".pnx") else None
-            except (OSError, UnicodeError, ValueError) as error:
+            except (OSError, UnicodeError, ValueError, CoreSnapshotError) as error:
                 response["error"] = str(error)
             serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
             view.evaluateJavaScript_completionHandler_(
@@ -219,6 +219,15 @@ def main() -> None:
                     raise ValueError("Source is outside the indexed project")
                 if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
                     raise ValueError("Source content exceeds the editor limit")
+                # Core is the authoritative in-memory buffer for .pnx saves.
+                # Reconcile this exact revision before the V4 atomic disk write.
+                if core_reader is not None and source.endswith(".pnx"):
+                    revision = request.get("revision")
+                    if not isinstance(revision, bool) and hasattr(revision, "integerValue"):
+                        whole = int(revision.integerValue())
+                        if float(revision) == whole:
+                            revision = whole
+                    core_reader.update_source(source, content, revision)
                 # Preserve the session's original disk snapshot for conflict checks.
                 if source not in session.documents:
                     session.open(source)
