@@ -34,3 +34,14 @@ def test_legacy_fifth_entry_demo_highlight_does_not_bleed_into_explorer():
     assert ".workspace-mode .tree .project-entry:not(.workspace-selected){background:transparent}" in html
     assert html.index(".workspace-mode .tree .project-entry:not(.workspace-selected)") > html.index(
         ".entry:nth-of-type(5){background:#1d3048}")
+
+
+def test_editor_bracket_pairs_wrap_selection_and_skip_existing_closer():
+    preview = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    editor = preview.split("editorInput.addEventListener('keydown',e=>{", 1)[1].split(
+        "const coreSyncTimers=", 1)[0]
+    assert "const pairs={'(' : ')','[' : ']','{' : '}'};" in editor
+    assert "e.key+selected+pairs[e.key]" in editor
+    assert "editorInput.setSelectionRange(start+1,start+1+selected.length)" in editor
+    assert "editorInput.value[start]===e.key" in editor
+    assert "if(!e.metaKey&&!e.ctrlKey&&!e.altKey&&!e.isComposing)" in editor
