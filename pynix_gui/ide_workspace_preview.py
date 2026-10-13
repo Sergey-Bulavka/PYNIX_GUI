@@ -1179,7 +1179,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        if(depth<=base)break;
        end++;
      }
-     if(end>i+2)positions.set(i,end-1);
+     if(end>i+1)positions.set(i,end-1);
    }
    return positions;
  }
