@@ -8,15 +8,15 @@
 - Pair insertion for parentheses, square/curly braces, and quotes; wrap selected text; skip duplicate closers.
 - Live matching-bracket highlight with strings/comments excluded.
 - Cmd+/ toggles line comments; Cmd+Shift+D duplicates line; Option+Up/Down moves line.
-- Cmd+D adds the next occurrence as a secondary selection; typed characters/backspace apply to all selections, and Esc clears extras. Mouse selection clears extras.
+- Cmd+D adds the next occurrence; Cmd+Option+Up/Down creates vertical cursors; Option+Click places additional cursors. Typing, backspace and paired punctuation apply to all active cursors. Esc clears extras; a normal mouse selection resets them.
 - Find, replace, replace-all, go-to-line, toolbar navigation (existing features).
-- Collapse/expand indentation blocks using line-gutter triangles in the Preview view. The source document is not modified by folding.
+- Fold / Unfold toolbar commands, and line-gutter triangles in Preview, collapse indentation blocks without changing the saved document.
 - Native Save remains guarded by the M4 Core revision protocol.
 
 ## Limitations to resolve before calling Block 2 commercially complete
 
-- Folding is only in Preview; the textarea editor cannot physically elide source lines while preserving native selection offsets. A virtualized text editing surface is needed for inline folding.
-- Multi-caret support currently covers Cmd+D same-text occurrences and text insertion/backspace; arbitrary mouse-placed carets, rectangular selection, multiline paste, IME, and overlapping selections require further design and macOS validation.
+- Folding currently switches to Preview; the textarea cannot physically elide editable source lines without breaking caret and selection offsets. True inline folding will need a virtualized editable document surface.
+- Multi-caret supports Cmd+D, vertical keyboard carets, Option+Click, typing/backspace and paired punctuation; rectangular selection, multiline paste/IME and overlapping selections still require a richer editing engine and macOS acceptance.
 - Native keyboard shortcuts may conflict with platform menu actions; test on macOS WKWebView.
 
 ## After the full code package: regression and manual acceptance
