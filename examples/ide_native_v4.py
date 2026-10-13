@@ -101,15 +101,18 @@ def main() -> None:
             result = query_navigation(session.root, compiler_python, args.nav_command,
                                       args.nav_source, args.nav_line, args.nav_column)
             document = attach_navigation(document, result, args.nav_command)
+    core_reader = None
     if args.ide_core:
-        from pynix_gui.ide_core_read_bridge import read_core_snapshot, CoreSnapshotError
+        from pynix_gui.ide_core_persistent import PersistentCoreReader
+        from pynix_gui.ide_core_read_bridge import CoreSnapshotError
         from html import escape
         compiler_for_core = args.compiler_python or (session.root / ".venv" / "bin" / "python")
         try:
-            core_snapshot = read_core_snapshot(args.ide_core, session.root, compiler_for_core)
-            # Read-only connection indicator; never replace V4 document buffers.
-            core_status = "IDE Core: connected (read-only)"
-        except CoreSnapshotError as exc:
+            core_reader = PersistentCoreReader(args.ide_core, session.root, compiler_for_core)
+            core_snapshot = core_reader.start()
+            core_status = "IDE Core: connected (persistent, read-only)"
+        except (CoreSnapshotError, OSError) as exc:
+            core_reader = None
             core_status = "IDE Core: " + str(exc)[:180]
         indicator = '<div class="pynix-core-bridge-indicator" role="status" style="position:fixed;right:16px;bottom:30px;z-index:9000;background:#1c2939;color:#e5effc;border:1px solid #496782;padding:5px 10px;border-radius:6px;font:12px system-ui">' + escape(core_status) + '</div>'
         document = document.replace("</body>", indicator + "</body>", 1)
@@ -144,6 +147,13 @@ def main() -> None:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("File is not part of the indexed project")
                 file_path = session.resolve_file(source)
+                if core_reader is not None and source.endswith(".pnx"):
+                    # Mirror only the open-source selection in the persistent Core.
+                    # V4 still owns editor buffers and all writes.
+                    try:
+                        core_reader.open_source(source)
+                    except CoreSnapshotError as exc:
+                        print("IDE Core read mirror:", exc, file=sys.stderr)
                 if file_path.stat().st_size > 1_000_000:
                     raise ValueError("File is too large for this preview")
                 text = file_path.read_text(encoding="utf-8")
@@ -242,7 +252,11 @@ def main() -> None:
     window.makeKeyAndOrderFront_(None)
     window.makeFirstResponder_(view)
     app.activateIgnoringOtherApps_(True)
-    app.run()
+    try:
+        app.run()
+    finally:
+        if core_reader is not None:
+            core_reader.close()
 
 
 if __name__ == "__main__":
