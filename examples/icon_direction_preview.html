@@ -230,6 +230,13 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-find-bar[hidden]{display:none!important}
 .workspace-mode .pynix-find-bar input{width:190px;min-width:80px;height:25px;padding:3px 8px;border:1px solid #4b617c;border-radius:5px;color:#e6efff;background:#111b2b;outline:none;font-size:12px}
 .workspace-mode .pynix-find-bar input:focus{border-color:#77a7e8}
+/* Search controls use the native blinking insertion caret, not the editor overlay. */
+.workspace-mode .pynix-find-bar input,
+.workspace-mode .pynix-find-bar input:focus{
+ caret-color:#e6efff!important;
+ -webkit-text-fill-color:#e6efff!important;
+ color:#e6efff!important;
+}
 .workspace-mode .pynix-find-bar button{width:25px;height:25px;padding:0;border:0;border-radius:4px;background:transparent;color:#c9d8eb;cursor:pointer}
 .workspace-mode .pynix-find-bar button:hover{background:#334a67}
 .workspace-mode .pynix-find-count{font-size:11px;color:#bdcbe0;white-space:nowrap;min-width:52px;text-align:center}
