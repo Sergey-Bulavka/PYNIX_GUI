@@ -313,3 +313,63 @@ def test_late_core_and_file_responses_cannot_resurrect_closed_tabs():
     assert "!openTabs.includes(payload.source)" in load
     assert "if(!file.unloaded||file.dirty)return;" in load
     assert "if(!openTabs.includes(name))return;" in close
+
+
+def test_core_recovery_replays_all_open_buffers_without_disk_writes(tmp_path, monkeypatch):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    first = project / "src" / "first.pnx"
+    second = project / "src" / "second.pnx"
+    first.write_text("saved 1", encoding="utf-8")
+    second.write_text("saved 2", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    events = []
+    monkeypatch.setattr(reader, "close", lambda: events.append("close"))
+    monkeypatch.setattr(reader, "start", lambda: events.append("start"))
+    monkeypatch.setattr(reader, "update_source",
+                        lambda source, content, revision: events.append(
+                            ("update", source, content, revision)))
+    monkeypatch.setattr(reader, "read_source",
+                        lambda source: {"source": source,
+                                        "content": "edited 1" if source.endswith("first.pnx") else "edited 2",
+                                        "revision": 4 if source.endswith("first.pnx") else 9})
+    result = reader.restart_with_buffers([
+        {"source": "src/first.pnx", "content": "edited 1", "revision": 4},
+        {"source": "src/second.pnx", "content": "edited 2", "revision": 9},
+    ])
+    assert result == {"restored": 2}
+    assert events == [
+        "close", "start",
+        ("update", "src/first.pnx", "edited 1", 4),
+        ("update", "src/second.pnx", "edited 2", 9)]
+    assert first.read_text(encoding="utf-8") == "saved 1"
+    assert second.read_text(encoding="utf-8") == "saved 2"
+
+
+def test_core_recovery_rejects_invalid_batch_before_stopping_process(tmp_path, monkeypatch):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    (project / "src" / "main.pnx").write_text("saved", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    stopped = []
+    monkeypatch.setattr(reader, "close", lambda: stopped.append(True))
+    with pytest.raises(CoreSnapshotError, match="recovery buffer"):
+        reader.restart_with_buffers([
+            {"source": "src/main.pnx", "content": "first", "revision": 1},
+            {"source": "src/main.pnx", "content": "second", "revision": 2},
+        ])
+    assert stopped == []
+
+
+def test_core_recovery_bridge_keeps_live_editor_text():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    adapter = (root / "pynix_gui" / "ide_core_persistent.py").read_text(encoding="utf-8")
+    assert "class CoreRecoveryHandler(NSObject):" in native
+    assert '"pynixCoreRecover"' in native
+    assert "core_reader.restart_with_buffers(buffers)" in native
+    assert "window.pynixCoreRecoveryResult=reply=>" in preview
+    assert "coreIndicator.addEventListener('click',recoverCoreBuffers)" in preview
+    assert "buffers.push({source,content:file.text,revision});" in preview
+    assert "self._lines = queue.Queue()" in adapter
