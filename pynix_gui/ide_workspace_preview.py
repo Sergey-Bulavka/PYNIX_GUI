@@ -804,12 +804,13 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const tail=editorInput.value.slice(end);
      const next=tail[0]||'';
      const opens=prefix.trimEnd().endsWith('{');
+     const pnxBlock=/^(?:function|if|elif|else|for|while|class|interface|match|case|try|catch|finally)\\b/.test(prefix.trim());
      if(opens&&next==='}'){
        replaceSelection('\\n'+indent+'    '+'\\n'+indent,start,end);
        editorInput.setSelectionRange(start+1+indent.length+4,start+1+indent.length+4);
      }else{
        const adjusted=/^[}\\]\\)]/.test(next)&&indent.length>=4?indent.slice(0,-4):indent;
-       replaceSelection('\\n'+adjusted+(opens?'    ':''),start,end);
+       replaceSelection('\\n'+adjusted+((opens||pnxBlock)?'    ':''),start,end);
      }
    }
  });
