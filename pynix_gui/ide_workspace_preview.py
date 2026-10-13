@@ -377,10 +377,29 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const projectResults=document.createElement('div');
  projectResults.className='pynix-project-results';
  projectResults.hidden=true;
- document.querySelector('.editor')?.appendChild(projectResults);
+ document.body.appendChild(projectResults);
+ function positionProjectResults(){
+   const rect=projectFindBar.getBoundingClientRect();
+   projectResults.style.top=Math.round(rect.bottom+7)+'px';
+   projectResults.style.left=Math.round(Math.max(8,rect.right-Math.min(570,window.innerWidth-16)))+'px';
+   projectResults.style.width=Math.round(Math.min(570,window.innerWidth-16))+'px';
+   projectResults.style.maxHeight=Math.max(100,window.innerHeight-rect.bottom-20)+'px';
+ }
+ function closeProjectFind(){
+   projectFindBar.hidden=true;
+   projectResults.hidden=true;
+   editorInput.focus();
+ }
+ window.addEventListener('resize',()=>{if(!projectResults.hidden)positionProjectResults();});
+ document.addEventListener('keydown',e=>{
+   if(e.key==='Escape'&&(!projectFindBar.hidden||!projectResults.hidden)){
+     e.preventDefault();e.stopImmediatePropagation();closeProjectFind();
+   }
+ },true);
  function runProjectFind(){
    const query=projectFindInput.value.trim();
    if(!query)return;
+   positionProjectResults();
    projectResults.hidden=false;
    projectResults.textContent='Searching project…';
    const bridge=window.webkit?.messageHandlers?.pynixProjectSearch;
@@ -390,15 +409,18 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  projectFindButton.addEventListener('click',runProjectFind);
  projectFindInput.addEventListener('keydown',e=>{
    if(e.key==='Enter'){e.preventDefault();runProjectFind();}
-   if(e.key==='Escape'){e.preventDefault();projectFindBar.hidden=true;projectResults.hidden=true;editorInput.focus();}
+   if(e.key==='Escape'){e.preventDefault();closeProjectFind();}
  });
- projectFindClose.addEventListener('click',()=>{projectFindBar.hidden=true;projectResults.hidden=true;editorInput.focus();});
+ projectFindClose.addEventListener('click',closeProjectFind);
  document.addEventListener('keydown',e=>{
    if((e.metaKey||e.ctrlKey)&&e.shiftKey&&e.key.toLowerCase()==='f'){
      e.preventDefault();projectFindBar.hidden=false;projectFindInput.focus();projectFindInput.select();
+     positionProjectResults();
    }
  });
  window.pynixProjectSearchResult=payload=>{
+   if(projectFindBar.hidden)return;
+   positionProjectResults();
    projectResults.replaceChildren();
    if(payload.error){projectResults.textContent=payload.error;return;}
    const head=document.createElement('div');
