@@ -680,12 +680,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      if(status)status.textContent='IDE Core: recovery failed — '+error;
    }
  };
- const coreIndicator=document.querySelector('.pynix-core-bridge-indicator');
- if(coreIndicator){
-   coreIndicator.title='Click to restart IDE Core and restore open buffers';
-   coreIndicator.style.cursor='pointer';
-   coreIndicator.addEventListener('click',recoverCoreBuffers);
- }
+ // The native host injects this indicator after the workspace script.
+ // Delegate from document so recovery works independently of insertion order.
+ document.addEventListener('click',event=>{
+   if(event.target?.closest?.('.pynix-core-bridge-indicator'))recoverCoreBuffers();
+ });
  function scheduleCoreBufferSync(){
    if(!current||!current.endsWith('.pnx'))return;
    const source=current;
