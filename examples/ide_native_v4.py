@@ -197,6 +197,7 @@ def main() -> None:
                 session.update(source, content)
                 session.save(source)
                 response["saved"] = True
+                response["savedText"] = content
                 if core_reader is not None and source.endswith(".pnx"):
                     try:
                         core_reader.acknowledge_saved_source(source, content)
