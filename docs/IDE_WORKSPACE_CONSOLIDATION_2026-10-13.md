@@ -226,3 +226,23 @@ external-change protection while replacing its prototype session.
 This is a migration decision, **not** a claim that V4 has been merged into
 PYNIX_IDE. Keep the existing GUI regression examples and V4 launcher working
 throughout the transition.
+
+## Persistent read-only Core connection (2026-10-13)
+
+`pynix_gui/ide_core_persistent.py` now starts one PYNIX
+`workspace_read_host.pnx` process through the user-selected compiler.
+It retains the same IDE Core session across `openProject`, `openSource`
+and `snapshot` requests. The V4 launcher with `--ide-core` uses this
+instead of the previous one-shot diagnostic; closing the window terminates
+the subprocess in `finally`. The V4 file-open bridge mirrors PYNIX source
+selection to Core, **not** file mutations.
+
+The editor still belongs to V4's `WorkspaceSession`; its save-conflict
+and atomic-write behavior is unchanged. The Core snapshot is *diagnostic*,
+not the authoritative editor model. Do not infer full session synchronization.
+
+Acceptance: run `tests/test_ide_core_persistent.py`,
+`tests/test_ide_core_read_bridge.py`, V4 tests, then launch with
+`--ide-core`. The expected indicator is
+`IDE Core: connected (persistent, read-only)`. Confirm file open and
+window close on macOS. Native runtime behavior is still pending verification.
