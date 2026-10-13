@@ -147,16 +147,16 @@ def main() -> None:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("File is not part of the indexed project")
                 file_path = session.resolve_file(source)
-                if core_reader is not None and source.endswith(".pnx"):
-                    # Mirror only the open-source selection in the persistent Core.
-                    # V4 still owns editor buffers and all writes.
-                    try:
-                        core_reader.open_source(source)
-                    except CoreSnapshotError as exc:
-                        print("IDE Core read mirror:", exc, file=sys.stderr)
                 if file_path.stat().st_size > 1_000_000:
                     raise ValueError("File is too large for this preview")
-                text = file_path.read_text(encoding="utf-8")
+                if core_reader is not None and source.endswith(".pnx"):
+                    core_reader.open_source(source)
+                    state = core_reader.read_source(source)
+                    text = state["content"]
+                    response["revision"] = state["revision"]
+                    response["dirty"] = state["dirty"]
+                else:
+                    text = file_path.read_text(encoding="utf-8")
                 response["text"] = text
                 response["tokens"] = highlight_document(text) if source.endswith(".pnx") else None
             except (OSError, UnicodeError, ValueError, CoreSnapshotError) as error:
