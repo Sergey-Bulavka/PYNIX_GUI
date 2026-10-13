@@ -73,3 +73,18 @@ def test_multiselection_visualization_and_pointer_exit():
     assert "pynix-secondary-caret" in source
     assert "file.extraSelections=[];" in source
     assert ".workspace-mode .pynix-secondary-selection{" in html
+
+
+def test_multicaret_pair_insertion_keeps_caret_inside_each_pair():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "inputType==='insertPair'?data+value.slice(item.start,item.end)+closing[data]" in source
+    assert "inputType==='insertPair'?1+(item.end-item.start):replacement.length" in source
+    assert "editMultipleSelections('insertPair',e.key)" in source
+
+
+def test_folding_has_accessible_toolbar_controls():
+    source = SCRIPT.read_text(encoding="utf-8")
+    assert "foldButton.textContent='Fold'" in source
+    assert "unfoldButton.textContent='Unfold'" in source
+    assert "file.foldedLines=new Set()" in source
+    assert "editing=false;updateEditingView();renderCode(file);" in source
