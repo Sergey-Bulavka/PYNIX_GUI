@@ -53,7 +53,7 @@ def test_unsaved_buffer_mirrored_without_disk_write(tmp_path):
         write=written.append, flush=lambda: None))
     content = "function main()\\n    print(\\\"updated\\\")\\n"
     reader._lines.put({"ok": True, "kind": "snapshot", "value": {
-        "activeSourceContent": content, "activeSourceDirty": True,
+        "activeSourceContent": content, "activeSourceDirty": True, "revision": 1,
     }})
     result = reader.update_source("src/main.pnx", content)
     assert result["activeSourceDirty"] is True
@@ -67,7 +67,7 @@ def test_v4_publishes_unsaved_buffers_on_input():
     native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
     assert 'scheduleCoreBufferSync();' in js
     assert 'pynixCoreBuffer' in js
-    assert 'core_reader.update_source(source, content)' in native
+    assert 'core_reader.update_source(source, content, revision)' in native
     assert '"pynixCoreBuffer"' in native
 
 
@@ -95,3 +95,25 @@ def test_native_save_waits_for_v4_disk_write_before_core_ack():
         encoding="utf-8")
     assert source.index("session.save(source)") < source.index(
         "core_reader.acknowledge_saved_source(source, content)")
+
+
+def test_rejects_revision_mismatch(tmp_path):
+    project = tmp_path / "project"
+    (project / "src").mkdir(parents=True)
+    (project / "src" / "main.pnx").write_text("old", encoding="utf-8")
+    reader = PersistentCoreReader(tmp_path, project, tmp_path / "python")
+    reader._process = SimpleNamespace(poll=lambda: None, stdin=SimpleNamespace(
+        write=lambda value: None, flush=lambda: None))
+    reader._lines.put({"ok": True, "kind": "snapshot", "value": {
+        "activeSourceContent": "new", "revision": 1,
+    }})
+    with pytest.raises(CoreSnapshotError, match="differs|Invalid"):
+        reader.update_source("src/main.pnx", "new", 2)
+
+
+def test_v4_tracks_revisions_per_source():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "const coreRevisions=new Map();" in js
+    assert "coreRevisions.set(source,revision)" in js
+    assert "bridge.postMessage({source,text:content,revision})" in js
