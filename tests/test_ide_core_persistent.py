@@ -506,3 +506,33 @@ def test_core_close_rejects_completion_after_inflight_text_changes():
     assert "file?.text!==pending.text" in close
     assert "if(reply?.closed){finishTabClose(source);return;}" in close
     assert "recover Core before continuing" in close
+
+
+def test_recovery_is_fenced_from_inflight_save_and_close():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    recovery = preview.split("function recoverCoreBuffers(){", 1)[1].split(
+        "window.pynixCoreRecoveryResult=reply=>{", 1)[0]
+    assert "if(pendingNativeSaves.size||pendingCoreClose.size){" in recovery
+    assert "Wait for pending Save or Close before restoring IDE Core" in recovery
+    assert recovery.index("if(pendingNativeSaves.size||pendingCoreClose.size){") < (
+        recovery.index("persistBuffer();"))
+    prepare = preview.split("function prepareNativeSave(source,content){", 1)[1].split(
+        "function saveSource(){", 1)[0]
+    assert "if(coreRecovering||pendingCoreClose.has(source)||pendingNativeSaves.has(source))return null;" in prepare
+    close = preview.split("function closeTabNow(name,discard=false){", 1)[1].split(
+        "window.pynixCoreCloseResult=reply=>{", 1)[0]
+    assert "if(coreRecovering){" in close
+    assert "Wait for IDE Core recovery before closing a tab" in close
+
+
+def test_recovery_fence_retains_live_editor_buffer_during_restart():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    recovery = preview.split("function recoverCoreBuffers(){", 1)[1].split(
+        "window.pynixCoreRecoveryResult=reply=>{", 1)[0]
+    guard = recovery.split("if(pendingNativeSaves.size||pendingCoreClose.size){", 1)[1].split(
+        "persistBuffer();", 1)[0]
+    assert "return;" in guard
+    assert "file.text=" not in guard
+    assert "file.dirty=" not in guard
