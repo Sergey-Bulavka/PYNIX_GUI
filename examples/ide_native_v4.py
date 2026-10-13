@@ -312,6 +312,7 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixProjectSearchResult(" + serialized + ");", None)
 
+    core_close_handler = CoreCloseHandler.alloc().init()
     core_discard_handler = CoreDiscardHandler.alloc().init()
     core_buffer_handler = CoreBufferHandler.alloc().init()
     project_search_handler = ProjectSearchHandler.alloc().init()
@@ -323,6 +324,7 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
     controller.addScriptMessageHandler_name_(core_buffer_handler, "pynixCoreBuffer")
     controller.addScriptMessageHandler_name_(core_discard_handler, "pynixCoreDiscard")
+    controller.addScriptMessageHandler_name_(core_close_handler, "pynixCoreClose")
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
