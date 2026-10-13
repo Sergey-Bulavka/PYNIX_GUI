@@ -1,7 +1,7 @@
-"""Persistent, read-only subprocess adapter for the official PYNIX_IDE Core.
+"""Persistent subprocess adapter for IDE Core with in-memory buffer mirroring.
 
-The subprocess owns one IdeSession; Workspace V4 keeps its current editor and
-save implementation until single-owner migration is independently verified.
+The subprocess owns one IdeSession and accepts unsaved in-memory buffer updates.
+Workspace V4 retains disk-save ownership until single-owner migration is verified.
 """
 from __future__ import annotations
 
