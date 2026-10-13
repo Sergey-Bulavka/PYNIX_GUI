@@ -161,3 +161,29 @@ force-merge them or delete them based only on these numbers.
   regression or platform gates, even if the UI is visually superseded.
 - Only delete branches after a second read confirms the exact target ref and
   the repository owner approves the final classification.
+
+## Diverged branch file-level triage (2026-10-13)
+
+Compared representative high-impact diverged branches to V4, not just their
+branch ancestry. The following files reported by older branches **already
+exist** on V4: `pynix_gui/tree_visuals.py`,
+`pynix_gui/wrap_engine.py`, `pynix_gui/height_for_width.py`,
+`tests/test_open_event.py`, and
+`tests/test_macos_menu_key_equivalents.py`.
+
+This proves those capabilities have current *files*, **not** that their
+implementations are byte-identical or satisfy the same behavioral contract.
+Never copy over current V4 files from old branches.
+
+| Historical branch | Changed-file areas | Decision |
+| --- | --- | --- |
+| `fix/macos-menu-keyboard-shortcuts` | macOS host + menu accelerator test | Compare key equivalent semantics and run native shortcut regression |
+| `feature/file-manager-interaction-v2` | core, macOS/Windows backends, OPEN event test | Preserve current event contract, compare edge cases |
+| `feature/tree-explorer-visual-quality-v1` | tree visuals, assets, backends, gallery tests | Keep current file/icon quality and run visual acceptance |
+| `feature/text-layout-v4-height-for-width` | layout engine, wrap engine, backends, tests | Keep current layout, compare edge-case tests |
+| `feature/commercial-gallery-discovery-pass` | showcase and gallery documentation/tests | Historical gallery track; check current showcase functionality |
+| `feature/workspace-responsive-visual-accessibility` | style, backends, showcase and tests | Re-test responsiveness/contrast on V4 |
+
+The safest next step is focused testing and reviewing actual diffs for these
+areas before archiving diverged references. No branch deletion, file deletion,
+or re-merge has been performed during triage.
