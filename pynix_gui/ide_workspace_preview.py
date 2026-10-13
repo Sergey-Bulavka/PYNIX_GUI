@@ -934,12 +934,35 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      coreSyncTimers.delete(name);
    }
  }
- function closeTabNow(name){
-   if(!openTabs.includes(name))return;
+ const pendingCoreClose=new Map();
+ function closeTabNow(name,discard=false){
+   if(!openTabs.includes(name)||pendingCoreClose.has(name))return;
    cancelCoreBufferSync(name);
-   if(name.endsWith('.pnx')){
-     window.webkit?.messageHandlers?.pynixCoreClose?.postMessage({source:name});
+   const bridge=window.webkit?.messageHandlers?.pynixCoreClose;
+   if(name.endsWith('.pnx')&&bridge){
+     pendingCoreClose.set(name,{discard,revision:coreRevisions.get(name)||0});
+     bridge.postMessage({source:name,discard});
+     return;
    }
+   finishTabClose(name);
+ }
+ window.pynixCoreCloseResult=reply=>{
+   const source=reply?.source;
+   const pending=pendingCoreClose.get(source);
+   if(!pending)return;
+   pendingCoreClose.delete(source);
+   const file=byName.get(source);
+   // A user may have edited the document while Core was closing it.
+   if((coreRevisions.get(source)||0)!==pending.revision||file?.dirty&&!pending.discard){
+     if(!reply?.closed)window.alert('IDE Core refused to close '+source+': '+String(reply?.error||'Document changed'));
+     return;
+   }
+   if(reply?.closed){finishTabClose(source);return;}
+   if(file)file.coreSyncError=String(reply?.error||'IDE Core refused to close document');
+   window.alert('Close failed: '+String(reply?.error||'Unknown Core error'));
+ };
+ function finishTabClose(name){
+   if(!openTabs.includes(name))return;
    const index=openTabs.indexOf(name);
    if(index<0)return;
    openTabs.splice(index,1);
@@ -978,10 +1001,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const cancel=button('Cancel',dismiss);
    button('Don’t Save',()=>{
      dismiss();
-     cancelCoreBufferSync(name);
-     const bridge=window.webkit?.messageHandlers?.pynixCoreDiscard;
-     if(bridge&&name.endsWith('.pnx'))bridge.postMessage({source:name});
-     closeTabNow(name);
+     closeTabNow(name,true);
    });
    button('Save',()=>{
      if(current!==name){dismiss();show(name);}
