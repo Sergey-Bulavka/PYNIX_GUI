@@ -191,3 +191,15 @@ def test_editor_keeps_caret_selection_and_scroll_per_tab():
     assert "file.scrollLeft=editorInput.scrollLeft;" in js
     assert "editorInput.addEventListener('select',()=>persistBuffer());" in js
     assert "editorInput.setSelectionRange(file.cursorStart||0,file.cursorEnd??file.cursorStart??0);" in js
+
+
+def test_webkit_restoration_suppresses_deferred_selection_and_scroll_events():
+    source = (Path(__file__).resolve().parents[1] / "pynix_gui" /
+              "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "if(restoringEditor||!editing||!current)return;" in source
+    assert "const start=file.cursorStart??0;" in source
+    assert "const top=file.scrollTop??0;" in source
+    assert "restoringEditor=true;" in source
+    assert "editorRestoreEpoch" in source
+    assert "requestAnimationFrame(()=>{" in source
+    assert "if(epoch===editorRestoreEpoch&&current===source)restoringEditor=false;" in source
