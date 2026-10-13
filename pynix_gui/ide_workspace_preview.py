@@ -610,7 +610,16 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      const start=editorInput.selectionStart,end=editorInput.selectionEnd;
      const prefix=editorInput.value.slice(editorInput.value.lastIndexOf('\\n',start-1)+1,start);
      const indent=prefix.match(/^[ \\t]*/)?.[0]||'';
-     replaceSelection('\\n'+indent,start,end);
+     const tail=editorInput.value.slice(end);
+     const next=tail[0]||'';
+     const opens=prefix.trimEnd().endsWith('{');
+     if(opens&&next==='}'){
+       replaceSelection('\\n'+indent+'    '+'\\n'+indent,start,end);
+       editorInput.setSelectionRange(start+1+indent.length+4,start+1+indent.length+4);
+     }else{
+       const adjusted=/^[}\\]\\)]/.test(next)&&indent.length>=4?indent.slice(0,-4):indent;
+       replaceSelection('\\n'+adjusted+(opens?'    ':''),start,end);
+     }
    }
  });
  const coreSyncTimers=new Map();
