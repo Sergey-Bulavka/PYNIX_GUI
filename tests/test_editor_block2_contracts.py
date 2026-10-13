@@ -98,3 +98,15 @@ def test_option_click_places_secondary_carets_without_wrapped_text():
     assert "ctx.measureText('0000000000').width/10" in source
     assert "event.preventDefault();" in source
     assert "if(position===previous.start&&previous.start===previous.end)return;" in source
+
+
+def test_editor_acceptance_runner_is_isolated(tmp_path):
+    import subprocess
+    runner = ROOT / "scripts" / "test_editor_block2.sh"
+    text = runner.read_text(encoding="utf-8")
+    assert "mktemp -d" in text
+    assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in text
+    assert 'mkdir -p "$PROJECT/src"' in text
+    assert "rm -rf" not in text
+    result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
