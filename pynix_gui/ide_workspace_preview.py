@@ -442,8 +442,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  diagnosticsStatus.className='pynix-diagnostics-status';
  document.querySelector('.bottom')?.appendChild(diagnosticsStatus);
  let editing=true;
+ let restoringEditor=false;
+ let editorRestoreEpoch=0;
  function persistBuffer(){
-   if(!editing || !current)return;
+   if(restoringEditor||!editing||!current)return;
    const file=byName.get(current);
    if(!file || file.unloaded)return;
    file.text=editorInput.value;
@@ -466,14 +468,35 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    editButton.textContent=editing?'Preview':'Edit';
    saveButton.disabled=!available||!file.dirty;
    if(editing&&available){
+     // WebKit dispatches selection/scroll events while replacing textarea.value
+     // and after setSelectionRange; those events must not overwrite tab state.
+     const source=current;
+     const epoch=++editorRestoreEpoch;
+     const start=file.cursorStart??0;
+     const end=file.cursorEnd??start;
+     const top=file.scrollTop??0;
+     const left=file.scrollLeft??0;
+     restoringEditor=true;
      editorInput.value=file.text;
      recolorSource();
      editorInput.focus();
-     editorInput.setSelectionRange(file.cursorStart||0,file.cursorEnd??file.cursorStart??0);
-     editorInput.scrollTop=file.scrollTop||0;
-     editorInput.scrollLeft=file.scrollLeft||0;
+     editorInput.setSelectionRange(start,end);
+     editorInput.scrollTop=top;
+     editorInput.scrollLeft=left;
      recolorSource();
      updateCursor();
+     requestAnimationFrame(()=>{
+       if(epoch!==editorRestoreEpoch||current!==source)return;
+       editorInput.setSelectionRange(start,end);
+       editorInput.scrollTop=top;
+       editorInput.scrollLeft=left;
+       requestAnimationFrame(()=>{
+         if(epoch===editorRestoreEpoch&&current===source)restoringEditor=false;
+       });
+     });
+   }else{
+     ++editorRestoreEpoch;
+     restoringEditor=false;
    }
  }
  // Explicit history is needed because setRangeText and document switches do not
