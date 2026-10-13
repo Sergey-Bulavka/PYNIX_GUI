@@ -224,6 +224,8 @@ def main() -> None:
     document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
+    from pynix_gui.ide_native_menu import install_native_workspace_menu
+    menu_dispatcher = install_native_workspace_menu(app, view, AppKit)
     window.makeKeyAndOrderFront_(None)
     window.makeFirstResponder_(view)
     app.activateIgnoringOtherApps_(True)
