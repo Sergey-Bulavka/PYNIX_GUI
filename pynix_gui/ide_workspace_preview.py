@@ -602,16 +602,18 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const source=reply?.source;
    const revision=reply?.revision;
    if(typeof source!=='string'||!Number.isInteger(revision))return;
-   if(!byName.has(source))return;
-   if(revision<(coreRevisions.get(source)||0))return;
+   if(!byName.has(source)||!openTabs.includes(source))return;
+   if(revision!==(coreRevisions.get(source)||0))return;
    const status=document.querySelector('.pynix-core-bridge-indicator');
    if(!status)return;
    if(reply.ok){
      coreConfirmedRevisions.set(source,revision);
      const file=byName.get(source);
-     if(file){file.coreRevision=revision;file.coreDirty=reply.dirty===true;}
+     if(file){file.coreRevision=revision;file.coreDirty=reply.dirty===true;file.coreSyncError=null;}
      status.textContent='IDE Core: synced (revision '+revision+')';
    }else{
+     const file=byName.get(source);
+     if(file)file.coreSyncError=String(reply.error||'Unknown error');
      status.textContent='IDE Core: sync error — '+String(reply.error||'Unknown error');
    }
  };
@@ -860,6 +862,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
  }
  function closeTabNow(name){
+   if(!openTabs.includes(name))return;
    cancelCoreBufferSync(name);
    if(name.endsWith('.pnx')){
      window.webkit?.messageHandlers?.pynixCoreClose?.postMessage({source:name});
@@ -868,7 +871,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(index<0)return;
    openTabs.splice(index,1);
    const file=byName.get(name);
-   if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;}
+   if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;file.coreSyncError=null;}
    if(current===name){
      current=null;
      const next=openTabs[Math.min(index,openTabs.length-1)];
@@ -994,8 +997,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  window.pynixReceiveFile=function(payload){
-   if(!payload || !byName.has(payload.source))return;
+   if(!payload || !byName.has(payload.source)||!openTabs.includes(payload.source))return;
    const file=byName.get(payload.source);
+   if(!file.unloaded||file.dirty)return;
    if(payload.error){
      if(current===payload.source){
        code.replaceChildren();
