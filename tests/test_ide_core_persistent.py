@@ -537,3 +537,24 @@ def test_recovery_fence_retains_live_editor_buffer_during_restart():
     assert "return;" in guard
     assert "file.text=" not in guard
     assert "file.dirty=" not in guard
+
+
+def test_configured_core_never_silently_falls_back_to_disk_only_save():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    save = native.split("class FileSaveHandler(NSObject):", 1)[1].split(
+        "class ProjectSearchHandler(NSObject):", 1)[0]
+    assert 'if args.ide_core is not None and source.endswith(".pnx") and core_reader is None:' in save
+    assert "IDE Core is unavailable; cannot save .pnx" in save
+    assert save.index("IDE Core is unavailable; cannot save .pnx") < save.index("session.save(source)")
+
+
+def test_recovery_listener_works_for_native_indicator_inserted_after_bootstrap():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    callback = preview.split("window.pynixCoreRecoveryResult=reply=>{", 1)[1].split(
+        "document.addEventListener('click',event=>{", 1)[0]
+    assert "file.text===item.content" in callback
+    assert "file.savedText=" not in callback
+    assert "file.dirty=" not in callback
+    assert "recoverCoreBuffers();" in preview
