@@ -864,7 +864,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      file.extraSelections=[];
      if(!openTabs.includes(item.source))openTabs.push(item.source);
      cancelCoreBufferSync(item.source);
-     const revision=(coreRevisions.get(item.source)||0)+1;
+     const revision=Math.max(coreRevisions.get(item.source)||0,
+       Number.isInteger(item.coreRevision)?item.coreRevision:0)+1;
      coreRevisions.set(item.source,revision);
      bridge.postMessage({source:item.source,text:item.after,revision});
    }
