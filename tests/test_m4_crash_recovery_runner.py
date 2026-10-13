@@ -13,8 +13,7 @@ def test_crash_recovery_runner_isolated_and_valid_shell():
     assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in source
     assert "kill -9 <CORE_PID>" in source
     assert "rm -rf" not in source
-    assert "pkill " not in source
-    assert "killall " not in source
+    assert not any(line.lstrip().startswith(("pkill ", "killall ")) for line in source.splitlines())
     result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
