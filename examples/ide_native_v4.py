@@ -175,7 +175,8 @@ def main() -> None:
                 content = request.get("text")
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
-                core_reader.update_source(source, content)
+                revision = request.get("revision")
+                core_reader.update_source(source, content, revision)
             except (CoreSnapshotError, ValueError, OSError, TypeError) as exc:
                 print("IDE Core buffer mirror:", exc, file=sys.stderr)
 
