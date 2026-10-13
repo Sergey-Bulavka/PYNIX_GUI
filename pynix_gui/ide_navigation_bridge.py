@@ -104,6 +104,10 @@ def navigation_controls() -> str:
        return;
      }
      if(!ready){window.pynixNavigationResult({command,result:{error:'Wait for the source file to finish loading, then click a symbol.'}});return;}
+     if(window.pynixHasUnsavedSource?.(source)){
+       window.pynixNavigationResult({command,result:{error:'Save changes before querying compiler navigation (compiler reads saved files).'}});
+       return;
+     }
      if(!handler){window.pynixNavigationResult({command,result:{error:'Native navigation bridge unavailable'}});return;}
      handler.postMessage({command,source,line,column});
    });
