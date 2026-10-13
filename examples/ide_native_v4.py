@@ -130,7 +130,15 @@ def main() -> None:
                 new_name = request.get("newName")
                 result = plan_semantic_rename(
                     session.root, compiler_python, source, line, column, new_name)
-            except (ValueError, TypeError, RenamePlanError, OSError) as exc:
+                if core_reader is None:
+                    raise CoreSnapshotError("Connected IDE Core required for semantic rename")
+                for entry in result["files"]:
+                    core_reader.open_source(entry["source"])
+                    state = core_reader.read_source(entry["source"])
+                    if state["dirty"] or state["content"] != entry["before"]:
+                        raise CoreSnapshotError("Core source changed; save and retry semantic rename")
+                    entry["coreRevision"] = state["revision"]
+            except (ValueError, TypeError, RenamePlanError, CoreSnapshotError, OSError) as exc:
                 result = {"error": str(exc)}
             serialized = json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
             view.evaluateJavaScript_completionHandler_(
