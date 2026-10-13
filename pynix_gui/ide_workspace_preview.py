@@ -618,6 +618,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
  };
  let coreRecovering=false;
+ let coreRecoverySnapshot=null;
+ function sendCoreRevision(source,content,revision){
+   const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
+   if(bridge)bridge.postMessage({source,text:content,revision});
+ }
  function recoverCoreBuffers(){
    const bridge=window.webkit?.messageHandlers?.pynixCoreRecover;
    if(!bridge||coreRecovering)return;
@@ -632,27 +637,44 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      buffers.push({source,content:file.text,revision});
    }
    coreRecovering=true;
+   coreRecoverySnapshot=buffers;
    const status=document.querySelector('.pynix-core-bridge-indicator');
    if(status)status.textContent='IDE Core: restoring '+buffers.length+' buffers...';
    bridge.postMessage({buffers});
  }
  window.pynixCoreRecoveryResult=reply=>{
+   const replay=coreRecoverySnapshot||[];
+   coreRecoverySnapshot=null;
    coreRecovering=false;
    const status=document.querySelector('.pynix-core-bridge-indicator');
-   if(!status)return;
    if(reply?.ok){
-     // Editing may have continued while replay was running.
-     // Never overwrite live buffers; newly changed revisions sync separately.
-     status.textContent='IDE Core: restored '+reply.restored+' buffers';
-     for(const source of openTabs){
-       const file=byName.get(source);
-       if(source.endsWith('.pnx')&&file&&!file.unloaded&&!coreSyncTimers.has(source)
-           &&(file.coreRevision||0)!==(coreRevisions.get(source)||0)
-           &&source===current){
-         scheduleCoreBufferSync();
+     // Mark only exactly replayed versions as confirmed. An edit during
+     // recovery must always be sent again, even for an inactive tab.
+     for(const item of replay){
+       if(!openTabs.includes(item.source))continue;
+       const file=byName.get(item.source);
+       if(!file||file.unloaded)continue;
+       if((coreRevisions.get(item.source)||0)===item.revision&&file.text===item.content){
+         file.coreRevision=item.revision;
+         file.coreDirty=file.dirty;
+         file.coreSyncError=null;
+         coreConfirmedRevisions.set(item.source,item.revision);
+       }else{
+         cancelCoreBufferSync(item.source);
+         const revision=(coreRevisions.get(item.source)||0)+1;
+         coreRevisions.set(item.source,revision);
+         sendCoreRevision(item.source,file.text,revision);
        }
      }
-   }else status.textContent='IDE Core: recovery failed — '+String(reply?.error||'Unknown error');
+     if(status)status.textContent='IDE Core: restored '+reply.restored+' buffers';
+   }else{
+     const error=String(reply?.error||'Unknown error');
+     for(const item of replay){
+       const file=byName.get(item.source);
+       if(file&&!file.unloaded)file.coreSyncError=error;
+     }
+     if(status)status.textContent='IDE Core: recovery failed — '+error;
+   }
  };
  const coreIndicator=document.querySelector('.pynix-core-bridge-indicator');
  if(coreIndicator){
