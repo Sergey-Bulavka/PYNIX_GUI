@@ -62,7 +62,8 @@ def main() -> None:
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
     parser = argparse.ArgumentParser(description="PYNIX IDE V4 preview")
-    parser.add_argument("--project", type=Path, help="Read-only source project to explore")
+    parser.add_argument("--project", type=Path, help="Source project to explore")
+    parser.add_argument("--ide-core", type=Path, help="Official PYNIX_IDE checkout for read-only Core snapshot")
     parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
     parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
     parser.add_argument("--nav-command", choices=("definition", "references", "type-at"))
@@ -100,6 +101,18 @@ def main() -> None:
             result = query_navigation(session.root, compiler_python, args.nav_command,
                                       args.nav_source, args.nav_line, args.nav_column)
             document = attach_navigation(document, result, args.nav_command)
+    if args.ide_core:
+        from pynix_gui.ide_core_read_bridge import read_core_snapshot, CoreSnapshotError
+        from html import escape
+        compiler_for_core = args.compiler_python or (session.root / ".venv" / "bin" / "python")
+        try:
+            core_snapshot = read_core_snapshot(args.ide_core, session.root, compiler_for_core)
+            # Read-only connection indicator; never replace V4 document buffers.
+            core_status = "IDE Core: connected (read-only)"
+        except CoreSnapshotError as exc:
+            core_status = "IDE Core: " + str(exc)[:180]
+        indicator = '<div class="pynix-core-bridge-indicator" role="status" style="position:fixed;right:16px;bottom:30px;z-index:9000;background:#1c2939;color:#e5effc;border:1px solid #496782;padding:5px 10px;border-radius:6px;font:12px system-ui">' + escape(core_status) + '</div>'
+        document = document.replace("</body>", indicator + "</body>", 1)
     from pynix_gui.ide_tooling_navigation import query_navigation
     compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
     available_sources = set(session.list_files(limit=5000))
