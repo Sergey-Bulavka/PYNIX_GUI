@@ -88,7 +88,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const before=editorInput.value.slice(0,editorInput.selectionStart);
    const line=before.split('\\n').length;
    const column=before.length-before.lastIndexOf('\\n');
-   cursorStatus.textContent='Ln '+line+', Col '+column;
+   const extraCount=byName.get(current)?.extraSelections?.length||0;
+   cursorStatus.textContent='Ln '+line+', Col '+column+(extraCount?' · '+(extraCount+1)+' cursors':'');
    const metrics=getComputedStyle(editorInput);
    const lineHeight=parseFloat(metrics.lineHeight);
    const topPadding=parseFloat(metrics.paddingTop);
@@ -646,6 +647,33 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
    editorInput.dispatchEvent(new Event('input',{bubbles:true}));
  }
+ function addVerticalCaret(direction){
+   const file=current?byName.get(current):null;
+   if(!file)return;
+   const value=editorInput.value;
+   const start=editorInput.selectionStart;
+   const lineStart=value.lastIndexOf('\\n',Math.max(0,start-1))+1;
+   const lineEndIndex=value.indexOf('\\n',start);
+   const lineEnd=lineEndIndex<0?value.length:lineEndIndex;
+   const column=start-lineStart;
+   let targetStart,targetEnd;
+   if(direction<0){
+     if(lineStart===0)return;
+     targetEnd=lineStart-1;
+     targetStart=value.lastIndexOf('\\n',Math.max(0,targetEnd-1))+1;
+   }else{
+     if(lineEnd===value.length)return;
+     targetStart=lineEnd+1;
+     const nextEnd=value.indexOf('\\n',targetStart);
+     targetEnd=nextEnd<0?value.length:nextEnd;
+   }
+   const target=Math.min(targetStart+column,targetEnd);
+   const extras=file.extraSelections||(file.extraSelections=[]);
+   if(extras.some(range=>range.start===target&&range.end===target))return;
+   extras.push({start:editorInput.selectionStart,end:editorInput.selectionEnd});
+   editorInput.setSelectionRange(target,target);
+   recolorSource();updateCursor();
+ }
  function addNextOccurrence(){
    const file=current?byName.get(current):null;
    if(!file)return;
@@ -761,6 +789,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateCursor();
  }
  editorInput.addEventListener('keydown',e=>{
+   if(e.metaKey&&e.altKey&&['ArrowUp','ArrowDown'].includes(e.key)){
+     e.preventDefault();addVerticalCaret(e.key==='ArrowUp'?-1:1);return;
+   }
    if(e.metaKey&&e.shiftKey&&!e.altKey&&e.key.toLowerCase()==='d'){
      e.preventDefault();duplicateCurrentLine();return;
    }
