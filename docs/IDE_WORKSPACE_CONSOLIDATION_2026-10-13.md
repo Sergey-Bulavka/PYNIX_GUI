@@ -94,3 +94,19 @@ git status --short --branch
 GitHub branch names are not proof that changes were merged. The actual local
 working tree and native macOS behavior cannot be inferred solely from GitHub.
 Windows interactive parity remains an independent release gate.
+
+## Sampled branch comparison against GUI main (2026-10-13)
+
+The GitHub compare API returned:
+
+| Branch | Relationship to main | Unique commits ahead | Behind |
+| --- | --- | ---: | ---: |
+| feature/ide-native-visual-shell-v3 | ahead | 43 | 0 |
+| feature/ide-design-system-v2 | ahead | 18 | 0 |
+| feature/ide-visual-foundation-v1 | ahead | 14 | 0 |
+| fix/macos-menu-keyboard-shortcuts | diverged | 2 | 56 |
+
+These counts show that **blind deletion would risk losing unique work**.
+They do not establish whether the latest active branch already contains the
+changes; compare against the integration branch, not just main, before any
+archive/deletion. No remote branches have been deleted.
