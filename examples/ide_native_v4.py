@@ -210,7 +210,9 @@ def main() -> None:
                     raise CoreSnapshotError("IDE Core was not connected at startup")
                 payload = dict(message.body())
                 entries = payload.get("buffers")
-                if not isinstance(entries, (list, tuple)):
+                # PyObjC may bridge a JavaScript Array as NSArray, not list/tuple.
+                from collections.abc import Sequence
+                if not isinstance(entries, Sequence) or isinstance(entries, (str, bytes)):
                     raise ValueError("Invalid recovery request")
                 buffers = []
                 for entry in entries:
