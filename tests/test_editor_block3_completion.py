@@ -54,3 +54,17 @@ def test_compiler_navigation_uses_live_editor_and_rejects_stale_buffer():
     assert "window.pynixHasUnsavedSource?.(source)" in bridge
     assert "Save changes before querying compiler navigation" in bridge
     assert "window.pynixHasUnsavedSource=source=>" in source
+
+
+
+def test_project_symbol_completion_uses_public_compiler_protocol():
+    source = (ROOT / "pynix_gui/ide_tooling_symbols.py").read_text(encoding="utf-8")
+    native = (ROOT / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert '"tooling", "symbols", str(root)' in source
+    assert 'payload.get("protocol") != "pynix-tooling"' in source
+    assert "payload.get(\"version\") != 1" in source
+    assert 'controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")' in native
+    assert "window.pynixProjectSymbolsResult=packet=>" in preview
+    assert "compilerSymbols,...identifiers" in preview
+    assert "completionButton.textContent='Complete'" in preview
