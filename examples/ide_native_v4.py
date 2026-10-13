@@ -177,6 +177,12 @@ def main() -> None:
                 source = request.get("source")
                 content = request.get("text")
                 revision = request.get("revision")
+                # WKWebView exposes JSON numbers as Objective-C NSNumber on macOS.
+                # Normalize at the boundary, before Python-side strict int validation.
+                if not isinstance(revision, bool) and hasattr(revision, "integerValue"):
+                    whole = int(revision.integerValue())
+                    if float(revision) == whole:
+                        revision = whole
                 reply.update(source=source, revision=revision)
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
