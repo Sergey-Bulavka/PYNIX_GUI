@@ -1104,8 +1104,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      return;
    }
    file.text=payload.text;
-   file.savedText=payload.text;
-   file.dirty=false;
+   file.savedText=typeof payload.savedText==='string'?payload.savedText:payload.text;
+   file.dirty=payload.dirty===true;
+   if(Number.isInteger(payload.revision)&&payload.revision>=0){
+     coreRevisions.set(payload.source,Math.max(coreRevisions.get(payload.source)||0,payload.revision));
+     coreConfirmedRevisions.set(payload.source,payload.revision);
+     file.coreRevision=payload.revision;
+     file.coreDirty=file.dirty;
+   }
    file.tokens=payload.tokens||null;
    file.unloaded=false;
    if(current===payload.source){
