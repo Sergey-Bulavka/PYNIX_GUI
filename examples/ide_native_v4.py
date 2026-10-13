@@ -272,7 +272,7 @@ def main() -> None:
             request = dict(message.body())
             source = request.get("source")
             content = request.get("text")
-            response = {"source": source}
+            response = {"source": source, "revision": request.get("revision")}
             try:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Source is outside the indexed project")
