@@ -116,6 +116,12 @@ def navigation_controls() -> str:
  const outputTab=[...tabs.children].find(el=>el.textContent.trim()==='OUTPUT');
  window.pynixNavigationResult=packet=>{
    const result=packet.result||{};
+   const normalizeSource=value=>{
+     if(typeof value!=='string')return '';
+     const names=window.pynixIndexedSources||[];
+     if(names.includes(value))return value;
+     return names.find(item=>value.endsWith('/'+item))||value;
+   };
    output.replaceChildren();
    const add=text=>{
      const row=document.createElement('div');
@@ -128,7 +134,7 @@ def navigation_controls() -> str:
      const d=result.definition;
      if(!d){add('No definition at this position');return;}
      add((d.qualifiedName||d.name||'')+' · '+d.source+':'+(d.start?.line||1));
-     if(d.source)document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:d.source,line:d.start?.line||1}}));
+     if(d.source)document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:normalizeSource(d.source),line:d.start?.line||1}}));
    } else if(packet.command==='references'){
      const refs=result.references||[];
      add('References: '+refs.length);
@@ -137,7 +143,7 @@ def navigation_controls() -> str:
        row.className='navigation-result nav-location';
        row.textContent=ref.source+':'+(ref.start?.line||1)+':'+(ref.start?.column||1);
        row.addEventListener('click',()=>document.dispatchEvent(
-         new CustomEvent('pynix:navigate',{detail:{source:ref.source,line:ref.start?.line||1}})));
+         new CustomEvent('pynix:navigate',{detail:{source:normalizeSource(ref.source),line:ref.start?.line||1}})));
        output.appendChild(row);
      }
    } else if(packet.command==='type-at'){
