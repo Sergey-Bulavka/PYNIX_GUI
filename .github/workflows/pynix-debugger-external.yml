@@ -5,6 +5,7 @@ on:
     branches: [feature/icon-system-v4]
     paths:
       - '.github/workflows/pynix-debugger-external.yml'
+      - 'scripts/test_real_debugger_bridge.py'
   workflow_dispatch:
 
 jobs:
