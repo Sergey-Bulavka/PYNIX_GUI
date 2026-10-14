@@ -613,6 +613,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      debugState=state;
    }
    refreshDebugControls();
+   const location=packet?.location;
+   if(debugState==='paused'&&location&&
+      typeof location.source==='string'&&byName.has(location.source)&&
+      Number.isSafeInteger(location.line)&&location.line>0&&
+      Number.isSafeInteger(location.column)&&location.column>0){
+     document.dispatchEvent(new CustomEvent('pynix:navigate',{
+       detail:{source:location.source,line:location.line,column:location.column}
+     }));
+   }
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
    const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
