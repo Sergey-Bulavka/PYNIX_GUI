@@ -701,6 +701,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  const terminal=document.querySelector('.integrated-terminal');
  terminal?.prepend(debugPanelBar);
+ debugPanelBar.hidden=true;
  refreshDebugControls();
  window.pynixDebugResult=packet=>{
    debugBusy=false;
@@ -708,6 +709,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const command=packet?.command||'';
    const state=packet?.state||'';
    if(event==='started')debugOutput=[];
+   debugPanelBar.hidden=!(debugActive||event==='started'||state==='paused'||state==='running'||state==='pause-requested');
    if(typeof packet?.output==='string'&&packet.output){
      debugOutput.push(packet.output);
      if(debugOutput.length>100)debugOutput=debugOutput.slice(-100);
@@ -772,6 +774,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        catch(error){debugBusy=false;debugState='error';refreshDebugControls();}
      },350);
    }
+   debugPanelBar.hidden=!debugActive;
    refreshDebugControls();
    const location=packet?.location;
    if(debugState==='paused'&&location&&
@@ -788,7 +791,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
    const debugTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='DEBUG CONSOLE');
-   debugTab?.click();
+   if(debugTab){
+     for(const tab of tabs.children)tab.classList.remove('pynix-active-tab');
+     debugTab.classList.add('pynix-active-tab');
+   }
    if(!panel){debugInfoButton.title=packet?.message||state||event;return;}
    const view={event,state,frames:debugFrames,variables:debugVariables,
      message:packet?.message||'',session:packet?.session||'',
