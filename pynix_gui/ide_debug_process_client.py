@@ -101,7 +101,7 @@ class _Worker:
         raw = json.dumps(packet, ensure_ascii=False).encode("utf-8")
         if len(raw) > 65536:
             raise DebugClientError("Debugger message too large")
-        self.process.stdin.write(raw + b"\\n")
+        self.process.stdin.write(raw + b"\n")
         self.process.stdin.flush()
 
     def receive(self, timeout=5.0):
@@ -111,7 +111,7 @@ class _Worker:
         can strand already-prefetched bytes and cause false timeouts.
         """
         deadline = time.monotonic() + timeout
-        while b"\\n" not in self._pending:
+        while b"\n" not in self._pending:
             if len(self._pending) > 65537:
                 raise DebugClientError("Debugger sent oversized response")
             remaining = deadline - time.monotonic()
@@ -124,7 +124,7 @@ class _Worker:
             if not chunk:
                 raise DebugClientError("Debugger closed unexpectedly")
             self._pending.extend(chunk)
-        line, _, rest = self._pending.partition(b"\\n")
+        line, _, rest = self._pending.partition(b"\n")
         self._pending = bytearray(rest)
         if len(line) > 65536:
             raise DebugClientError("Debugger sent oversized response")
