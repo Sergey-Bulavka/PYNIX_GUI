@@ -203,7 +203,13 @@ def main() -> None:
                               debug_client.command(action))
                     publish_debug_result(result)
                 except Exception as exc:
-                    publish_debug_result({"event": "error", "message": str(exc)[:200]})
+                    from pynix_gui.ide_debug_process_client import DebugClientError
+                    # A failed transport is not a protocol-level command rejection.
+                    # Signal that the native session has been discarded only when
+                    # the client no longer owns a worker.
+                    disconnected = debug_client._worker is None
+                    publish_debug_result({"event": "disconnected" if disconnected else "error",
+                                          "message": str(exc)[:200]})
             run_threading.Thread(target=job, daemon=True).start()
 
     def publish_debug_result(result):
