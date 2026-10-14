@@ -559,7 +559,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  document.querySelector('.workspace-toolbar')?.append(runButton,stopButton);
  let isProjectRunning=false;
  function runProjectAction(action){
-   if(action==='run'){
+   if(action==='run'||action==='restart'){
      persistBuffer();
      if([...byName.values()].some(file=>file.dirty)){
        window.alert('Save all changes before running the PYNIX project.');return;
@@ -569,6 +569,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
    bridge.postMessage({action});
  }
+ const restartButton=document.createElement('button');
+ restartButton.type='button';restartButton.className='nav-action pynix-restart-action';
+ restartButton.textContent='Restart';
+ restartButton.title='Stop the current run and start the saved project again';
+ document.querySelector('.workspace-toolbar')?.appendChild(restartButton);
+ restartButton.addEventListener('click',()=>runProjectAction('restart'));
  runButton.addEventListener('click',()=>runProjectAction('run'));
  stopButton.addEventListener('click',()=>runProjectAction('stop'));
  window.pynixProjectRunResult=packet=>{
@@ -576,6 +582,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(state==='running')isProjectRunning=true;
    if(state==='finished'||state==='error'||state==='idle')isProjectRunning=false;
    runButton.disabled=isProjectRunning;
+   restartButton.disabled=state==='stopping';
    stopButton.disabled=!isProjectRunning;
    const tabs=document.querySelector('.terminal-tabs');
    const consolePanel=document.querySelector('.terminal-console');
