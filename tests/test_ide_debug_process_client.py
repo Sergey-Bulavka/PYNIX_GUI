@@ -64,6 +64,7 @@ def test_worker_response_timeout_is_bounded():
 
 def test_worker_rejects_oversized_response():
     import os
+    from threading import Thread
     from types import SimpleNamespace
     from pynix_gui.ide_debug_process_client import _Worker
 
@@ -71,9 +72,17 @@ def test_worker_rejects_oversized_response():
     worker = _Worker(Path("/usr/bin/python3"), Path("."))
     with os.fdopen(read_fd, "rb", buffering=0) as reader:
         worker.process = SimpleNamespace(stdout=reader)
+
+        def send_large_packet():
+            try:
+                os.write(write_fd, b"x" * 65537 + b"\\n")
+            finally:
+                os.close(write_fd)
+
+        producer = Thread(target=send_large_packet)
+        producer.start()
         try:
-            os.write(write_fd, b"x" * 65537 + b"\\n")
             with pytest.raises(DebugClientError, match="oversized"):
-                worker.receive(timeout=0.1)
+                worker.receive(timeout=2.0)
         finally:
-            os.close(write_fd)
+            producer.join(timeout=2.0)
