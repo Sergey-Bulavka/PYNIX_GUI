@@ -187,7 +187,7 @@ def main() -> None:
                 source = request.get("source")
                 breakpoints = request.get("breakpoints")
                 if action not in {"launch", "pause", "continue", "stepInto",
-                                  "stepOver", "stepOut", "stack", "variables", "stop", "setBreakpoints"}:
+                                  "stepOver", "stepOut", "stack", "variables", "status", "stop", "setBreakpoints"}:
                     raise ValueError("Unknown debugger command")
                 if action == "launch" and (not isinstance(source, str) or
                                             source not in available_sources):
