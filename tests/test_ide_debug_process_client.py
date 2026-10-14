@@ -198,3 +198,15 @@ def test_native_debugger_marks_paused_line_and_structures_inspection():
     assert "renderSection('LOCALS',view.variables" in source
     assert "panel.replaceChildren();" in source
     assert "row.textContent=format(item);" in source
+
+
+def test_debug_inspection_is_serialized_and_nonrecursive():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "let debugInspectPhase=null;" in source
+    assert "debugInspectPhase='variables';" in source
+    assert "bridge?.postMessage({action:'variables',source:current});" in source
+    assert "bridge?.postMessage({action:'stack',source:current});" in source
+    assert "['stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command)" in source
+    assert "debugFrames=[];debugVariables=[];" in source
+    assert "debugLocation={source:location.source,line:location.line,column:location.column};" in source
