@@ -491,3 +491,15 @@ def test_debug_worker_discovers_compiler_outside_user_project(tmp_path):
         assert worker.receive()["event"] == "pong"
     finally:
         worker.close()
+
+
+def test_v5_docked_debugger_panel_keeps_controls_and_short_stack_paths():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "debugPanelBar.className='pynix-debug-panel-toolbar';" in js
+    assert "terminal?.prepend(debugPanelBar);" in js
+    assert "['continue','pause','stepInto','stepOver','stepOut','stop']" in js
+    assert "el.textContent.trim()==='DEBUG CONSOLE'" in js
+    assert ".split('/').pop()" in js
+    assert ".workspace-mode .pynix-debug-panel-toolbar{display:flex" in html
