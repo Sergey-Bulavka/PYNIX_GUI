@@ -310,6 +310,20 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-tools-menu-items{position:absolute;top:calc(100% + 6px);right:0;width:240px;max-width:calc(100vw - 20px);display:flex;flex-direction:column;gap:3px;padding:8px;background:#1b2839;border:1px solid #455b73;border-radius:9px;box-shadow:0 14px 35px #0009;z-index:155;white-space:normal}
 .workspace-mode .pynix-tools-menu-items>button{width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;min-height:34px}
 .workspace-mode .pynix-tools-menu-items>button:hover{background:#31465f}
+
+/* V5 workspace direction: clear editor / tool-window hierarchy, PyCharm-inspired. */
+.workspace-mode .integrated-terminal{display:flex;flex-direction:column;min-height:155px;background:#171c24}
+.workspace-mode .pynix-debug-panel-toolbar{display:flex;align-items:center;gap:6px;padding:7px 15px;min-height:42px;border-bottom:1px solid #303a4a;background:#202735}
+.workspace-mode .pynix-debug-panel-toolbar>strong{font-size:11px;letter-spacing:.1em;color:#aebed0;margin-right:14px}
+.workspace-mode .pynix-debug-panel-toolbar>button{border:1px solid transparent;border-radius:5px;background:#303a4c;color:#dee9f4;padding:6px 11px;min-width:48px;cursor:pointer}
+.workspace-mode .pynix-debug-panel-toolbar>button:hover:not(:disabled){background:#3b4f6b}
+.workspace-mode .pynix-debug-panel-toolbar>button:disabled{opacity:.38;cursor:default}
+.workspace-mode .terminal-console{overflow:auto;flex:1;min-height:0}
+.workspace-mode .workspace-toolbar{background:#222631;border-bottom-color:#373d4b}
+.workspace-mode .editor-tabs{background:#20252f}
+.workspace-mode .tree{background:#1d222b}
+.workspace-mode .rail{background:#1a2029}
+.workspace-mode .integrated-terminal .terminal-tabs{background:#20252f}
 </style>
 <style>
 .workspace-mode .tree,
