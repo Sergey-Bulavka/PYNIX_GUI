@@ -274,6 +274,23 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 }
 .workspace-mode .pynix-project-result:hover{background:#304565}
 .workspace-mode .pynix-project-results[hidden]{display:none!important}
+
+/* IDE compact controls: never let secondary actions overlap the editor. */
+.workspace-mode .workspace-toolbar{gap:7px;min-width:0;overflow:visible;position:relative;z-index:30;white-space:nowrap}
+.workspace-mode .workspace-toolbar>strong,.workspace-mode .workspace-toolbar>.current-branch{flex-shrink:0}
+.workspace-mode .workspace-toolbar .toolbar-spacer{flex:1 1 16px;min-width:4px}
+.workspace-mode .workspace-toolbar>button{flex-shrink:0;padding:7px 9px}
+.workspace-mode .pynix-debug-menu{position:relative;flex:none}
+.workspace-mode .pynix-debug-menu>summary{list-style:none;cursor:pointer;padding:8px 12px;border-radius:6px;background:#29405a;border:1px solid #415b77;color:#e3ecfa;font-weight:600}
+.workspace-mode .pynix-debug-menu>summary::-webkit-details-marker{display:none}
+.workspace-mode .pynix-debug-toolbar{position:absolute;right:0;top:calc(100% + 6px);display:grid;grid-template-columns:repeat(3,minmax(78px,1fr));gap:6px;padding:10px;width:290px;max-width:calc(100vw - 20px);background:#1b2839;border:1px solid #455b73;border-radius:9px;box-shadow:0 14px 35px #0009;white-space:normal;z-index:150}
+.workspace-mode .pynix-debug-toolbar button{min-height:34px;line-height:1.2}
+.workspace-mode .workspace-toolbar .pynix-debug-status{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:1300px){
+ .workspace-mode .workspace-toolbar{gap:5px;padding-inline:9px}
+ .workspace-mode .workspace-toolbar>.current-branch{display:none}
+ .workspace-mode .workspace-toolbar .pynix-debug-status{max-width:115px}
+}
 </style>
 <style>
 .workspace-mode .tree,
