@@ -550,6 +550,40 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      projectResults.appendChild(entry);
    }
  };
+ const debugToolbar=document.createElement('span');
+ debugToolbar.className='pynix-debug-toolbar';
+ const debugActions=[['launch','Debug Start'],['pause','Pause'],['continue','Continue'],
+   ['stepInto','Into'],['stepOver','Over'],['stepOut','Out'],
+   ['stack','Stack'],['variables','Variables'],['stop','Debug Stop']];
+ for(const [action,label] of debugActions){
+   const control=document.createElement('button');
+   control.type='button';control.className='nav-action';
+   control.textContent=label;
+   control.addEventListener('click',()=>{
+     const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
+     if(!bridge){window.alert('Native PYNIX debugger unavailable');return;}
+     if(action==='launch'){
+       persistBuffer();
+       if([...byName.values()].some(file=>file.dirty)){
+         window.alert('Save all sources before debugging');return;
+       }
+     }
+     bridge.postMessage({action,source:current});
+   });
+   debugToolbar.appendChild(control);
+ }
+ document.querySelector('.workspace-toolbar')?.appendChild(debugToolbar);
+ window.pynixDebugResult=packet=>{
+   const tabs=document.querySelector('.terminal-tabs');
+   const panel=document.querySelector('.terminal-console');
+   const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
+   outputTab?.click();
+   if(!panel)return;
+   const view={event:packet?.event||'',state:packet?.state||'',
+     frames:packet?.frames||[],variables:packet?.variables||[],
+     message:packet?.message||'',session:packet?.session||''};
+   panel.textContent='PYNIX Debug · '+JSON.stringify(view,null,2);
+ };
  const debugInfoButton=document.createElement('button');
  debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
  debugInfoButton.textContent='Debug (unavailable)';
