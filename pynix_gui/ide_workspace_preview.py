@@ -550,6 +550,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      projectResults.appendChild(entry);
    }
  };
+ const debugInfoButton=document.createElement('button');
+ debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
+ debugInfoButton.textContent='Debug (unavailable)';
+ debugInfoButton.title='Interactive debugging requires a compiler pause/step protocol';
+ document.querySelector('.workspace-toolbar')?.appendChild(debugInfoButton);
+ debugInfoButton.addEventListener('click',()=>{
+   window.alert('PYNIX interactive debugger is not available yet: the compiler lacks a public pause/step/stack protocol. Run and Check work independently.');
+ });
  const runButton=document.createElement('button');
  runButton.type='button';runButton.className='nav-action pynix-run-action';
  runButton.textContent='Run';
