@@ -209,7 +209,8 @@ def test_webkit_restoration_suppresses_deferred_selection_and_scroll_events():
     assert "restoringEditor=true;" in source
     assert "editorRestoreEpoch" in source
     assert "requestAnimationFrame(()=>{" in source
-    assert "if(epoch===editorRestoreEpoch&&current===source)restoringEditor=false;" in source
+    assert "if(epoch===editorRestoreEpoch&&current===source){" in source
+    assert "restoringEditor=false;updateCursor();" in source
 
 
 def test_core_authoritative_source_readback(tmp_path):
