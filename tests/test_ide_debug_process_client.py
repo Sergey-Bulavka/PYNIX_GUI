@@ -123,6 +123,6 @@ def test_debug_toolbar_serializes_requests_and_reports_experimental_state():
     assert "control.disabled=debugBusy" in source
     assert "debugBusy=true;" in source
     assert "debugBusy=false;" in source
-    assert "if(event==='started'){debugActive=true;" in source
+    assert "if(event==='started'){debugActive=state!=='finished';" in source
     assert "if(event==='exited'||state==='finished')" in source
     assert "Debug (experimental" in source
