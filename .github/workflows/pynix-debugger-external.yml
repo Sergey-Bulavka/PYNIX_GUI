@@ -19,6 +19,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Sergey-Bulavka/PYNIX
+          # PYNIX is private: GITHUB_TOKEN from PYNIX_GUI cannot read it.
+          # Configure a fine-grained token with PYNIX Contents: read.
+          token: \${{ secrets.PYNIX_CI_READ_TOKEN }}
           ref: main
           path: pynix-compiler
           persist-credentials: false
