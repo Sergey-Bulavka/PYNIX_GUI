@@ -82,3 +82,39 @@ def test_run_error_locations_are_clickable_and_bounded():
     assert "split('\\\\n').slice(0,4000)" in source
     assert "jump.addEventListener('click'" in source
     assert "new CustomEvent('pynix:navigate'" in source
+
+
+
+def test_runner_check_configuration_uses_pinned_compiler(tmp_path, monkeypatch):
+    from io import StringIO
+    (tmp_path / "pynix.toml").write_text("[project]\nname='demo'\n", encoding="utf-8")
+    python = tmp_path / "python"
+    python.write_text("", encoding="utf-8")
+    commands = []
+    class FakeProcess:
+        returncode = 0
+        stdout = StringIO("No issues\n")
+        def poll(self): return 0
+        def wait(self, timeout=None): return 0
+    def fake_popen(command, **kwargs):
+        commands.append((command, kwargs))
+        return FakeProcess()
+    monkeypatch.setattr("pynix_gui.ide_project_runner.subprocess.Popen", fake_popen)
+    runner = ProjectRunner(tmp_path, python)
+    runner.start(mode="check")
+    assert commands[0][0] == [str(python), "-u", "-m", "compiler", "check", str(tmp_path)]
+    assert runner.collect()["exitCode"] == 0
+    with pytest.raises(RunError, match="Unsupported run configuration"):
+        runner.start(mode="--arbitrary")
+
+
+def test_run_configuration_is_restricted_at_native_and_ui_boundaries():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert 'if mode not in ("run", "check"):' in native
+    assert 'start_project_run(mode)' in native
+    assert "runModeSelect.setAttribute('aria-label','PYNIX run configuration')" in preview
+    assert "['run','Run project']" in preview
+    assert "['check','Check project']" in preview
+    assert "bridge.postMessage({action,mode:runModeSelect.value})" in preview
