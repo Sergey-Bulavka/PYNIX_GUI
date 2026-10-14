@@ -679,6 +679,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      }
    }
    else if(event==='exited'||state==='finished'){debugActive=false;debugState='finished';}
+   else if(event==='disconnected'){debugActive=false;debugState='disconnected';}
    else if(event==='error'){
      // Worker errors are not proof of termination; explicit launch failure is.
      if(!debugActive)debugState='error';
@@ -688,7 +689,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(command==='setBreakpoints'&&event!=='error'){
      debugInfoButton.title='Installed '+String(packet.breakpoints||0)+' breakpoints';
    }
-   if(event==='error'||state==='finished'||event==='exited'||state==='running'){
+   if(event==='error'||event==='disconnected'||state==='finished'||event==='exited'||state==='running'){
      debugInspectPhase=null;
      debugFrames=[];
      debugVariables=[];
