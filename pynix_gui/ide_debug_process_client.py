@@ -68,7 +68,7 @@ class DebugProcessClient:
             if self._worker is None or self._session is None:
                 raise DebugClientError("No active debugger session")
             if action not in {"pause", "continue", "stepInto", "stepOver",
-                              "stepOut", "stack", "variables", "stop"}:
+                              "stepOut", "stack", "variables", "status", "stop"}:
                 raise DebugClientError("Unknown debugger action")
             try:
                 self._worker.send({"protocol": "pynix-debug", "version": 1,
