@@ -116,3 +116,23 @@ def test_cross_file_semantic_rename_accepts_unloaded_indexed_sources():
     assert "if(file.unloaded){" in rename
     assert "file.text=item.before;file.savedText=item.before;file.unloaded=false;" in rename
     assert "!file.unloaded&&(file.text!==item.before||file.savedText!==item.before)" in rename
+
+
+def test_automatic_inline_completion_accepts_tab_at_end_of_prediction():
+    preview = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (ROOT / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "function refreshInlineCompletion()" in preview
+    assert "function acceptInlineCompletion()" in preview
+    assert "inlineHint.textContent=candidate.slice(range.prefix.length)" in preview
+    assert "if(!range||range.prefix.length<2)return;" in preview
+    assert "event.key==='Tab'" in preview
+    assert "completionBox.hidden&&acceptInlineCompletion()" in preview
+    assert "editorInput.setSelectionRange(candidate.start+candidate.word.length,candidate.start+candidate.word.length)" in preview
+    assert ".pynix-inline-completion{" in html
+
+
+def test_editor_caret_stays_hidden_during_restoration():
+    preview = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "activeLine.hidden=restoringEditor||document.activeElement!==editorInput" in preview
+    assert "customCaret.hidden=restoringEditor||editorInput.selectionStart" in preview
+    assert "restoringEditor=false;updateCursor();" in preview
