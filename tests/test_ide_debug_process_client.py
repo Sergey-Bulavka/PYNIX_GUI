@@ -260,7 +260,7 @@ def test_client_does_not_retain_worker_if_program_finishes_during_launch(tmp_pat
     from pynix_gui import ide_debug_process_client as bridge
 
     source = tmp_path / "main.pnx"
-    source.write_text("function main()\\n    print(1)\\n", encoding="utf-8")
+    source.write_text("function main()\\n    print(1)\n", encoding="utf-8")
     created = []
 
     class FinishedWorker:
@@ -455,3 +455,39 @@ def test_secondary_workspace_commands_use_overflow_not_flat_toolbar():
     assert "toolsMenuItems.appendChild(action);" in js
     assert ".workspace-mode .pynix-tools-menu-items{position:absolute" in html
     assert ".workspace-mode .workspace-toolbar>.run-control{display:none}" in html
+
+
+def test_debug_worker_discovers_compiler_outside_user_project(tmp_path):
+    """A venv-based compiler works even if the edited project is unrelated."""
+    import os
+    import sys
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    compiler_root = tmp_path / "PYNIX"
+    project = tmp_path / "user-project"
+    project.mkdir()
+    module = compiler_root / "compiler"
+    module.mkdir(parents=True)
+    (module / "__init__.py").write_text("", encoding="utf-8")
+    (module / "debug_worker.py").write_text(
+        "import sys, json\n"
+        "print(json.dumps({'protocol':'pynix-debug','version':1,'event':'ready'}),flush=True)\n"
+        "for line in sys.stdin:\n"
+        " print(json.dumps({'protocol':'pynix-debug','version':1,'event':'pong'}),flush=True)\n",
+        encoding="utf-8",
+    )
+    venv_bin = compiler_root / ".venv" / ("Scripts" if os.name == "nt" else "bin")
+    venv_bin.mkdir(parents=True)
+    interpreter = venv_bin / ("python.exe" if os.name == "nt" else "python")
+    try:
+        interpreter.symlink_to(sys.executable)
+    except (OSError, NotImplementedError):
+        import shutil
+        shutil.copy2(sys.executable, interpreter)
+    worker = _Worker(interpreter, project)
+    try:
+        worker.start()
+        worker.send({"protocol": "pynix-debug", "version": 1, "command": "ping"})
+        assert worker.receive()["event"] == "pong"
+    finally:
+        worker.close()
