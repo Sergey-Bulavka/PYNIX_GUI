@@ -144,3 +144,71 @@ class WorkspaceSession:
         self.documents.pop(relative)
         if self.active == relative:
             self.active = next(reversed(self.documents), None)
+
+    def _project_target(self, relative: str) -> Path:
+        """Resolve a proposed project path without following symlinks outside root."""
+        if (not isinstance(relative, str) or not relative or
+                Path(relative).is_absolute() or "\\x00" in relative):
+            raise WorkspaceError("Expected a safe relative project path")
+        parts = Path(relative).parts
+        if any(part in (".", "..") for part in parts) or parts[0] in {
+                ".git", ".venv", ".worktrees"}:
+            raise WorkspaceError("Protected or unsafe project path")
+        target = self.root.joinpath(*parts)
+        if not target.resolve().is_relative_to(self.root):
+            raise WorkspaceError("Project path escapes root")
+        if target.is_symlink():
+            raise WorkspaceError("Symlink project paths cannot be modified")
+        return target
+
+    def create_file(self, relative: str, *, content: str = "") -> WorkspaceDocument:
+        """Create a UTF-8 source exclusively, never overwriting existing files."""
+        path = self._project_target(relative)
+        if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
+            raise WorkspaceError("Invalid initial source")
+        if not path.parent.is_dir():
+            raise WorkspaceError("Create the parent directory first")
+        try:
+            with path.open("x", encoding="utf-8", newline="") as stream:
+                stream.write(content)
+        except FileExistsError as exc:
+            raise WorkspaceError("Project file already exists") from exc
+        except OSError as exc:
+            raise WorkspaceError("Cannot create project file") from exc
+        return self.open(relative)
+
+    def rename_file(self, source: str, destination: str) -> None:
+        """Rename one clean file; reject dirty tabs and destination collisions."""
+        src = self.resolve_file(source)
+        dst = self._project_target(destination)
+        if src == dst or dst.exists():
+            raise WorkspaceError("Destination exists or is unchanged")
+        if source in self.documents and self.documents[source].dirty:
+            raise WorkspaceError("Save or discard unsaved source before renaming")
+        if not dst.parent.is_dir():
+            raise WorkspaceError("Destination parent directory does not exist")
+        try:
+            os.rename(src, dst)
+        except OSError as exc:
+            raise WorkspaceError("Could not rename project file") from exc
+        doc = self.documents.pop(source, None)
+        if doc is not None:
+            doc.path = destination
+            self.documents[destination] = doc
+        if self.active == source:
+            self.active = destination
+
+    def delete_file(self, relative: str) -> None:
+        """Delete only clean project files; never recursively remove directories."""
+        path = self.resolve_file(relative)
+        if relative in self.documents and self.documents[relative].dirty:
+            raise WorkspaceError("Save or discard unsaved source before deletion")
+        if path.is_symlink():
+            raise WorkspaceError("Cannot delete symlink through project explorer")
+        try:
+            path.unlink()
+        except OSError as exc:
+            raise WorkspaceError("Could not delete project file") from exc
+        self.documents.pop(relative, None)
+        if self.active == relative:
+            self.active = next(reversed(self.documents), None)
