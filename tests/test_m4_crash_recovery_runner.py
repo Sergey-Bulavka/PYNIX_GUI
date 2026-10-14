@@ -1,3 +1,4 @@
+import os
 """Safety checks for isolated macOS M4 crash recovery exercise."""
 from pathlib import Path
 import subprocess
@@ -14,6 +15,8 @@ def test_crash_recovery_runner_isolated_and_valid_shell():
     assert "kill -9 <CORE_PID>" in source
     assert "rm -rf" not in source
     assert not any(line.lstrip().startswith(("pkill ", "killall ")) for line in source.splitlines())
+    if os.name == "nt":
+        return  # Bash syntax of POSIX scripts is checked on Linux and macOS CI.
     result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
