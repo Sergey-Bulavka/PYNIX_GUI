@@ -90,3 +90,21 @@ def test_native_project_create_is_bound_to_workspace_and_updates_file_index():
     assert "window.pynixProjectCreateResult=result=>" in preview
     assert "window.pynixIndexedSources=files.map(entry=>entry.name)" in preview
     assert "show(name);" in preview
+
+
+def test_native_project_rename_delete_guard_core_and_refresh_explorer():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "class ProjectFileActionHandler(NSObject)" in native
+    assert 'core_reader.close_source(source)' in native
+    assert 'state["dirty"]' in native
+    assert 'session.rename_file(source, destination)' in native
+    assert 'session.delete_file(source)' in native
+    assert 'controller.addScriptMessageHandler_name_(project_file_action_handler, "pynixProjectFileAction")' in native
+    assert "window.pynixProjectFileActionResult=result=>" in preview
+    assert "if(openTabs.includes(source))" in preview
+    assert "window.confirm('Permanently delete '" in preview
+    assert "renameFileButton.textContent='Rename File'" in preview
+    assert "deleteFileButton.textContent='Delete File'" in preview
