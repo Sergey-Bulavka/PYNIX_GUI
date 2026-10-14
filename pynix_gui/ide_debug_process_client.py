@@ -51,6 +51,11 @@ class DebugProcessClient:
                 response = worker.receive()
                 if response.get("event") != "started":
                     raise DebugClientError(str(response.get("message", "Debug launch failed")))
+                if response.get("state") == "finished":
+                    # A short program can exit before launch() receives its reply.
+                    # Preserve the final response but do not retain a dead worker.
+                    worker.close()
+                    return response
                 self._worker = worker
                 self._session = session
                 return response
