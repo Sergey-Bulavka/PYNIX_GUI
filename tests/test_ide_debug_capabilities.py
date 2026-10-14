@@ -17,5 +17,5 @@ def test_debug_ui_does_not_claim_interactive_support():
     from pathlib import Path
     preview = (Path(__file__).resolve().parents[1] /
                "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
-    assert "Debug (unavailable)" in preview
-    assert "PYNIX interactive debugger is not available yet" in preview
+    assert "Debug (experimental" in preview
+    assert "Interactive stepping and source mapping have not passed release acceptance." in preview
