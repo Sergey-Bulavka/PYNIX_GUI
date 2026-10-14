@@ -80,7 +80,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const customCaret=document.createElement('div');
  customCaret.className='pynix-custom-caret';
  customCaret.setAttribute('aria-hidden','true');
- editLayer.append(gutter,activeLine,coloredSource,editorInput,customCaret);
+ const inlineHint=document.createElement('span');
+ inlineHint.className='pynix-inline-completion';
+ inlineHint.hidden=true;
+ inlineHint.setAttribute('aria-hidden','true');
+ editLayer.append(gutter,activeLine,coloredSource,editorInput,customCaret,inlineHint);
  const cursorStatus=document.createElement('span');
  cursorStatus.className='pynix-cursor-status';
  document.querySelector('.bottom')?.appendChild(cursorStatus);
@@ -94,6 +98,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const metrics=getComputedStyle(editorInput);
    const lineHeight=parseFloat(metrics.lineHeight);
    const topPadding=parseFloat(metrics.paddingTop);
+   activeLine.hidden=restoringEditor||document.activeElement!==editorInput;
    activeLine.style.height=lineHeight+'px';
    activeLine.style.transform='translateY('+(topPadding+(line-1)*lineHeight-editorInput.scrollTop)+'px)';
    const colIndex=before.length-before.lastIndexOf('\\n')-1;
@@ -115,7 +120,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    customCaret.classList.remove('pynix-caret-blink');
    void customCaret.offsetWidth;
    customCaret.classList.add('pynix-caret-blink');
-   customCaret.hidden=editorInput.selectionStart!==editorInput.selectionEnd||document.activeElement!==editorInput;
+   inlineHint.style.transform=customCaret.style.transform;
+   customCaret.hidden=restoringEditor||editorInput.selectionStart!==editorInput.selectionEnd||document.activeElement!==editorInput;
 
    const file=byName.get(current);
    if(file){file.cursorStart=editorInput.selectionStart;file.cursorEnd=editorInput.selectionEnd;file.scrollTop=editorInput.scrollTop;file.scrollLeft=editorInput.scrollLeft;}
@@ -640,7 +646,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        editorInput.scrollTop=top;
        editorInput.scrollLeft=left;
        requestAnimationFrame(()=>{
-         if(epoch===editorRestoreEpoch&&current===source)restoringEditor=false;
+         if(epoch===editorRestoreEpoch&&current===source){
+           restoringEditor=false;updateCursor();
+         }
        });
      });
    }else{
@@ -718,6 +726,33 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      completionBox.appendChild(item);
    });
  }
+ let inlineSuggestion=null;
+ function refreshInlineCompletion(){
+   inlineHint.hidden=true;inlineSuggestion=null;
+   if(restoringEditor||document.activeElement!==editorInput||
+      !completionBox.hidden||byName.get(current)?.extraSelections?.length)return;
+   const range=completionPrefix();
+   if(!range||range.prefix.length<2)return;
+   const source=editorInput.value;
+   const names=source.match(/\\b[A-Za-z_][A-Za-z0-9_]*\\b/g)||[];
+   const candidate=[...new Set([...completionKeywords,...compilerSymbols,...names])]
+     .find(word=>word!==range.prefix&&word.startsWith(range.prefix));
+   if(!candidate)return;
+   inlineSuggestion={...range,word:candidate};
+   inlineHint.textContent=candidate.slice(range.prefix.length);
+   inlineHint.hidden=false;
+ }
+ function acceptInlineCompletion(){
+   const candidate=inlineSuggestion;
+   if(!candidate||document.activeElement!==editorInput)return false;
+   if(editorInput.selectionStart!==candidate.end||editorInput.selectionEnd!==candidate.end||
+      editorInput.value.slice(candidate.start,candidate.end)!==candidate.prefix)return false;
+   inlineHint.hidden=true;inlineSuggestion=null;
+   replaceSelection(candidate.word,candidate.start,candidate.end);
+   editorInput.setSelectionRange(candidate.start+candidate.word.length,candidate.start+candidate.word.length);
+   updateCursor();
+   return true;
+ }
  function offerCompletion(){
    const range=completionPrefix();
    if(!range){closeCompletion();return;}
@@ -743,7 +778,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    closeCompletion();
    replaceSelection(word,range.start,range.end);
  }
- editorInput.addEventListener('keydown',event=>{
+  editorInput.addEventListener('keydown',event=>{
+   if(event.key==='Tab'&&!event.shiftKey&&!event.altKey&&!event.ctrlKey&&!event.metaKey&&completionBox.hidden&&acceptInlineCompletion()){
+     event.preventDefault();event.stopImmediatePropagation();
+   }
+ },true);
+editorInput.addEventListener('keydown',event=>{
    if(event.ctrlKey&&!event.metaKey&&event.code==='Space'&&!event.altKey){
      event.preventDefault();
      window.webkit?.messageHandlers?.pynixProjectSymbols?.postMessage({});
@@ -762,8 +802,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  },true);
  editorInput.addEventListener('input',()=>{
    if(!completionBox.hidden)offerCompletion();
+   refreshInlineCompletion();
  });
- editorInput.addEventListener('blur',()=>closeCompletion());
+ editorInput.addEventListener('click',refreshInlineCompletion);
+ editorInput.addEventListener('keyup',refreshInlineCompletion);
+ editorInput.addEventListener('select',refreshInlineCompletion);
+ editorInput.addEventListener('blur',()=>{closeCompletion();inlineHint.hidden=true;inlineSuggestion=null;});
  const renameButton=document.createElement('button');
  renameButton.type='button';renameButton.className='nav-action pynix-rename-action';
  renameButton.textContent='Rename Local';
