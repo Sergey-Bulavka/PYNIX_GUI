@@ -418,3 +418,14 @@ def test_native_client_can_query_debugger_status_without_stopping(tmp_path):
     assert worker.requests[0]["command"] == "status"
     assert worker.requests[0]["session"] == "s1"
     assert client._worker is worker
+
+
+def test_debug_controls_are_kept_out_of_flat_top_toolbar():
+    root = Path(__file__).resolve().parents[1]
+    view = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "debugMenu.className='pynix-debug-menu';" in view
+    assert "debugMenu.append(debugMenuLabel,debugToolbar);" in view
+    assert "append(debugMenu,debugInfoButton);" in view
+    assert ".workspace-mode .pynix-debug-toolbar{position:absolute" in html
+    assert "grid-template-columns:repeat(3,minmax(78px,1fr))" in html
