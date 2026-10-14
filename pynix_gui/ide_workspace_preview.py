@@ -601,8 +601,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      projectResults.appendChild(entry);
    }
  };
- const debugToolbar=document.createElement('span');
+ const debugToolbar=document.createElement('div');
  debugToolbar.className='pynix-debug-toolbar';
+ const debugMenu=document.createElement('details');
+ debugMenu.className='pynix-debug-menu';
+ const debugMenuLabel=document.createElement('summary');
+ debugMenuLabel.textContent='Debug ▾';
+ debugMenuLabel.title='Open debugger controls';
+ debugMenu.append(debugMenuLabel,debugToolbar);
  const debugActions=[['launch','Debug Start'],['pause','Pause'],['continue','Continue'],
    ['stepInto','Into'],['stepOver','Over'],['stepOut','Out'],
    ['stack','Stack'],['variables','Variables'],['stop','Debug Stop']];
@@ -663,7 +669,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    debugControls.set(action,control);
    debugToolbar.appendChild(control);
  }
- document.querySelector('.workspace-toolbar')?.append(debugToolbar,debugInfoButton);
+ document.querySelector('.workspace-toolbar')?.append(debugMenu,debugInfoButton);
  refreshDebugControls();
  window.pynixDebugResult=packet=>{
    debugBusy=false;
