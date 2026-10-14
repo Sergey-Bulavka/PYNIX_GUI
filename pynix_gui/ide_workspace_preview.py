@@ -613,6 +613,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  let debugInspectPhase=null;
  let debugFrames=[];
  let debugVariables=[];
+ let debugOutput=[];
  const debugInfoButton=document.createElement('button');
  debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
  debugInfoButton.title='Experimental PYNIX interpreter debugger; stepping is not release-verified';
@@ -646,6 +647,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      }
      debugBusy=true;
      debugInspectPhase=null;
+     if(action==='launch')debugOutput=[];
      if(['continue','stepInto','stepOver','stepOut','stop'].includes(action)){
        debugFrames=[];debugVariables=[];
      }
@@ -663,6 +665,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const event=packet?.event||'';
    const command=packet?.command||'';
    const state=packet?.state||'';
+   if(event==='started')debugOutput=[];
+   if(typeof packet?.output==='string'&&packet.output){
+     debugOutput.push(packet.output);
+     if(debugOutput.length>100)debugOutput=debugOutput.slice(-100);
+   }
    if(event==='started'){
      debugActive=state!=='finished';debugState=state||'paused';
      if(debugActive){
@@ -750,11 +757,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(view.location){const position=document.createElement('div');
      position.textContent='At '+view.location.source+':'+view.location.line;
      panel.appendChild(position);}
+   if(debugOutput.length){
+     const outputTitle=document.createElement('div');
+     outputTitle.textContent='PROGRAM OUTPUT';
+     outputTitle.style.cssText='font-weight:600;margin-top:10px';
+     const outputText=document.createElement('pre');
+     outputText.textContent=debugOutput.join('\\n');
+     outputText.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0';
+     panel.append(outputTitle,outputText);
+   }
    renderSection('CALL STACK',view.frames,item=>
      String(item?.name||'<frame>')+' · '+String(item?.source||'')+':'+String(item?.line||'?'));
    renderSection('LOCALS',view.variables,item=>
      String(item?.name||'')+' : '+String(item?.type||'')+' = '+String(item?.value??''));
-   if(!view.frames.length&&!view.variables.length&&!view.message){
+   if(!view.frames.length&&!view.variables.length&&!view.message&&!debugOutput.length){
      const empty=document.createElement('div');empty.textContent='No stack or local variables in this response';
      panel.appendChild(empty);
    }
