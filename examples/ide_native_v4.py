@@ -156,31 +156,46 @@ def main() -> None:
         NSOperationQueue.mainQueue().addOperationWithBlock_(
             lambda: view.evaluateJavaScript_completionHandler_(script, None))
 
+    run_generation = {"value": 0}
+
+    def start_project_run():
+        project_runner.start()
+        run_generation["value"] += 1
+        generation = run_generation["value"]
+        publish_run_result({"state": "running"})
+        def worker():
+            def deliver(chunk):
+                if run_generation["value"] == generation:
+                    publish_run_result({"state": "output", "chunk": chunk})
+            try:
+                result = project_runner.collect(on_output=deliver)
+                if run_generation["value"] == generation:
+                    publish_run_result({"state": "finished", **result})
+            except (RunError, OSError) as exc:
+                if run_generation["value"] == generation:
+                    publish_run_result({"state": "error", "error": str(exc)[:300]})
+        run_threading.Thread(target=worker, daemon=True).start()
+
     class ProjectRunHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             try:
                 request = dict(message.body())
                 action = request.get("action")
-                if action == "stop":
+                if action == "run":
+                    start_project_run()
+                elif action in ("stop", "restart"):
+                    run_generation["value"] += 1
                     publish_run_result({"state": "stopping"})
-                    def stop_worker():
+                    def stop_or_restart():
                         try:
                             project_runner.stop()
+                            if action == "restart":
+                                start_project_run()
+                            else:
+                                publish_run_result({"state": "idle"})
                         except (RunError, OSError) as exc:
                             publish_run_result({"state": "error", "error": str(exc)[:300]})
-                    run_threading.Thread(target=stop_worker, daemon=True).start()
-                elif action == "run":
-                    project_runner.start()
-                    publish_run_result({"state": "running"})
-                    def worker():
-                        try:
-                            result = project_runner.collect(
-                                on_output=lambda chunk: publish_run_result(
-                                    {"state": "output", "chunk": chunk}))
-                            publish_run_result({"state": "finished", **result})
-                        except (RunError, OSError) as exc:
-                            publish_run_result({"state": "error", "error": str(exc)[:300]})
-                    run_threading.Thread(target=worker, daemon=True).start()
+                    run_threading.Thread(target=stop_or_restart, daemon=True).start()
                 else:
                     raise RunError("Unknown project run action")
             except (RunError, OSError, ValueError, TypeError) as exc:
