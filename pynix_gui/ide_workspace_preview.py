@@ -583,6 +583,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    consoleTab?.click();
    if(!consolePanel)return;
    if(state==='running')consolePanel.textContent='Running PYNIX project…';
+   else if(state==='output'){
+     const chunk=typeof packet.chunk==='string'?packet.chunk:'';
+     consolePanel.textContent=(consolePanel.textContent||'')+chunk;
+     consolePanel.scrollTop=consolePanel.scrollHeight;
+   }
    else if(state==='stopping')consolePanel.textContent+='\\nStopping…';
    else if(state==='finished')
      consolePanel.textContent=(packet.output||'')+
