@@ -148,7 +148,7 @@ def test_switch_flushes_pending_revisions_and_discard_cancels_pending():
     assert "closeTabNow(name,true);" in src
     assert "bridge.postMessage({source:name,discard});" in src
     assert "core_reader.discard_source(source)" in app
-    assert app.index("core_reader.discard_source(source)") < app.index("core_reader.close_source(source)")
+    assert "if discard:\n                        core_reader.discard_source(source)\n                    if not core_reader.close_source(source):" in app
 
 
 def test_core_revision_acknowledgment_ignores_stale_callbacks():
