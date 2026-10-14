@@ -136,3 +136,33 @@ def test_debugger_navigation_requires_paused_valid_project_location():
     assert "Number.isSafeInteger(location.line)&&location.line>0" in source
     assert "Number.isSafeInteger(location.column)&&location.column>0" in source
     assert "new CustomEvent('pynix:navigate'" in source
+
+
+def test_client_rejects_breakpoints_outside_project(tmp_path):
+    (tmp_path / "main.pnx").write_text("pass", encoding="utf-8")
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    for entries in ([{"source": "../escape.pnx", "line": 1}],
+                    [{"source": "/tmp/test.pnx", "line": 1}],
+                    [{"source": "main.pnx", "line": True}],
+                    [{}], [{}] * 257):
+        with pytest.raises(DebugClientError):
+            client.set_breakpoints(entries)
+
+
+def test_client_transmits_project_breakpoints(tmp_path):
+    (tmp_path / "main.pnx").write_text("pass", encoding="utf-8")
+    class Worker:
+        def __init__(self):
+            self.packet = None
+        def send(self, packet):
+            self.packet = packet
+        def receive(self):
+            return {"protocol": "pynix-debug", "version": 1,
+                    "command": "setBreakpoints", "breakpoints": 1}
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    client._worker = Worker()
+    client._session = "s1"
+    result = client.set_breakpoints([{"source": "main.pnx", "line": 1}])
+    assert result["breakpoints"] == 1
+    assert client._worker.packet["session"] == "s1"
+    assert client._worker.packet["command"] == "setBreakpoints"
