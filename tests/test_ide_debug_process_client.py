@@ -290,3 +290,33 @@ def test_client_does_not_retain_worker_if_program_finishes_during_launch(tmp_pat
     second = client.launch("main.pnx")
     assert second["state"] == "finished"
     assert created[1].closed
+
+
+@pytest.mark.parametrize("action", ["continue", "stepInto", "stop"])
+def test_debugger_finished_reply_preserves_final_output_and_releases_worker(tmp_path, action):
+    class FinishingWorker:
+        def __init__(self):
+            self.closed = False
+
+        def send(self, packet):
+            assert packet["command"] == action
+            assert packet["session"] == "live"
+
+        def receive(self):
+            return {"protocol": "pynix-debug", "version": 1,
+                    "command": action, "state": "finished",
+                    "output": "last line"}
+
+        def close(self):
+            self.closed = True
+
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    worker = FinishingWorker()
+    client._worker = worker
+    client._session = "live"
+    result = client.command(action)
+    assert result["output"] == "last line"
+    assert result["state"] == "finished"
+    assert worker.closed
+    assert client._worker is None
+    assert client._session is None
