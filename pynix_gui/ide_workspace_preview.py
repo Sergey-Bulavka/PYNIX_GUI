@@ -717,6 +717,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
       typeof location.source==='string'&&byName.has(location.source)&&
       Number.isSafeInteger(location.line)&&location.line>0&&
       Number.isSafeInteger(location.column)&&location.column>0){
+     debugLocation={source:location.source,line:location.line,column:location.column};
      document.dispatchEvent(new CustomEvent('pynix:navigate',{
        detail:{source:location.source,line:location.line,column:location.column}
      }));
