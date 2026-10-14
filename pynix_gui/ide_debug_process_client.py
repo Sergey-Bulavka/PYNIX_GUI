@@ -72,7 +72,7 @@ class DebugProcessClient:
                 # Never retain an unusable native debugger process.
                 self.close()
                 raise
-            if action == "stop":
+            if action == "stop" or result.get("state") == "finished":
                 self.close()
             return result
 
