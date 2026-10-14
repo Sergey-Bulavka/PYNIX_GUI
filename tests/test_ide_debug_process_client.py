@@ -383,3 +383,38 @@ def test_real_debug_worker_pipe_preserves_unicode_and_split_frames(tmp_path):
         assert response["output"] == "Привіт 🌍"
     finally:
         worker.close()
+
+
+def test_debugger_status_polling_uses_native_bridge_and_stops_when_inactive():
+    root = Path(__file__).resolve().parents[1]
+    view = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    assert "let debugStatusTimer=null;" in view
+    assert "clearTimeout(debugStatusTimer);" in view
+    assert "pollingBridge.postMessage({action:'status',source:current});" in view
+    assert "if(debugBusy||!debugActive||" in view
+    assert "'continue','status','stepInto'" in view
+    assert '"status", "stop", "setBreakpoints"' in native
+
+
+def test_native_client_can_query_debugger_status_without_stopping(tmp_path):
+    class StatusWorker:
+        def __init__(self):
+            self.requests = []
+        def send(self, packet):
+            self.requests.append(packet)
+        def receive(self):
+            return {"protocol": "pynix-debug", "version": 1,
+                    "command": "status", "state": "running"}
+        def close(self):
+            raise AssertionError("Polling running debugger must not stop its worker")
+
+    worker = StatusWorker()
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    client._worker = worker
+    client._session = "s1"
+    packet = client.command("status")
+    assert packet["state"] == "running"
+    assert worker.requests[0]["command"] == "status"
+    assert worker.requests[0]["session"] == "s1"
+    assert client._worker is worker
