@@ -27,6 +27,9 @@ def test_real_debugger():
             launched = client.launch("main.pnx")
             assert launched["event"] == "started", launched
             assert launched["state"] == "paused", launched
+            initial_status = client.command("status")
+            assert initial_status["state"] == "paused", initial_status
+            assert initial_status.get("location"), initial_status
             bp = client.set_breakpoints([{"source": "main.pnx", "line": 4}])
             assert bp["breakpoints"] == 1, bp
             continued = client.command("continue")
