@@ -2217,6 +2217,20 @@ editorInput.addEventListener('keydown',event=>{
  deleteFileButton.type='button';deleteFileButton.className='nav-action';
  deleteFileButton.textContent='Delete File';
  document.querySelector('.workspace-toolbar')?.append(renameFileButton,deleteFileButton);
+ // Secondary actions live in one explicit menu, not a 30-button toolbar.
+ const toolsMenu=document.createElement('details');
+ toolsMenu.className='pynix-tools-menu';
+ const toolsMenuLabel=document.createElement('summary');
+ toolsMenuLabel.textContent='Tools ▾';
+ const toolsMenuItems=document.createElement('div');
+ toolsMenuItems.className='pynix-tools-menu-items';
+ for(const action of [foldButton,unfoldButton,diagnosticsButton,
+                      completionButton,renameButton,semanticRenameButton,
+                      newSourceButton,renameFileButton,deleteFileButton]){
+   toolsMenuItems.appendChild(action);
+ }
+ toolsMenu.append(toolsMenuLabel,toolsMenuItems);
+ document.querySelector('.workspace-toolbar')?.appendChild(toolsMenu);
  function requestProjectFileAction(action){
    persistBuffer();
    const source=selectedPath||current;
