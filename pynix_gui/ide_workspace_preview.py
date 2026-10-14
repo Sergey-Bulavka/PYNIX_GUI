@@ -604,7 +604,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    debugBusy=false;
    const event=packet?.event||'';
    const state=packet?.state||'';
-   if(event==='started'){debugActive=true;debugState=state==='running'?'running':'paused';}
+   if(event==='started'){debugActive=state!=='finished';debugState=state||'paused';}
    else if(event==='exited'||state==='finished'){debugActive=false;debugState='finished';}
    else if(event==='error'){
      // Worker errors are not proof of termination; explicit launch failure is.
