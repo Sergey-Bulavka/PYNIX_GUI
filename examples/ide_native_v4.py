@@ -169,7 +169,9 @@ def main() -> None:
                     publish_run_result({"state": "running"})
                     def worker():
                         try:
-                            result = project_runner.collect()
+                            result = project_runner.collect(
+                                on_output=lambda chunk: publish_run_result(
+                                    {"state": "output", "chunk": chunk}))
                             publish_run_result({"state": "finished", **result})
                         except (RunError, OSError) as exc:
                             publish_run_result({"state": "error", "error": str(exc)[:300]})
