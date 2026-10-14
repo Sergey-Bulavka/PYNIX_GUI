@@ -689,6 +689,18 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
  }
  document.querySelector('.workspace-toolbar')?.append(debugMenu,debugInfoButton);
+ // During debugging keep execution controls in the dedicated lower tool window.
+ const debugPanelBar=document.createElement('div');
+ debugPanelBar.className='pynix-debug-panel-toolbar';
+ const debugPanelLabel=document.createElement('strong');
+ debugPanelLabel.textContent='DEBUG';
+ debugPanelBar.appendChild(debugPanelLabel);
+ for(const action of ['continue','pause','stepInto','stepOver','stepOut','stop']){
+   const control=debugControls.get(action);
+   if(control)debugPanelBar.appendChild(control);
+ }
+ const terminal=document.querySelector('.integrated-terminal');
+ terminal?.prepend(debugPanelBar);
  refreshDebugControls();
  window.pynixDebugResult=packet=>{
    debugBusy=false;
@@ -775,8 +787,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    updateDebugExecutionLine();
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
-   const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
-   outputTab?.click();
+   const debugTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='DEBUG CONSOLE');
+   debugTab?.click();
    if(!panel){debugInfoButton.title=packet?.message||state||event;return;}
    const view={event,state,frames:debugFrames,variables:debugVariables,
      message:packet?.message||'',session:packet?.session||'',
@@ -814,7 +826,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      panel.append(outputTitle,outputText);
    }
    renderSection('CALL STACK',view.frames,item=>
-     String(item?.name||'<frame>')+' · '+String(item?.source||'')+':'+String(item?.line||'?'));
+     String(item?.name||'<frame>')+' · '+String(item?.source||'').split('/').pop()+':'+String(item?.line||'?'));
    renderSection('LOCALS',view.variables,item=>
      String(item?.name||'')+' : '+String(item?.type||'')+' = '+String(item?.value??''));
    if(!view.frames.length&&!view.variables.length&&!view.message&&!debugOutput.length){
