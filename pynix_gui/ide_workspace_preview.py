@@ -1820,6 +1820,41 @@ editorInput.addEventListener('keydown',event=>{
      pendingNavigation=null;
    }
  });
+ const newSourceButton=document.createElement('button');
+ newSourceButton.type='button';
+ newSourceButton.className='nav-action pynix-new-source';
+ newSourceButton.textContent='New .pnx';
+ newSourceButton.title='Create a new PYNIX file inside the current project';
+ document.querySelector('.workspace-toolbar')?.appendChild(newSourceButton);
+ newSourceButton.addEventListener('click',()=>{
+   const selected=selectedPath||current||'';
+   const base=selected.includes('/')?selected.slice(0,selected.lastIndexOf('/')+1):'';
+   const proposed=window.prompt('New PYNIX file (project-relative path):',base+'new_file.pnx');
+   if(proposed===null)return;
+   if(!/^[A-Za-z0-9_./-]+\\.pnx$/.test(proposed)){
+     window.alert('Use a project-relative .pnx path without spaces');return;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixProjectCreate;
+   if(!bridge){window.alert('File creation requires native macOS workspace');return;}
+   bridge.postMessage({source:proposed});
+ });
+ window.pynixProjectCreateResult=result=>{
+   if(!result?.ok){window.alert('Create file failed: '+String(result?.error||'unknown error'));return;}
+   const name=result.source;
+   if(byName.has(name))return;
+   const file={name,text:result.text||'',savedText:result.text||'',tokens:null,icon:'pnx',dirty:false};
+   files.push(file);
+   files.sort((a,b)=>a.name.localeCompare(b.name));
+   byName.set(name,file);
+   window.pynixIndexedSources=files.map(entry=>entry.name);
+   const parts=name.split('/');
+   for(let i=1;i<parts.length;i++){
+     const folder=parts.slice(0,i).join('/');
+     if(!folders.includes(folder))folders.push(folder);
+     expanded.add(folder);
+   }
+   show(name);
+ };
  const explorerControl=document.querySelectorAll('.rail-item')[0];
  explorerControl?.addEventListener('click',()=>renderTree());
  explorerControl?.addEventListener('keydown',e=>{
