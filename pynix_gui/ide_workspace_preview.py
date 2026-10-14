@@ -647,6 +647,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        }
      }
      debugBusy=true;
+     debugInspectPhase=null;
+     if(['continue','stepInto','stepOver','stepOut','stop'].includes(action)){
+       debugFrames=[];debugVariables=[];
+     }
      refreshDebugControls();
      try{bridge.postMessage({action,source:current});}
      catch(error){debugBusy=false;refreshDebugControls();window.alert(String(error));}
@@ -700,7 +704,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    if(debugState==='paused'&&debugActive&&!debugBusy&&event!=='error'){
      if(debugInspectPhase==='variables'){
        debugBusy=true;bridge?.postMessage({action:'variables',source:current});
-     }else if(debugInspectPhase===null&&command!=='variables'){
+     }else if(debugInspectPhase===null&&(event==='started'||
+          ['stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command))){
        debugInspectPhase='stack';
        debugBusy=true;bridge?.postMessage({action:'stack',source:current});
      }
