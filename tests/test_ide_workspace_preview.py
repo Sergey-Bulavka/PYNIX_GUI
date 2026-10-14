@@ -113,7 +113,7 @@ def test_v4_generated_project_javascript_parses_with_node_if_available(tmp_path)
     source = workspace_bootstrap(WorkspaceSession(tmp_path))
     match = re.fullmatch(r"<script>\s*(.*?)\s*</script>", source, re.S)
     assert match is not None
-    proc = subprocess.run([node, "--check", "-"], input=match.group(1),
+    proc = subprocess.run([node, "--check", "-"], input=match.group(1), encoding="utf-8",
                           text=True, capture_output=True, timeout=10)
     assert proc.returncode == 0, proc.stderr
 
@@ -153,7 +153,7 @@ def test_single_pointer_press_and_lazy_file_open_bridge(tmp_path):
 
 
 def test_mac_host_has_bounded_lazy_source_reader():
-    src = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text()
+    src = (Path(__file__).resolve().parents[1] / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
     assert 'class FileOpenHandler(NSObject)' in src
     assert 'source not in available_sources' in src
     assert 'session.resolve_file(source)' in src
