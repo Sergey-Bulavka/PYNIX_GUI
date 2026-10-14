@@ -366,13 +366,13 @@ def test_real_debug_worker_pipe_preserves_unicode_and_split_frames(tmp_path):
         "import os, sys\n"
         "fd=sys.stdout.fileno()\n"
         "def send(data): os.write(fd, data)\n"
-        "send(b'{\\\"protocol\\\":\\\"pynix-debug\\\",\\\"version\\\":1,\\\"event\\\":\\\"ready\\\"}\\\\n')\n"
+        "send(b'{\\\"protocol\\\":\\\"pynix-debug\\\",\\\"version\\\":1,\\\"event\\\":\\\"ready\\\"}\\\n')\n"
         "for line in sys.stdin.buffer:\n"
         "    packet=b'{\\\"protocol\\\":\\\"pynix-debug\\\",\\\"version\\\":1,\\\"event\\\":\\\"pong\\\",\\\"output\\\":\\\"'\n"
         "    send(packet)\n"
         "    data='Привіт 🌍'.encode('utf-8')\n"
         "    for part in (data[:2],data[2:5],data[5:]): send(part)\n"
-        "    send(b'\\\"}\\\\n')\n"
+        "    send(b'\\\"}\\\n')\n"
         "    break\n",
         encoding="utf-8",
     )
