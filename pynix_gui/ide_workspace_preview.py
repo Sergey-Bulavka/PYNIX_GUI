@@ -658,13 +658,27 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      }
      debugBusy=true;
      debugInspectPhase=null;
-     if(action==='launch')debugOutput=[];
+     if(action==='launch'){
+       debugOutput=[];
+       debugInfoButton.title='Starting PYNIX debugger for '+String(current||'no selected file');
+       const consolePanel=document.querySelector('.terminal-console');
+       if(consolePanel){
+         const notification=document.createElement('div');
+         notification.textContent='Starting PYNIX debugger · '+String(current||'no file selected');
+         consolePanel.replaceChildren(notification);
+       }
+     }
      if(['continue','stepInto','stepOver','stepOut','stop'].includes(action)){
        debugFrames=[];debugVariables=[];
      }
      refreshDebugControls();
      try{bridge.postMessage({action,source:current});}
-     catch(error){debugBusy=false;refreshDebugControls();window.alert(String(error));}
+     catch(error){
+       debugBusy=false;debugState='error';
+       const panel=document.querySelector('.terminal-console');
+       if(panel)panel.textContent='PYNIX debugger failed: '+String(error);
+       refreshDebugControls();window.alert(String(error));
+     }
    });
    debugControls.set(action,control);
    if(action==='launch'){
