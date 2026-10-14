@@ -166,3 +166,22 @@ def test_client_transmits_project_breakpoints(tmp_path):
     assert result["breakpoints"] == 1
     assert client._worker.packet["session"] == "s1"
     assert client._worker.packet["command"] == "setBreakpoints"
+
+
+def test_native_bridge_routes_breakpoint_updates_to_client():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    assert '"setBreakpoints"' in native
+    assert "debug_client.set_breakpoints(breakpoints)" in native
+
+
+def test_editor_gutter_toggles_and_transmits_real_breakpoints():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "const breakpoints=new Map();" in source
+    assert "gutter.addEventListener('click',event=>" in source
+    assert "if(!current||debugBusy||debugActive)return;" in source
+    assert "if(lines.has(line))lines.delete(line);else lines.add(line);" in source
+    assert "function collectBreakpoints()" in source
+    assert "bridge.postMessage({action:'setBreakpoints',breakpoints:entries});" in source
+    assert "packet?.command==='setBreakpoints'" in source
