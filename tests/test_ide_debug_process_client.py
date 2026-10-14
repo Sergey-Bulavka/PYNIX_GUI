@@ -86,3 +86,30 @@ def test_worker_rejects_oversized_response():
                 worker.receive(timeout=2.0)
         finally:
             producer.join(timeout=2.0)
+
+
+def test_client_releases_broken_worker_after_command_failure(tmp_path):
+    class BrokenWorker:
+        def __init__(self):
+            self.closed = False
+
+        def send(self, packet):
+            assert packet["command"] == "stack"
+
+        def receive(self):
+            raise DebugClientError("Debugger response timed out")
+
+        def close(self):
+            self.closed = True
+
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    worker = BrokenWorker()
+    client._worker = worker
+    client._session = "active"
+    with pytest.raises(DebugClientError, match="timed out"):
+        client.command("stack")
+    assert worker.closed
+    assert client._worker is None
+    assert client._session is None
+    with pytest.raises(DebugClientError, match="No active"):
+        client.command("stack")
