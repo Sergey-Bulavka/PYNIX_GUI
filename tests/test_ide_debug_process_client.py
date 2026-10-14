@@ -320,3 +320,35 @@ def test_debugger_finished_reply_preserves_final_output_and_releases_worker(tmp_
     assert worker.closed
     assert client._worker is None
     assert client._session is None
+
+
+def test_real_debug_worker_pipe_lifecycle_without_private_compiler(tmp_path):
+    """Exercise actual subprocess pipes and JSON framing on every CI OS."""
+    import json
+    import sys
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    package = tmp_path / "compiler"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "debug_worker.py").write_text(
+        "import json, sys\\n"
+        "def send(event):\\n"
+        "    sys.stdout.write(json.dumps({'protocol':'pynix-debug','version':1,'event':event})+'\\\\n')\\n"
+        "    sys.stdout.flush()\\n"
+        "send('ready')\\n"
+        "for line in sys.stdin:\\n"
+        "    packet=json.loads(line)\\n"
+        "    send('pong' if packet.get('command')=='ping' else 'exited')\\n"
+        "    if packet.get('command')=='shutdown': break\\n",
+        encoding="utf-8",
+    )
+    worker = _Worker(Path(sys.executable), tmp_path)
+    try:
+        worker.start()
+        worker.send({"protocol": "pynix-debug", "version": 1, "command": "ping"})
+        worker.send({"protocol": "pynix-debug", "version": 1, "command": "shutdown"})
+        assert worker.receive(timeout=3)["event"] == "pong"
+        assert worker.receive(timeout=3)["event"] == "exited"
+    finally:
+        worker.close()
