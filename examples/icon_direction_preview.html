@@ -331,6 +331,22 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .pynix-debug-inspector-row{padding:5px 12px;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;border-bottom:1px solid #2a374b}
 .workspace-mode .pynix-debug-inspector-row:last-child{border-bottom:0}
 @media(max-width:820px){.workspace-mode .pynix-debug-inspector{grid-template-columns:minmax(0,1fr)}}
+
+/* V5 editor/navigation polish, aligned with professional JetBrains density. */
+.workspace-mode .editor-tabs{min-height:37px;height:37px;background:#20242d;border-bottom:1px solid #353b46;gap:0}
+.workspace-mode .editor-tabs button{height:37px;min-width:90px;padding:0 13px;background:transparent;border-right:1px solid #313947;color:#a7b1c0;font-size:12px}
+.workspace-mode .editor-tabs button.active{background:#151b24;color:#ecf1f7;border-top:2px solid #7ba9de;padding-top:0}
+.workspace-mode .editor-tabs button:hover:not(.active){background:#2a3240}
+.workspace-mode .tree{background:#1d222b;color:#c4ccd7;border-right:1px solid #353c47}
+.workspace-mode .workspace-toolbar{height:45px;min-height:45px}
+.workspace-mode .workspace-toolbar button{font-size:12px;line-height:1.2}
+.workspace-mode .bottom{background:#263b53;border-top:1px solid #364e6a;color:#c6d9ee;font-size:11px}
+.workspace-mode .terminal-tabs{height:34px;min-height:34px;font-size:10px;letter-spacing:.03em}
+.workspace-mode .terminal-tabs>strong{height:34px}
+@media(max-width:1100px){
+ .workspace-mode .workspace-toolbar .pynix-debug-status{max-width:85px}
+ .workspace-mode .workspace-toolbar>span:not(.toolbar-spacer){max-width:140px;overflow:hidden;text-overflow:ellipsis}
+}
 </style>
 <style>
 .workspace-mode .tree,
