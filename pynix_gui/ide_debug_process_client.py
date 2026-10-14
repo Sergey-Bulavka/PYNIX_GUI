@@ -11,7 +11,9 @@ from uuid import uuid4
 
 import json
 import os
+import queue
 import select
+import threading
 import subprocess
 import time
 
@@ -120,6 +122,7 @@ class _Worker:
         self.python, self.root = python, root
         self.process = None
         self._pending = bytearray()
+        self._windows_chunks = None
 
     def start(self):
         if not self.python.is_file():
@@ -152,10 +155,30 @@ class _Worker:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise DebugClientError("Debugger response timed out")
-            readable, _, _ = select.select([self.process.stdout.fileno()], [], [], remaining)
-            if not readable:
-                raise DebugClientError("Debugger response timed out")
-            chunk = os.read(self.process.stdout.fileno(), 4096)
+            if os.name == 'nt':
+                if self._windows_chunks is None:
+                    self._windows_chunks = queue.Queue()
+                    target = self._windows_chunks
+                    fd = self.process.stdout.fileno()
+                    def pump():
+                        try:
+                            while True:
+                                data = os.read(fd, 4096)
+                                target.put(data)
+                                if not data:
+                                    break
+                        except OSError:
+                            target.put(b'')
+                    threading.Thread(target=pump, daemon=True).start()
+                try:
+                    chunk = self._windows_chunks.get(timeout=remaining)
+                except queue.Empty as error:
+                    raise DebugClientError("Debugger response timed out") from error
+            else:
+                readable, _, _ = select.select([self.process.stdout.fileno()], [], [], remaining)
+                if not readable:
+                    raise DebugClientError("Debugger response timed out")
+                chunk = os.read(self.process.stdout.fileno(), 4096)
             if not chunk:
                 raise DebugClientError("Debugger closed unexpectedly")
             self._pending.extend(chunk)
