@@ -39,7 +39,7 @@ def test_worker_reads_multiple_packets_without_losing_prefetched_bytes():
             {"protocol": "pynix-debug", "version": 1, "event": "started"},
         ]
         try:
-            os.write(write_fd, b"".join(json.dumps(p).encode() + b"\\n" for p in packets))
+            os.write(write_fd, b"".join(json.dumps(p).encode() + b"\n" for p in packets))
             assert worker.receive(timeout=0.1)["event"] == "ready"
             assert worker.receive(timeout=0.1)["event"] == "started"
         finally:
@@ -75,7 +75,7 @@ def test_worker_rejects_oversized_response():
 
         def send_large_packet():
             try:
-                os.write(write_fd, b"x" * 65537 + b"\\n")
+                os.write(write_fd, b"x" * 65537 + b"\n")
             finally:
                 os.close(write_fd)
 
