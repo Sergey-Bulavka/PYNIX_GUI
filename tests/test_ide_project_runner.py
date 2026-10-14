@@ -56,7 +56,19 @@ def test_native_controller_publishes_chunks():
     root = Path(__file__).resolve().parents[1]
     native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
     preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
-    assert 'on_output=lambda chunk: publish_run_result(' in native
+    assert 'result = project_runner.collect(on_output=deliver)' in native
     assert '{"state": "output", "chunk": chunk}' in native
     assert "else if(state==='output')" in preview
     assert "consolePanel.scrollTop=consolePanel.scrollHeight" in preview
+
+
+def test_restart_is_generation_guarded_and_nonblocking():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert 'elif action in ("stop", "restart"):' in native
+    assert 'if action == "restart":' in native
+    assert 'run_generation["value"] == generation' in native
+    assert "run_threading.Thread(target=stop_or_restart, daemon=True).start()" in native
+    assert "restartButton.textContent='Restart'" in preview
+    assert "if(action==='run'||action==='restart')" in preview
