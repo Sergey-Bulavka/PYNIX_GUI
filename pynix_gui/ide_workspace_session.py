@@ -161,6 +161,18 @@ class WorkspaceSession:
             raise WorkspaceError("Symlink project paths cannot be modified")
         return target
 
+    def create_directory(self, relative: str) -> None:
+        """Create a single directory inside the project, without implicit parents."""
+        path = self._project_target(relative)
+        if not path.parent.is_dir():
+            raise WorkspaceError("Create the parent directory first")
+        try:
+            path.mkdir()
+        except FileExistsError as exc:
+            raise WorkspaceError("Project path already exists") from exc
+        except OSError as exc:
+            raise WorkspaceError("Cannot create project directory") from exc
+
     def create_file(self, relative: str, *, content: str = "") -> WorkspaceDocument:
         """Create a UTF-8 source exclusively, never overwriting existing files."""
         path = self._project_target(relative)
