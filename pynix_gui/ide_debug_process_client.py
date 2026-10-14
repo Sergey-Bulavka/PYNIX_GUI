@@ -25,7 +25,9 @@ class DebugClientError(ValueError):
 class DebugProcessClient:
     def __init__(self, root: Path, python: Path):
         self.root = Path(root).resolve()
-        self.python = Path(python).resolve()
+        # Keep the venv path: resolve() can follow its executable symlink
+        # outside the PYNIX checkout, losing the compiler package root.
+        self.python = Path(python).absolute()
         self._lock = RLock()
         self._worker = None
         self._session = None
@@ -124,7 +126,8 @@ class DebugProcessClient:
 class _Worker:
     """No import dependency on compiler inside the GUI Python environment."""
     def __init__(self, python, root):
-        self.python, self.root = python, root
+        self.python, self.root = Path(python), Path(root)
+        self._stderr_file = None
         self.process = None
         self._pending = bytearray()
         self._windows_chunks = None
@@ -132,10 +135,20 @@ class _Worker:
     def start(self):
         if not self.python.is_file():
             raise DebugClientError("PYNIX compiler interpreter unavailable")
+        import tempfile
+        env = os.environ.copy()
+        # A project is not the compiler checkout: the native IDE runs from
+        # the project directory, while the compiler lives beside its venv.
+        for parent in self.python.absolute().parents:
+            if (parent / "compiler" / "debug_worker.py").is_file():
+                env["PYTHONPATH"] = os.pathsep.join(
+                    filter(None, (str(parent), env.get("PYTHONPATH", ""))))
+                break
+        self._stderr_file = tempfile.TemporaryFile(mode="w+b")
         self.process = subprocess.Popen(
             [str(self.python), "-u", "-m", "compiler.debug_worker"],
             cwd=self.root, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL, start_new_session=True)
+            stderr=self._stderr_file, env=env, start_new_session=True)
         message = self.receive()
         if message.get("event") != "ready":
             raise DebugClientError("Debug worker not ready")
@@ -185,7 +198,13 @@ class _Worker:
                     raise DebugClientError("Debugger response timed out")
                 chunk = os.read(self.process.stdout.fileno(), 4096)
             if not chunk:
-                raise DebugClientError("Debugger closed unexpectedly")
+                details = ""
+                if self._stderr_file is not None and self.process.poll() is not None:
+                    self._stderr_file.seek(0)
+                    details = self._stderr_file.read(4096).decode("utf-8", errors="replace").strip()
+                raise DebugClientError(
+                    "Debugger closed unexpectedly" + (": " + details[-500:] if details else "")
+                )
             self._pending.extend(chunk)
         line, _, rest = self._pending.partition(b"\n")
         self._pending = bytearray(rest)
@@ -213,3 +232,6 @@ class _Worker:
             for stream in (proc.stdin, proc.stdout):
                 if stream is not None:
                     stream.close()
+        if self._stderr_file is not None:
+            self._stderr_file.close()
+            self._stderr_file = None
