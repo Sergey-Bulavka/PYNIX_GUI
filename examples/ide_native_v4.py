@@ -203,7 +203,6 @@ def main() -> None:
                               debug_client.command(action))
                     publish_debug_result(result)
                 except Exception as exc:
-                    from pynix_gui.ide_debug_process_client import DebugClientError
                     # A failed transport is not a protocol-level command rejection.
                     # Signal that the native session has been discarded only when
                     # the client no longer owns a worker.
