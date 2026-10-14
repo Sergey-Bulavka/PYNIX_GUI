@@ -557,6 +557,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  stopButton.type='button';stopButton.className='nav-action pynix-stop-action';
  stopButton.textContent='Stop';stopButton.disabled=true;
  document.querySelector('.workspace-toolbar')?.append(runButton,stopButton);
+ const runModeSelect=document.createElement('select');
+ runModeSelect.className='pynix-run-mode';
+ runModeSelect.setAttribute('aria-label','PYNIX run configuration');
+ for(const [value,label] of [['run','Run project'],['check','Check project']]){
+   const option=document.createElement('option');
+   option.value=value;option.textContent=label;
+   runModeSelect.appendChild(option);
+ }
+ document.querySelector('.workspace-toolbar')?.appendChild(runModeSelect);
  let isProjectRunning=false;
  function runProjectAction(action){
    if(action==='run'||action==='restart'){
@@ -567,7 +576,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }
    const bridge=window.webkit?.messageHandlers?.pynixProjectRun;
    if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
-   bridge.postMessage({action});
+   bridge.postMessage({action,mode:runModeSelect.value});
  }
  const restartButton=document.createElement('button');
  restartButton.type='button';restartButton.className='nav-action pynix-restart-action';
