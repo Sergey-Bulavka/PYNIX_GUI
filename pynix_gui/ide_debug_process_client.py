@@ -10,7 +10,10 @@ from threading import RLock
 from uuid import uuid4
 
 import json
+import os
+import select
 import subprocess
+import time
 
 
 class DebugClientError(ValueError):
@@ -81,6 +84,7 @@ class _Worker:
     def __init__(self, python, root):
         self.python, self.root = python, root
         self.process = None
+        self._pending = bytearray()
 
     def start(self):
         if not self.python.is_file():
@@ -100,10 +104,30 @@ class _Worker:
         self.process.stdin.write(raw + b"\\n")
         self.process.stdin.flush()
 
-    def receive(self):
-        line = self.process.stdout.readline(65538)
-        if not line or len(line) > 65537:
-            raise DebugClientError("Debugger closed or sent oversized response")
+    def receive(self, timeout=5.0):
+        """Read one bounded line without blocking the native UI indefinitely.
+
+        Use unbuffered OS reads: select() combined with a buffered readline()
+        can strand already-prefetched bytes and cause false timeouts.
+        """
+        deadline = time.monotonic() + timeout
+        while b"\\n" not in self._pending:
+            if len(self._pending) > 65537:
+                raise DebugClientError("Debugger sent oversized response")
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise DebugClientError("Debugger response timed out")
+            readable, _, _ = select.select([self.process.stdout.fileno()], [], [], remaining)
+            if not readable:
+                raise DebugClientError("Debugger response timed out")
+            chunk = os.read(self.process.stdout.fileno(), 4096)
+            if not chunk:
+                raise DebugClientError("Debugger closed unexpectedly")
+            self._pending.extend(chunk)
+        line, _, rest = self._pending.partition(b"\\n")
+        self._pending = bytearray(rest)
+        if len(line) > 65536:
+            raise DebugClientError("Debugger sent oversized response")
         try:
             data = json.loads(line.decode("utf-8"))
         except (UnicodeError, ValueError) as error:
