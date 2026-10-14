@@ -555,11 +555,33 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const debugActions=[['launch','Debug Start'],['pause','Pause'],['continue','Continue'],
    ['stepInto','Into'],['stepOver','Over'],['stepOut','Out'],
    ['stack','Stack'],['variables','Variables'],['stop','Debug Stop']];
+ const debugControls=new Map();
+ let debugActive=false;
+ let debugBusy=false;
+ let debugState='idle';
+ const debugInfoButton=document.createElement('button');
+ debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
+ debugInfoButton.title='Experimental PYNIX interpreter debugger; stepping is not release-verified';
+ debugInfoButton.addEventListener('click',()=>{
+   window.alert('Experimental PYNIX debugger. Run/Check are independent. Interactive stepping and source mapping have not passed release acceptance.');
+ });
+ const refreshDebugControls=()=>{
+   const paused=debugState==='paused';
+   const running=debugState==='running'||debugState==='pause-requested';
+   for(const [action,control] of debugControls){
+     control.disabled=debugBusy||(action==='launch'?debugActive:
+       !debugActive||(action==='pause'?!running:
+       action==='continue'? !paused:
+       action==='stop'?false:!paused));
+   }
+   debugInfoButton.textContent='Debug (experimental · '+(debugBusy?'working':debugState)+')';
+ };
  for(const [action,label] of debugActions){
    const control=document.createElement('button');
    control.type='button';control.className='nav-action';
    control.textContent=label;
    control.addEventListener('click',()=>{
+     if(control.disabled)return;
      const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
      if(!bridge){window.alert('Native PYNIX debugger unavailable');return;}
      if(action==='launch'){
@@ -568,30 +590,39 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
          window.alert('Save all sources before debugging');return;
        }
      }
-     bridge.postMessage({action,source:current});
+     debugBusy=true;
+     refreshDebugControls();
+     try{bridge.postMessage({action,source:current});}
+     catch(error){debugBusy=false;refreshDebugControls();window.alert(String(error));}
    });
+   debugControls.set(action,control);
    debugToolbar.appendChild(control);
  }
- document.querySelector('.workspace-toolbar')?.appendChild(debugToolbar);
+ document.querySelector('.workspace-toolbar')?.append(debugToolbar,debugInfoButton);
+ refreshDebugControls();
  window.pynixDebugResult=packet=>{
+   debugBusy=false;
+   const event=packet?.event||'';
+   const state=packet?.state||'';
+   if(event==='started'){debugActive=true;debugState='running';}
+   else if(event==='exited'||state==='finished'){debugActive=false;debugState='finished';}
+   else if(event==='error'){
+     // Worker errors are not proof of termination; explicit launch failure is.
+     if(!debugActive)debugState='error';
+   }else if(state==='paused'||state==='running'||state==='pause-requested'){
+     debugState=state;
+   }
+   refreshDebugControls();
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
    const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
    outputTab?.click();
    if(!panel)return;
-   const view={event:packet?.event||'',state:packet?.state||'',
-     frames:packet?.frames||[],variables:packet?.variables||[],
-     message:packet?.message||'',session:packet?.session||''};
-   panel.textContent='PYNIX Debug · '+JSON.stringify(view,null,2);
+   const view={event,state,frames:packet?.frames||[],variables:packet?.variables||[],
+     message:packet?.message||'',session:packet?.session||'',
+     location:packet?.location||null};
+   panel.textContent='PYNIX Debug (experimental) · '+JSON.stringify(view,null,2);
  };
- const debugInfoButton=document.createElement('button');
- debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
- debugInfoButton.textContent='Debug (unavailable)';
- debugInfoButton.title='Interactive debugging requires a compiler pause/step protocol';
- document.querySelector('.workspace-toolbar')?.appendChild(debugInfoButton);
- debugInfoButton.addEventListener('click',()=>{
-   window.alert('PYNIX interactive debugger is not available yet: the compiler lacks a public pause/step/stack protocol. Run and Check work independently.');
- });
  const runButton=document.createElement('button');
  runButton.type='button';runButton.className='nav-action pynix-run-action';
  runButton.textContent='Run';
