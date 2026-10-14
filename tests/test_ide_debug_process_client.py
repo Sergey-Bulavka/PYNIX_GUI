@@ -113,3 +113,16 @@ def test_client_releases_broken_worker_after_command_failure(tmp_path):
     assert client._session is None
     with pytest.raises(DebugClientError, match="No active"):
         client.command("stack")
+
+
+def test_debug_toolbar_serializes_requests_and_reports_experimental_state():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "let debugBusy=false;" in source
+    assert "debugControls.set(action,control);" in source
+    assert "control.disabled=debugBusy" in source
+    assert "debugBusy=true;" in source
+    assert "debugBusy=false;" in source
+    assert "if(event==='started'){debugActive=true;" in source
+    assert "if(event==='exited'||state==='finished')" in source
+    assert "Debug (experimental" in source
