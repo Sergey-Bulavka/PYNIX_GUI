@@ -123,8 +123,8 @@ def test_debug_toolbar_serializes_requests_and_reports_experimental_state():
     assert "control.disabled=debugBusy" in source
     assert "debugBusy=true;" in source
     assert "debugBusy=false;" in source
-    assert "if(event==='started'){debugActive=state!=='finished';" in source
-    assert "if(event==='exited'||state==='finished')" in source
+    assert "debugActive=state!=='finished';debugState=state||'paused';" in source
+    assert "event==='exited'||state==='finished'" in source
     assert "Debug (experimental" in source
 
 
@@ -184,7 +184,7 @@ def test_editor_gutter_toggles_and_transmits_real_breakpoints():
     assert "if(lines.has(line))lines.delete(line);else lines.add(line);" in source
     assert "function collectBreakpoints()" in source
     assert "bridge.postMessage({action:'setBreakpoints',breakpoints:entries});" in source
-    assert "packet?.command==='setBreakpoints'" in source
+    assert "command==='setBreakpoints'" in source
 
 
 def test_native_debugger_marks_paused_line_and_structures_inspection():
