@@ -614,6 +614,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  let debugFrames=[];
  let debugVariables=[];
  let debugOutput=[];
+ let debugStatusTimer=null;
  const debugInfoButton=document.createElement('button');
  debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
  debugInfoButton.title='Experimental PYNIX interpreter debugger; stepping is not release-verified';
@@ -644,6 +645,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        if([...byName.values()].some(file=>file.dirty)){
          window.alert('Save all sources before debugging');return;
        }
+     }
+     if(debugStatusTimer!==null){
+       clearTimeout(debugStatusTimer);
+       debugStatusTimer=null;
      }
      debugBusy=true;
      debugInspectPhase=null;
@@ -711,10 +716,24 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      if(debugInspectPhase==='variables'){
        debugBusy=true;bridge?.postMessage({action:'variables',source:current});
      }else if(debugInspectPhase===null&&(event==='started'||
-          ['stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command))){
+          ['continue','status','stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command))){
        debugInspectPhase='stack';
        debugBusy=true;bridge?.postMessage({action:'stack',source:current});
      }
+   }
+   if((debugState==='running'||debugState==='pause-requested')&&
+      debugActive&&!debugBusy&&event!=='error'){
+     debugStatusTimer=setTimeout(()=>{
+       debugStatusTimer=null;
+       if(debugBusy||!debugActive||
+          (debugState!=='running'&&debugState!=='pause-requested'))return;
+       const pollingBridge=window.webkit?.messageHandlers?.pynixDebugCommand;
+       if(!pollingBridge)return;
+       debugBusy=true;
+       refreshDebugControls();
+       try{pollingBridge.postMessage({action:'status',source:current});}
+       catch(error){debugBusy=false;debugState='error';refreshDebugControls();}
+     },350);
    }
    refreshDebugControls();
    const location=packet?.location;
