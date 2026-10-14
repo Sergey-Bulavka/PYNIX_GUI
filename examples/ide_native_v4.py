@@ -176,6 +176,39 @@ def main() -> None:
                     publish_run_result({"state": "error", "error": str(exc)[:300]})
         run_threading.Thread(target=worker, daemon=True).start()
 
+    from pynix_gui.ide_debug_process_client import DebugProcessClient
+    debug_client = DebugProcessClient(session.root, compiler_python)
+
+    class DebugCommandHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            try:
+                request = dict(message.body())
+                action = request.get("action")
+                source = request.get("source")
+                if action not in {"launch", "pause", "continue", "stepInto",
+                                  "stepOver", "stepOut", "stack", "variables", "stop"}:
+                    raise ValueError("Unknown debugger command")
+                if action == "launch" and (not isinstance(source, str) or
+                                            source not in available_sources):
+                    raise ValueError("Unindexed debugger source")
+            except (TypeError, ValueError) as exc:
+                publish_debug_result({"event": "error", "message": str(exc)[:200]})
+                return
+
+            def job():
+                try:
+                    result = debug_client.launch(source) if action == "launch" else debug_client.command(action)
+                    publish_debug_result(result)
+                except Exception as exc:
+                    publish_debug_result({"event": "error", "message": str(exc)[:200]})
+            run_threading.Thread(target=job, daemon=True).start()
+
+    def publish_debug_result(result):
+        payload = run_json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        NSOperationQueue.mainQueue().addOperationWithBlock_(
+            lambda: view.evaluateJavaScript_completionHandler_(
+                "window.pynixDebugResult(" + payload + ");", None))
+
     class ProjectRunHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             try:
@@ -540,6 +573,7 @@ def main() -> None:
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     semantic_rename_handler = SemanticRenameHandler.alloc().init()
+    debug_command_handler = DebugCommandHandler.alloc().init()
     project_run_handler = ProjectRunHandler.alloc().init()
     project_file_action_handler = ProjectFileActionHandler.alloc().init()
     project_create_handler = ProjectCreateHandler.alloc().init()
@@ -548,6 +582,7 @@ def main() -> None:
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
+    controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
     controller.addScriptMessageHandler_name_(project_file_action_handler, "pynixProjectFileAction")
     controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")
@@ -572,6 +607,7 @@ def main() -> None:
     try:
         app.run()
     finally:
+        debug_client.close()
         project_runner.close()
         if core_reader is not None:
             core_reader.close()
