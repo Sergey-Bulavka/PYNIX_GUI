@@ -144,6 +144,27 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixSemanticRenamePlan(" + serialized + ");", None)
 
+    class ProjectCreateHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_workspace_session import WorkspaceError
+            response = {"ok": False}
+            try:
+                request = dict(message.body())
+                relative = request.get("source")
+                if not isinstance(relative, str) or not relative.endswith(".pnx"):
+                    raise WorkspaceError("Only PYNIX source creation is supported")
+                if len(available_sources) >= 5000:
+                    raise WorkspaceError("Project file index is full")
+                doc = session.create_file(relative)
+                available_sources.add(relative)
+                response = {"ok": True, "source": relative, "text": doc.text}
+            except (ValueError, TypeError, OSError, WorkspaceError) as exc:
+                response["error"] = str(exc)
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixProjectCreateResult(" + serialized + ");", None)
+
     class SymbolsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -415,11 +436,13 @@ def main() -> None:
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     semantic_rename_handler = SemanticRenameHandler.alloc().init()
+    project_create_handler = ProjectCreateHandler.alloc().init()
     symbols_handler = SymbolsHandler.alloc().init()
     diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
+    controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")
     controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
     controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
