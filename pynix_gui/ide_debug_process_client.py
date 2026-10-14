@@ -63,9 +63,15 @@ class DebugProcessClient:
             if action not in {"pause", "continue", "stepInto", "stepOver",
                               "stepOut", "stack", "variables", "stop"}:
                 raise DebugClientError("Unknown debugger action")
-            self._worker.send({"protocol": "pynix-debug", "version": 1,
-                               "command": action, "session": self._session})
-            result = self._worker.receive()
+            try:
+                self._worker.send({"protocol": "pynix-debug", "version": 1,
+                                   "command": action, "session": self._session})
+                result = self._worker.receive()
+            except (OSError, ValueError, EOFError):
+                # The worker may have exited or the pipe may be corrupt.
+                # Never retain an unusable native debugger process.
+                self.close()
+                raise
             if action == "stop":
                 self.close()
             return result
