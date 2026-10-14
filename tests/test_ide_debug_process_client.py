@@ -503,3 +503,13 @@ def test_v5_docked_debugger_panel_keeps_controls_and_short_stack_paths():
     assert "el.textContent.trim()==='DEBUG CONSOLE'" in js
     assert ".split('/').pop()" in js
     assert ".workspace-mode .pynix-debug-panel-toolbar{display:flex" in html
+
+
+def test_v5_debug_inspector_has_separate_stack_and_locals_sections():
+    root = Path(__file__).resolve().parents[1]
+    view = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "inspector.className='pynix-debug-inspector';" in view
+    assert "section.className='pynix-debug-inspector-section';" in view
+    assert "if(inspector.childElementCount)panel.appendChild(inspector);" in view
+    assert ".workspace-mode .pynix-debug-inspector{display:grid;" in html
