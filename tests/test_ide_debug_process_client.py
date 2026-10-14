@@ -207,7 +207,7 @@ def test_debug_inspection_is_serialized_and_nonrecursive():
     assert "debugInspectPhase='variables';" in source
     assert "bridge?.postMessage({action:'variables',source:current});" in source
     assert "bridge?.postMessage({action:'stack',source:current});" in source
-    assert "['stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command)" in source
+    assert "['continue','status','stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command)" in source
     assert "debugFrames=[];debugVariables=[];" in source
     assert "debugLocation={source:location.source,line:location.line,column:location.column};" in source
 
