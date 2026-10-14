@@ -28,7 +28,7 @@ class ProjectRunner:
             if not self.python.is_file():
                 raise RunError("PYNIX compiler interpreter is unavailable")
             self.process = subprocess.Popen(
-                [str(self.python), "-m", "compiler", "run", str(self.root)],
+                [str(self.python), "-u", "-m", "compiler", "run", str(self.root)],
                 cwd=self.root, stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding="utf-8", errors="replace",
