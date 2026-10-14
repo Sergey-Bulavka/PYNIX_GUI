@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 import subprocess
 import threading
+from collections.abc import Callable
 
 class RunError(ValueError):
     pass
@@ -34,23 +35,49 @@ class ProjectRunner:
                 bufsize=1, start_new_session=True,
             )
 
-    def collect(self, *, limit: int = 200_000, timeout: float = 90) -> dict:
+    def collect(self, *, limit: int = 200_000, timeout: float = 90,
+                on_output: Callable[[str], None] | None = None) -> dict:
+        """Stream bounded output while process runs; never wait for all output first."""
         with self._lock:
             proc = self.process
         if proc is None:
             raise RunError("No PYNIX process running")
+        if proc.stdout is None:
+            raise RunError("Runner has no output pipe")
+        collected: list[str] = []
+        total = 0
+        timed_out = False
+        truncated = False
+        completed = threading.Event()
+
+        def watchdog():
+            if not completed.wait(timeout):
+                nonlocal timed_out
+                if proc.poll() is None:
+                    timed_out = True
+                    self.stop()
+
+        timer = threading.Thread(target=watchdog, daemon=True)
+        timer.start()
         try:
-            stdout, _ = proc.communicate(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            self.stop()
-            stdout, _ = proc.communicate(timeout=5)
-            return {"exitCode": proc.returncode, "output": stdout[:limit], "timedOut": True}
+            for chunk in iter(proc.stdout.readline, ""):
+                remaining = max(0, limit - total)
+                if remaining:
+                    excerpt = chunk[:remaining]
+                    collected.append(excerpt)
+                    total += len(excerpt)
+                    if on_output:
+                        on_output(excerpt)
+                if len(chunk) > remaining:
+                    truncated = True
+            proc.wait()
         finally:
+            completed.set()
             with self._lock:
                 if self.process is proc:
                     self.process = None
-        return {"exitCode": proc.returncode, "output": stdout[:limit],
-                "truncated": len(stdout) > limit}
+        return {"exitCode": proc.returncode, "output": "".join(collected),
+                "truncated": truncated, "timedOut": timed_out}
 
     def stop(self) -> bool:
         with self._lock:
