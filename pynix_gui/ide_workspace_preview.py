@@ -597,6 +597,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      entry.addEventListener('click',()=>{
        projectResults.hidden=true;projectFindBar.hidden=true;
        debugLocation={source:location.source,line:location.line,column:location.column};
+     debugLocation={source:location.source,line:location.line,column:location.column};
      document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
      });
      projectResults.appendChild(entry);
@@ -611,6 +612,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  let debugActive=false;
  let debugBusy=false;
  let debugState='idle';
+ let debugInspectPhase=null;
+ let debugFrames=[];
+ let debugVariables=[];
  const debugInfoButton=document.createElement('button');
  debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
  debugInfoButton.title='Experimental PYNIX interpreter debugger; stepping is not release-verified';
@@ -655,6 +659,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  window.pynixDebugResult=packet=>{
    debugBusy=false;
    const event=packet?.event||'';
+   const command=packet?.command||'';
    const state=packet?.state||'';
    if(event==='started'){
      debugActive=state!=='finished';debugState=state||'paused';
@@ -676,8 +681,29 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    }else if(state==='paused'||state==='running'||state==='pause-requested'){
      debugState=state;
    }
-   if(packet?.command==='setBreakpoints'&&packet?.event!=='error'){
+   if(command==='setBreakpoints'&&event!=='error'){
      debugInfoButton.title='Installed '+String(packet.breakpoints||0)+' breakpoints';
+   }
+   if(event==='error'||state==='finished'||event==='exited'||state==='running'){
+     debugInspectPhase=null;
+     debugFrames=[];
+     debugVariables=[];
+   }
+   if(command==='stack'&&debugInspectPhase==='stack'){
+     debugFrames=Array.isArray(packet.frames)?packet.frames:[];
+     debugInspectPhase='variables';
+   }else if(command==='variables'&&debugInspectPhase==='variables'){
+     debugVariables=Array.isArray(packet.variables)?packet.variables:[];
+     debugInspectPhase=null;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
+   if(debugState==='paused'&&debugActive&&!debugBusy&&event!=='error'){
+     if(debugInspectPhase==='variables'){
+       debugBusy=true;bridge?.postMessage({action:'variables',source:current});
+     }else if(debugInspectPhase===null&&command!=='variables'){
+       debugInspectPhase='stack';
+       debugBusy=true;bridge?.postMessage({action:'stack',source:current});
+     }
    }
    refreshDebugControls();
    const location=packet?.location;
@@ -696,7 +722,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
    outputTab?.click();
    if(!panel)return;
-   const view={event,state,frames:packet?.frames||[],variables:packet?.variables||[],
+   const view={event,state,frames:debugFrames,variables:debugVariables,
      message:packet?.message||'',session:packet?.session||'',
      location:packet?.location||null};
    panel.replaceChildren();
