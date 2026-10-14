@@ -6,6 +6,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 import sys
 
+# Running a script by path does not add the repository root to sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
 from pynix_gui.ide_debug_process_client import DebugProcessClient
 
 
