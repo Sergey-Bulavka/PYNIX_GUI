@@ -247,7 +247,8 @@ def test_debugger_program_output_is_bounded_and_rendered_as_text():
     root = Path(__file__).resolve().parents[1]
     source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     assert "let debugOutput=[];" in source
-    assert "if(action==='launch')debugOutput=[];" in source
+    assert "if(action==='launch'){" in source
+    assert "debugOutput=[];" in source
     assert "typeof packet?.output==='string'" in source
     assert "if(debugOutput.length>100)debugOutput=debugOutput.slice(-100);" in source
     assert "outputTitle.textContent='PROGRAM OUTPUT';" in source
