@@ -64,3 +64,29 @@ def test_rename_preserves_destination_and_refuses_collisions(tmp_path):
         session.rename_file("a.pnx", "b.pnx")
     assert (tmp_path / "a.pnx").read_text() == "a"
     assert (tmp_path / "b.pnx").read_text() == "b"
+
+
+def test_create_directory_requires_existing_parent(tmp_path):
+    session = WorkspaceSession(tmp_path)
+    session.create_directory("src")
+    assert (tmp_path / "src").is_dir()
+    with pytest.raises(WorkspaceError):
+        session.create_directory("src")
+    with pytest.raises(WorkspaceError, match="parent"):
+        session.create_directory("missing/nested")
+    with pytest.raises(WorkspaceError):
+        session.create_directory("../escaped")
+
+
+def test_native_project_create_is_bound_to_workspace_and_updates_file_index():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "class ProjectCreateHandler(NSObject)" in native
+    assert "doc = session.create_file(relative)" in native
+    assert "available_sources.add(relative)" in native
+    assert 'controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")' in native
+    assert "window.pynixProjectCreateResult=result=>" in preview
+    assert "window.pynixIndexedSources=files.map(entry=>entry.name)" in preview
+    assert "show(name);" in preview
