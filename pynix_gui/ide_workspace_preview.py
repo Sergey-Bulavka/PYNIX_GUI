@@ -76,6 +76,23 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const gutter=document.createElement('pre');
  gutter.className='pynix-edit-gutter';
  gutter.setAttribute('aria-hidden','true');
+ const debugExecutionLine=document.createElement('div');
+ debugExecutionLine.className='pynix-debug-execution-line';
+ debugExecutionLine.hidden=true;
+ debugExecutionLine.style.cssText='position:absolute;left:0;right:0;pointer-events:none;background:rgba(245,190,61,.19);border-left:3px solid #e4a52d;z-index:1';
+ let debugLocation=null;
+ function updateDebugExecutionLine(){
+   if(!debugLocation||debugLocation.source!==current){
+     debugExecutionLine.hidden=true;return;
+   }
+   const metrics=getComputedStyle(editorInput);
+   const height=parseFloat(metrics.lineHeight);
+   const top=parseFloat(metrics.paddingTop)||0;
+   if(!Number.isFinite(height)||height<=0){debugExecutionLine.hidden=true;return;}
+   debugExecutionLine.hidden=false;
+   debugExecutionLine.style.height=height+'px';
+   debugExecutionLine.style.transform='translateY('+(top+(debugLocation.line-1)*height-editorInput.scrollTop)+'px)';
+ }
  const activeLine=document.createElement('div');
  activeLine.className='pynix-active-line';
  const customCaret=document.createElement('div');
@@ -85,7 +102,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  inlineHint.className='pynix-inline-completion';
  inlineHint.hidden=true;
  inlineHint.setAttribute('aria-hidden','true');
- editLayer.append(gutter,activeLine,coloredSource,editorInput,customCaret,inlineHint);
+ editLayer.append(gutter,activeLine,debugExecutionLine,coloredSource,editorInput,customCaret,inlineHint);
  const cursorStatus=document.createElement('span');
  cursorStatus.className='pynix-cursor-status';
  document.querySelector('.bottom')?.appendChild(cursorStatus);
@@ -100,6 +117,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const lineHeight=parseFloat(metrics.lineHeight);
    const topPadding=parseFloat(metrics.paddingTop);
    activeLine.hidden=restoringEditor||document.activeElement!==editorInput;
+   updateDebugExecutionLine();
    activeLine.style.height=lineHeight+'px';
    activeLine.style.transform='translateY('+(topPadding+(line-1)*lineHeight-editorInput.scrollTop)+'px)';
    const colIndex=before.length-before.lastIndexOf('\\n')-1;
@@ -245,6 +263,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    coloredSource.scrollTop=editorInput.scrollTop;
    coloredSource.scrollLeft=editorInput.scrollLeft;
    gutter.scrollTop=editorInput.scrollTop;
+   updateDebugExecutionLine();
  }
  function collectBreakpoints(){
    const entries=[];
@@ -577,7 +596,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      entry.textContent=item.source+':'+item.line+'  '+item.preview;
      entry.addEventListener('click',()=>{
        projectResults.hidden=true;projectFindBar.hidden=true;
-       document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
+       debugLocation={source:location.source,line:location.line,column:location.column};
+     document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
      });
      projectResults.appendChild(entry);
    }
@@ -669,6 +689,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        detail:{source:location.source,line:location.line,column:location.column}
      }));
    }
+   if(debugState!=='paused')debugLocation=null;
+   updateDebugExecutionLine();
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
    const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
@@ -677,7 +699,34 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const view={event,state,frames:packet?.frames||[],variables:packet?.variables||[],
      message:packet?.message||'',session:packet?.session||'',
      location:packet?.location||null};
-   panel.textContent='PYNIX Debug (experimental) · '+JSON.stringify(view,null,2);
+   panel.replaceChildren();
+   const header=document.createElement('div');
+   header.textContent='PYNIX Debug (experimental) · '+(state||event||'unknown');
+   panel.appendChild(header);
+   const renderSection=(heading,items,format)=>{
+     if(!Array.isArray(items)||!items.length)return;
+     const title=document.createElement('div');title.textContent=heading;
+     title.style.cssText='font-weight:600;margin-top:10px';
+     panel.appendChild(title);
+     for(const item of items.slice(0,100)){
+       const row=document.createElement('div');
+       row.textContent=format(item);
+       row.style.cssText='padding:2px 0;white-space:pre-wrap';
+       panel.appendChild(row);
+     }
+   };
+   if(view.message){const error=document.createElement('div');error.textContent=view.message;panel.appendChild(error);}
+   if(view.location){const position=document.createElement('div');
+     position.textContent='At '+view.location.source+':'+view.location.line;
+     panel.appendChild(position);}
+   renderSection('CALL STACK',view.frames,item=>
+     String(item?.name||'<frame>')+' · '+String(item?.source||'')+':'+String(item?.line||'?'));
+   renderSection('LOCALS',view.variables,item=>
+     String(item?.name||'')+' : '+String(item?.type||'')+' = '+String(item?.value??''));
+   if(!view.frames.length&&!view.variables.length&&!view.message){
+     const empty=document.createElement('div');empty.textContent='No stack or local variables in this response';
+     panel.appendChild(empty);
+   }
  };
  const runButton=document.createElement('button');
  runButton.type='button';runButton.className='nav-action pynix-run-action';
