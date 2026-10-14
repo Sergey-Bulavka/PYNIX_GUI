@@ -442,3 +442,15 @@ def test_debug_start_remains_primary_visible_action_and_reports_state():
     assert "debugInfoButton.textContent='● '" in js
     assert "debugInfoButton.title=packet?.message||'Debugger connection failed';" in js
     assert ".workspace-mode .workspace-toolbar .pynix-debug-primary" in css
+
+
+def test_secondary_workspace_commands_use_overflow_not_flat_toolbar():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "toolsMenu.className='pynix-tools-menu';" in js
+    assert "toolsMenuItems.className='pynix-tools-menu-items';" in js
+    assert "newSourceButton,renameFileButton,deleteFileButton" in js
+    assert "toolsMenuItems.appendChild(action);" in js
+    assert ".workspace-mode .pynix-tools-menu-items{position:absolute" in html
+    assert ".workspace-mode .workspace-toolbar>.run-control{display:none}" in html
