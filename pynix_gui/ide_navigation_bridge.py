@@ -122,12 +122,12 @@ def navigation_controls() -> str:
      if(names.includes(value))return value;
      return names.find(item=>value.endsWith('/'+item))||value;
    };
+   outputTab?.click();
    output.replaceChildren();
    const add=text=>{
      const row=document.createElement('div');
      row.className='navigation-result';row.textContent=text;output.appendChild(row);
    };
-   outputTab?.click();
    if(result.error){add(result.error);return;}
    add('PYNIX · '+packet.command+' · '+source+':'+line+':'+column);
    if(packet.command==='definition'){
