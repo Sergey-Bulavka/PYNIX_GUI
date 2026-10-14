@@ -126,3 +126,13 @@ def test_debug_toolbar_serializes_requests_and_reports_experimental_state():
     assert "if(event==='started'){debugActive=state!=='finished';" in source
     assert "if(event==='exited'||state==='finished')" in source
     assert "Debug (experimental" in source
+
+
+def test_debugger_navigation_requires_paused_valid_project_location():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "if(debugState==='paused'&&location&&" in source
+    assert "byName.has(location.source)" in source
+    assert "Number.isSafeInteger(location.line)&&location.line>0" in source
+    assert "Number.isSafeInteger(location.column)&&location.column>0" in source
+    assert "new CustomEvent('pynix:navigate'" in source
