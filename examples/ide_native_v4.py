@@ -162,8 +162,13 @@ def main() -> None:
                 request = dict(message.body())
                 action = request.get("action")
                 if action == "stop":
-                    stopped = project_runner.stop()
-                    publish_run_result({"state": "stopping" if stopped else "idle"})
+                    publish_run_result({"state": "stopping"})
+                    def stop_worker():
+                        try:
+                            project_runner.stop()
+                        except (RunError, OSError) as exc:
+                            publish_run_result({"state": "error", "error": str(exc)[:300]})
+                    run_threading.Thread(target=stop_worker, daemon=True).start()
                 elif action == "run":
                     project_runner.start()
                     publish_run_result({"state": "running"})
