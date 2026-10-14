@@ -144,6 +144,41 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixSemanticRenamePlan(" + serialized + ");", None)
 
+    from pynix_gui.ide_project_runner import ProjectRunner, RunError
+    import json as run_json
+    import threading as run_threading
+    from Foundation import NSOperationQueue
+    project_runner = ProjectRunner(session.root, compiler_python)
+
+    def publish_run_result(result):
+        payload = run_json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        script = "window.pynixProjectRunResult(" + payload + ");"
+        NSOperationQueue.mainQueue().addOperationWithBlock_(
+            lambda: view.evaluateJavaScript_completionHandler_(script, None))
+
+    class ProjectRunHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            try:
+                request = dict(message.body())
+                action = request.get("action")
+                if action == "stop":
+                    stopped = project_runner.stop()
+                    publish_run_result({"state": "stopping" if stopped else "idle"})
+                elif action == "run":
+                    project_runner.start()
+                    publish_run_result({"state": "running"})
+                    def worker():
+                        try:
+                            result = project_runner.collect()
+                            publish_run_result({"state": "finished", **result})
+                        except (RunError, OSError) as exc:
+                            publish_run_result({"state": "error", "error": str(exc)[:300]})
+                    run_threading.Thread(target=worker, daemon=True).start()
+                else:
+                    raise RunError("Unknown project run action")
+            except (RunError, OSError, ValueError, TypeError) as exc:
+                publish_run_result({"state": "error", "error": str(exc)[:300]})
+
     class ProjectFileActionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -477,6 +512,7 @@ def main() -> None:
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     semantic_rename_handler = SemanticRenameHandler.alloc().init()
+    project_run_handler = ProjectRunHandler.alloc().init()
     project_file_action_handler = ProjectFileActionHandler.alloc().init()
     project_create_handler = ProjectCreateHandler.alloc().init()
     symbols_handler = SymbolsHandler.alloc().init()
@@ -484,6 +520,7 @@ def main() -> None:
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
+    controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
     controller.addScriptMessageHandler_name_(project_file_action_handler, "pynixProjectFileAction")
     controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")
     controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
@@ -507,6 +544,7 @@ def main() -> None:
     try:
         app.run()
     finally:
+        project_runner.close()
         if core_reader is not None:
             core_reader.close()
 
