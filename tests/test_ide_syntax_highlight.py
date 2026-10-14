@@ -20,7 +20,7 @@ def test_multiline_document():
 def test_editor_uses_safe_text_content():
     from pathlib import Path
     root = Path(__file__).resolve().parents[1]
-    src = (root/'pynix_gui'/'ide_workspace_preview.py').read_text()
+    src = (root/'pynix_gui'/'ide_workspace_preview.py').read_text(encoding="utf-8")
     assert 'highlight_document(doc.text)' in src
     assert "span.textContent=token.text" in src
     assert 'if(current===payload.source){' in src
