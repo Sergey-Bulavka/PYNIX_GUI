@@ -1,3 +1,4 @@
+import os
 """Editor block 2 integration contracts, verified in full GUI regression."""
 from pathlib import Path
 
@@ -108,5 +109,7 @@ def test_editor_acceptance_runner_is_isolated(tmp_path):
     assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in text
     assert 'mkdir -p "$PROJECT/src"' in text
     assert "rm -rf" not in text
+    if os.name == "nt":
+        return  # Bash syntax of POSIX scripts is checked on Linux and macOS CI.
     result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
