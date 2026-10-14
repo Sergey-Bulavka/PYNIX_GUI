@@ -762,7 +762,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      outputTitle.textContent='PROGRAM OUTPUT';
      outputTitle.style.cssText='font-weight:600;margin-top:10px';
      const outputText=document.createElement('pre');
-     outputText.textContent=debugOutput.join('\n');
+     outputText.textContent=debugOutput.join('\\n');
      outputText.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;margin:4px 0';
      panel.append(outputTitle,outputText);
    }
