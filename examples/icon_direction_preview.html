@@ -301,6 +301,15 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 .workspace-mode .terminal-tabs{gap:0}
 .workspace-mode .terminal-tabs>span:not(.term-spacer),.workspace-mode .terminal-tabs>strong{padding:0 13px;cursor:pointer}
 .workspace-mode .terminal-tabs>.pynix-active-tab{color:#e1efff;border-bottom:2px solid #71b8fa}
+
+/* PyCharm-style chrome: prioritize core actions and group secondary tools. */
+.workspace-mode .workspace-toolbar>.run-control{display:none}
+.workspace-mode .pynix-tools-menu{position:relative;flex:none}
+.workspace-mode .pynix-tools-menu>summary{list-style:none;cursor:pointer;padding:8px 12px;border-radius:6px;background:#202d40;border:1px solid #35475c;color:#dce7f6}
+.workspace-mode .pynix-tools-menu>summary::-webkit-details-marker{display:none}
+.workspace-mode .pynix-tools-menu-items{position:absolute;top:calc(100% + 6px);right:0;width:240px;max-width:calc(100vw - 20px);display:flex;flex-direction:column;gap:3px;padding:8px;background:#1b2839;border:1px solid #455b73;border-radius:9px;box-shadow:0 14px 35px #0009;z-index:155;white-space:normal}
+.workspace-mode .pynix-tools-menu-items>button{width:100%;text-align:left;border:0;background:transparent;padding:8px 10px;min-height:34px}
+.workspace-mode .pynix-tools-menu-items>button:hover{background:#31465f}
 </style>
 <style>
 .workspace-mode .tree,
