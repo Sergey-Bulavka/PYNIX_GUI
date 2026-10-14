@@ -15,6 +15,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Checkout PYNIX_GUI bridge tests
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Checkout PYNIX compiler
         uses: actions/checkout@v4
         with:
@@ -32,6 +36,10 @@ jobs:
         run: python -m pip install -e ./pynix-compiler pytest
       - name: Compile compiler sources
         run: python -m compileall -q pynix-compiler/compiler
+      - name: Verify real IDE-to-compiler debugger bridge
+        env:
+          PYTHONPATH: ${{ github.workspace }}/pynix-compiler
+        run: python scripts/test_real_debugger_bridge.py
       - name: Run real debugger integration tests
         working-directory: pynix-compiler
         run: python -m pytest -q tests/test_debug_protocol.py tests/test_debug_execution.py tests/test_debug_frames.py tests/test_debug_session.py tests/test_debug_dispatch.py tests/test_debug_worker.py
