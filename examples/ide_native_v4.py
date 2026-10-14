@@ -144,6 +144,47 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixSemanticRenamePlan(" + serialized + ");", None)
 
+    class ProjectFileActionHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            from pynix_gui.ide_workspace_session import WorkspaceError
+            response = {"ok": False}
+            try:
+                request = dict(message.body())
+                action = request.get("action")
+                source = request.get("source")
+                destination = request.get("destination")
+                if action not in {"rename", "delete"} or not isinstance(source, str) or source not in available_sources:
+                    raise WorkspaceError("Unknown project file action")
+                if action == "rename" and (not isinstance(destination, str) or
+                                           not destination.endswith(".pnx") or
+                                           destination in available_sources):
+                    raise WorkspaceError("Invalid destination for PYNIX source rename")
+                if not source.endswith(".pnx"):
+                    raise WorkspaceError("Only PYNIX source files can be modified")
+                if core_reader is not None:
+                    core_reader.open_source(source)
+                    state = core_reader.read_source(source)
+                    if state["dirty"]:
+                        raise WorkspaceError("Save IDE Core changes before modifying this file")
+                    if not core_reader.close_source(source):
+                        raise WorkspaceError("IDE Core refused to close source")
+                if action == "rename":
+                    session.rename_file(source, destination)
+                    available_sources.discard(source)
+                    available_sources.add(destination)
+                    response = {"ok": True, "action": action, "source": source,
+                                "destination": destination}
+                else:
+                    session.delete_file(source)
+                    available_sources.discard(source)
+                    response = {"ok": True, "action": action, "source": source}
+            except (ValueError, TypeError, WorkspaceError, CoreSnapshotError, OSError) as exc:
+                response["error"] = str(exc)[:300]
+            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+            view.evaluateJavaScript_completionHandler_(
+                "window.pynixProjectFileActionResult(" + serialized + ");", None)
+
     class ProjectCreateHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
@@ -436,12 +477,14 @@ def main() -> None:
     file_save_handler = FileSaveHandler.alloc().init()
     file_open_handler = FileOpenHandler.alloc().init()
     semantic_rename_handler = SemanticRenameHandler.alloc().init()
+    project_file_action_handler = ProjectFileActionHandler.alloc().init()
     project_create_handler = ProjectCreateHandler.alloc().init()
     symbols_handler = SymbolsHandler.alloc().init()
     diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
+    controller.addScriptMessageHandler_name_(project_file_action_handler, "pynixProjectFileAction")
     controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")
     controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
     controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
