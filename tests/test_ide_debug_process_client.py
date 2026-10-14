@@ -185,3 +185,16 @@ def test_editor_gutter_toggles_and_transmits_real_breakpoints():
     assert "function collectBreakpoints()" in source
     assert "bridge.postMessage({action:'setBreakpoints',breakpoints:entries});" in source
     assert "packet?.command==='setBreakpoints'" in source
+
+
+def test_native_debugger_marks_paused_line_and_structures_inspection():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "pynix-debug-execution-line" in source
+    assert "function updateDebugExecutionLine()" in source
+    assert "debugLocation={source:location.source,line:location.line,column:location.column};" in source
+    assert "if(debugState!=='paused')debugLocation=null;" in source
+    assert "renderSection('CALL STACK',view.frames" in source
+    assert "renderSection('LOCALS',view.variables" in source
+    assert "panel.replaceChildren();" in source
+    assert "row.textContent=format(item);" in source
