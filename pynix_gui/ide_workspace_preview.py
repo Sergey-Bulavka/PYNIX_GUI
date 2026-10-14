@@ -606,7 +606,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const debugMenu=document.createElement('details');
  debugMenu.className='pynix-debug-menu';
  const debugMenuLabel=document.createElement('summary');
- debugMenuLabel.textContent='Debug ▾';
+ debugMenuLabel.textContent='Steps ▾';
  debugMenuLabel.title='Open debugger controls';
  debugMenu.append(debugMenuLabel,debugToolbar);
  const debugActions=[['launch','Debug Start'],['pause','Pause'],['continue','Continue'],
@@ -636,7 +636,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        action==='continue'? !paused:
        action==='stop'?false:!paused));
    }
-   debugInfoButton.textContent='Debug (experimental · '+(debugBusy?'working':debugState)+')';
+   debugInfoButton.textContent='● '+(debugBusy?'starting…':debugState);
  };
  for(const [action,label] of debugActions){
    const control=document.createElement('button');
@@ -667,7 +667,12 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      catch(error){debugBusy=false;refreshDebugControls();window.alert(String(error));}
    });
    debugControls.set(action,control);
-   debugToolbar.appendChild(control);
+   if(action==='launch'){
+     control.classList.add('pynix-debug-primary');
+     document.querySelector('.workspace-toolbar')?.appendChild(control);
+   }else{
+     debugToolbar.appendChild(control);
+   }
  }
  document.querySelector('.workspace-toolbar')?.append(debugMenu,debugInfoButton);
  refreshDebugControls();
@@ -758,7 +763,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const panel=document.querySelector('.terminal-console');
    const outputTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='OUTPUT');
    outputTab?.click();
-   if(!panel)return;
+   if(!panel){debugInfoButton.title=packet?.message||state||event;return;}
    const view={event,state,frames:debugFrames,variables:debugVariables,
      message:packet?.message||'',session:packet?.session||'',
      location:packet?.location||null};
@@ -778,6 +783,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        panel.appendChild(row);
      }
    };
+   if(event==='error'||event==='disconnected'){
+     debugInfoButton.title=packet?.message||'Debugger connection failed';
+   }
    if(view.message){const error=document.createElement('div');error.textContent=view.message;panel.appendChild(error);}
    if(view.location){const position=document.createElement('div');
      position.textContent='At '+view.location.source+':'+view.location.line;
