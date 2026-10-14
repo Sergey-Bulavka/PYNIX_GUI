@@ -841,9 +841,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    // Preflight every document BEFORE changing any editor buffers.
    if(changes.some(item=>{
      const file=byName.get(item?.source);
-     return !file||file.unloaded||typeof item.before!=='string'||typeof item.after!=='string'||
-       file.text!==item.before||file.savedText!==item.before||
-       (current===item.source&&editorInput.value!==item.before);
+     return !file||typeof item.before!=='string'||typeof item.after!=='string'||
+       (!file.unloaded&&(file.text!==item.before||file.savedText!==item.before))||
+       (current===item.source&&!file.unloaded&&editorInput.value!==item.before);
    })){
      window.alert('Rename aborted: open all affected sources and save changes, then retry.');return;
    }
@@ -856,6 +856,10 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
        'Changes remain UNSAVED. Review every tab and save manually.'))return;
    for(const item of changes){
      const file=byName.get(item.source);
+     if(file.unloaded){
+       // Compiler plan and native Core preflight verified these exact bytes.
+       file.text=item.before;file.savedText=item.before;file.unloaded=false;
+     }
      const undo=file.undoStack||(file.undoStack=[]);
      undo.push({text:item.before,start:file.cursorStart||0,end:file.cursorEnd||0,extraSelections:[]});
      if(undo.length>undoLimit)undo.shift();
