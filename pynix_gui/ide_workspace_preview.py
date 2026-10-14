@@ -1855,6 +1855,59 @@ editorInput.addEventListener('keydown',event=>{
    }
    show(name);
  };
+ const renameFileButton=document.createElement('button');
+ renameFileButton.type='button';renameFileButton.className='nav-action';
+ renameFileButton.textContent='Rename File';
+ const deleteFileButton=document.createElement('button');
+ deleteFileButton.type='button';deleteFileButton.className='nav-action';
+ deleteFileButton.textContent='Delete File';
+ document.querySelector('.workspace-toolbar')?.append(renameFileButton,deleteFileButton);
+ function requestProjectFileAction(action){
+   persistBuffer();
+   const source=selectedPath||current;
+   if(!source||!byName.has(source)||!source.endsWith('.pnx'))return;
+   if(openTabs.includes(source)){
+     window.alert('Close the file tab before renaming or deleting it. Save any changes first.');
+     return;
+   }
+   const file=byName.get(source);
+   if(file?.dirty){
+     window.alert('Save changes before modifying the project file.');return;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixProjectFileAction;
+   if(!bridge){window.alert('Project file actions require native macOS workspace');return;}
+   if(action==='rename'){
+     const destination=window.prompt('Rename project file:',source);
+     if(destination===null||destination===source)return;
+     if(!/^[A-Za-z0-9_./-]+\\.pnx$/.test(destination)){
+       window.alert('Use a safe project-relative .pnx filename');return;
+     }
+     bridge.postMessage({action,source,destination});
+   } else {
+     if(!window.confirm('Permanently delete '+source+'? This cannot be undone.'))return;
+     bridge.postMessage({action,source});
+   }
+ }
+ renameFileButton.addEventListener('click',()=>requestProjectFileAction('rename'));
+ deleteFileButton.addEventListener('click',()=>requestProjectFileAction('delete'));
+ window.pynixProjectFileActionResult=result=>{
+   if(!result?.ok){window.alert('Project file operation failed: '+String(result?.error||'unknown error'));return;}
+   const source=result.source;
+   const file=byName.get(source);
+   if(!file)return;
+   byName.delete(source);
+   const index=files.indexOf(file);
+   if(index>=0)files.splice(index,1);
+   if(result.action==='rename'){
+     file.name=result.destination;
+     byName.set(file.name,file);
+     files.push(file);
+     files.sort((a,b)=>a.name.localeCompare(b.name));
+   }
+   window.pynixIndexedSources=files.map(entry=>entry.name);
+   selectedPath=result.action==='rename'?result.destination:null;
+   renderTree();
+ };
  const explorerControl=document.querySelectorAll('.rail-item')[0];
  explorerControl?.addEventListener('click',()=>renderTree());
  explorerControl?.addEventListener('keydown',e=>{
