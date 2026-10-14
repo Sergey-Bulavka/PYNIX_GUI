@@ -1,3 +1,4 @@
+import os
 """Block 3 local completion integration checks."""
 from pathlib import Path
 
@@ -96,6 +97,8 @@ def test_block3_test_runner_isolated_and_has_cross_file_rename(tmp_path):
     assert "press F2" in source
     assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in source
     assert "rm -rf" not in source
+    if os.name == "nt":
+        return  # Bash syntax of POSIX scripts is checked on Linux and macOS CI.
     result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
