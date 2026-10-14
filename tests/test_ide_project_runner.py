@@ -72,3 +72,13 @@ def test_restart_is_generation_guarded_and_nonblocking():
     assert "run_threading.Thread(target=stop_or_restart, daemon=True).start()" in native
     assert "restartButton.textContent='Restart'" in preview
     assert "if(action==='run'||action==='restart')" in preview
+
+
+def test_run_error_locations_are_clickable_and_bounded():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "function renderRunOutputLinks(panel,output)" in source
+    assert "window.pynixIndexedSources||[]" in source
+    assert "split('\\\\n').slice(0,4000)" in source
+    assert "jump.addEventListener('click'" in source
+    assert "new CustomEvent('pynix:navigate'" in source
