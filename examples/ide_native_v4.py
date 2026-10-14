@@ -158,8 +158,8 @@ def main() -> None:
 
     run_generation = {"value": 0}
 
-    def start_project_run():
-        project_runner.start()
+    def start_project_run(mode="run"):
+        project_runner.start(mode=mode)
         run_generation["value"] += 1
         generation = run_generation["value"]
         publish_run_result({"state": "running"})
@@ -182,15 +182,21 @@ def main() -> None:
                 request = dict(message.body())
                 action = request.get("action")
                 if action == "run":
-                    start_project_run()
+                    mode = request.get("mode", "run")
+                    if mode not in ("run", "check"):
+                        raise RunError("Unsupported run configuration")
+                    start_project_run(mode)
                 elif action in ("stop", "restart"):
+                    mode = request.get("mode", "run")
+                    if mode not in ("run", "check"):
+                        raise RunError("Unsupported run configuration")
                     run_generation["value"] += 1
                     publish_run_result({"state": "stopping"})
                     def stop_or_restart():
                         try:
                             project_runner.stop()
                             if action == "restart":
-                                start_project_run()
+                                start_project_run(mode)
                             else:
                                 publish_run_result({"state": "idle"})
                         except (RunError, OSError) as exc:
