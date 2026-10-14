@@ -332,15 +332,15 @@ def test_real_debug_worker_pipe_lifecycle_without_private_compiler(tmp_path):
     package.mkdir()
     (package / "__init__.py").write_text("", encoding="utf-8")
     (package / "debug_worker.py").write_text(
-        "import json, sys\\n"
-        "def send(event):\\n"
-        "    sys.stdout.write(json.dumps({'protocol':'pynix-debug','version':1,'event':event})+'\\\\n')\\n"
-        "    sys.stdout.flush()\\n"
-        "send('ready')\\n"
-        "for line in sys.stdin:\\n"
-        "    packet=json.loads(line)\\n"
-        "    send('pong' if packet.get('command')=='ping' else 'exited')\\n"
-        "    if packet.get('command')=='shutdown': break\\n",
+        "import json, sys\n"
+        "def send(event):\n"
+        "    sys.stdout.write(json.dumps({'protocol':'pynix-debug','version':1,'event':event})+'\\n')\n"
+        "    sys.stdout.flush()\n"
+        "send('ready')\n"
+        "for line in sys.stdin:\n"
+        "    packet=json.loads(line)\n"
+        "    send('pong' if packet.get('command')=='ping' else 'exited')\n"
+        "    if packet.get('command')=='shutdown': break\n",
         encoding="utf-8",
     )
     worker = _Worker(Path(sys.executable), tmp_path)
