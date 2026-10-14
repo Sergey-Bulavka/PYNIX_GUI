@@ -596,9 +596,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      entry.textContent=item.source+':'+item.line+'  '+item.preview;
      entry.addEventListener('click',()=>{
        projectResults.hidden=true;projectFindBar.hidden=true;
-       debugLocation={source:location.source,line:location.line,column:location.column};
-     debugLocation={source:location.source,line:location.line,column:location.column};
-     document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
+       document.dispatchEvent(new CustomEvent('pynix:navigate',{detail:{source:item.source,line:item.line,column:item.column}}));
      });
      projectResults.appendChild(entry);
    }
