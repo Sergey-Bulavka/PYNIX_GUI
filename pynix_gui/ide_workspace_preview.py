@@ -797,17 +797,22 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const header=document.createElement('div');
    header.textContent='PYNIX Debug (experimental) · '+(state||event||'unknown');
    panel.appendChild(header);
+   const inspector=document.createElement('div');
+   inspector.className='pynix-debug-inspector';
    const renderSection=(heading,items,format)=>{
      if(!Array.isArray(items)||!items.length)return;
+     const section=document.createElement('section');
+     section.className='pynix-debug-inspector-section';
      const title=document.createElement('div');title.textContent=heading;
-     title.style.cssText='font-weight:600;margin-top:10px';
-     panel.appendChild(title);
+     title.className='pynix-debug-inspector-heading';
+     section.appendChild(title);
      for(const item of items.slice(0,100)){
        const row=document.createElement('div');
        row.textContent=format(item);
-       row.style.cssText='padding:2px 0;white-space:pre-wrap';
-       panel.appendChild(row);
+       row.className='pynix-debug-inspector-row';
+       section.appendChild(row);
      }
+     inspector.appendChild(section);
    };
    if(event==='error'||event==='disconnected'){
      debugInfoButton.title=packet?.message||'Debugger connection failed';
@@ -829,6 +834,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      String(item?.name||'<frame>')+' · '+String(item?.source||'').split('/').pop()+':'+String(item?.line||'?'));
    renderSection('LOCALS',view.variables,item=>
      String(item?.name||'')+' : '+String(item?.type||'')+' = '+String(item?.value??''));
+   if(inspector.childElementCount)panel.appendChild(inspector);
    if(!view.frames.length&&!view.variables.length&&!view.message&&!debugOutput.length){
      const empty=document.createElement('div');empty.textContent='No stack or local variables in this response';
      panel.appendChild(empty);
