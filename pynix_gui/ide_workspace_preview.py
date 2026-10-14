@@ -56,6 +56,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  if (!tree || !tabs || !code) return;
  const original = tree.innerHTML;
  const byName = new Map(files.map(file => [file.name, file]));
+ window.pynixIndexedSources=files.map(file=>file.name);
  const openTabs = [];
  let current = null;
  let selectedPath = null;
