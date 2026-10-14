@@ -22,3 +22,58 @@ def test_native_debug_bridge_uses_background_worker_and_safe_ui():
     assert 'debug_client.close()' in native
     assert 'window.pynixDebugResult=packet=>' in view
     assert "window.webkit?.messageHandlers?.pynixDebugCommand" in view
+
+
+def test_worker_reads_multiple_packets_without_losing_prefetched_bytes():
+    import json
+    import os
+    from types import SimpleNamespace
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    read_fd, write_fd = os.pipe()
+    worker = _Worker(Path("/usr/bin/python3"), Path("."))
+    with os.fdopen(read_fd, "rb", buffering=0) as reader:
+        worker.process = SimpleNamespace(stdout=reader)
+        packets = [
+            {"protocol": "pynix-debug", "version": 1, "event": "ready"},
+            {"protocol": "pynix-debug", "version": 1, "event": "started"},
+        ]
+        try:
+            os.write(write_fd, b"".join(json.dumps(p).encode() + b"\\n" for p in packets))
+            assert worker.receive(timeout=0.1)["event"] == "ready"
+            assert worker.receive(timeout=0.1)["event"] == "started"
+        finally:
+            os.close(write_fd)
+
+
+def test_worker_response_timeout_is_bounded():
+    import os
+    from types import SimpleNamespace
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    read_fd, write_fd = os.pipe()
+    worker = _Worker(Path("/usr/bin/python3"), Path("."))
+    with os.fdopen(read_fd, "rb", buffering=0) as reader:
+        worker.process = SimpleNamespace(stdout=reader)
+        try:
+            with pytest.raises(DebugClientError, match="timed out"):
+                worker.receive(timeout=0.01)
+        finally:
+            os.close(write_fd)
+
+
+def test_worker_rejects_oversized_response():
+    import os
+    from types import SimpleNamespace
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    read_fd, write_fd = os.pipe()
+    worker = _Worker(Path("/usr/bin/python3"), Path("."))
+    with os.fdopen(read_fd, "rb", buffering=0) as reader:
+        worker.process = SimpleNamespace(stdout=reader)
+        try:
+            os.write(write_fd, b"x" * 65537 + b"\\n")
+            with pytest.raises(DebugClientError, match="oversized"):
+                worker.receive(timeout=0.1)
+        finally:
+            os.close(write_fd)
