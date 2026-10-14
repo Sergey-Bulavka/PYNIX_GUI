@@ -72,6 +72,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const coloredSource=document.createElement('pre');
  coloredSource.className='pynix-edit-highlight';
  coloredSource.setAttribute('aria-hidden','true');
+ const breakpoints=new Map();
  const gutter=document.createElement('pre');
  gutter.className='pynix-edit-gutter';
  gutter.setAttribute('aria-hidden','true');
@@ -238,11 +239,42 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    coloredSource.innerHTML=html+decorateSegment(value.slice(last),last)+'\\n';
    decorateFindMatches();
    const count=value.split('\\n').length;
-   gutter.textContent=Array.from({length:count},(_,i)=>String(i+1)).join('\\n');
+   const marked=breakpoints.get(current)||new Set();
+   gutter.textContent=Array.from({length:count},(_,i)=>
+     (marked.has(i+1)?'● ':'  ')+String(i+1)).join('\\n');
    coloredSource.scrollTop=editorInput.scrollTop;
    coloredSource.scrollLeft=editorInput.scrollLeft;
    gutter.scrollTop=editorInput.scrollTop;
  }
+ function collectBreakpoints(){
+   const entries=[];
+   for(const [source,lines] of breakpoints)
+     for(const line of lines)entries.push({source,line});
+   return entries.sort((a,b)=>a.source.localeCompare(b.source)||a.line-b.line);
+ }
+ function redrawBreakpointGutter(){
+   const source=current||'';
+   const count=editorInput.value.split('\\n').length;
+   const marked=breakpoints.get(source)||new Set();
+   gutter.textContent=Array.from({length:count},(_,i)=>
+     (marked.has(i+1)?'● ':'  ')+String(i+1)).join('\\n');
+ }
+ gutter.title='Click a line number to toggle a breakpoint (experimental)';
+ gutter.style.cursor='pointer';
+ gutter.addEventListener('click',event=>{
+   if(!current||debugBusy||debugActive)return;
+   const style=getComputedStyle(editorInput);
+   const height=parseFloat(style.lineHeight);
+   if(!Number.isFinite(height)||height<=0)return;
+   const top=parseFloat(style.paddingTop)||0;
+   const offset=event.clientY-gutter.getBoundingClientRect().top+gutter.scrollTop-top;
+   const line=Math.floor(offset/height)+1;
+   if(line<1||line>editorInput.value.split('\\n').length)return;
+   const lines=breakpoints.get(current)||new Set();
+   if(lines.has(line))lines.delete(line);else lines.add(line);
+   if(lines.size)breakpoints.set(current,lines);else breakpoints.delete(current);
+   redrawBreakpointGutter();
+ });
  editorInput.addEventListener('scroll',()=>{coloredSource.scrollTop=editorInput.scrollTop;coloredSource.scrollLeft=editorInput.scrollLeft;gutter.scrollTop=editorInput.scrollTop;updateCursor();});
  const editButton=document.createElement('button');
  editButton.type='button';
@@ -604,13 +636,28 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    debugBusy=false;
    const event=packet?.event||'';
    const state=packet?.state||'';
-   if(event==='started'){debugActive=state!=='finished';debugState=state||'paused';}
+   if(event==='started'){
+     debugActive=state!=='finished';debugState=state||'paused';
+     if(debugActive){
+       const entries=collectBreakpoints();
+       if(entries.length){
+         const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
+         if(bridge){
+           debugBusy=true;
+           bridge.postMessage({action:'setBreakpoints',breakpoints:entries});
+         }
+       }
+     }
+   }
    else if(event==='exited'||state==='finished'){debugActive=false;debugState='finished';}
    else if(event==='error'){
      // Worker errors are not proof of termination; explicit launch failure is.
      if(!debugActive)debugState='error';
    }else if(state==='paused'||state==='running'||state==='pause-requested'){
      debugState=state;
+   }
+   if(packet?.command==='setBreakpoints'&&packet?.event!=='error'){
+     debugInfoButton.title='Installed '+String(packet.breakpoints||0)+' breakpoints';
    }
    refreshDebugControls();
    const location=packet?.location;
