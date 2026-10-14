@@ -550,6 +550,46 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      projectResults.appendChild(entry);
    }
  };
+ const runButton=document.createElement('button');
+ runButton.type='button';runButton.className='nav-action pynix-run-action';
+ runButton.textContent='Run';
+ const stopButton=document.createElement('button');
+ stopButton.type='button';stopButton.className='nav-action pynix-stop-action';
+ stopButton.textContent='Stop';stopButton.disabled=true;
+ document.querySelector('.workspace-toolbar')?.append(runButton,stopButton);
+ let isProjectRunning=false;
+ function runProjectAction(action){
+   if(action==='run'){
+     persistBuffer();
+     if([...byName.values()].some(file=>file.dirty)){
+       window.alert('Save all changes before running the PYNIX project.');return;
+     }
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixProjectRun;
+   if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
+   bridge.postMessage({action});
+ }
+ runButton.addEventListener('click',()=>runProjectAction('run'));
+ stopButton.addEventListener('click',()=>runProjectAction('stop'));
+ window.pynixProjectRunResult=packet=>{
+   const state=packet?.state||'error';
+   if(state==='running')isProjectRunning=true;
+   if(state==='finished'||state==='error'||state==='idle')isProjectRunning=false;
+   runButton.disabled=isProjectRunning;
+   stopButton.disabled=!isProjectRunning;
+   const tabs=document.querySelector('.terminal-tabs');
+   const consolePanel=document.querySelector('.terminal-console');
+   const consoleTab=[...tabs?.children||[]].find(item=>item.textContent.trim()==='TERMINAL');
+   consoleTab?.click();
+   if(!consolePanel)return;
+   if(state==='running')consolePanel.textContent='Running PYNIX project…';
+   else if(state==='stopping')consolePanel.textContent+='\\nStopping…';
+   else if(state==='finished')
+     consolePanel.textContent=(packet.output||'')+
+       '\\nProcess exited: '+packet.exitCode+(packet.timedOut?' (timeout)':'')+
+       (packet.truncated?' (output truncated)':'');
+   else if(state==='error')consolePanel.textContent='Run failed: '+String(packet.error||'unknown error');
+ };
  const diagnosticsButton=document.createElement('button');
  diagnosticsButton.type='button';
  diagnosticsButton.className='nav-action pynix-diagnostics-action';
