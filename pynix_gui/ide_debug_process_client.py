@@ -76,6 +76,35 @@ class DebugProcessClient:
                 self.close()
             return result
 
+    def set_breakpoints(self, entries: list[dict]) -> dict:
+        if not isinstance(entries, list) or len(entries) > 256:
+            raise DebugClientError("Invalid breakpoint list")
+        normalized = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise DebugClientError("Invalid breakpoint")
+            source, line = entry.get("source"), entry.get("line")
+            if (not isinstance(source, str) or not source.endswith(".pnx")
+                    or type(line) is not int or line < 1):
+                raise DebugClientError("Invalid breakpoint location")
+            target = self.root / source
+            if (Path(source).is_absolute() or ".." in Path(source).parts
+                    or not target.resolve().is_relative_to(self.root)
+                    or not target.is_file()):
+                raise DebugClientError("Breakpoint source outside project")
+            normalized.append({"source": source, "line": line})
+        with self._lock:
+            if self._worker is None or self._session is None:
+                raise DebugClientError("No active debugger session")
+            try:
+                self._worker.send({"protocol": "pynix-debug", "version": 1,
+                                   "command": "setBreakpoints", "session": self._session,
+                                   "breakpoints": normalized})
+                return self._worker.receive()
+            except (OSError, ValueError, EOFError):
+                self.close()
+                raise
+
     def close(self):
         with self._lock:
             worker = self._worker
