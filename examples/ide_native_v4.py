@@ -185,8 +185,9 @@ def main() -> None:
                 request = dict(message.body())
                 action = request.get("action")
                 source = request.get("source")
+                breakpoints = request.get("breakpoints")
                 if action not in {"launch", "pause", "continue", "stepInto",
-                                  "stepOver", "stepOut", "stack", "variables", "stop"}:
+                                  "stepOver", "stepOut", "stack", "variables", "stop", "setBreakpoints"}:
                     raise ValueError("Unknown debugger command")
                 if action == "launch" and (not isinstance(source, str) or
                                             source not in available_sources):
@@ -197,7 +198,9 @@ def main() -> None:
 
             def job():
                 try:
-                    result = debug_client.launch(source) if action == "launch" else debug_client.command(action)
+                    result = (debug_client.launch(source) if action == "launch" else
+                              debug_client.set_breakpoints(breakpoints) if action == "setBreakpoints" else
+                              debug_client.command(action))
                     publish_debug_result(result)
                 except Exception as exc:
                     publish_debug_result({"event": "error", "message": str(exc)[:200]})
