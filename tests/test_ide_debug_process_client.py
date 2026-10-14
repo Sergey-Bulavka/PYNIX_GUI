@@ -253,3 +253,40 @@ def test_debugger_program_output_is_bounded_and_rendered_as_text():
     assert "outputTitle.textContent='PROGRAM OUTPUT';" in source
     assert "outputText.textContent=debugOutput.join(" in source
     assert "panel.append(outputTitle,outputText);" in source
+
+
+def test_client_does_not_retain_worker_if_program_finishes_during_launch(tmp_path, monkeypatch):
+    from pynix_gui import ide_debug_process_client as bridge
+
+    source = tmp_path / "main.pnx"
+    source.write_text("function main()\\n    print(1)\\n", encoding="utf-8")
+    created = []
+
+    class FinishedWorker:
+        def __init__(self, python, root):
+            self.closed = False
+            created.append(self)
+
+        def start(self):
+            pass
+
+        def send(self, packet):
+            assert packet["command"] == "launch"
+
+        def receive(self):
+            return {"protocol": "pynix-debug", "version": 1,
+                    "event": "started", "state": "finished", "output": "1"}
+
+        def close(self):
+            self.closed = True
+
+    monkeypatch.setattr(bridge, "_Worker", FinishedWorker)
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    first = client.launch("main.pnx")
+    assert first["output"] == "1"
+    assert created[0].closed
+    assert client._worker is None
+    assert client._session is None
+    second = client.launch("main.pnx")
+    assert second["state"] == "finished"
+    assert created[1].closed
