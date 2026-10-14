@@ -49,7 +49,7 @@ def test_native_run_stop_wiring_and_dirty_buffer_guard():
     assert "run_threading.Thread(target=worker, daemon=True).start()" in native
     assert "window.pynixProjectRunResult=packet=>" in preview
     assert "file=>file.dirty" in preview
-    assert "consolePanel.textContent=(packet.output||'')" in preview
+    assert "renderRunOutputLinks(consolePanel,(packet.output||'')" in preview
 
 
 def test_native_controller_publishes_chunks():
