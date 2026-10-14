@@ -220,3 +220,24 @@ def test_native_debug_disconnect_releases_ui_session():
     assert "else if(event==='disconnected'){debugActive=false;debugState='disconnected';}" in preview
     assert "event==='error'||event==='disconnected'" in preview
     assert "if(debugState!=='paused')debugLocation=null;" in preview
+
+
+def test_client_closes_worker_when_program_finishes_naturally(tmp_path):
+    class FinishedWorker:
+        closed = False
+        def send(self, packet):
+            assert packet["command"] == "stack"
+        def receive(self):
+            return {"protocol": "pynix-debug", "version": 1,
+                    "command": "stack", "state": "finished"}
+        def close(self):
+            self.closed = True
+
+    client = DebugProcessClient(tmp_path, tmp_path / "python")
+    worker = FinishedWorker()
+    client._worker = worker
+    client._session = "active"
+    assert client.command("stack")["state"] == "finished"
+    assert worker.closed
+    assert client._worker is None
+    assert client._session is None
