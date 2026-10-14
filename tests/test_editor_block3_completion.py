@@ -98,3 +98,21 @@ def test_block3_test_runner_isolated_and_has_cross_file_rename(tmp_path):
     assert "rm -rf" not in source
     result = subprocess.run(["bash", "-n", str(runner)], capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
+
+
+def test_compiler_results_select_output_before_rendering():
+    bridge = (ROOT / "pynix_gui/ide_navigation_bridge.py").read_text(encoding="utf-8")
+    block = bridge.split("window.pynixNavigationResult=packet=>", 1)[1]
+    assert block.index("outputTab?.click();") < block.index("output.replaceChildren();")
+    assert "normalizeSource(ref.source)" in block
+    assert "normalizeSource(d.source)" in block
+
+
+def test_cross_file_semantic_rename_accepts_unloaded_indexed_sources():
+    preview = (ROOT / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "window.pynixIndexedSources=files.map(file=>file.name)" in preview
+    rename = preview.split("window.pynixSemanticRenamePlan=packet=>", 1)[1].split(
+        "semanticRenameButton.addEventListener", 1)[0]
+    assert "if(file.unloaded){" in rename
+    assert "file.text=item.before;file.savedText=item.before;file.unloaded=false;" in rename
+    assert "!file.unloaded&&(file.text!==item.before||file.savedText!==item.before)" in rename
