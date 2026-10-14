@@ -429,3 +429,16 @@ def test_debug_controls_are_kept_out_of_flat_top_toolbar():
     assert "append(debugMenu,debugInfoButton);" in view
     assert ".workspace-mode .pynix-debug-toolbar{position:absolute" in html
     assert "grid-template-columns:repeat(3,minmax(78px,1fr))" in html
+
+
+def test_debug_start_remains_primary_visible_action_and_reports_state():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "control.classList.add('pynix-debug-primary');" in js
+    assert "document.querySelector('.workspace-toolbar')?.appendChild(control);" in js
+    assert "debugToolbar.appendChild(control);" in js
+    assert "debugMenuLabel.textContent='Steps ▾';" in js
+    assert "debugInfoButton.textContent='● '" in js
+    assert "debugInfoButton.title=packet?.message||'Debugger connection failed';" in js
+    assert ".workspace-mode .workspace-toolbar .pynix-debug-primary" in css
