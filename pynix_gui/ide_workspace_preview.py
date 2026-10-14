@@ -577,6 +577,27 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  restartButton.addEventListener('click',()=>runProjectAction('restart'));
  runButton.addEventListener('click',()=>runProjectAction('run'));
  stopButton.addEventListener('click',()=>runProjectAction('stop'));
+ function renderRunOutputLinks(panel,output){
+   panel.replaceChildren();
+   const known=window.pynixIndexedSources||[];
+   for(const line of String(output||'').split('\\n').slice(0,4000)){
+     const row=document.createElement('div');
+     row.className='pynix-run-output-line';
+     const match=line.match(/([^\\s:()]+\\.pnx):(\\d+)(?::(\\d+))?/);
+     const source=match&&(known.includes(match[1])?match[1]:
+       known.find(item=>match[1].endsWith('/'+item)));
+     if(source){
+       const jump=document.createElement('button');
+       jump.type='button';jump.className='nav-location pynix-run-source-link';
+       jump.textContent=line;
+       jump.addEventListener('click',()=>document.dispatchEvent(
+         new CustomEvent('pynix:navigate',{detail:{
+           source,line:Number(match[2]),column:Number(match[3]||1)}})));
+       row.appendChild(jump);
+     }else row.textContent=line;
+     panel.appendChild(row);
+   }
+ }
  window.pynixProjectRunResult=packet=>{
    const state=packet?.state||'error';
    if(state==='running')isProjectRunning=true;
@@ -596,10 +617,11 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      consolePanel.scrollTop=consolePanel.scrollHeight;
    }
    else if(state==='stopping')consolePanel.textContent+='\\nStopping…';
-   else if(state==='finished')
-     consolePanel.textContent=(packet.output||'')+
+   else if(state==='finished'){
+     renderRunOutputLinks(consolePanel,(packet.output||'')+
        '\\nProcess exited: '+packet.exitCode+(packet.timedOut?' (timeout)':'')+
-       (packet.truncated?' (output truncated)':'');
+       (packet.truncated?' (output truncated)':''));
+   }
    else if(state==='error')consolePanel.textContent='Run failed: '+String(packet.error||'unknown error');
  };
  const diagnosticsButton=document.createElement('button');
