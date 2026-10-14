@@ -210,3 +210,13 @@ def test_debug_inspection_is_serialized_and_nonrecursive():
     assert "['stepInto','stepOver','stepOut','setBreakpoints','pause'].includes(command)" in source
     assert "debugFrames=[];debugVariables=[];" in source
     assert "debugLocation={source:location.source,line:location.line,column:location.column};" in source
+
+
+def test_native_debug_disconnect_releases_ui_session():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert '"disconnected" if disconnected else "error"' in native
+    assert "else if(event==='disconnected'){debugActive=false;debugState='disconnected';}" in preview
+    assert "event==='error'||event==='disconnected'" in preview
+    assert "if(debugState!=='paused')debugLocation=null;" in preview
