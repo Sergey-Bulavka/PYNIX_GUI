@@ -352,3 +352,36 @@ def test_real_debug_worker_pipe_lifecycle_without_private_compiler(tmp_path):
         assert worker.receive(timeout=3)["event"] == "exited"
     finally:
         worker.close()
+
+
+def test_real_debug_worker_pipe_preserves_unicode_and_split_frames(tmp_path):
+    """Subprocess sends UTF-8 text in separate writes, including a split multibyte character."""
+    import sys
+    from pynix_gui.ide_debug_process_client import _Worker
+
+    package = tmp_path / "compiler"
+    package.mkdir()
+    (package / "__init__.py").write_text("", encoding="utf-8")
+    (package / "debug_worker.py").write_text(
+        "import os, sys\n"
+        "fd=sys.stdout.fileno()\n"
+        "def send(data): os.write(fd, data)\n"
+        "send(b'{\\\"protocol\\\":\\\"pynix-debug\\\",\\\"version\\\":1,\\\"event\\\":\\\"ready\\\"}\\\\n')\n"
+        "for line in sys.stdin.buffer:\n"
+        "    packet=b'{\\\"protocol\\\":\\\"pynix-debug\\\",\\\"version\\\":1,\\\"event\\\":\\\"pong\\\",\\\"output\\\":\\\"'\n"
+        "    send(packet)\n"
+        "    data='Привіт 🌍'.encode('utf-8')\n"
+        "    for part in (data[:2],data[2:5],data[5:]): send(part)\n"
+        "    send(b'\\\"}\\\\n')\n"
+        "    break\n",
+        encoding="utf-8",
+    )
+    worker = _Worker(Path(sys.executable), tmp_path)
+    try:
+        worker.start()
+        worker.send({"protocol": "pynix-debug", "version": 1, "command": "ping"})
+        response = worker.receive(timeout=3)
+        assert response["event"] == "pong"
+        assert response["output"] == "Привіт 🌍"
+    finally:
+        worker.close()
