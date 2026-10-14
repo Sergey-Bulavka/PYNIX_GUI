@@ -291,6 +291,16 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
  .workspace-mode .workspace-toolbar>.current-branch{display:none}
  .workspace-mode .workspace-toolbar .pynix-debug-status{max-width:115px}
 }
+
+/* Product workspace hierarchy: primary debug control and calm IDE chrome. */
+.workspace-mode .workspace-toolbar .pynix-debug-primary{color:#dff9ec;background:#24664e;border-color:#3c9776;font-weight:650;min-width:92px}
+.workspace-mode .workspace-toolbar .pynix-debug-primary:hover{background:#30775b}
+.workspace-mode .workspace-toolbar .pynix-debug-status{background:transparent;border:0;color:#9fb3c8;padding-inline:6px;max-width:105px}
+.workspace-mode .workspace-toolbar .pynix-debug-status:disabled{opacity:.6}
+.workspace-mode .pynix-debug-menu>summary{background:#202d40;border-color:#35475c;font-weight:500}
+.workspace-mode .terminal-tabs{gap:0}
+.workspace-mode .terminal-tabs>span:not(.term-spacer),.workspace-mode .terminal-tabs>strong{padding:0 13px;cursor:pointer}
+.workspace-mode .terminal-tabs>.pynix-active-tab{color:#e1efff;border-bottom:2px solid #71b8fa}
 </style>
 <style>
 .workspace-mode .tree,
