@@ -19,7 +19,7 @@ def test_generated_editor_javascript_parses_with_node_when_available(tmp_path):
     assert html.endswith("</script>")
     program = html.removeprefix("<script>").removesuffix("</script>")
     result = subprocess.run(
-        [node, "--check"], input=program, text=True, capture_output=True, timeout=20
+        [node, "--check"], input=program, text=True, encoding="utf-8", capture_output=True, timeout=20
     )
     assert result.returncode == 0, result.stderr
 
@@ -50,5 +50,5 @@ const lines = 'function main()\\n    print(1)\\n    return 1\\nprint(2)';
 if (foldableLines(lines).get(0)!==2) process.exit(13);
 """
     )
-    result = subprocess.run([node, "-"], input=program, text=True, capture_output=True, timeout=20)
+    result = subprocess.run([node, "-"], input=program, text=True, encoding="utf-8", capture_output=True, timeout=20)
     assert result.returncode == 0, result.stderr or f"Node exit {result.returncode}"
