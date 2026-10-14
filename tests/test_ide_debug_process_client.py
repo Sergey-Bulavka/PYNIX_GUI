@@ -513,3 +513,14 @@ def test_v5_debug_inspector_has_separate_stack_and_locals_sections():
     assert "section.className='pynix-debug-inspector-section';" in view
     assert "if(inspector.childElementCount)panel.appendChild(inspector);" in view
     assert ".workspace-mode .pynix-debug-inspector{display:grid;" in html
+
+
+def test_v5_debug_dock_is_session_scoped_and_console_tab_is_selected():
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "debugPanelBar.hidden=true;" in js
+    assert "debugPanelBar.hidden=!debugActive;" in js
+    assert "debugTab.classList.add('pynix-active-tab');" in js
+    assert ".workspace-mode .pynix-debug-panel-toolbar[hidden]{display:none}" in css
+    assert ".workspace-mode .editor-tabs button.active" in css
