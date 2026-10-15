@@ -42,7 +42,8 @@ TOOL_WINDOW_PROFILE = (
 # Matched to the supplied PyCharm screenshot. Tools not pinned remain in
 # More Tool Windows, where unavailable capabilities are clearly marked.
 PINNED_TOOLS = frozenset({
-    "Structure", "Run", "Python Console", "Packages", "Debug",
+    "Project", "Search", "Version Control", "Structure",
+    "Run", "Python Console", "Packages", "Debug",
     "Terminal", "Problems", "Git", "Notifications", "AI Assistant",
 })
 
@@ -55,8 +56,8 @@ EXISTING_ACTIONS = {
 }
 
 EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
-/* Fixed JetBrains-style strips. Keep the existing clickable rail controls in
-   the DOM so keyboard shortcuts, navigation and icon selectors still work. */
+/* Single owner for every visible side icon: this JetBrains catalog.
+   Hidden legacy controls preserve commands and keyboard shortcuts. */
 .workspace-mode .ide>.rail,.workspace-mode .right-tools{
  display:flex!important;flex-direction:column!important;align-items:center!important;
  gap:1px!important;overflow-y:auto!important;overflow-x:hidden!important;
@@ -64,10 +65,9 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 }
 .workspace-mode .ide>.rail::-webkit-scrollbar,
 .workspace-mode .right-tools::-webkit-scrollbar{display:none}
-.workspace-mode .ide>.rail>.rail-item:nth-child(-n+3){
- display:flex!important;flex:0 0 40px!important;order:0!important
-}
-.workspace-mode .ide>.rail>.rail-item:nth-child(n+4){display:none!important}
+/* All former rail elements remain DOM-only command proxies. Neither
+   their Lucide artwork nor their CSS can paint over the new strip. */
+.workspace-mode .ide>.rail>.rail-item{display:none!important}
 .workspace-mode .right-tools>button{display:none!important}
 .workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-top"]{order:1!important}
 .workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-bottom"]{
@@ -140,6 +140,13 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    }
   }
  };
+ // The old buttons are retained only as JS command targets. Strip all
+ // legacy SVG markup so a second icon renderer cannot show through.
+ for(const host of document.querySelectorAll('.workspace-mode .rail,.workspace-mode .right-tools')){
+  for(const button of host.children){
+   if(button.matches('.rail-item,button'))button.querySelectorAll('svg').forEach(svg=>svg.remove());
+  }
+ }
  const place=(edge,host)=>{
   if(!host||host.querySelector('[data-edge="'+edge+'"]'))return;
   const container=document.createElement('div');
@@ -162,6 +169,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     }
    }
    if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));
+   if(entry.action?.startsWith('rail:')){
+    const index=Number(entry.action.slice(5));
+    const target=document.querySelectorAll('.workspace-mode .rail>.rail-item')[index];
+    const sync=()=>{
+     const active=!!target?.classList.contains('active');
+     button.setAttribute('aria-pressed',String(active));
+    };
+    sync();
+    if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
+   }
    container.appendChild(button);
   }
   // The right-bottom group has no pinned controls in the user's reference.
