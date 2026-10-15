@@ -610,6 +610,14 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .workspace-toolbar>button:not(.pynix-run-action):not(.pynix-debug-primary):not(.pynix-debug-status){color:#9fa3ad!important}
 .workspace-mode .editor-tabs button.active{background:#2b2d30!important;border-radius:6px!important;font-weight:500!important;color:#e7e8ed!important}
 .workspace-mode .editor-tabs button:not(.active){font-weight:400!important}
+
+/* Match JetBrains New UI project selector and quiet tool window chrome. */
+.workspace-mode .workspace-toolbar>strong{display:inline-flex!important;align-items:center!important;gap:7px!important;font-size:12px!important;font-weight:600!important;letter-spacing:0!important}
+.workspace-mode .workspace-toolbar>strong::before{content:"PY";display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:5px;background:#9560d3;color:#fff;font-size:10px;font-weight:700;letter-spacing:0}
+.workspace-mode .tree .pynix-project-header{font-size:12px!important}
+.workspace-mode .pynix-project-header-actions>span:first-child{opacity:.68!important}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){text-transform:none!important}
+.workspace-mode .terminal-tabs>.pynix-active-tab{font-weight:600!important}
 </style>
 <style>
 .workspace-mode .tree,
