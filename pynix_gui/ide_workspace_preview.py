@@ -264,7 +264,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    for(let i=1;i<=count;i++){
      const row=document.createElement('span');
      row.className=marked.has(i)?'pynix-gutter-breakpoint':'pynix-gutter-number';
-     row.textContent=marked.has(i)?'●':String(i).padStart(3,' ');
+     // Align all numbers on the gutter's left edge, without padded spaces.
+     row.textContent=marked.has(i)?'●':String(i);
      fragment.appendChild(row);
    }
    gutter.appendChild(fragment);
@@ -284,7 +285,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const count=editorInput.value.split('\\n').length;
    const marked=breakpoints.get(source)||new Set();
    gutter.textContent=Array.from({length:count},(_,i)=>
-     (marked.has(i+1)?'● ':'  ')+String(i+1)).join('\\n');
+     marked.has(i+1)?'●':String(i+1)).join('\\n');
  }
  gutter.title='Click line numbers to toggle breakpoints';
  gutter.style.cursor='pointer';
@@ -2141,7 +2142,13 @@ editorInput.addEventListener('keydown',event=>{
      if(foldable.has(i)){
        gutter.classList.add('pynix-fold-control');
        gutter.title=folded.has(i)?'Expand block':'Collapse block';
-       gutter.textContent=(folded.has(i)?'▸ ':'▾ ')+(i+1);
+       // Keep the line number at the same left offset on folding lines.
+       // The disclosure arrow occupies the unused right side of the gutter.
+       const foldMarker=document.createElement('span');
+       foldMarker.className='pynix-gutter-fold-marker';
+       foldMarker.textContent=folded.has(i)?'▸':'▾';
+       foldMarker.setAttribute('aria-hidden','true');
+       gutter.appendChild(foldMarker);
        gutter.addEventListener('click',()=>{
          if(folded.has(i))folded.delete(i);else folded.add(i);
          renderCode(file);
