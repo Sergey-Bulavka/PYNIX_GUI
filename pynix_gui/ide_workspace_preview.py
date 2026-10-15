@@ -2511,8 +2511,8 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
                                       "PYNIX</b> / " + escaped_name, 1)
     html_source = html_source.replace("⑂ feature/icon-system-v4",
                                       "⌄ " + escaped_name, 1)
-    html_source = html_source.replace("▾ main.pnx", "▾ Current File", 1)
-    html_source = html_source.replace("⑂ main · 1 modified", "Project · read-only", 1)
+    html_source = html_source.replace("▾ main.pnx", "▾ " + escaped_name, 1)
+    html_source = html_source.replace("⑂ main · 1 modified", escaped_name, 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
 
 
