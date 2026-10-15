@@ -658,3 +658,16 @@ def test_project_tool_window_collapse_action_preserves_root():
     assert "collapseFolders.setAttribute('aria-label','Collapse project folders');" in js
     assert "expanded.clear();\n     expanded.add('');\n     renderTree();" in js
     assert ".workspace-mode .pynix-project-header-button{" in css
+
+
+def test_project_tool_window_rail_toggle_is_accessible_and_restores_tree():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "function setExplorerVisible(visible){" in js
+    assert "tree.hidden=!visible;" in js
+    assert "explorerResizeHandle.hidden=!visible;" in js
+    assert "setExplorerVisible(!explorerVisible)" in js
+    assert "aria-label','Toggle Project tool window'" in js
+    assert ".workspace-mode .tree[hidden],.workspace-mode .tree-resizer[hidden]" in css
