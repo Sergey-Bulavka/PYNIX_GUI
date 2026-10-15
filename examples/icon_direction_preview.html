@@ -1282,4 +1282,56 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
    if(heading){const span=heading.childNodes[heading.childNodes.length-1];if(span.nodeType===3)span.textContent=' '+name+' ';}
  }));
 })();
+</script><script>
+/* Read-only visual geometry diagnostic. Does not alter workspace styles. */
+(() => {
+ if(!document.body.classList.contains('workspace-mode'))return;
+ const targets=[
+  ['window','.workspace-toolbar'],['project','.tree'],
+  ['left rail','.rail'],['right rail','.right-tools'],
+  ['editor','.editor'],['tabs','.editor-tabs'],
+  ['active tab','.editor-tabs .pynix-editor-tab.active'],
+  ['editor code','.editor .code'],['editor input','.pynix-source-input'],
+  ['edit gutter','.pynix-edit-gutter'],
+  ['terminal','.integrated-terminal'],['terminal tabs','.terminal-tabs'],
+  ['status','.bottom']
+ ];
+ function snapshot(){
+  const result={viewport:{width:innerWidth,height:innerHeight,scale:devicePixelRatio},items:{}};
+  targets.forEach(([name,selector])=>{
+   const el=document.querySelector(selector);
+   if(!el){result.items[name]={missing:true};return}
+   const r=el.getBoundingClientRect(),c=getComputedStyle(el);
+   const round=n=>Math.round(n*10)/10;
+   result.items[name]={x:round(r.x),y:round(r.y),width:round(r.width),height:round(r.height),
+    display:c.display,visibility:c.visibility,background:c.backgroundColor,border:c.border,
+    radius:c.borderRadius,padding:c.padding,margin:c.margin,overflow:c.overflow,
+    font:c.font,fontSize:c.fontSize,lineHeight:c.lineHeight,scrollLeft:el.scrollLeft,
+    scrollTop:el.scrollTop,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+  });
+  return result;
+ }
+ window.pynixVisualMetrics=snapshot;
+ document.addEventListener('keydown',event=>{
+  if(!(event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyM'))return;
+  event.preventDefault();
+  const old=document.getElementById('pynix-geometry-report');
+  if(old){old.remove();return}
+  const panel=document.createElement('div');
+  panel.id='pynix-geometry-report';
+  panel.style.cssText='position:fixed;inset:8% 7%;z-index:2147483647;background:#24262c;color:#eee;border:1px solid #60636b;border-radius:7px;display:flex;flex-direction:column;padding:14px;box-shadow:0 14px 50px #000c;font:12px system-ui';
+  const header=document.createElement('div');
+  header.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px';
+  const title=document.createElement('strong');title.textContent='PYNIX visual geometry diagnostics';
+  const close=document.createElement('button');close.textContent='Close';close.addEventListener('click',()=>panel.remove());
+  header.append(title,close);
+  const report=document.createElement('textarea');
+  report.readOnly=true;report.value=JSON.stringify(snapshot(),null,2);
+  report.style.cssText='flex:1;min-height:0;resize:none;white-space:pre;background:#17191d;color:#dce2e9;border:1px solid #454851;padding:12px;font:12px/1.5 ui-monospace,monospace';
+  const hint=document.createElement('div');
+  hint.textContent='Select all (Cmd+A) then copy (Cmd+C). Toggle with Ctrl+Option+Shift+M.';
+  hint.style.cssText='padding-top:9px;color:#afb5bf';
+  panel.append(header,report,hint);document.body.appendChild(panel);report.focus();report.select();
+ });
+})();
 </script></body></html>
