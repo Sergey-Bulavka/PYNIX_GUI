@@ -2038,6 +2038,7 @@ editorInput.addEventListener('keydown',event=>{
      const chevron=document.createElement('span');
      chevron.className='project-chevron';
      if(entry.folder) {
+       chevron.classList.add('folder-disclosure');
        chevron.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/></svg>';
        if(!isOpen)chevron.classList.add('collapsed');
      }
