@@ -12,6 +12,7 @@ import json
 from pathlib import Path
 from .ide_jetbrains_icons import JetBrainsIconCatalog
 from .ide_icon_parity import BUNDLED_ICONS
+from .ide_native_tool_icons import native_tool_icon
 
 # (label, licensed icon key, edge, availability)
 # The existing Project, Find, VCS, Run, Terminal and Settings hosts keep
@@ -89,7 +90,15 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 }
 .workspace-mode .pynix-extra-tool:not(:disabled){cursor:pointer}
 .workspace-mode .pynix-extra-tool:not(:disabled):hover{background:#3a3d45}
-.workspace-mode .pynix-extra-tool[aria-pressed="true"]{background:#424b5c;color:#d9e7ff}
+.workspace-mode .pynix-extra-tool[aria-pressed="true"]{
+ background:#3574d6;color:#ffffff
+}
+.workspace-mode .pynix-extra-tool[aria-pressed="true"] svg [stroke]{
+ stroke:#ffffff!important
+}
+.workspace-mode .pynix-extra-tool[aria-pressed="true"] svg [fill]:not([fill="none"]){
+ fill:#ffffff!important
+}
 .workspace-mode .pynix-extra-tool:disabled{opacity:.56;cursor:not-allowed}
 .workspace-mode .pynix-extra-tool svg{display:block;width:20px;height:20px;flex:0 0 20px}
 .workspace-mode .pynix-extra-tool:focus-visible,
@@ -249,7 +258,7 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         catalog = JetBrainsIconCatalog(directory)
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
-            "svg": catalog.svg(key, dark=dark, tool_window=True),
+            "svg": native_tool_icon(label, dark=dark) or catalog.svg(key, dark=dark, tool_window=True),
             "pinned": label in PINNED_TOOLS,
             "action": EXISTING_ACTIONS.get(label, ""),
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
