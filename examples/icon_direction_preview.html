@@ -874,13 +874,13 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .tree{
  box-sizing:border-box!important;flex-shrink:0!important;
  width:var(--explorer-width,220px)!important;
- margin:0 1px 0 1px!important;padding:0 3px!important;
+ margin:0 5px 0 1px!important;padding:0 3px!important;
  border:0!important;border-radius:9px!important;box-shadow:none!important;
  background:#1e1f22!important;overflow-y:auto!important
 }
 .workspace-mode .tree .pynix-project-header{height:37px!important;min-height:37px!important}
 .workspace-mode .tree-resizer{
- flex:0 0 4px!important;width:4px!important;background:#2b2d30!important
+ flex:0 0 6px!important;width:6px!important;min-width:6px!important;background:transparent!important;border:0!important
 }
 .workspace-mode .editor{
  display:flex!important;flex-direction:column!important;
@@ -925,8 +925,8 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  margin-top:0!important;border:0!important;background:#1e1f22!important
 }
 .workspace-mode .terminal-resizer{
- box-sizing:border-box!important;height:5px!important;min-height:5px!important;
- margin:0 35px 0 40px!important;background:#2b2d30!important
+ box-sizing:border-box!important;height:6px!important;min-height:6px!important;
+ margin:0 35px 0 40px!important;background:transparent!important;border:0!important
 }
 .workspace-mode .integrated-terminal{
  box-sizing:border-box!important;flex-shrink:0!important;
@@ -937,7 +937,7 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  overflow:hidden!important
 }
 .workspace-mode .terminal-tabs{
- background:#242529!important;border-bottom:1px solid #34363c!important;
+ background:#242529!important;border-bottom:0!important;
  border-radius:9px 9px 0 0!important
 }
 .workspace-mode .bottom{
@@ -945,17 +945,18 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  height:30px!important;min-height:30px!important;max-height:30px!important;
  margin:0!important;padding:0 8px!important;
  display:flex!important;align-items:center!important;font-size:11px!important;
- line-height:30px!important;border-top:1px solid #34363c!important;
+ line-height:30px!important;border-top:0!important;
  background:#2b2d30!important
 }
 .workspace-mode .ide>.rail{
  top:0!important;bottom:30px!important;
- background:#2b2d30!important
+ background:#2b2d30!important;border-right:0!important;box-shadow:none!important
 }
 .workspace-mode .right-tools{
  top:0!important;bottom:30px!important;
- background:#2b2d30!important
+ background:#2b2d30!important;border-left:0!important;box-shadow:none!important
 }
+.workspace-mode .workspace-toolbar{border-bottom:0!important;box-shadow:none!important}
 </style>
 <style>
 .workspace-mode .tree,
