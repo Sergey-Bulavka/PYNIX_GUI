@@ -229,17 +229,13 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     assert "def mouseDown_(self, event):" not in source
 
 
-def test_v59_tab_attachment_and_status_height():
+def test_v511_compact_tabs_and_status_bar_visual_contract():
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "height:36px!important;min-height:36px!important;max-height:36px!important" in css
-    assert "height:28px!important;min-height:28px!important" in css
-    assert ".workspace-mode .ide>.rail{bottom:28px!important}" in css
-
-
-def test_v510_editor_tab_connects_to_editor_border():
-    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "align-items:flex-end!important" in css
-    assert "align-self:flex-end!important;height:31px!important" in css
-    assert "border-radius:7px 7px 0 0!important" in css
+    assert "height:34px!important;min-height:34px!important;max-height:34px!important" in css
+    assert "height:28px!important;min-height:28px!important;max-height:28px!important" in css
+    assert "border-radius:6px 6px 0 0!important" in css
     assert "border-bottom-color:#2b2d30!important" in css
-    assert "top:1px!important" in css
+    assert "height:26px!important;min-height:26px!important;max-height:26px!important" in css
+    assert ".workspace-mode .ide>.rail{bottom:26px!important}" in css
+    assert ".workspace-mode .right-tools{bottom:26px!important}" in css
+    assert ".workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important" in css
