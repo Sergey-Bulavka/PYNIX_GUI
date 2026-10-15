@@ -500,3 +500,39 @@ def test_v521_toolbar_drag_area_survives_repeated_resize_and_preserves_resize_ed
     assert "width:Math.max(0,region.width-24)" in script
     assert "height:Math.max(0,bar.height-18)" in script
     assert "bounds_width - x - 18" in source
+
+
+def test_v522_permanent_title_drag_handle_remains_at_top_for_all_window_sizes():
+    from examples.ide_native_v4 import title_drag_frame
+
+    # x and dimensions never depend on the HTML spacer or window width.
+    assert title_drag_frame(760, 520) == (92, 485, 62, 24)
+    assert title_drag_frame(1500, 950) == (92, 915, 62, 24)
+    assert title_drag_frame(2400, 1400) == (92, 1365, 62, 24)
+    assert title_drag_frame(760, 1400) == (92, 1365, 62, 24)
+    assert title_drag_frame(2399, 1400) == (92, 1365, 62, 24)
+    # Minimum window size is respected; no oversized overlay in invalid bounds.
+    assert title_drag_frame(759, 520) is None
+    assert title_drag_frame(760, 519) is None
+
+
+def test_v522_native_resize_delegate_repositions_both_drag_handles():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "def windowDidResize_(self, notification):" in source
+    assert 'update = drag_resize_callback["update"]' in source
+    assert "if update is not None:" in source
+    assert "window.setDelegate_(delegate)" in source
+    assert 'drag_resize_callback["update"] = refresh_native_drag_areas' in source
+    assert "refresh_native_drag_areas()" in source
+    assert "title_drag_area = ToolbarDragView.alloc().initWithFrame_" in source
+    assert "content_view.addSubview_(title_drag_area)" in source
+    assert "content_view.addSubview_(drag_area)" in source
+    assert "title_drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
+    assert "frame = title_drag_frame(bounds.width, bounds.height)" in source
+    assert 'area = drag_geometry["area"]' in source
+    assert "toolbar_drag_frame(bounds.width, bounds.height, area)" in source
+    assert 'drag_geometry["area"] = message.body()' in source
+    assert "window.setMovableByWindowBackground_(False)" in source
+    assert "self.window().performWindowDragWithEvent_(event)" in source
+    assert "AppKit.NSWindowStyleMaskResizable" in source
+    assert "window.setContentView_(container)" not in source
