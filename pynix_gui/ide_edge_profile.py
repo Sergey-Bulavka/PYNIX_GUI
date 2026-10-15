@@ -109,13 +109,27 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   const popover=document.createElement('div');
   popover.className='pynix-tool-profile-popover';
   popover.hidden=true;
-  popover.setAttribute('role','status');
+  popover.setAttribute('role','group');
+  popover.setAttribute('aria-label','Available and planned tool windows');
   for(const entry of entries.filter(x=>x.edge===edge)){
    const row=document.createElement('div');
    row.textContent=entry.label+(entry.state==='unavailable'?' (not available)':'');
    popover.appendChild(row);
   }
-  more.addEventListener('click',()=>{popover.hidden=!popover.hidden;});
+  more.setAttribute('aria-expanded','false');
+  more.setAttribute('aria-controls','pynix-more-'+edge);
+  popover.id='pynix-more-'+edge;
+  const setOpen=open=>{
+   popover.hidden=!open;
+   more.setAttribute('aria-expanded',String(open));
+  };
+  more.addEventListener('click',()=>setOpen(popover.hidden));
+  more.addEventListener('keydown',event=>{
+   if(event.key==='Escape'){setOpen(false);more.focus();}
+  });
+  document.addEventListener('pointerdown',event=>{
+   if(!container.contains(event.target))setOpen(false);
+  });
   container.append(more,popover);
   host.appendChild(container);
  };
