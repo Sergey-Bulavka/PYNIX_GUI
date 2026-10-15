@@ -381,3 +381,13 @@ def test_editor_middle_click_uses_guarded_close_lifecycle(tmp_path):
     assert "requestCloseTab(fileName);" in js
     assert "label.title=fileName;" in js
     assert "label.setAttribute('aria-current',fileName===current?'page':'false')" in js
+
+
+def test_editor_tabs_support_focus_preserving_arrow_navigation(tmp_path):
+    (tmp_path / "one.pnx").write_text("one", encoding="utf-8")
+    (tmp_path / "two.pnx").write_text("two", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "label.className='pynix-editor-tab-label';" in js
+    assert "event.key!=='ArrowLeft'&&event.key!=='ArrowRight'" in js
+    assert "const neighbor=openTabs[(index+direction+openTabs.length)%openTabs.length];" in js
+    assert "nextLabels[openTabs.indexOf(neighbor)]?.focus();" in js
