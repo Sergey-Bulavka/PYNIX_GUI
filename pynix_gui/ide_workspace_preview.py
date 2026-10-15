@@ -2254,6 +2254,18 @@ editorInput.addEventListener('keydown',event=>{
      label.title=fileName;
      label.setAttribute('aria-current',fileName===current?'page':'false');
      label.addEventListener('click',()=>show(fileName));
+     label.addEventListener('keydown',event=>{
+       if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+       const index=openTabs.indexOf(fileName);
+       if(index<0||openTabs.length<2)return;
+       event.preventDefault();
+       event.stopPropagation();
+       const direction=event.key==='ArrowRight'?1:-1;
+       const neighbor=openTabs[(index+direction+openTabs.length)%openTabs.length];
+       show(neighbor);
+       const nextLabels=[...tabs.querySelectorAll('.pynix-editor-tab-label')];
+       nextLabels[openTabs.indexOf(neighbor)]?.focus();
+     });
      // Middle-click follows IDE tab conventions; dirty documents still use the
      // existing confirmation and Core close protocol, never a direct removal.
      wrap.addEventListener('auxclick',event=>{
