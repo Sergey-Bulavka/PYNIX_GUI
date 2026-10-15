@@ -62,6 +62,7 @@ EXTENSION_ICON_NAMES = (
 # Project semantic glyph slots deliberately have no legacy SVG fallback.
 # Python and PYNIX marks stay dedicated: neither is in licensed JetBrains pack.
 TREE_ICON_BINDINGS = (
+    (".workspace-mode .project-chevron.folder-disclosure", "general/chevronDown", True),
     (".workspace-mode .project-glyph[data-pynix-semantic='folder']", "nodes/folder", True),
     (".workspace-mode .project-glyph[data-pynix-semantic='generic']", "fileTypes/text", True),
 )
