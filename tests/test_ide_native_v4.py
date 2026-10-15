@@ -229,13 +229,14 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     assert "def mouseDown_(self, event):" not in source
 
 
-def test_v511_compact_tabs_and_status_bar_visual_contract():
+def test_v512_flat_editor_tabs_and_panel_chrome():
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "height:34px!important;min-height:34px!important;max-height:34px!important" in css
-    assert "height:28px!important;min-height:28px!important;max-height:28px!important" in css
-    assert "border-radius:6px 6px 0 0!important" in css
-    assert "border-bottom-color:#2b2d30!important" in css
-    assert "height:26px!important;min-height:26px!important;max-height:26px!important" in css
-    assert ".workspace-mode .ide>.rail{bottom:26px!important}" in css
-    assert ".workspace-mode .right-tools{bottom:26px!important}" in css
-    assert ".workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important" in css
+    assert "/* V5.12: restrained JetBrains-like window chrome (single final cascade). */" in css
+    final = css.split("/* V5.12:", 1)[1]
+    assert "height:35px!important;min-height:35px!important;max-height:35px!important" in final
+    assert "position:static!important;top:auto!important" in final
+    assert "border:0!important;box-shadow:none!important" in final
+    assert "border-radius:5px!important" in final
+    assert "height:24px!important;min-height:24px!important" in final
+    assert ".workspace-mode .ide>.rail{bottom:24px!important}" in final
+    assert ".workspace-mode .right-tools{bottom:24px!important}" in final
