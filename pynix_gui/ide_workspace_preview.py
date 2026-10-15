@@ -2582,6 +2582,9 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
                                       project_chevron + escaped_name, 1)
     html_source = html_source.replace("▾ main.pnx", "▾ Current File", 1)
     html_source = html_source.replace("⑂ main · 1 modified", escaped_name, 1)
+    # The live cursor status is populated by the workspace editor. Drop the
+    # gallery's static sample "Ln 7" rather than duplicating line indicators.
+    html_source = html_source.replace("PYNIX · UTF-8 · Ln 7", "UTF-8 · LF", 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
 
 
