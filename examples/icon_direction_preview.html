@@ -581,6 +581,13 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .pynix-terminal-session-tab{background:#393c47!important;color:#e3e4eb!important;border-radius:5px!important;height:24px!important;padding:4px 11px!important}
 .workspace-mode .terminal-console{background:#1e1f22!important;color:#c6c8cf!important}
 .workspace-mode .bottom{background:#2b2d30!important;border-top:1px solid #393b41!important;color:#aeb2ba!important;height:23px!important;min-height:23px!important;display:flex!important;align-items:center!important;padding:0 8px!important;font-size:11px!important}
+
+/* Distinct left project breadcrumb and right editor metrics in status strip. */
+.workspace-mode .bottom{gap:12px!important;justify-content:space-between!important}
+.workspace-mode .bottom>span{display:inline-flex!important;align-items:center!important;white-space:nowrap!important;gap:7px!important}
+.workspace-mode .bottom>span:first-child{margin-right:auto!important;max-width:55%;overflow:hidden;text-overflow:ellipsis}
+.workspace-mode .bottom>span:last-child{margin-left:auto!important;color:#b9bdc7!important}
+.workspace-mode .pynix-terminal-session[hidden]{display:none!important}
 </style>
 <style>
 .workspace-mode .tree,
