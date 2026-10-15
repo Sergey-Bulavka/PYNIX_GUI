@@ -837,6 +837,8 @@ def main() -> None:
     document = attach_navigation_controls(document)
     from pynix_gui.ide_icon_parity import apply_new_ui_icons
     document = apply_new_ui_icons(document)
+    from pynix_gui.ide_edge_profile import apply_edge_profile
+    document = apply_edge_profile(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
