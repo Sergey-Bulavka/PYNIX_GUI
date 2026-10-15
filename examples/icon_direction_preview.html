@@ -761,6 +761,13 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .tree .project-entry:hover:not(.workspace-selected){background:#282a2f!important}
 .workspace-mode .bottom{font-size:11px!important;gap:12px!important}
 
+/* V5.6: outer editor must never retain horizontal scroll offset. */
+.workspace-mode .editor .code{overflow:clip!important;overflow-x:clip!important;overflow-y:clip!important}
+.workspace-mode .pynix-editor-viewport{width:100%!important;max-width:100%!important;overflow:hidden!important}
+.workspace-mode .pynix-editor-gutter{width:62px!important;max-width:62px!important;isolation:isolate!important}
+.workspace-mode .pynix-editor-scroll{width:100%!important;max-width:100%!important;overscroll-behavior-x:contain!important}
+.workspace-mode .integrated-terminal{margin-right:4px!important}
+.workspace-mode .terminal-resizer{margin-right:4px!important}
 /* V5.5: fixed gutter and genuinely independent horizontal code scroll. */
 .workspace-mode .editor .code{overflow:hidden!important;padding:0!important;min-height:0!important}
 .workspace-mode .pynix-editor-viewport{
