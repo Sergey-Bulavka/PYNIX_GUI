@@ -229,16 +229,15 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     assert "def mouseDown_(self, event):" not in source
 
 
-def test_v511_compact_tabs_and_status_bar_visual_contract():
+def test_v513_measured_tabs_status_and_pane_chrome():
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "height:34px!important;min-height:34px!important;max-height:34px!important" in css
-    assert "height:28px!important;min-height:28px!important;max-height:28px!important" in css
-    assert "border-radius:6px 6px 0 0!important" in css
-    assert "border-bottom-color:#2b2d30!important" in css
-    assert "height:26px!important;min-height:26px!important;max-height:26px!important" in css
-    assert ".workspace-mode .ide>.rail{bottom:26px!important}" in css
-    assert ".workspace-mode .right-tools{bottom:26px!important}" in css
-    assert ".workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important" in css
+    final = css.split("/* V5.13:", 1)[1]
+    assert "height:28px!important;min-height:28px!important;max-height:28px!important" in final
+    assert "border-bottom-color:#1e1f22!important" in final
+    assert "border-radius:6px 6px 0 0!important" in final
+    assert "border:1px solid #303238!important;border-radius:5px!important" in final
+    assert ".workspace-mode .ide>.rail{bottom:28px!important}" in final
+    assert ".workspace-mode .right-tools{bottom:28px!important}" in final
 
 
 def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
