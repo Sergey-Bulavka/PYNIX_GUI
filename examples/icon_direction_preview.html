@@ -1057,6 +1057,48 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  display:inline-flex!important;align-items:center!important;
  justify-content:center!important;gap:5px!important;
 }
+
+/* V5.26: PyCharm-style file icons on editor tabs and compact status strip.
+   This only styles existing controls; viewport, gutter and native window remain untouched. */
+.workspace-mode .pynix-editor-tab-label{
+ display:inline-flex!important;align-items:center!important;gap:7px!important;
+ min-width:0!important;
+}
+.workspace-mode .pynix-tab-file-glyph{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:16px!important;height:16px!important;flex:0 0 16px!important;
+}
+.workspace-mode .pynix-tab-file-glyph svg{
+ display:block!important;width:16px!important;height:16px!important;
+}
+.workspace-mode .bottom{
+ gap:12px!important;
+ padding:0 11px!important;
+ white-space:nowrap!important;
+ overflow:hidden!important;
+}
+.workspace-mode .bottom > span:nth-of-type(1){
+ display:inline-flex!important;align-items:center!important;gap:7px!important;
+ flex:1 1 auto!important;margin:0!important;max-width:none!important;
+ min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ color:#aeb1ba!important;
+}
+.workspace-mode .bottom > span:nth-of-type(1) > .pynix-jetbrains-icon{
+ display:block!important;flex:0 0 16px!important;width:16px!important;height:16px!important;
+}
+.workspace-mode .bottom .pynix-diagnostics-status{
+ order:1!important;margin-left:auto!important;
+}
+.workspace-mode .bottom .pynix-cursor-status{
+ order:2!important;margin:0!important;flex:0 0 auto!important;
+ font-variant-numeric:tabular-nums;
+}
+.workspace-mode .bottom > span:nth-of-type(2){
+ order:3!important;margin:0!important;flex:0 0 auto!important;
+ color:#aeb1ba!important;
+}
+.workspace-mode .bottom .pynix-cursor-status:empty,
+.workspace-mode .bottom .pynix-diagnostics-status:empty{display:none!important}
 </style>
 <style>
 .workspace-mode .tree,
