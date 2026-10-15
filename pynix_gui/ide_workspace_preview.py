@@ -722,7 +722,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const dockRestore=document.createElement('button');
  dockRestore.type='button';
  dockRestore.className='pynix-tool-window-restore';
- dockRestore.textContent='Terminal ↑';
+ dockRestore.textContent='Tool Windows ↑';
  dockRestore.title='Show bottom tool window';
  dockRestore.hidden=true;
  const bottomBar=document.querySelector('.bottom');
@@ -988,6 +988,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    else if(status)status.textContent='Compiler diagnostics require native IDE';
  });
  window.pynixLiveDiagnosticsResult=payload=>{
+   setToolWindowVisible(true);
    const status=document.querySelector('.pynix-diagnostics-status');
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
