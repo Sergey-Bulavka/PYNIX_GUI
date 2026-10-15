@@ -389,5 +389,6 @@ def test_editor_tabs_support_focus_preserving_arrow_navigation(tmp_path):
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "label.className='pynix-editor-tab-label';" in js
     assert "event.key!=='ArrowLeft'&&event.key!=='ArrowRight'" in js
+    assert "if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;" in js
     assert "const neighbor=openTabs[(index+direction+openTabs.length)%openTabs.length];" in js
     assert "nextLabels[openTabs.indexOf(neighbor)]?.focus();" in js
