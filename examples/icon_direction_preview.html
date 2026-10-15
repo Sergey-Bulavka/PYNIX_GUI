@@ -858,6 +858,27 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  height:auto!important;box-sizing:border-box!important;z-index:4!important
 }
 .workspace-mode .ide{padding-right:35px!important}
+
+/* V5.9: tabs must be flush with the editor chrome, status bar matches New UI density. */
+.workspace-mode .editor{border-radius:8px 8px 0 0!important}
+.workspace-mode .editor-tabs{
+ box-sizing:border-box!important;align-items:center!important;
+ height:38px!important;min-height:38px!important;max-height:38px!important;
+ flex:0 0 38px!important;padding:0 5px!important;margin:0!important;
+ background:#1e1f22!important;border-radius:8px 8px 0 0!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab{
+ margin:0!important;align-self:center!important;height:32px!important;
+ min-height:32px!important;max-height:32px!important;border-radius:6px!important
+}
+.workspace-mode .editor .code,.workspace-mode .pynix-edit-layer{margin-top:0!important}
+.workspace-mode .bottom{
+ box-sizing:border-box!important;height:28px!important;min-height:28px!important;
+ max-height:28px!important;flex:0 0 28px!important;
+ padding:0 9px!important;align-items:center!important;font-size:11px!important
+}
+.workspace-mode .ide>.rail{bottom:28px!important}
+.workspace-mode .right-tools{bottom:28px!important}
 </style>
 <style>
 .workspace-mode .tree,
