@@ -1,0 +1,23 @@
+name: Full JetBrains New UI icon audit
+
+on:
+  push:
+    branches:
+      - feature/icon-system-v4
+    paths:
+      - ".github/workflows/full-icon-audit.yml"
+      - "scripts/import_full_new_ui_icons.sh"
+      - "pynix_gui/ide_jetbrains_icons.py"
+  workflow_dispatch:
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Audit whole JetBrains expui catalog without modifying PYNIX
+        run: bash scripts/import_full_new_ui_icons.sh --dry-run
