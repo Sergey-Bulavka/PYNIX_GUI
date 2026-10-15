@@ -150,3 +150,13 @@ def test_v52_workspace_geometry_keeps_adjustable_panel_sizes():
     assert "width:var(--explorer-width,220px)!important" in style
     assert ".workspace-mode .editor-tabs{height:35px!important" in style
     assert ".workspace-mode .bottom{height:22px!important" in style
+
+
+def test_native_v4_unifies_macos_titlebar_and_toolbar():
+    native = Path(app.__file__).read_text(encoding="utf-8")
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert "NSWindowStyleMaskFullSizeContentView" in native
+    assert "setTitleVisibility_(AppKit.NSWindowTitleHidden)" in native
+    assert "setTitlebarAppearsTransparent_(True)" in native
+    assert "padding-left:86px!important" in css
+    assert "height:calc(100vh - 44px)!important" in css
