@@ -2256,15 +2256,17 @@ editorInput.addEventListener('keydown',event=>{
      label.setAttribute('aria-current',fileName===current?'page':'false');
      label.addEventListener('click',()=>show(fileName));
      label.addEventListener('keydown',event=>{
-       if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+       if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
        // Modifier chords belong to the native IDE and must not be hijacked.
        if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
        const index=openTabs.indexOf(fileName);
-       if(index<0||openTabs.length<2)return;
+       if(index<0||!openTabs.length)return;
        event.preventDefault();
        event.stopPropagation();
        const direction=event.key==='ArrowRight'?1:-1;
-       const neighbor=openTabs[(index+direction+openTabs.length)%openTabs.length];
+       const target=event.key==='Home'?0:event.key==='End'?openTabs.length-1:
+         (index+direction+openTabs.length)%openTabs.length;
+       const neighbor=openTabs[target];
        show(neighbor);
        const nextLabels=[...tabs.querySelectorAll('.pynix-editor-tab-label')];
        nextLabels[openTabs.indexOf(neighbor)]?.focus();
