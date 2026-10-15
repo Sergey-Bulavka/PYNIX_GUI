@@ -565,6 +565,14 @@ def test_reference_gutter_breakpoint_replaces_line_number():
     root = Path(__file__).resolve().parents[1]
     source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
-    assert "(marked.has(i+1)?'●':String(i+1).padStart(3,' '))" in source
+    assert "row.className=marked.has(i)?'pynix-gutter-breakpoint':'pynix-gutter-number';" in source
+    assert "row.textContent=marked.has(i)?'●':String(i).padStart(3,' ');" in source
     assert ".pynix-edit-gutter{width:48px!important" in html
     assert "padding-left:60px!important" in html
+
+
+def test_reference_breakpoint_is_red_and_number_rows_match_line_height():
+    from pathlib import Path
+    html = (Path(__file__).resolve().parents[1] / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".pynix-edit-gutter>span{display:block;height:19px;line-height:19px" in html
+    assert ".pynix-gutter-breakpoint{color:#e66b75!important" in html
