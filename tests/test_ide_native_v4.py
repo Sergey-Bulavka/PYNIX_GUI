@@ -356,7 +356,7 @@ def test_v517_tab_divider_real_gutter_and_centered_project_chevron():
     assert "border-bottom:1px solid #34363c!important" in tabs
     gutter = last_rule(".workspace-mode .pynix-edit-layer .pynix-edit-gutter")
     assert "text-align:left!important" in gutter
-    assert "padding:15px 0 15px 11px!important" in gutter
+    assert "padding:15px 0 15px 8px!important" in gutter
     readonly_gutter = last_rule(".workspace-mode .pynix-editor-gutter .pynix-gutter-line")
     assert "text-align:left!important" in readonly_gutter
     assert "align-items:center!important" in last_rule(
@@ -586,3 +586,24 @@ def test_v523_native_corner_grip_stays_responsive_through_relaunch_and_resize():
     assert "content_view.addSubview_(view)" in source
     assert "content_view.addSubview_(drag_area)" in source
     assert "content_view.addSubview_(title_drag_area)" in source
+
+
+def test_v524_line_numbers_share_left_edge_without_changing_scroll_geometry():
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    marker = "/* V5.24: true left-edge line numbers"
+    assert css.count(marker) == 1
+    final = css.split(marker, 1)[1]
+    editable = _effective_css_rule(final, ".workspace-mode .pynix-edit-layer .pynix-edit-gutter")
+    readonly = _effective_css_rule(final, ".workspace-mode .pynix-editor-gutter .pynix-gutter-line")
+    fold = _effective_css_rule(final, ".workspace-mode .pynix-editor-gutter .pynix-gutter-fold-marker")
+    assert "text-align:left!important" in editable
+    assert "padding:15px 0 15px 8px!important" in editable
+    assert "text-align:left!important" in readonly
+    assert "padding:0 0 0 8px!important" in readonly
+    assert "position:absolute" in fold
+    assert "right:9px" in fold
+    assert "pointer-events:none" in fold
+    # The gutter is still a fixed independent pane; code scroll is unaffected.
+    assert "grid-template-columns:62px minmax(0,1fr)" in css
+    assert "width:64px!important" in css
+    assert "overflow-x:auto!important;overflow-y:auto!important" in css
