@@ -388,7 +388,8 @@ def test_editor_tabs_support_focus_preserving_arrow_navigation(tmp_path):
     (tmp_path / "two.pnx").write_text("two", encoding="utf-8")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "label.className='pynix-editor-tab-label';" in js
-    assert "event.key!=='ArrowLeft'&&event.key!=='ArrowRight'" in js
+    assert "['ArrowLeft','ArrowRight','Home','End'].includes(event.key)" in js
+    assert "const target=event.key==='Home'?0:event.key==='End'?openTabs.length-1:" in js
     assert "if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;" in js
     assert "const neighbor=openTabs[(index+direction+openTabs.length)%openTabs.length];" in js
     assert "nextLabels[openTabs.indexOf(neighbor)]?.focus();" in js
