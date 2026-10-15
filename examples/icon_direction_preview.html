@@ -760,6 +760,51 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .tree .project-entry.workspace-selected{background:#30343c!important}
 .workspace-mode .tree .project-entry:hover:not(.workspace-selected){background:#282a2f!important}
 .workspace-mode .bottom{font-size:11px!important;gap:12px!important}
+
+/* V5.5: fixed gutter and genuinely independent horizontal code scroll. */
+.workspace-mode .editor .code{overflow:hidden!important;padding:0!important;min-height:0!important}
+.workspace-mode .pynix-editor-viewport{
+ display:grid;grid-template-columns:62px minmax(0,1fr);height:100%;min-height:0;
+ background:#1e1f22
+}
+.workspace-mode .pynix-editor-gutter{
+ position:relative;min-width:0;overflow:hidden;z-index:2;background:#1e1f22;
+ border-right:1px solid #34363b
+}
+.workspace-mode .pynix-editor-gutter-inner{padding-top:12px;will-change:transform}
+.workspace-mode .pynix-editor-scroll{
+ min-width:0;min-height:0;overflow:auto;background:#1e1f22;
+ scrollbar-color:#585c64 transparent;scrollbar-width:thin
+}
+.workspace-mode .pynix-editor-code{
+ width:max-content;min-width:100%;padding:12px 0 16px;box-sizing:border-box
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line,
+.workspace-mode .pynix-editor-code .pynix-code-line{
+ box-sizing:border-box;min-height:23px;height:23px;line-height:23px;
+ font:13px/23px ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line{
+ display:block;padding:0 10px 0 2px;text-align:right;color:#7a808a;
+ background:#1e1f22;user-select:none
+}
+.workspace-mode .pynix-editor-code .pynix-code-line{
+ display:block!important;min-width:100%!important;width:max-content!important;
+ padding:0 14px;color:#d7dae0
+}
+.workspace-mode .pynix-editor-code .pynix-code-line .source-text{
+ display:inline!important;margin:0!important;padding:0!important
+}
+/* Extend the existing left tool rail alongside the bottom tool window. */
+.workspace-mode .layout>.section:first-child>.card:first-child{position:relative}
+.workspace-mode .ide{padding-left:40px!important;box-sizing:border-box}
+.workspace-mode .ide>.rail{
+ position:absolute!important;left:0!important;top:44px!important;bottom:22px!important;
+ height:auto!important;z-index:4!important;width:40px!important
+}
+.workspace-mode .ide>.rail .rail-item:nth-child(5){margin-top:auto!important}
+.workspace-mode .integrated-terminal{margin-left:43px!important}
+.workspace-mode .terminal-resizer{margin-left:40px!important}
 </style>
 <style>
 .workspace-mode .tree,
