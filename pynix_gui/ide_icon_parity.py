@@ -154,8 +154,10 @@ ICON_BRIDGE_SCRIPT = r"""<script>
  const dynamic=__DYNAMIC_ICON_DATA__;
  const dockItems=__DOCK_ICON_DATA__;
  const parsed=new Map();
+ // Cache the parsed SVG template once for each icon, rather than every row.
  function activate(target,item){
-  if(!target||target.dataset.pynixIcon===item.name)return;
+  if(!target)return;
+  if(target.dataset.pynixIcon===item.name && target.querySelector(".pynix-jetbrains-icon"))return;
   let source=parsed.get(item.name);
   if(!source){
    const xml=new DOMParser().parseFromString(item.svg,'image/svg+xml');
@@ -178,7 +180,14 @@ ICON_BRIDGE_SCRIPT = r"""<script>
   }
   target.dataset.pynixIcon=item.name;
  }
- for(const item of items)activate(document.querySelector(item.selector),item);
+ const syncStatic=()=>{for(const item of items)
+  for(const target of document.querySelectorAll(item.selector))activate(target,item);};
+ syncStatic();
+ // Toolbar and side-rail controls can mount after this bridge executes.
+ const shell=document.querySelector(".workspace-mode .ide");
+ if(shell&&items.length){
+  new MutationObserver(syncStatic).observe(shell,{childList:true,subtree:true});
+ }
  // Project tree rows are recreated on folder expand, search and file changes.
  // Observe only that tree; avoid replacing click handlers or editor content.
  const tree=document.querySelector('.workspace-mode .tree');
@@ -226,7 +235,7 @@ def apply_new_ui_icons(
     No network access is used; source SVG license headers are retained in
     the packed icon strings.
     """
-    if "</body>" not in document:
+    if "</body>" not in document or 'id="pynix-new-ui-icon-states"' in document:
         return document
     try:
         catalog = JetBrainsIconCatalog(directory)
