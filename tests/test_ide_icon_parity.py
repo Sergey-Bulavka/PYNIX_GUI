@@ -224,3 +224,25 @@ def test_native_debugger_toolbar_uses_official_step_icons_and_accessible_buttons
     assert ".pynix-debug-icon-action .pynix-jetbrains-icon" in html
     assert "font-size:0!important" in html
     assert ".pynix-run-action:has(.pynix-jetbrains-icon)::before" in html
+
+
+def test_new_ui_interaction_states_are_scoped_and_keyboard_accessible():
+    from pynix_gui.ide_icon_parity import ICON_STATE_STYLE
+
+    document = "<html><body class='workspace-mode'></body></html>"
+    output = apply_new_ui_icons(document)
+    assert output.count('id="pynix-new-ui-icon-states"') == 1
+    assert output.index('id="pynix-new-ui-icon-states"') < output.index("pynix-jetbrains-icon")
+    for selector in (
+        ".workspace-mode .rail > .rail-item:hover",
+        ".workspace-mode .right-tools > button:hover",
+        ".workspace-mode .workspace-toolbar > button:hover",
+        ".workspace-mode .rail > .rail-item.active",
+        ".workspace-mode .right-tools > button[aria-pressed=\"true\"]",
+        ".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action]:focus-visible",
+    ):
+        assert selector in ICON_STATE_STYLE
+    assert "outline:2px solid #80b8f4!important" in ICON_STATE_STYLE
+    assert "prefers-reduced-motion:reduce" in ICON_STATE_STYLE
+    assert "pointer-events:none" not in ICON_STATE_STYLE
+    assert "addEventListener" not in ICON_STATE_STYLE
