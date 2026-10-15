@@ -387,3 +387,54 @@ def test_v518_native_webview_does_not_capture_scrollbar_mouse_down_as_window_dra
     native=Path(app.__file__).read_text(encoding="utf-8")
     assert "window.setMovableByWindowBackground_(False)" in native
     assert "def mouseDownCanMoveWindow(self):" not in native
+
+
+def test_v519_toolbar_drag_frame_respects_only_blank_header():
+    from examples.ide_native_v4 import toolbar_drag_frame
+
+    frame = toolbar_drag_frame(
+        1500, 950, {"x": 350, "y": 3, "width": 420, "height": 38})
+    assert frame == (350, 909, 420, 38)
+    # No region in Project, Editor, scrollbars, the traffic lights or the toolbar
+    # action buttons may be interpreted as a dragging area.
+    assert toolbar_drag_frame(
+        1500, 950, {"x": 30, "y": 3, "width": 420, "height": 38}) is None
+    assert toolbar_drag_frame(
+        1500, 950, {"x": 350, "y": 60, "width": 420, "height": 38}) is None
+    assert toolbar_drag_frame(
+        1500, 950, {"x": 350, "y": 3, "width": 12, "height": 38}) is None
+    assert toolbar_drag_frame(
+        760, 520, {"x": 700, "y": 3, "width": 20, "height": 38}) is None
+    assert toolbar_drag_frame(
+        1500, 950, {"x": 350, "y": 3, "width": float("nan"), "height": 38}) is None
+    assert toolbar_drag_frame(1500, 950, {}) is None
+    # Never extend an overlay past the right edge of the window.
+    assert toolbar_drag_frame(
+        760, 520, {"x": 700, "y": 3, "width": 500, "height": 38}) == (700, 479, 52, 38)
+
+
+def test_v519_titlebar_drag_is_a_native_overlay_above_webview_only():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "class ToolbarDragView(AppKit.NSView):" in source
+    assert "self.window().performWindowDragWithEvent_(event)" in source
+    assert "container.addSubview_(view)" in source
+    assert "container.addSubview_(drag_area)" in source
+    assert source.index("container.addSubview_(view)") < source.index("container.addSubview_(drag_area)")
+    assert "window.setContentView_(container)" in source
+    assert 'toolbar_drag_handler, "pynixToolbarDragRegion"' in source
+    assert "drag_area.setHidden_(True)" in source
+    assert "drag_area.setHidden_(False)" in source
+    assert "window.setMovableByWindowBackground_(False)" in source
+    assert "def mouseDownCanMoveWindow(self):" not in source
+
+
+def test_v519_toolbar_drag_region_comes_from_flex_spacer_not_fixed_pixels():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    script = app.TOOLBAR_DRAG_SCRIPT
+    assert ".workspace-toolbar > .toolbar-spacer" in script
+    assert "spacer.getBoundingClientRect()" in script
+    assert "toolbar.getBoundingClientRect()" in script
+    assert "pynixToolbarDragRegion?.postMessage(area)" in script
+    assert "ResizeObserver(update)" in script
+    assert "window.addEventListener('resize', update)" in script
+    assert "document.replace(\"</body>\", TOOLBAR_DRAG_SCRIPT + \"</body>\", 1)" in source
