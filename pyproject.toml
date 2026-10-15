@@ -37,4 +37,6 @@ pynix_gui = [
     "assets/jetbrains_new_ui/svg/*/*/*.svg",
     "assets/jetbrains_new_ui/svg/*/*/*/*.svg",
     "assets/jetbrains_new_ui/manifest.json",
+    "assets/jetbrains_new_ui/NOTICE.md",
+    "assets/jetbrains_new_ui/UPSTREAM_COMMIT",
 ]
