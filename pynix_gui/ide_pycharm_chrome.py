@@ -75,7 +75,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  box-sizing:border-box!important;gap:3px!important
 }
 .workspace-mode .pynix-project-header>span:first-child{
- font-weight:600!important;white-space:nowrap!important;min-width:34px!important;
+ font-weight:600!important;white-space:nowrap!important;min-width:52px!important;
  font-size:12px!important
 }
 .workspace-mode .pynix-project-header-actions{margin-left:auto!important;gap:1px!important}
@@ -93,6 +93,18 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-project-quick-button svg{width:16px;height:16px;display:block}
 .workspace-mode .pynix-project-quick-button:disabled{opacity:.4;cursor:not-allowed}
 .workspace-mode .pynix-project-header .pynix-project-more-menu{position:relative}
+.workspace-mode .pynix-project-header .pynix-project-header-button svg,
+.workspace-mode .pynix-project-more-menu>summary svg{
+ display:block!important;width:16px!important;height:16px!important
+}
+.workspace-mode .tree .pynix-project-header-actions{
+ opacity:0!important;pointer-events:none!important;
+ transition:opacity 100ms ease
+}
+.workspace-mode .tree .pynix-project-header:hover .pynix-project-header-actions,
+.workspace-mode .tree .pynix-project-header:focus-within .pynix-project-header-actions{
+ opacity:1!important;pointer-events:auto!important
+}
 .workspace-mode .pynix-project-more-menu>summary{list-style:none}
 .workspace-mode .pynix-project-more-menu>summary::-webkit-details-marker{display:none}
 .workspace-mode .pynix-project-more-menu>div{
@@ -163,8 +175,11 @@ CHROME_SCRIPT = r"""<script>
   for(const el of [select,run,debug,stop,tools])if(el)center.appendChild(el);
   if(tools){
    const summary=tools.querySelector(':scope>summary');
-   if(summary){summary.textContent='⋮';summary.title='More run and editor actions';
-    summary.setAttribute('aria-label','More run and editor actions');}
+   if(summary){
+    summary.replaceChildren(makeIcon('general/moreVertical')||document.createTextNode('⋮'));
+    summary.title='More run and editor actions';
+    summary.setAttribute('aria-label','More run and editor actions');
+   }
    const items=tools.querySelector('.pynix-tools-menu-items');
    const save=toolbar.querySelector('.pynix-save-action');
    if(items&&save)items.prepend(save);
@@ -195,7 +210,7 @@ CHROME_SCRIPT = r"""<script>
   if(!head||head.dataset.pynixPyCharmHeader)return;
   head.dataset.pynixPyCharmHeader='1';
   const title=head.querySelector(':scope>span:first-child');
-  if(title){title.textContent='Proj';title.title='Project';}
+  if(title){title.textContent='Project';title.title='Project';}
   const actions=head.querySelector('.pynix-project-header-actions');
   if(!actions)return;
   const collapse=actions.querySelector('.pynix-project-header-button');
@@ -222,7 +237,8 @@ CHROME_SCRIPT = r"""<script>
   more.className='pynix-project-more-menu';
   const summary=document.createElement('summary');
   summary.className='pynix-project-quick-button';
-  summary.textContent='⋮';summary.title='Project view options';
+  summary.replaceChildren(makeIcon('general/moreVertical')||document.createTextNode('⋮'));
+  summary.title='Project view options';
   summary.setAttribute('aria-label','Project view options');
   const menu=document.createElement('div');
   const collapseItem=document.createElement('button');
@@ -233,6 +249,10 @@ CHROME_SCRIPT = r"""<script>
   const minimize=quick('Hide Project tool window','general/hide',()=>{
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
   });
+  if(collapse){
+   collapse.replaceChildren(makeIcon('general/collapseAll')||document.createTextNode('⌃'));
+   collapse.title='Collapse project folders';
+  }
   actions.replaceChildren(create,locate,expand);
   if(collapse)actions.appendChild(collapse);
   actions.append(more,minimize);
@@ -273,7 +293,8 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
     try:
         catalog = JetBrainsIconCatalog(directory)
         keys = ("general/search","general/settings","general/add",
-                "general/locate","general/expandAll","general/hide")
+                "general/locate","general/expandAll","general/collapseAll",
+                "general/moreVertical","general/hide")
         data = {key: catalog.svg(key,dark=dark) for key in keys}
     except (OSError,ValueError,KeyError,json.JSONDecodeError):
         return document
