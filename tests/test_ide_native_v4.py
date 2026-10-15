@@ -401,25 +401,33 @@ def test_v518_native_webview_does_not_capture_scrollbar_mouse_down_as_window_dra
 def test_v519_toolbar_drag_frame_respects_only_blank_header():
     from examples.ide_native_v4 import toolbar_drag_frame
 
-    frame = toolbar_drag_frame(
-        1500, 950, {"x": 350, "y": 3, "width": 420, "height": 38})
-    assert frame == (350, 909, 420, 38)
-    # No region in Project, Editor, scrollbars, the traffic lights or the toolbar
-    # action buttons may be interpreted as a dragging area.
+    area = {"x": 350, "y": 10, "width": 420, "height": 26}
+    assert toolbar_drag_frame(1500, 950, area) == (350, 914, 420, 26)
+    # An overlay whose TOP edge is 10 CSS points from the window top
+    # must stay there through successive height-only resizes.
+    assert toolbar_drag_frame(1500, 1100, area) == (350, 1064, 420, 26)
+    assert toolbar_drag_frame(1500, 800, area) == (350, 764, 420, 26)
+
+    # No region in Project, Editor, scrollbars, macOS top border or corner
+    # can ever be interpreted as a dragging surface.
     assert toolbar_drag_frame(
-        1500, 950, {"x": 30, "y": 3, "width": 420, "height": 38}) is None
+        1500, 950, {"x": 30, "y": 10, "width": 420, "height": 26}) is None
     assert toolbar_drag_frame(
-        1500, 950, {"x": 350, "y": 60, "width": 420, "height": 38}) is None
+        1500, 950, {"x": 350, "y": 60, "width": 420, "height": 26}) is None
     assert toolbar_drag_frame(
-        1500, 950, {"x": 350, "y": 3, "width": 12, "height": 38}) is None
+        1500, 950, {"x": 350, "y": 3, "width": 420, "height": 26}) is None
     assert toolbar_drag_frame(
-        760, 520, {"x": 700, "y": 3, "width": 20, "height": 38}) is None
+        1500, 950, {"x": 350, "y": 10, "width": 420, "height": 38}) is None
     assert toolbar_drag_frame(
-        1500, 950, {"x": 350, "y": 3, "width": float("nan"), "height": 38}) is None
+        1500, 950, {"x": 350, "y": 10, "width": 12, "height": 26}) is None
+    assert toolbar_drag_frame(
+        760, 520, {"x": 700, "y": 10, "width": 20, "height": 26}) is None
+    assert toolbar_drag_frame(
+        1500, 950, {"x": 350, "y": 10, "width": float("nan"), "height": 26}) is None
     assert toolbar_drag_frame(1500, 950, {}) is None
-    # Never extend an overlay past the right edge of the window.
+    # The last 18px are reserved for the native window resize corner.
     assert toolbar_drag_frame(
-        760, 520, {"x": 700, "y": 3, "width": 500, "height": 38}) == (700, 479, 52, 38)
+        760, 520, {"x": 700, "y": 10, "width": 500, "height": 26}) == (700, 484, 42, 26)
 
 
 def test_v519_titlebar_drag_is_a_native_overlay_above_webview_only():
@@ -447,7 +455,13 @@ def test_v519_toolbar_drag_region_comes_from_flex_spacer_not_fixed_pixels():
     assert "spacer.getBoundingClientRect()" in script
     assert "toolbar.getBoundingClientRect()" in script
     assert "pynixToolbarDragRegion?.postMessage(area)" in script
-    assert "ResizeObserver(update)" in script
+    assert "const observer = new ResizeObserver(update)" in script
+    assert "observer.observe(spacer)" in script
+    assert "observer.observe(toolbar)" in script
+    assert "if(title)observer.observe(title)" in script
+    assert "space.width >= 64 ? space : (label || space)" in script
+    assert "y:bar.top+10" in script
+    assert "Math.max(0,bar.height-18)" in script
     assert "window.addEventListener('resize', update)" in script
     assert "document.replace(\"</body>\", TOOLBAR_DRAG_SCRIPT + \"</body>\", 1)" in source
 
@@ -466,3 +480,23 @@ def test_v520_native_resize_retains_window_owned_content_and_drag_overlay():
     assert "window.setMinSize_(AppKit.NSMakeSize(760, 520))" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "window.setMovableByWindowBackground_(False)" in source
+
+
+def test_v521_toolbar_drag_area_survives_repeated_resize_and_preserves_resize_edges():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
+    assert "window.setMovableByWindowBackground_(False)" in source
+    assert "AppKit.NSWindowStyleMaskResizable" in source
+    assert "content_view = window.contentView()" in source
+    assert "drag_area.setFrame_(AppKit.NSMakeRect(*frame))" in source
+    assert "drag_area.setHidden_(False)" in source
+    script = app.TOOLBAR_DRAG_SCRIPT
+    assert "const title = toolbar.querySelector('strong')" in script
+    assert "space.width >= 64 ? space : (label || space)" in script
+    assert "window.addEventListener('resize', update)" in script
+    assert "observer.observe(toolbar)" in script
+    assert "observer.observe(spacer)" in script
+    assert "observer.observe(title)" in script
+    assert "width:Math.max(0,region.width-24)" in script
+    assert "height:Math.max(0,bar.height-18)" in script
+    assert "bounds_width - x - 18" in source
