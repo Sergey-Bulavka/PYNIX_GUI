@@ -471,6 +471,16 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 .workspace-mode .pynix-edit-layer .pynix-edit-gutter>span{display:block;height:19px;line-height:19px;white-space:pre}
 .workspace-mode .pynix-edit-layer .pynix-edit-gutter>.pynix-gutter-breakpoint{color:#e66b75!important;font-size:16px;font-weight:700}
 .workspace-mode .pynix-edit-layer .pynix-edit-gutter>.pynix-gutter-number{color:#81838c}
+
+/* JetBrains-style collapsible bottom tool window, retaining its last height. */
+.workspace-mode .integrated-terminal.pynix-tool-window-collapsed{display:none!important}
+.workspace-mode .terminal-resizer[hidden]{display:none!important}
+.workspace-mode .pynix-tool-window-toggle{margin-left:auto;border:0;background:transparent;color:#a5aab5;font-size:17px;line-height:22px;cursor:pointer;border-radius:4px;padding:2px 7px}
+.workspace-mode .pynix-tool-window-toggle:hover{background:#41434b;color:#e3e5ed}
+.workspace-mode .pynix-tool-window-restore{border:0;background:transparent;color:#b3b9c7;font-size:11px;padding:2px 9px;cursor:pointer;border-radius:4px}
+.workspace-mode .pynix-tool-window-restore:hover{background:#41434b}
+.workspace-mode .pynix-tool-window-restore[hidden]{display:none!important}
+.workspace-mode .terminal-tabs .term-spacer{margin-left:auto}
 </style>
 <style>
 .workspace-mode .tree,
