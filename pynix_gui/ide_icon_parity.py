@@ -117,10 +117,18 @@ ICON_STATE_STYLE = """<style id="pynix-new-ui-icon-states">
 </style>"""
 
 
+# Dock controls are created after the preview loads; observe their real hosts.
+DOCK_ICON_BINDINGS = (
+    (".workspace-mode .pynix-tool-window-toggle", "general/hide", True),
+    (".workspace-mode .pynix-tool-window-restore", "toolwindows/messages", False),
+)
+
+
 ICON_BRIDGE_SCRIPT = r"""<script>
 (() => {
  const items=__ICON_DATA__;
  const dynamic=__DYNAMIC_ICON_DATA__;
+ const dockItems=__DOCK_ICON_DATA__;
  const parsed=new Map();
  function activate(target,item){
   if(!target||target.dataset.pynixIcon===item.name)return;
@@ -157,6 +165,16 @@ ICON_BRIDGE_SCRIPT = r"""<script>
   };
   synchronize();
   new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true});
+ }
+ // Dock buttons arrive from the workspace controller, not the static HTML.
+ // Watch only these two small hosts and keep their existing click listeners.
+ for(const selector of [".workspace-mode .integrated-terminal",".workspace-mode .bottom"]){
+  const host=document.querySelector(selector);
+  if(!host||!dockItems.length)continue;
+  const sync=()=>{for(const item of dockItems)
+   for(const target of host.querySelectorAll(item.selector))activate(target,item);};
+  sync();
+  new MutationObserver(sync).observe(host,{childList:true,subtree:true});
  }
  // Open tabs are rebuilt when a source changes or tabs are reordered.
  const editorTabs=document.querySelector('.workspace-mode .editor-tabs');
@@ -209,11 +227,18 @@ def apply_new_ui_icons(
                 "selector": selector, "name": name,
                 "svg": source, "replaceLabel": replace_label,
             })
-    if not data and not dynamic:
+    dock = []
+    for selector, name, replace_label in DOCK_ICON_BINDINGS:
+        source = catalog.svg(name, dark=dark)
+        if source is not None:
+            dock.append({"selector": selector, "name": name, "svg": source,
+                         "replaceLabel": replace_label})
+    if not data and not dynamic and not dock:
         return document
     serialized = json.dumps(data, ensure_ascii=True).replace("<", "\\u003c")
     serialized_dynamic = json.dumps(dynamic, ensure_ascii=True).replace("<", "\\u003c")
+    serialized_dock = json.dumps(dock, ensure_ascii=True).replace("<", "\\u003c")
     script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized).replace(
         "__DYNAMIC_ICON_DATA__", serialized_dynamic
-    )
+    ).replace("__DOCK_ICON_DATA__", serialized_dock)
     return document.replace("</body>", ICON_STATE_STYLE + script + "</body>", 1)
