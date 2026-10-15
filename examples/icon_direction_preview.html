@@ -1099,6 +1099,21 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 }
 .workspace-mode .bottom .pynix-cursor-status:empty,
 .workspace-mode .bottom .pynix-diagnostics-status:empty{display:none!important}
+
+/* V5.27: original JetBrains debugger glyphs; keep the existing commands. */
+.workspace-mode .workspace-toolbar .pynix-run-action:has(.pynix-jetbrains-icon)::before,
+.workspace-mode .workspace-toolbar .pynix-debug-primary:has(.pynix-jetbrains-icon)::before{
+ content:none!important;display:none!important;
+}
+.workspace-mode .pynix-debug-panel-toolbar .pynix-debug-icon-action:has(.pynix-jetbrains-icon){
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:30px!important;min-width:30px!important;padding:3px!important;
+ font-size:0!important;gap:0!important;
+}
+.workspace-mode .pynix-debug-panel-toolbar .pynix-debug-icon-action .pynix-jetbrains-icon{
+ display:block!important;width:16px!important;height:16px!important;
+ flex:0 0 16px!important;
+}
 </style>
 <style>
 .workspace-mode .tree,
