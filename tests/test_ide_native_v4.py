@@ -229,17 +229,28 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     assert "def mouseDown_(self, event):" not in source
 
 
-def test_v514_continuous_workspace_shell():
-    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
-    css = html.split("</style>", 1)[0]
-    assert "/* V5.14 structural chrome:" in css
-    final = css.split("/* V5.14 structural chrome:", 1)[1]
-    assert ".workspace-mode .editor{background:#1e1f22!important;border:0!important;border-radius:0!important" in final
-    assert ".workspace-mode .tree{background:#1e1f22!important;margin:0!important;padding:0 9px!important;border:0!important" in final
-    assert "position:static!important;top:auto!important;align-self:stretch!important" in final
-    assert "height:35px!important;min-height:35px!important;max-height:35px!important" in final
-    assert "margin:3px 35px 3px 40px!important;border:0!important" in final
-    assert ".workspace-mode .ide>.rail,.workspace-mode .right-tools{bottom:28px!important}" in final
+def test_v515_rounded_surfaces_integrated_tabs_and_30px_status():
+    # These rules are in the LAST chrome contract, not obsolete V5.x blocks.
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    marker = "/* V5.15: measured three-surface New UI shell."
+    assert css.count(marker) == 1
+    final = css.split(marker, 1)[1]
+    assert "/* V5.14 structural chrome:" not in final
+    assert ".workspace-mode .ide{" in final
+    assert "background:#2b2d30!important;padding-left:40px!important;padding-right:35px!important" in final
+    assert "margin:0 3px 4px 1px!important" in final
+    assert "border:0!important;border-radius:9px!important" in final
+    assert "margin:0 0 4px 0!important" in final
+    assert "height:37px!important;min-height:37px!important;max-height:37px!important" in final
+    assert "align-items:flex-start!important;padding:5px 6px 3px!important" in final
+    assert "height:29px!important;min-height:29px!important;max-height:29px!important" in final
+    assert "border:0!important;border-radius:6px!important" in final
+    assert "height:var(--terminal-height,315px)!important" in final
+    assert "height:30px!important;min-height:30px!important;max-height:30px!important" in final
+    assert "bottom:30px!important" in final
+    # Gutter occlusion and independent editor scroll must survive chrome changes.
+    assert "z-index:12!important;background:#1e1f22!important" in css
+    assert ".workspace-mode .pynix-editor-scroll{" in css
 
 
 def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
