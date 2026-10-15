@@ -22,19 +22,30 @@ TOOLBAR_DRAG_SCRIPT = """<script>
   const spacer = document.querySelector('.workspace-mode .workspace-toolbar > .toolbar-spacer');
   const toolbar = document.querySelector('.workspace-mode .workspace-toolbar');
   if (!spacer || !toolbar) return;
+  // In narrow windows the flex spacer can collapse. The static PYNIX title
+  // remains a safe drag target (unlike editor tabs or toolbar buttons).
+  const title = toolbar.querySelector('strong');
   let last = '';
   const update = () => {
     const space = spacer.getBoundingClientRect();
     const bar = toolbar.getBoundingClientRect();
-    const area = {x:space.left+4, y:bar.top+3,
-                  width:Math.max(0,space.width-8), height:Math.max(0,bar.height-6)};
+    const label = title?.getBoundingClientRect();
+    const region = space.width >= 64 ? space : (label || space);
+    // Keep clear of the macOS top resize edge and right resize corner.
+    const area = {x:region.left+12, y:bar.top+10,
+                  width:Math.max(0,region.width-24),
+                  height:Math.max(0,bar.height-18)};
     const encoded = JSON.stringify(area);
     if(encoded===last)return;
     last=encoded;
     window.webkit?.messageHandlers?.pynixToolbarDragRegion?.postMessage(area);
   };
-  new ResizeObserver(update).observe(spacer);
-  new ResizeObserver(update).observe(toolbar);
+  const observer = new ResizeObserver(update);
+  observer.observe(spacer);
+  observer.observe(toolbar);
+  if(title)observer.observe(title);
+  // Native NSViewMinYMargin holds the drag view at the top when the height
+  // changes; a resize event also refreshes horizontal spacer geometry.
   window.addEventListener('resize', update);
   requestAnimationFrame(update);
 })();
@@ -58,10 +69,11 @@ def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
         return None
     if not all(math.isfinite(v) for v in (x, top, width, height, bounds_width, bounds_height)):
         return None
-    if (x < 86 or top < 0 or top > 12 or height < 16 or height > 44
-            or top + height > 44 or width < 32 or bounds_width < 760):
+    # Reserve the top border for resizing and never cover window corners.
+    if (x < 86 or top < 8 or top > 16 or height < 16 or height > 30
+            or top + height > 40 or width < 32 or bounds_width < 760):
         return None
-    width = min(width, bounds_width - x - 8)
+    width = min(width, bounds_width - x - 18)
     if width < 32:
         return None
     return (x, bounds_height - top - height, width, height)
@@ -129,6 +141,9 @@ def main() -> None:
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
     content_view.addSubview_(view)
     drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
+    # Flexible MIN-Y (bottom) margin pins the region to the TOP of its
+    # superview through height-only resizes, even without a fresh JS message.
+    drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
     drag_area.setHidden_(True)
     content_view.addSubview_(drag_area)  # Native sibling above WebKit; only the toolbar spacer.
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
