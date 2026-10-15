@@ -481,6 +481,10 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 .workspace-mode .pynix-tool-window-restore:hover{background:#41434b}
 .workspace-mode .pynix-tool-window-restore[hidden]{display:none!important}
 .workspace-mode .terminal-tabs .term-spacer{margin-left:auto}
+
+/* One selected tool tab only; the static Terminal <strong> is not always active. */
+.workspace-mode .terminal-tabs>strong:not(.pynix-active-tab){border-bottom-color:transparent!important;color:#a7aab4!important;font-weight:500!important}
+.workspace-mode .terminal-tabs>.pynix-active-tab{border-bottom-color:#8d93d5!important;color:#e4e5ea!important;font-weight:600!important}
 </style>
 <style>
 .workspace-mode .tree,
