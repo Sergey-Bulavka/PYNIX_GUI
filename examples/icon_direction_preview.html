@@ -1018,6 +1018,23 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  scrollbar-width:auto!important;scrollbar-color:#686d76 #202125!important;
 }
 .workspace-mode .tree{scrollbar-width:auto!important;scrollbar-color:#686d76 #202125!important}
+
+/* V5.24: true left-edge line numbers (no fake spaces before digits).
+   Keep the 64px gutter and separate editor scroll host unchanged. */
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{
+ text-align:left!important;padding:15px 0 15px 8px!important;
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line{
+ text-align:left!important;padding:0 0 0 8px!important;
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line.pynix-fold-control{
+ position:relative!important;
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-fold-marker{
+ position:absolute;right:9px;top:0;
+ height:23px;line-height:23px;color:#aebbc9;
+ pointer-events:none;user-select:none;
+}
 </style>
 <style>
 .workspace-mode .tree,
