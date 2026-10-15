@@ -1035,6 +1035,28 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  height:23px;line-height:23px;color:#aebbc9;
  pointer-events:none;user-select:none;
 }
+
+/* V5.25: native JetBrains New UI glyph scale; never alter click targets. */
+.workspace-mode .rail .rail-item > .pynix-jetbrains-icon{
+ display:block!important;width:20px!important;height:20px!important;
+ min-width:20px!important;max-width:20px!important;flex:0 0 20px!important;
+}
+.workspace-mode .right-tools > button:has(.pynix-jetbrains-icon){
+ display:flex!important;align-items:center!important;justify-content:center!important;
+}
+.workspace-mode .right-tools .pynix-jetbrains-icon{
+ display:block!important;width:20px!important;height:20px!important;
+ min-width:20px!important;max-width:20px!important;
+}
+.workspace-mode .workspace-toolbar .pynix-jetbrains-icon{
+ display:inline-block!important;vertical-align:middle!important;
+ width:16px!important;height:16px!important;flex:0 0 16px!important;
+}
+.workspace-mode .workspace-toolbar .pynix-run-action:has(.pynix-jetbrains-icon),
+.workspace-mode .workspace-toolbar .pynix-debug-primary:has(.pynix-jetbrains-icon){
+ display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;gap:5px!important;
+}
 </style>
 <style>
 .workspace-mode .tree,
