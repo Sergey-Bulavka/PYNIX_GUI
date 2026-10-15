@@ -566,7 +566,8 @@ def test_reference_gutter_breakpoint_replaces_line_number():
     source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
     assert "row.className=marked.has(i)?'pynix-gutter-breakpoint':'pynix-gutter-number';" in source
-    assert "row.textContent=marked.has(i)?'●':String(i).padStart(3,' ');" in source
+    assert "row.textContent=marked.has(i)?'●':String(i);" in source
+    assert "String(i).padStart(3,' ')" not in source
     assert ".pynix-edit-gutter{width:48px!important" in html
     assert "padding-left:60px!important" in html
 
@@ -725,7 +726,8 @@ def test_pycharm_reference_shell_visual_density_and_project_context():
     assert ".workspace-mode .rail{background:#2b2d30!important;width:40px!important" in css
     assert ".workspace-mode .editor-tabs button.active{background:#2b2d30!important" in css
     assert ".workspace-mode .integrated-terminal{background:#1e1f22!important" in css
-    assert '"⌄ " + escaped_name' in source
+    assert "project_chevron + escaped_name" in source
+    assert 'class="pynix-project-dropdown-chevron"' in source
 
 
 def test_project_toolbar_context_does_not_overlap_or_show_demo_read_only_label():
