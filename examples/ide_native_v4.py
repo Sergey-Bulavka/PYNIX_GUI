@@ -122,14 +122,15 @@ def main() -> None:
     window.setMovableByWindowBackground_(False)
     window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
-    container = AppKit.NSView.alloc().initWithFrame_(window.contentView().bounds())
-    container.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
-    view = FirstClickWebView.alloc().initWithFrame_(container.bounds())
+    # Preserve AppKit's original content view: replacing it can interfere with
+    # the border/corner resize hit-testing of full-size-content windows.
+    content_view = window.contentView()
+    view = FirstClickWebView.alloc().initWithFrame_(content_view.bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
-    container.addSubview_(view)
+    content_view.addSubview_(view)
     drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
     drag_area.setHidden_(True)
-    container.addSubview_(drag_area)  # Above WKWebView, but never above Project or Editor.
+    content_view.addSubview_(drag_area)  # Native sibling above WebKit; only the toolbar spacer.
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
@@ -663,8 +664,8 @@ def main() -> None:
     class ToolbarDragRegionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             frame = toolbar_drag_frame(
-                container.bounds().size.width,
-                container.bounds().size.height,
+                content_view.bounds().size.width,
+                content_view.bounds().size.height,
                 message.body(),
             )
             if frame is None:
@@ -695,7 +696,7 @@ def main() -> None:
     document = attach_navigation_controls(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
-    window.setContentView_(container)
+    # The original content view remains window-owned and resizable.
     from pynix_gui.ide_native_menu import install_native_workspace_menu
     menu_dispatcher = install_native_workspace_menu(app, view, AppKit)
     window.makeKeyAndOrderFront_(None)
