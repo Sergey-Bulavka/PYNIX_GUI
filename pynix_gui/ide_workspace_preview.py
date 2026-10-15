@@ -2047,7 +2047,14 @@ editorInput.addEventListener('keydown',event=>{
      const fileType=byName.get(entry.path)?.icon || 'file';
      glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+fileType));
      glyph.dataset.extension=extension;
-     glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):fileIconMarkup(fileType);
+     // JetBrains icon bridge is the single visible painter for standard
+     // Project rows. Do not paint the legacy Lucide/file-type icons first.
+     // The Python and native PYNIX identities remain intentional exceptions:
+     // neither appears in the eligible licensed JetBrains SVG catalog.
+     glyph.dataset.pynixSemantic=entry.folder?'folder':
+       (fileType==='python'?'python':fileType==='pnx'?'pnx':'generic');
+     if(glyph.dataset.pynixSemantic==='python'||glyph.dataset.pynixSemantic==='pnx')
+       glyph.innerHTML=fileIconMarkup(fileType);
      line.appendChild(glyph);
      const label=document.createElement('span');
      label.className='project-label';
