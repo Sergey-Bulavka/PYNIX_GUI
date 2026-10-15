@@ -512,6 +512,15 @@ body.workspace-mode>header{display:none!important}
 .workspace-mode .terminal-tabs{border-radius:10px 10px 0 0}
 .workspace-mode .bottom{min-height:22px!important}
 .workspace-mode .workspace-toolbar>.run-control{display:none!important}
+
+/* Compact, quiet primary actions instead of equal-weight text buttons. */
+.workspace-mode .workspace-toolbar .pynix-run-action,
+.workspace-mode .workspace-toolbar .pynix-debug-primary{font-size:0!important;min-width:28px!important;width:30px!important;height:30px!important;padding:5px!important;border:0!important;background:transparent!important}
+.workspace-mode .workspace-toolbar .pynix-run-action::before{content:"▷";font-size:24px;line-height:18px;color:#57b97d}
+.workspace-mode .workspace-toolbar .pynix-debug-primary::before{content:"⚙";font-size:18px;line-height:20px;color:#57b97d}
+.workspace-mode .workspace-toolbar .pynix-run-action:hover,.workspace-mode .workspace-toolbar .pynix-debug-primary:hover{background:#39443d!important}
+.workspace-mode .workspace-toolbar button:focus-visible,
+.workspace-mode .terminal-tabs>*:focus-visible{outline:2px solid #7284b5;outline-offset:1px}
 </style>
 <style>
 .workspace-mode .tree,
