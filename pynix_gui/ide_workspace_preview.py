@@ -2052,8 +2052,8 @@ editorInput.addEventListener('keydown',event=>{
      // The Python and native PYNIX identities remain intentional exceptions:
      // neither appears in the eligible licensed JetBrains SVG catalog.
      glyph.dataset.pynixSemantic=entry.folder?'folder':
-       (fileType==='python'?'python':fileType==='pnx'?'pnx':'generic');
-     if(glyph.dataset.pynixSemantic==='python'||glyph.dataset.pynixSemantic==='pnx')
+       (fileType==='python'?'python':fileType==='pynix'?'pynix':'generic');
+     if(glyph.dataset.pynixSemantic==='python'||glyph.dataset.pynixSemantic==='pynix')
        glyph.innerHTML=fileIconMarkup(fileType);
      line.appendChild(glyph);
      const label=document.createElement('span');
