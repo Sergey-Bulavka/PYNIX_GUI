@@ -24,6 +24,20 @@ license. PYNIX retains its own app logo and visual identity.
 
 ## Import the entire eligible source tree (not a hardcoded icon subset)
 
+For a reproducible, minimal sparse Git checkout, use the included importer
+script. It prints the upstream commit and counts every eligible/skipped SVG:
+
+```bash
+cd /Users/morphey/PycharmProjects/PYNIX_GUI
+bash scripts/import_full_new_ui_icons.sh --dry-run
+bash scripts/import_full_new_ui_icons.sh --apply
+```
+
+`--apply` saves the original licensed files, their manifest, an upstream commit
+record and a searchable gallery. Inspect the license counts and `git diff`
+before committing the full collection. The source checkout is deleted after
+import; it does not become part of PYNIX.
+
 The importer is offline and operates on a local clone. It walks all folders
 and creates dark/light/resolution variants indexed by category:
 
