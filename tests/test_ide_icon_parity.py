@@ -120,7 +120,7 @@ def test_project_tree_icons_use_original_new_ui_nodes_and_file_types():
             assert resolved.variant.startswith("dark" if dark else "light")
     assert "new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true})" in ICON_BRIDGE_SCRIPT
     assert "const tree=document.querySelector('.workspace-mode .tree')" in ICON_BRIDGE_SCRIPT
-    assert "if(!target||target.dataset.pynixIcon===item.name)return;" in ICON_BRIDGE_SCRIPT
+    assert 'if(target.dataset.pynixIcon===item.name && target.querySelector(".pynix-jetbrains-icon"))return;' in ICON_BRIDGE_SCRIPT
     assert "for(const target of tree.querySelectorAll(item.selector))activate(target,item)" in ICON_BRIDGE_SCRIPT
     assert "new DOMParser()" in ICON_BRIDGE_SCRIPT
     assert "old.replaceWith(icon)" in ICON_BRIDGE_SCRIPT
@@ -153,7 +153,7 @@ def test_editor_tabs_and_status_strip_are_native_icon_targets():
                    for selector in dynamic)
     assert "const editorTabs=document.querySelector('.workspace-mode .editor-tabs')" in ICON_BRIDGE_SCRIPT
     assert "new MutationObserver(synchronizeTabs).observe(editorTabs,{childList:true,subtree:true})" in ICON_BRIDGE_SCRIPT
-    assert "if(!target||target.dataset.pynixIcon===item.name)return;" in ICON_BRIDGE_SCRIPT
+    assert 'if(target.dataset.pynixIcon===item.name && target.querySelector(".pynix-jetbrains-icon"))return;' in ICON_BRIDGE_SCRIPT
 
     native_css = (Path(__file__).resolve().parents[1] / "examples" /
                   "icon_direction_preview.html").read_text(encoding="utf-8")
