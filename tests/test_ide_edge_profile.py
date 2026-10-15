@@ -59,3 +59,12 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
         assert expected in style
     assert 'pointer-events:none' not in style
     assert 'display:none!important' not in style
+
+
+def test_more_tool_windows_tracks_expansion_and_closes_on_escape():
+    script = EDGE_PROFILE_SCRIPT
+    assert "more.setAttribute('aria-expanded','false')" in script
+    assert "more.setAttribute('aria-controls','pynix-more-'+edge)" in script
+    assert "popover.hidden=!open;" in script
+    assert "if(event.key==='Escape'){setOpen(false);more.focus();}" in script
+    assert "if(!container.contains(event.target))setOpen(false);" in script
