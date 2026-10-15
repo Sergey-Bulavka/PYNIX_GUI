@@ -57,6 +57,7 @@ def main() -> None:
     window.setTitle_("PYNIX IDE")
     window.setTitleVisibility_(AppKit.NSWindowTitleHidden)
     window.setTitlebarAppearsTransparent_(True)
+    window.setMovableByWindowBackground_(True)
     window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
     view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
