@@ -859,22 +859,24 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 }
 .workspace-mode .ide{padding-right:35px!important}
 
-/* V5.11 consolidated PyCharm New UI visual refinements. */
-.workspace-mode .editor{background:#1e1f22!important;border:1px solid #34363c!important;border-bottom:0!important;border-radius:7px 7px 0 0!important;overflow:hidden!important}
-.workspace-mode .editor-tabs{display:flex!important;box-sizing:border-box!important;align-items:flex-end!important;gap:3px!important;height:34px!important;min-height:34px!important;max-height:34px!important;flex:0 0 34px!important;padding:0 6px!important;margin:0!important;background:#1e1f22!important;border-bottom:1px solid #32343a!important;border-radius:7px 7px 0 0!important}
-.workspace-mode .editor-tabs .pynix-editor-tab{box-sizing:border-box!important;position:relative!important;top:1px!important;display:inline-flex!important;align-items:center!important;align-self:flex-end!important;gap:6px!important;height:28px!important;min-height:28px!important;max-height:28px!important;margin:0!important;padding:0 9px!important;border-radius:6px 6px 0 0!important;border:1px solid transparent!important;background:transparent!important;box-shadow:none!important}
-.workspace-mode .editor-tabs .pynix-editor-tab.active{background:#2b2d30!important;border-color:#3a3d42!important;border-bottom-color:#2b2d30!important;outline:none!important}
-.workspace-mode .editor-tabs .pynix-editor-tab:not(.active):hover{background:#25272c!important;border-color:#2f3238!important;border-bottom-color:#32343a!important}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{height:26px!important;min-height:26px!important;line-height:26px!important;font-size:12px!important;font-weight:500!important}
-.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{flex:0 0 16px!important;width:16px!important;min-width:16px!important;max-width:16px!important;height:16px!important;min-height:16px!important;max-height:16px!important;border-radius:3px!important}
-.workspace-mode .editor .code,.workspace-mode .editor .pynix-edit-layer{margin-top:0!important;border-top:0!important;background:#1e1f22!important}
-.workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important;box-sizing:border-box!important}
-.workspace-mode .integrated-terminal{border:1px solid #34363c!important;border-radius:6px!important;box-sizing:border-box!important}
-.workspace-mode .terminal-tabs{border-radius:6px 6px 0 0!important}
-.workspace-mode .workspace-toolbar{border-bottom:1px solid #34363c!important}
-.workspace-mode .bottom{box-sizing:border-box!important;height:26px!important;min-height:26px!important;max-height:26px!important;flex:0 0 26px!important;padding:0 8px!important;align-items:center!important;font-size:11px!important;line-height:26px!important;background:#2b2d30!important;border-top:1px solid #34363c!important}
-.workspace-mode .ide>.rail{bottom:26px!important}
-.workspace-mode .right-tools{bottom:26px!important}
+/* V5.14 structural chrome: one continuous work surface, no nested cards.
+   The tab is part of the header, not an independent floating container. */
+.workspace-mode .layout>.section:first-child>.card:first-child{background:#1e1f22!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
+.workspace-mode .ide{background:#1e1f22!important;padding-left:40px!important;padding-right:35px!important;box-sizing:border-box!important}
+.workspace-mode .tree{background:#1e1f22!important;margin:0!important;padding:0 9px!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.workspace-mode .tree .pynix-project-header{height:35px!important;min-height:35px!important}
+.workspace-mode .tree-resizer{width:4px!important;background:#303238!important}
+.workspace-mode .editor{background:#1e1f22!important;border:0!important;border-radius:0!important;box-shadow:none!important;overflow:hidden!important}
+.workspace-mode .editor-tabs{height:35px!important;min-height:35px!important;max-height:35px!important;flex:0 0 35px!important;display:flex!important;align-items:stretch!important;padding:0 5px!important;gap:4px!important;margin:0!important;background:#1e1f22!important;border:0!important;border-radius:0!important}
+.workspace-mode .editor-tabs .pynix-editor-tab{position:static!important;top:auto!important;align-self:stretch!important;box-sizing:border-box!important;height:35px!important;min-height:35px!important;max-height:35px!important;margin:0!important;padding:0 9px!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.workspace-mode .editor-tabs .pynix-editor-tab.active{background:#2b2d30!important;border:0!important;border-radius:5px 5px 0 0!important;box-shadow:none!important}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{height:30px!important;min-height:30px!important;line-height:30px!important;font-size:12px!important;font-weight:500!important}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{width:16px!important;min-width:16px!important;max-width:16px!important;height:16px!important;min-height:16px!important;max-height:16px!important}
+.workspace-mode .integrated-terminal{background:#1e1f22!important;margin:3px 35px 3px 40px!important;border:0!important;border-radius:0!important;box-shadow:none!important}
+.workspace-mode .terminal-resizer{margin-left:40px!important;margin-right:35px!important}
+.workspace-mode .terminal-tabs{border-radius:0!important}
+.workspace-mode .bottom{height:28px!important;min-height:28px!important;max-height:28px!important;flex:0 0 28px!important;line-height:28px!important;background:#2b2d30!important;border-top:1px solid #34363c!important}
+.workspace-mode .ide>.rail,.workspace-mode .right-tools{bottom:28px!important}
 </style>
 <style>
 .workspace-mode .tree,
