@@ -53,9 +53,11 @@ def test_icon_injection_preserves_actions_and_replaces_only_glyph_nodes():
     assert "pynixToolbarDragRegion" not in output
     # The source SVG header and icon theme colors remain intact.
     assert "Apache 2.0 license" in output
-    assert "toolwindows/project" in output
-    assert "toolwindows/find" in output
-    assert "general/settings" in output
+    assert "nodes/folder" in output
+    assert "fileTypes/text" in output
+    assert "general/chevronDown" in output
+    assert "run/run" in output
+    assert "toolwindows/project" not in output
     # Raw SVG is JSON escaped, not pasted as a second HTML/script tag.
     assert "<svg" not in output
 
@@ -71,7 +73,8 @@ def test_all_imported_buttons_already_exist_and_have_semantic_bindings():
     assert len(selectors) == len(set(selectors))
     assert all(".workspace-mode" in selector for selector in selectors)
     assert len(selectors) >= 5
-    assert any(".rail > .rail-item:nth-child(1)" in selector for selector in selectors)
+    assert not any(".rail > .rail-item" in selector for selector in selectors)
+    assert not any(".right-tools" in selector for selector in selectors)
     assert any(".workspace-toolbar" in selector for selector in selectors)
     # The real project breadcrumb in the bottom status strip is a legitimate
     # non-interactive icon target; all other controls retain their actions.
@@ -80,38 +83,32 @@ def test_all_imported_buttons_already_exist_and_have_semantic_bindings():
     ]
 
 
-def test_jetbrains_icons_are_attached_only_to_existing_rail_and_run_controls():
+def test_action_icon_bridge_does_not_compete_with_the_visible_edge_renderer():
     from pynix_gui.ide_icon_parity import ICON_BINDINGS
 
     bindings = {selector: name for selector, name, _, _ in ICON_BINDINGS}
-    assert bindings[".workspace-mode .rail > .rail-item:nth-child(1)"] == "toolwindows/project"
-    assert bindings[".workspace-mode .rail > .rail-item:nth-child(2)"] == "toolwindows/find"
-    assert bindings[".workspace-mode .rail > .rail-item:nth-child(3)"] == "toolwindows/vcs"
-    assert bindings[".workspace-mode .rail > .rail-item:nth-child(4)"] == "toolwindows/run"
     assert bindings[".workspace-mode .workspace-toolbar .pynix-run-action"] == "run/run"
     assert bindings[".workspace-mode .workspace-toolbar .pynix-debug-primary"] == "run/debug"
-    assert bindings[".workspace-mode .right-tools > button[title='Outline']"] == "toolwindows/structure"
-    assert bindings[".workspace-mode .right-tools > button[title='Documentation']"] == "toolwindows/documentation"
-    assert not any("AI tools" in selector for selector in bindings)
-
-    html = (
-        Path(__file__).resolve().parents[1] / "examples" /
-        "icon_direction_preview.html"
-    ).read_text(encoding="utf-8")
-    assert "/* V5.25: native JetBrains New UI glyph scale" in html
-    assert ".workspace-mode .rail .rail-item > .pynix-jetbrains-icon" in html
-    assert ".workspace-mode .right-tools .pynix-jetbrains-icon" in html
-    assert ".workspace-mode .workspace-toolbar .pynix-jetbrains-icon" in html
+    assert all(".rail > .rail-item" not in selector for selector in bindings)
+    assert all(".right-tools" not in selector for selector in bindings)
+    # The only visible rail painter is now the dedicated New UI edge profile.
+    from pynix_gui.ide_edge_profile import TOOL_WINDOW_PROFILE, EDGE_PROFILE_SCRIPT
+    names = {label: icon for label, icon, _, _ in TOOL_WINDOW_PROFILE}
+    assert names["Project"] == "toolwindows/project"
+    assert names["Search"] == "toolwindows/find"
+    assert names["Version Control"] == "toolwindows/vcs"
+    assert "const place=(edge,host)=>{" in EDGE_PROFILE_SCRIPT
 
 
 def test_project_tree_icons_use_original_new_ui_nodes_and_file_types():
     from pynix_gui.ide_icon_parity import DYNAMIC_ICON_BINDINGS, ICON_BRIDGE_SCRIPT
 
     bindings = {selector: name for selector, name, _ in DYNAMIC_ICON_BINDINGS}
-    assert bindings[".workspace-mode .project-glyph.folder-icon"] == "nodes/folder"
-    assert bindings[".workspace-mode .project-glyph.file-json"] == "fileTypes/json"
-    assert bindings[".workspace-mode .project-glyph.file-markdown"] == "fileTypes/markdown"
-    assert bindings[".workspace-mode .project-glyph.file-text"] == "fileTypes/text"
+    assert bindings[".workspace-mode .project-glyph[data-pynix-semantic='folder']"] == "nodes/folder"
+    assert bindings[".workspace-mode .project-glyph[data-pynix-semantic='generic']"] == "fileTypes/text"
+    assert bindings[".workspace-mode .project-chevron.folder-disclosure"] == "general/chevronDown"
+    assert not any(".project-glyph.file-" in selector for selector in bindings)
+    assert "target.replaceChildren(icon);" in ICON_BRIDGE_SCRIPT
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for icon in bindings.values():
         for dark in (True, False):
@@ -186,9 +183,10 @@ def test_extended_file_extension_catalog_bindings_are_correct_and_licensed():
         assert role_by_extension[extension] == name
     for extension, name in EXTENSION_ICON_NAMES:
         assert catalog.resolve(name, dark=True) is not None, (extension, name)
-        for host in (".project-glyph", ".pynix-tab-file-glyph"):
-            selector = f".workspace-mode {host}[data-extension='{extension}']"
-            assert (selector, name, False) in DYNAMIC_ICON_BINDINGS
+        selector = f".workspace-mode .pynix-tab-file-glyph[data-extension='{extension}']"
+        assert (selector, name, False) in DYNAMIC_ICON_BINDINGS
+        # Project uses neutral JetBrains glyphs rather than legacy extension colors.
+        assert not any(".project-glyph[data-extension=" in x for x, _, _ in DYNAMIC_ICON_BINDINGS)
     assert len({key for key, _, _ in DYNAMIC_ICON_BINDINGS}) == len(DYNAMIC_ICON_BINDINGS)
 
 
