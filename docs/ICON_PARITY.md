@@ -33,7 +33,7 @@ cd /Users/morphey/PycharmProjects/PYNIX_GUI
 # Obtain a JetBrains source checkout separately, then point at its expui tree.
 # The source location changes with upstream releases.
 ./.venv/bin/python -m pynix_gui.ide_jetbrains_icons \
-  /path/to/intellij-community/community/platform/icons/src/expui \
+  /path/to/intellij-community/platform/icons/src/expui \
   ./pynix_gui/assets/jetbrains_new_ui \
   --dry-run
 
@@ -93,7 +93,22 @@ icon catalog. Install icons only on controls that have an actual user action.
    tool windows; no inert controls just because icons exist.
 6. HiDPI inspection, focus/hover/active/disabled states and runtime tests.
 
-**Status:** importer + manifest-backed lookup available. The upstream icon
-files have **not** yet been imported into the PYNIX repository, and the
-running IDE still uses its existing Lucide/Octicons assets. Full PyCharm
-icon parity has **not** yet been achieved.
+**Status (first production slice):** importer, manifest-backed lookup,
+offline gallery, and the first **16 original JetBrains New UI SVGs** are now in
+the PYNIX repository under `pynix_gui/assets/jetbrains_new_ui/svg/`.
+These cover Project, Find, VCS, Run, Debug, Settings, Search, Refresh in
+light and dark variants. The native V4 preview activates eligible icons on
+its existing left rail and toolbar and falls back to existing artwork if
+a named icon is missing.
+
+Full PyCharm icon parity has **not** yet been achieved. The user-visible
+status bar, full right rail, file type families and all secondary controls
+still need to be mapped as appropriate. Do not invent working controls.
+The full upstream `expui` directory has not yet been imported.
+
+Validate this slice with:
+
+```bash
+python -m pytest tests/test_ide_jetbrains_icons.py tests/test_ide_icon_parity.py \
+  tests/test_ide_native_v4.py tests/test_ide_workspace_preview.py -q
+```
