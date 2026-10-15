@@ -549,6 +549,38 @@ body.workspace-mode>header{display:none!important}
 .workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-heading{font-size:10px;letter-spacing:.02em;background:#303137;border-bottom:1px solid #41434a;padding:6px 9px}
 .workspace-mode .pynix-debug-inspector-empty{color:#777b84;font-size:11px;padding:10px}
 @media(max-width:680px){.workspace-mode .pynix-debug-inspector-docked{grid-template-columns:1fr}.workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-section{border-right:0!important;border-bottom:1px solid #3c3d43}}
+
+/* PYNIX V5 / PyCharm 2026 New UI reference — consolidated visual acceptance layer.
+   This is presentation only; the V4 workspace command handlers remain intact. */
+body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+.workspace-mode .workspace-toolbar{background:#2b2d30!important;border-bottom:1px solid #36383d!important;height:43px!important;min-height:43px!important;padding:0 13px!important;gap:11px!important}
+.workspace-mode .workspace-toolbar>strong{font-size:13px!important;color:#eeeef1!important}
+.workspace-mode .workspace-toolbar>.current-branch{font-size:12px!important;color:#b9bec6!important}
+.workspace-mode .workspace-toolbar .toolbar-spacer{flex:1!important}
+.workspace-mode .workspace-toolbar .pynix-run-action,.workspace-mode .workspace-toolbar .pynix-debug-primary{order:1!important}
+.workspace-mode .workspace-toolbar .pynix-tools-menu{order:3!important}
+.workspace-mode .workspace-toolbar .pynix-run-configuration{order:0!important}
+.workspace-mode .layout{height:calc(100vh - 43px)!important;background:#1e1f22!important;gap:0!important}
+.workspace-mode .rail{background:#2b2d30!important;width:40px!important;min-width:40px!important;border-right:0!important;padding-top:4px!important}
+.workspace-mode .rail-item{height:38px!important;width:34px!important;margin:2px 3px!important;border-radius:6px!important;color:#989ca5!important}
+.workspace-mode .rail-item.active{background:#454951!important;color:#e4e5e9!important}
+.workspace-mode .tree{background:#1e1f22!important;border:0!important;border-radius:9px!important;margin:3px 4px 4px 2px!important;width:var(--explorer-width,220px)!important;min-width:180px!important;font-size:12px!important}
+.workspace-mode .tree .pynix-project-header{height:36px!important;min-height:36px!important;background:#1e1f22!important;border-bottom:0!important;padding-inline:12px!important}
+.workspace-mode .tree .entry{height:24px!important;line-height:24px!important;border-radius:4px!important;font-size:12px!important}
+.workspace-mode .tree .workspace-selected{background:#303842!important;color:#e0e3eb!important}
+.workspace-mode .editor{background:#1e1f22!important;border:0!important;border-radius:9px!important;overflow:hidden}
+.workspace-mode .editor-tabs{height:39px!important;min-height:39px!important;border:0!important;border-radius:9px 9px 0 0!important;background:#1e1f22!important}
+.workspace-mode .editor-tabs button{height:39px!important;min-width:92px!important;background:transparent!important;color:#aaaeb6!important;font-size:12px!important;padding:0 13px!important;border:0!important;border-radius:4px!important}
+.workspace-mode .editor-tabs button.active{background:#2b2d30!important;color:#ececf0!important;border:0!important;border-bottom:0!important;font-weight:600!important}
+.workspace-mode .editor-tabs button:hover:not(.active){background:#292b30!important}
+.workspace-mode .integrated-terminal{background:#1e1f22!important;margin:4px 4px 4px 1px!important;border:0!important;border-radius:10px!important;box-shadow:none!important;overflow:hidden}
+.workspace-mode .terminal-tabs{height:35px!important;min-height:35px!important;background:#242528!important;border:0!important;padding:0 10px!important;gap:10px!important;font-size:11px!important;letter-spacing:0!important;border-radius:10px 10px 0 0!important}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){height:35px!important;min-height:35px!important;display:inline-flex!important;align-items:center!important;padding:0 8px!important;font-size:11px!important;letter-spacing:0!important}
+.workspace-mode .terminal-tabs>.pynix-active-tab{border-bottom:0!important;color:#ebedf0!important}
+.workspace-mode .pynix-terminal-session{height:32px!important;min-height:32px!important;background:#242528!important;padding:0 12px!important;border-bottom:1px solid #37393d!important}
+.workspace-mode .pynix-terminal-session-tab{background:#393c47!important;color:#e3e4eb!important;border-radius:5px!important;height:24px!important;padding:4px 11px!important}
+.workspace-mode .terminal-console{background:#1e1f22!important;color:#c6c8cf!important}
+.workspace-mode .bottom{background:#2b2d30!important;border-top:1px solid #393b41!important;color:#aeb2ba!important;height:23px!important;min-height:23px!important;display:flex!important;align-items:center!important;padding:0 8px!important;font-size:11px!important}
 </style>
 <style>
 .workspace-mode .tree,
