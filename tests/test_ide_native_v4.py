@@ -10,6 +10,50 @@ from pathlib import Path
 from examples import ide_native_v4 as app
 
 
+def _effective_css_rule(css: str, selector: str) -> str:
+    """Merge same-selector CSS declarations in cascade order.
+
+    Later rules only replace properties they actually specify. A final
+    scrollbar-color declaration must not hide an earlier overflow setting.
+    Within equal specificity, !important wins over non-important declarations.
+    This helper checks only the scoped selectors used by our visual contracts;
+    it is not a general-purpose CSS parser.
+    """
+    import re
+
+    blocks = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", css)
+    assert blocks, f"missing visual selector: {selector}"
+    properties: dict[str, str] = {}
+    for block in blocks:
+        for declaration in block.split(";"):
+            name, separator, value = declaration.strip().partition(":")
+            if not separator:
+                continue
+            name, value = name.strip(), value.strip()
+            previous = properties.get(name)
+            if previous is not None and previous.endswith("!important") and not value.endswith("!important"):
+                continue
+            properties[name] = value
+    return ";".join(f"{name}:{value}" for name, value in properties.items())
+
+
+def test_css_contract_merges_incremental_rules_by_property():
+    css = (
+        ".workspace-mode .tree{margin:0 5px 0 1px!important;"
+        "overflow-y:auto!important}"
+        ".workspace-mode .tree{scrollbar-width:auto!important}"
+        ".workspace-mode .tree{margin:0!important}"
+        ".workspace-mode .tree{overflow-y:hidden}"
+    )
+    properties = _effective_css_rule(css, ".workspace-mode .tree")
+    assert "scrollbar-width:auto!important" in properties
+    assert "margin:0!important" in properties
+    assert "margin:0 5px 0 1px!important" not in properties
+    assert "overflow-y:auto!important" in properties
+    assert "overflow-y:hidden" not in properties
+
+
+
 def test_native_v4_source_parses():
     ast.parse(Path(app.__file__).read_text(encoding="utf-8"))
 
@@ -269,15 +313,11 @@ def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
 
 def test_v516_no_panel_strokes_and_wider_project_editor_gap():
     # Verify the last scoped rule set, not historical visual experiments.
-    import re
-
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
     final = css.split("/* V5.15: measured three-surface New UI shell.", 1)[1]
 
     def rule(selector):
-        matches = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", final)
-        assert matches, f"missing final visual selector: {selector}"
-        return matches[-1]
+        return _effective_css_rule(final, selector)
 
     tree = rule(".workspace-mode .tree")
     splitter = rule(".workspace-mode .tree-resizer")
@@ -295,14 +335,11 @@ def test_v516_no_panel_strokes_and_wider_project_editor_gap():
 
 
 def test_v517_tab_divider_real_gutter_and_centered_project_chevron():
-    import re
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
     final = css.split("/* V5.15: measured three-surface New UI shell.", 1)[1]
 
     def last_rule(selector):
-        rules = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", final)
-        assert rules, f"missing visual selector: {selector}"
-        return rules[-1]
+        return _effective_css_rule(final, selector)
 
     tabs = last_rule(".workspace-mode .editor-tabs")
     assert "height:43px!important" in tabs
@@ -327,9 +364,7 @@ def test_v518_scroll_targets_are_real_independent_overflow_hosts():
     final=css.split(marker,1)[1]
 
     def rule(selector):
-        matches=re.findall(re.escape(selector)+r"\s*\{([^}]*)\}",final)
-        assert matches,selector
-        return matches[-1]
+        return _effective_css_rule(final, selector)
 
     tree=rule(".workspace-mode .tree")
     assert "overflow-y:auto!important" in tree
