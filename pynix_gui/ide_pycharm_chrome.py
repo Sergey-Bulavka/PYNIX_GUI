@@ -206,11 +206,15 @@ CHROME_SCRIPT = r"""<script>
    document.querySelector('.workspace-mode .project-entry.workspace-selected')
     ?.scrollIntoView({block:'nearest'});
   });
-  const expand=quick('Expand folders','general/expandAll',()=>{
-   // One level at a time to avoid eagerly opening a very large project.
-   const rows=[...document.querySelectorAll('.workspace-mode .tree .project-entry')]
-    .filter(row=>row.querySelector('.project-chevron.collapsed')).slice(0,20);
-   for(const row of rows)if(row.isConnected)row.click();
+  const expand=quick('Expand visible folders (up to 30)','general/expandAll',()=>{
+   // Tree rows are rebuilt on every expansion. Re-query between clicks and
+   // cap the work so a large project remains responsive.
+   for(let i=0;i<30;i++){
+    const row=document.querySelector(
+     '.workspace-mode .tree .project-entry:has(.project-chevron.collapsed)');
+    if(!row)break;
+    row.click();
+   }
   });
   const more=document.createElement('details');
   more.className='pynix-project-more-menu';
