@@ -26,7 +26,7 @@ def test_profile_is_idempotent_and_never_pretends_disabled_tools_work():
     result = apply_edge_profile(source)
     assert result != source
     assert apply_edge_profile(result) == result
-    assert "button.disabled=true" in EDGE_PROFILE_SCRIPT
+    assert "button.disabled=entry.state==='unavailable'" in EDGE_PROFILE_SCRIPT
     assert "not implemented in PYNIX IDE" in EDGE_PROFILE_SCRIPT
     assert "More tool windows" in EDGE_PROFILE_SCRIPT
     assert "place('left-top'" in EDGE_PROFILE_SCRIPT
@@ -48,17 +48,29 @@ def test_native_preview_loads_roster_after_original_icon_bindings():
 def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
     style = EDGE_PROFILE_STYLE
     for expected in (
-        '.workspace-mode .rail>.rail-item:nth-child(-n+4){order:0!important',
-        '.workspace-mode .rail>.pynix-extra-tools[data-edge="left-top"]{order:1!important',
-        '.workspace-mode .rail>.pynix-extra-tools[data-edge="left-bottom"]{order:2!important',
-        '.workspace-mode .rail>.rail-item:nth-child(n+5){order:3!important',
-        '.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-bottom"]{order:2!important',
+        '.workspace-mode .ide>.rail>.rail-item:nth-child(-n+3)',
+        '.workspace-mode .ide>.rail>.rail-item:nth-child(n+4){display:none!important}',
+        '.workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-top"]',
+        '.workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-bottom"]',
+        '.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-top"]',
         'margin-top:auto!important',
         'overflow-y:auto!important',
     ):
         assert expected in style
     assert 'pointer-events:none' not in style
-    assert 'display:none!important' not in style
+    assert "if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
+    assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[index]?.click();" in EDGE_PROFILE_SCRIPT
+
+
+def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
+    from pynix_gui.ide_edge_profile import PINNED_TOOLS, EXISTING_ACTIONS
+    assert {"Run", "Debug", "Terminal", "Problems", "Notifications", "AI Assistant"} <= PINNED_TOOLS
+    assert "Commit" not in PINNED_TOOLS
+    assert EXISTING_ACTIONS["Run"] == "rail:3"
+    assert EXISTING_ACTIONS["Terminal"] == "rail:4"
+    assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
+    assert "x.pinned" in EDGE_PROFILE_SCRIPT
+    assert "clickExisting(entry)" in EDGE_PROFILE_SCRIPT
 
 
 def test_more_tool_windows_tracks_expansion_and_closes_on_escape():
