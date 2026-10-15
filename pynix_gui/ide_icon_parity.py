@@ -25,6 +25,10 @@ ICON_BINDINGS = (
     (".workspace-mode .rail > .rail-item:nth-child(4)", "toolwindows/run", True, False),
     (".workspace-mode .rail > .rail-item:nth-child(6)", "general/settings", False, False),
     (".workspace-mode .workspace-toolbar > button[title='Visual preview']", "general/settings", False, True),
+    (".workspace-mode .workspace-toolbar .pynix-run-action", "run/run", False, False),
+    (".workspace-mode .workspace-toolbar .pynix-debug-primary", "run/debug", False, False),
+    (".workspace-mode .right-tools > button[title='Outline']", "toolwindows/structure", True, True),
+    (".workspace-mode .right-tools > button[title='Documentation']", "toolwindows/documentation", True, True),
 )
 
 ICON_BRIDGE_SCRIPT = r"""<script>
