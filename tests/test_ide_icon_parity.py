@@ -246,3 +246,21 @@ def test_new_ui_interaction_states_are_scoped_and_keyboard_accessible():
     assert "prefers-reduced-motion:reduce" in ICON_STATE_STYLE
     assert "pointer-events:none" not in ICON_STATE_STYLE
     assert "addEventListener" not in ICON_STATE_STYLE
+
+
+def test_bottom_dock_icons_bind_after_dynamic_controls_mount():
+    from pynix_gui.ide_icon_parity import DOCK_ICON_BINDINGS, ICON_BRIDGE_SCRIPT
+    names = {selector: (name, replace) for selector, name, replace in DOCK_ICON_BINDINGS}
+    assert names[".workspace-mode .pynix-tool-window-toggle"] == ("general/hide", True)
+    assert names[".workspace-mode .pynix-tool-window-restore"] == ("toolwindows/messages", False)
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for _, name, _ in DOCK_ICON_BINDINGS:
+        assert catalog.resolve(name, dark=True) is not None
+        assert catalog.resolve(name, dark=False) is not None
+    assert "const dockItems=__DOCK_ICON_DATA__;" in ICON_BRIDGE_SCRIPT
+    assert 'new MutationObserver(sync).observe(host,{childList:true,subtree:true})' in ICON_BRIDGE_SCRIPT
+    output = apply_new_ui_icons("<html><body class='workspace-mode'></body></html>")
+    assert "__DOCK_ICON_DATA__" not in output
+    assert "general/hide" in output
+    assert "toolwindows/messages" in output
+    assert "target.addEventListener" not in ICON_BRIDGE_SCRIPT
