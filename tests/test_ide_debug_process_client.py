@@ -524,3 +524,15 @@ def test_v5_debug_dock_is_session_scoped_and_console_tab_is_selected():
     assert "debugTab.classList.add('pynix-active-tab');" in js
     assert ".workspace-mode .pynix-debug-panel-toolbar[hidden]{display:none}" in css
     assert ".workspace-mode .editor-tabs button.active" in css
+
+
+def test_reference_workspace_has_compact_jetbrains_geometry_and_dark_chrome():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    template = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "/* V5 JetBrains reference-layout pass." in template
+    assert ".workspace-mode header{height:44px" in template
+    assert ".workspace-mode .workspace-toolbar{height:45px" in template
+    assert ".workspace-mode .tree{width:var(--explorer-width,238px)" in template
+    assert ".workspace-mode .editor-tabs{height:38px" in template
+    assert ".workspace-mode .terminal-console{color:#cbd2e1;background:#1e1f25}" in template
