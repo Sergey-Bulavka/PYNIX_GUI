@@ -537,3 +537,52 @@ def test_v522_native_resize_delegate_repositions_both_drag_handles():
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
     assert "window.setContentView_(container)" not in source
+
+
+def test_v523_corner_resize_frame_is_independent_of_webkit_and_window_size():
+    from examples.ide_native_v4 import corner_resize_geometry
+
+    assert corner_resize_geometry(760, 520) == (736.0, 2.0, 22.0, 22.0)
+    assert corner_resize_geometry(1500, 950) == (1476.0, 2.0, 22.0, 22.0)
+    assert corner_resize_geometry(2400, 1400) == (2376.0, 2.0, 22.0, 22.0)
+
+
+def test_v523_corner_resize_tracks_screen_pointer_and_keeps_top_left_anchor():
+    from examples.ide_native_v4 import resized_window_frame
+
+    initial = (100, 100, 1500, 950)
+    pointer = (1600, 100)
+    assert resized_window_frame(initial, pointer, (1800, 0)) == (
+        100.0, 0.0, 1700.0, 1050.0
+    )
+    assert resized_window_frame(initial, pointer, (1400, 200)) == (
+        100.0, 200.0, 1300.0, 850.0
+    )
+    # The same geometry applies across startup sizes, including wide windows.
+    assert resized_window_frame((0, 300, 2400, 1400), (2400, 300), (2600, 200)) == (
+        0.0, 200.0, 2600.0, 1500.0
+    )
+    # Clamping preserves the top-left corner rather than moving the whole IDE.
+    assert resized_window_frame(initial, pointer, (0, 2000)) == (
+        100.0, 530.0, 760.0, 520.0
+    )
+    assert resized_window_frame(initial, pointer, (float("nan"), 0)) is None
+
+
+def test_v523_native_corner_grip_stays_responsive_through_relaunch_and_resize():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "class CornerResizeView(AppKit.NSView):" in source
+    assert "def mouseDown_(self, event):" in source
+    assert "def mouseDragged_(self, event):" in source
+    assert "def mouseUp_(self, event):" in source
+    assert "AppKit.NSEvent.mouseLocation()" in source
+    assert "self.window().setFrame_display_(AppKit.NSMakeRect(*frame), True)" in source
+    assert "resized_window_frame(" in source
+    assert "corner_resize_geometry(" in source
+    assert "content_view.addSubview_(corner_resize)" in source
+    assert "AppKit.NSViewMinXMargin | AppKit.NSViewMaxYMargin" in source
+    assert "AppKit.NSWindowStyleMaskResizable" in source
+    assert "window.setMovableByWindowBackground_(False)" in source
+    assert "content_view.addSubview_(view)" in source
+    assert "content_view.addSubview_(drag_area)" in source
+    assert "content_view.addSubview_(title_drag_area)" in source
