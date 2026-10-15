@@ -94,11 +94,12 @@ icon catalog. Install icons only on controls that have an actual user action.
 6. HiDPI inspection, focus/hover/active/disabled states and runtime tests.
 
 **Status (first production slice):** importer, manifest-backed lookup,
-offline gallery, and the first **16 original JetBrains New UI SVGs** are now in
+offline gallery, and the first **36 original JetBrains New UI SVGs** are now in
 the PYNIX repository under `pynix_gui/assets/jetbrains_new_ui/svg/`.
-These cover Project, Find, VCS, Run, Debug, Settings, Search, Refresh in
-light and dark variants. The native V4 preview activates eligible icons on
-its existing left rail and toolbar and falls back to existing artwork if
+These cover Project, Find, VCS, Run, Debug, Settings, Search, Refresh,
+Structure, Documentation, Problems, Notifications, Services, Commit, Help,
+more-actions and Run/Debug toolbar actions in light and dark variants. The native V4 preview activates eligible icons on
+its existing left, top and right rails and falls back to existing artwork if
 a named icon is missing.
 
 Full PyCharm icon parity has **not** yet been achieved. The user-visible
