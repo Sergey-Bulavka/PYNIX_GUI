@@ -714,3 +714,15 @@ def test_debug_frames_and_variables_stay_visible_in_docked_columns():
     assert "empty.textContent='No data available';" in source
     assert ".pynix-debug-inspector-docked{display:grid!important" in html
     assert "grid-template-columns:minmax(155px,35%) minmax(0,1fr)" in html
+
+
+def test_pycharm_reference_shell_visual_density_and_project_context():
+    from pathlib import Path
+    root=Path(__file__).resolve().parents[1]
+    css=(root/"examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    source=(root/"pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "PYNIX V5 / PyCharm 2026 New UI reference" in css
+    assert ".workspace-mode .rail{background:#2b2d30!important;width:40px!important" in css
+    assert ".workspace-mode .editor-tabs button.active{background:#2b2d30!important" in css
+    assert ".workspace-mode .integrated-terminal{background:#1e1f22!important" in css
+    assert '"⌄ " + escaped_name' in source
