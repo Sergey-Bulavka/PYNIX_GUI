@@ -31,15 +31,29 @@ ICON_BINDINGS = (
     (".workspace-mode .right-tools > button[title='Documentation']", "toolwindows/documentation", True, True),
 )
 
+# Project Explorer is rebuilt on expansion/search; these icons require live binding.
+# The native PYNIX and Python marks are kept; only standard file types use JB.
+DYNAMIC_ICON_BINDINGS = (
+    (".workspace-mode .project-glyph.folder-icon", "nodes/folder", False),
+    (".workspace-mode .project-glyph.file-json", "fileTypes/json", False),
+    (".workspace-mode .project-glyph.file-markdown", "fileTypes/markdown", False),
+    (".workspace-mode .project-glyph.file-text", "fileTypes/text", False),
+)
+
 ICON_BRIDGE_SCRIPT = r"""<script>
 (() => {
- const items = __ICON_DATA__;
- for(const item of items){
-  const target=document.querySelector(item.selector);
-  if(!target)continue;
-  const parsed=new DOMParser().parseFromString(item.svg,'image/svg+xml');
-  const source=parsed.documentElement;
-  if(source.localName!=='svg'||parsed.querySelector('parsererror'))continue;
+ const items=__ICON_DATA__;
+ const dynamic=__DYNAMIC_ICON_DATA__;
+ const parsed=new Map();
+ function activate(target,item){
+  if(!target||target.dataset.pynixIcon===item.name)return;
+  let source=parsed.get(item.name);
+  if(!source){
+   const xml=new DOMParser().parseFromString(item.svg,'image/svg+xml');
+   source=xml.documentElement;
+   if(source.localName!=='svg'||xml.querySelector('parsererror'))return;
+   parsed.set(item.name,source);
+  }
   const icon=document.importNode(source,true);
   icon.classList.add('pynix-jetbrains-icon');
   icon.setAttribute('aria-hidden','true');
@@ -54,6 +68,18 @@ ICON_BRIDGE_SCRIPT = r"""<script>
    target.prepend(icon);
   }
   target.dataset.pynixIcon=item.name;
+ }
+ for(const item of items)activate(document.querySelector(item.selector),item);
+ // Project tree rows are recreated on folder expand, search and file changes.
+ // Observe only that tree; avoid replacing click handlers or editor content.
+ const tree=document.querySelector('.workspace-mode .tree');
+ if(tree&&dynamic.length){
+  const synchronize=()=>{
+   for(const item of dynamic)
+    for(const target of tree.querySelectorAll(item.selector))activate(target,item);
+  };
+  synchronize();
+  new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true});
  }
 })();
 </script>"""
@@ -88,8 +114,19 @@ def apply_new_ui_icons(
             "svg": source,
             "replaceLabel": replace_label,
         })
-    if not data:
+    dynamic = []
+    for selector, name, replace_label in DYNAMIC_ICON_BINDINGS:
+        source = catalog.svg(name, dark=dark)
+        if source is not None:
+            dynamic.append({
+                "selector": selector, "name": name,
+                "svg": source, "replaceLabel": replace_label,
+            })
+    if not data and not dynamic:
         return document
     serialized = json.dumps(data, ensure_ascii=True).replace("<", "\\u003c")
-    script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized)
+    serialized_dynamic = json.dumps(dynamic, ensure_ascii=True).replace("<", "\\u003c")
+    script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized).replace(
+        "__DYNAMIC_ICON_DATA__", serialized_dynamic
+    )
     return document.replace("</body>", script + "</body>", 1)
