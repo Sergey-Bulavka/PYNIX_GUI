@@ -182,7 +182,7 @@ def test_v54_terminal_and_tool_rail_have_scoped_visual_contracts():
 def test_v55_window_drag_and_separate_editor_gutter_contract():
     native = Path(app.__file__).read_text(encoding="utf-8")
     style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>",1)[0]
-    assert "window.setMovableByWindowBackground_(True)" in native
+    assert "window.setMovableByWindowBackground_(False)" in native
     assert ".workspace-mode .pynix-editor-viewport{" in style
     assert ".workspace-mode .pynix-editor-gutter{" in style
     assert ".workspace-mode .pynix-editor-scroll{" in style
@@ -192,8 +192,8 @@ def test_v55_window_drag_and_separate_editor_gutter_contract():
 
 def test_v56_native_window_drag_uses_appkit_background():
     source = Path(app.__file__).read_text(encoding="utf-8")
-    assert "def mouseDownCanMoveWindow(self):" in source
-    assert "window.setMovableByWindowBackground_(True)" in source
+    assert "def mouseDownCanMoveWindow(self):" not in source
+    assert "window.setMovableByWindowBackground_(False)" in source
     assert "class TitlebarDragArea" not in source
     assert "def hitTest_(self, point):" not in source
 
@@ -225,7 +225,7 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     source = Path(app.__file__).read_text(encoding="utf-8")
     assert "class FirstClickWebView(WebKit.WKWebView):" in source
     assert "def acceptsFirstMouse_(self, event):" in source
-    assert "def mouseDownCanMoveWindow(self):" in source
+    assert "def mouseDownCanMoveWindow(self):" not in source
     assert "def mouseDown_(self, event):" not in source
 
 
@@ -314,3 +314,38 @@ def test_v517_tab_divider_real_gutter_and_centered_project_chevron():
         ".workspace-mode .workspace-toolbar .current-branch")
     assert "width:14px!important;height:14px!important" in last_rule(
         ".workspace-mode .workspace-toolbar .pynix-project-dropdown-chevron")
+
+
+def test_v518_scroll_targets_are_real_independent_overflow_hosts():
+    import re
+    css=app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>",1)[0]
+    marker="/* V5.18: explicit, independently scrollable Project and Editor surfaces."
+    assert css.count(marker)==1
+    final=css.split(marker,1)[1]
+
+    def rule(selector):
+        matches=re.findall(re.escape(selector)+r"\s*\{([^}]*)\}",final)
+        assert matches,selector
+        return matches[-1]
+
+    tree=rule(".workspace-mode .tree")
+    assert "overflow-y:auto!important" in tree
+    assert "overflow-x:hidden!important" in tree
+    layer=rule(".workspace-mode .pynix-edit-layer")
+    assert "flex:1 1 auto!important" in layer
+    assert "min-height:0!important" in layer
+    textarea=rule(".workspace-mode .pynix-edit-layer .pynix-source-input")
+    assert "overflow-x:auto!important" in textarea
+    assert "overflow-y:auto!important" in textarea
+    assert "scrollbar-width:auto!important" in textarea
+    readonly=rule(".workspace-mode .pynix-editor-scroll")
+    assert "height:100%!important" in readonly
+    assert "overflow:auto!important" in readonly
+    assert "left:64px!important" in final
+    assert "width:calc(100% - 64px)!important" in final
+    assert "padding-left:13px!important" in final
+
+def test_v518_native_webview_does_not_capture_scrollbar_mouse_down_as_window_drag():
+    native=Path(app.__file__).read_text(encoding="utf-8")
+    assert "window.setMovableByWindowBackground_(False)" in native
+    assert "def mouseDownCanMoveWindow(self):" not in native
