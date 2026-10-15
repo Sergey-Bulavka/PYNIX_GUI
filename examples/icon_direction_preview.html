@@ -461,6 +461,12 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
  .workspace-mode .terminal-tabs{padding-inline:4px}
  .workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){padding-inline:7px;font-size:10px}
 }
+
+/* PyCharm New UI: breakpoint dots occupy the number cell, not another column. */
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{width:48px!important;padding-right:9px!important;color:#81838c!important}
+.workspace-mode .pynix-edit-layer .pynix-source-input,.workspace-mode .pynix-edit-layer .pynix-edit-highlight{padding-left:60px!important}
+.workspace-mode .pynix-edit-layer .pynix-debug-execution-line{border-left:2px solid #a6ad71!important}
+.workspace-mode .pynix-debug-panel-toolbar>strong{color:#aeb1b9;letter-spacing:.04em}
 </style>
 <style>
 .workspace-mode .tree,
