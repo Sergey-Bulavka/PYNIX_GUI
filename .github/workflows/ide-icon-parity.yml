@@ -1,0 +1,43 @@
+name: PYNIX IDE icon parity
+
+on:
+  push:
+    branches:
+      - feature/icon-system-v4
+  pull_request:
+    paths:
+      - "pynix_gui/ide_jetbrains_icons.py"
+      - "pynix_gui/ide_icon_parity.py"
+      - "pynix_gui/assets/jetbrains_new_ui/**"
+      - "examples/ide_native_v4.py"
+      - "examples/icon_catalog_gallery.py"
+      - "tests/test_ide_jetbrains_icons.py"
+      - "tests/test_ide_icon_parity.py"
+      - "tests/test_ide_native_v4.py"
+      - "tests/test_ide_workspace_preview.py"
+      - ".github/workflows/ide-icon-parity.yml"
+  workflow_dispatch:
+
+jobs:
+  icon-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install test dependencies
+        run: python -m pip install --upgrade pip pytest
+      - name: License, icon activation and native-source tests
+        run: |
+          python -m pytest -q \
+            tests/test_ide_jetbrains_icons.py \
+            tests/test_ide_icon_parity.py \
+            tests/test_ide_native_v4.py \
+            tests/test_ide_workspace_preview.py
