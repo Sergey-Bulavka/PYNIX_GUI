@@ -139,3 +139,19 @@ def test_camel_case_product_logo_names_are_also_rejected(tmp_path):
     assert check_svg(path, relative_path=Path("products/JetBrainsPycharm.svg")) == (
         False, "trademark"
     )
+
+
+def test_windows_git_crlf_normalization_preserves_verified_svg(tmp_path):
+    source, destination = tmp_path / "source", tmp_path / "destination"
+    create_icon(source, "actions/run.svg")
+    build_catalog(source, destination)
+    icon_file = destination / "svg/actions/run.svg"
+    original = icon_file.read_bytes()
+    icon_file.write_bytes(original.replace(b"\n", b"\r\n"))
+    icons = JetBrainsIconCatalog(destination)
+    assert icons.svg("actions/run") == original.decode("utf-8")
+    # Only line-ending changes are tolerated. Real SVG mutations still fail.
+    icon_file.write_bytes(original.replace(b"M1 1L5 5", b"M2 2L5 5"))
+    with pytest.raises(ValueError, match="differs from licensed manifest"):
+        icons.svg("actions/run")
+
