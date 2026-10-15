@@ -280,3 +280,16 @@ def test_perimeter_icon_geometry_has_consistent_scales_without_click_overlays():
     assert ".workspace-mode .pynix-tool-window-restore:has(>.pynix-jetbrains-icon)" in style
     assert "pointer-events:none" not in style
     assert "position:absolute" not in style
+
+
+def test_icon_bridge_reapplication_is_idempotent_and_repairs_removed_icons():
+    from pynix_gui.ide_icon_parity import ICON_BRIDGE_SCRIPT
+    document = "<html><body class='workspace-mode'></body></html>"
+    first = apply_new_ui_icons(document)
+    assert apply_new_ui_icons(first) == first
+    assert 'target.querySelector(".pynix-jetbrains-icon")' in ICON_BRIDGE_SCRIPT
+    assert 'for(const target of document.querySelectorAll(item.selector))activate(target,item)' in ICON_BRIDGE_SCRIPT
+    assert 'new MutationObserver(syncStatic).observe(host,{childList:true,subtree:true})' in ICON_BRIDGE_SCRIPT
+    assert 'const shell=document.querySelector' not in ICON_BRIDGE_SCRIPT
+    assert '".workspace-mode .workspace-toolbar"' in ICON_BRIDGE_SCRIPT
+    assert '".workspace-mode .right-tools"' in ICON_BRIDGE_SCRIPT
