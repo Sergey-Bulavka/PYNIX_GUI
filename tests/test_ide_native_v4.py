@@ -188,3 +188,16 @@ def test_v55_window_drag_and_separate_editor_gutter_contract():
     assert ".workspace-mode .pynix-editor-scroll{" in style
     assert ".workspace-mode .ide>.rail{" in style
     assert ".workspace-mode .integrated-terminal{margin-left:43px!important}" in style
+
+
+def test_v56_native_drag_surface_is_installed_after_webview():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "class TitlebarDragArea(AppKit.NSView):" in source
+    assert "performWindowDragWithEvent_(event)" in source
+    assert source.index("window.setContentView_(view)") < source.index("window.contentView().addSubview_(drag_area)")
+
+
+def test_v56_outer_editor_scroll_is_disabled_and_terminal_right_edge_aligned():
+    style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert "overflow-x:clip!important;overflow-y:clip!important" in style
+    assert ".workspace-mode .integrated-terminal{margin-right:4px!important}" in style
