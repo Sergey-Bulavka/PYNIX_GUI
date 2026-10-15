@@ -37,10 +37,25 @@ TOOL_WINDOW_PROFILE = (
 )
 
 EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
-.workspace-mode .rail,.workspace-mode .right-tools{position:relative!important}
+.workspace-mode .rail,.workspace-mode .right-tools{
+ display:flex!important;flex-direction:column!important;align-items:center!important;
+ overflow-y:auto!important;overflow-x:hidden!important;scrollbar-width:none
+}
+.workspace-mode .rail::-webkit-scrollbar,.workspace-mode .right-tools::-webkit-scrollbar{display:none}
+.workspace-mode .rail>.rail-item:nth-child(-n+4){order:0!important;flex-shrink:0!important}
+.workspace-mode .rail>.pynix-extra-tools[data-edge="left-top"]{order:1!important}
+.workspace-mode .rail>.pynix-extra-tools[data-edge="left-bottom"]{order:2!important}
+.workspace-mode .rail>.rail-item:nth-child(n+5){order:3!important;flex-shrink:0!important}
+.workspace-mode .right-tools>button{order:0!important;flex-shrink:0!important}
+.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-top"]{order:1!important}
+.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-bottom"]{order:2!important}
+.workspace-mode .rail>.pynix-extra-tools[data-edge="left-bottom"],
+.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-bottom"]{
+ margin-top:auto!important
+}
 .workspace-mode .pynix-extra-tools{display:flex;flex-direction:column;
  align-items:center;gap:3px;width:100%;box-sizing:border-box}
-.workspace-mode .pynix-extra-tools[data-edge$="bottom"]{margin-top:auto}
+
 .workspace-mode .pynix-extra-tool{display:flex;align-items:center;
  justify-content:center;width:32px;height:32px;min-width:32px;
  padding:5px;border:0;border-radius:6px;background:transparent;color:#868a93}
@@ -62,7 +77,6 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 EDGE_PROFILE_SCRIPT = r"""<script>
 (() => {
  const entries=__PROFILE_DATA__;
- const states=new Map(entries.map(item=>[item.label,item]));
  const place=(edge,host)=>{
   if(!host)return;
   if(host.querySelector('[data-edge="'+edge+'"]'))return;
