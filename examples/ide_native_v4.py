@@ -40,10 +40,6 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
-        def mouseDownCanMoveWindow(self):
-            # Let AppKit drag the window from non-interactive WebView background.
-            return True
-
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
     app.setDelegate_(delegate)
@@ -62,7 +58,7 @@ def main() -> None:
     window.setTitle_("PYNIX IDE")
     window.setTitleVisibility_(AppKit.NSWindowTitleHidden)
     window.setTitlebarAppearsTransparent_(True)
-    window.setMovableByWindowBackground_(True)
+    window.setMovableByWindowBackground_(False)
     window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
     view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
