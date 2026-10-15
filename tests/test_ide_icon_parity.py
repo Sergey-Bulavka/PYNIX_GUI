@@ -190,3 +190,37 @@ def test_extended_file_extension_catalog_bindings_are_correct_and_licensed():
             selector = f".workspace-mode {host}[data-extension='{extension}']"
             assert (selector, name, False) in DYNAMIC_ICON_BINDINGS
     assert len({key for key, _, _ in DYNAMIC_ICON_BINDINGS}) == len(DYNAMIC_ICON_BINDINGS)
+
+
+def test_native_debugger_toolbar_uses_official_step_icons_and_accessible_buttons():
+    from pynix_gui.ide_icon_parity import ICON_BINDINGS
+    names = {selector: name for selector, name, _, _ in ICON_BINDINGS}
+    actions = {
+        "continue": "run/resume",
+        "pause": "run/pause",
+        "stepInto": "run/stepInto",
+        "stepOver": "run/stepOver",
+        "stepOut": "run/stepOut",
+        "stop": "run/stop",
+    }
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for action, icon_name in actions.items():
+        selector = (
+            ".workspace-mode .pynix-debug-panel-toolbar "
+            f"[data-pynix-debug-action='{action}']"
+        )
+        assert names[selector] == icon_name
+        assert catalog.resolve(icon_name, dark=True) is not None
+
+    source = (Path(__file__).resolve().parents[1] /
+              "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "control.dataset.pynixDebugAction=action;" in source
+    assert "control.setAttribute('aria-label',label);" in source
+    assert "control.addEventListener('click',()=>{" in source
+
+    html = (Path(__file__).resolve().parents[1] / "examples" /
+            "icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "/* V5.27: original JetBrains debugger glyphs" in html
+    assert ".pynix-debug-icon-action .pynix-jetbrains-icon" in html
+    assert "font-size:0!important" in html
+    assert ".pynix-run-action:has(.pynix-jetbrains-icon)::before" in html
