@@ -692,3 +692,15 @@ def test_tool_tabs_keyboard_activation_and_aria_selection():
     assert "tab.click();" in source
     assert "child.setAttribute('aria-selected',String(child===tab));" in source
     assert "debugPanelBar.hidden=tab.textContent.trim()!=='DEBUG CONSOLE'||!debugActive;" in source
+
+
+def test_bottom_tool_views_keep_independent_dom_snapshots():
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[1] / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "const toolViews=new Map();" in source
+    assert "function saveToolView(name){" in source
+    assert "while(toolConsole.firstChild)snapshot.appendChild(toolConsole.firstChild);" in source
+    assert "function activateToolView(name){" in source
+    assert "saveToolView(selectedTool);" in source
+    assert "if(saved)toolConsole.appendChild(saved);" in source
+    assert "activateToolView(tab.textContent.trim());" in source
