@@ -65,7 +65,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode .pynix-tool-profile-more{font:12px system-ui;color:#a9abb2;
  background:transparent;border:0;border-radius:5px;padding:3px 5px}
 .workspace-mode .pynix-tool-profile-more:hover{background:#393b40}
-.workspace-mode .pynix-tool-profile-popover{position:absolute;z-index:600;
+.workspace-mode .pynix-tool-profile-popover{position:fixed;z-index:600;
  width:210px;max-height:55vh;overflow:auto;padding:7px;
  border:1px solid #484a50;border-radius:8px;background:#292b30;
  box-shadow:0 9px 24px #0008;color:#dedfe2}
@@ -120,6 +120,14 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   more.setAttribute('aria-controls','pynix-more-'+edge);
   popover.id='pynix-more-'+edge;
   const setOpen=open=>{
+   if(open){
+    const bounds=more.getBoundingClientRect();
+    const width=210;
+    const height=Math.min(window.innerHeight*0.55,entries.filter(x=>x.edge===edge).length*27+16);
+    const left=edge.startsWith('left')?bounds.right+7:bounds.left-width-7;
+    popover.style.left=Math.max(4,Math.min(window.innerWidth-width-4,left))+'px';
+    popover.style.top=Math.max(4,Math.min(window.innerHeight-height-4,bounds.top))+'px';
+   }
    popover.hidden=!open;
    more.setAttribute('aria-expanded',String(open));
   };
