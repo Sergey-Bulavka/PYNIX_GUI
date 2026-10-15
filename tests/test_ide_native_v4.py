@@ -231,6 +231,15 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
 
 def test_v59_tab_attachment_and_status_height():
     css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "height:38px!important;min-height:38px!important;max-height:38px!important" in css
+    assert "height:36px!important;min-height:36px!important;max-height:36px!important" in css
     assert "height:28px!important;min-height:28px!important" in css
     assert ".workspace-mode .ide>.rail{bottom:28px!important}" in css
+
+
+def test_v510_editor_tab_connects_to_editor_border():
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert "align-items:flex-end!important" in css
+    assert "align-self:flex-end!important;height:31px!important" in css
+    assert "border-radius:7px 7px 0 0!important" in css
+    assert "border-bottom-color:#2b2d30!important" in css
+    assert "top:1px!important" in css
