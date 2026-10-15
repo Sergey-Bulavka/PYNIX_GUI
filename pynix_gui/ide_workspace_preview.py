@@ -651,6 +651,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const control=document.createElement('button');
    control.type='button';control.className='nav-action';
    control.textContent=label;
+   control.dataset.pynixDebugAction=action;
+   control.setAttribute('aria-label',label);
    control.addEventListener('click',()=>{
      if(control.disabled)return;
      const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
