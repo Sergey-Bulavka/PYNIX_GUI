@@ -66,3 +66,11 @@ def test_status_breadcrumb_follows_current_editor_tab():
     assert "label.textContent=name" in CHROME_SCRIPT
     assert "new MutationObserver(updateBreadcrumb).observe(tabs" in CHROME_SCRIPT
     assert ".workspace-mode .bottom .pynix-status-breadcrumb" in CHROME_STYLE
+
+
+def test_native_toolbar_drag_overlay_excludes_centered_working_controls():
+    from examples.ide_native_v4 import TOOLBAR_DRAG_SCRIPT
+    assert "'.pynix-pycharm-center','.pynix-pycharm-right'" in TOOLBAR_DRAG_SCRIPT
+    assert "control.getBoundingClientRect()" in TOOLBAR_DRAG_SCRIPT
+    assert "area.width = Math.max(0, occupied.left - area.x - 8);" in TOOLBAR_DRAG_SCRIPT
+    assert "width:Math.max(0,region.width-24)" in TOOLBAR_DRAG_SCRIPT
