@@ -208,8 +208,8 @@ def main() -> None:
             for offset in (0.0, 5.0, 10.0):
                 line = AppKit.NSBezierPath.bezierPath()
                 line.setLineWidth_(1.0)
-                line.moveToPoint_(AppKit.NSMakePoint(10.0 + offset, 3.0))
-                line.lineToPoint_(AppKit.NSMakePoint(19.0, 12.0 - offset))
+                line.moveToPoint_(AppKit.NSMakePoint(7.0 + offset, 3.0))
+                line.lineToPoint_(AppKit.NSMakePoint(19.0, 15.0 - offset))
                 line.stroke()
 
     app = AppKit.NSApplication.sharedApplication()
