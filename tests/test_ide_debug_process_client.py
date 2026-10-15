@@ -635,3 +635,16 @@ def test_compact_toolbar_uses_vector_debug_and_run_actions():
     assert "data:image/svg+xml" in css
     assert ".workspace-mode .workspace-toolbar .pynix-run-action::before" in css
     assert "button:focus-visible" in css
+
+
+def test_project_header_and_terminal_local_session_follow_tool_window_layout():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "heading.className='tree-title pynix-project-header';" in js
+    assert "projectTitle.textContent='Project';" in js
+    assert "terminalSession.className='pynix-terminal-session';" in js
+    assert "localTab.textContent='Local';" in js
+    assert "terminalSession.hidden=name!=='TERMINAL';" in js
+    assert ".workspace-mode .pynix-terminal-session-tab{" in css
