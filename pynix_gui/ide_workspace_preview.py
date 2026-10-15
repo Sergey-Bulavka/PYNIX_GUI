@@ -1941,6 +1941,18 @@ editorInput.addEventListener('keydown',event=>{
    const projectCount=document.createElement('span');
    projectCount.textContent=files.length+' files';
    projectActions.appendChild(projectCount);
+   const collapseFolders=document.createElement('button');
+   collapseFolders.type='button';
+   collapseFolders.className='pynix-project-header-button';
+   collapseFolders.textContent='⌃';
+   collapseFolders.title='Collapse project folders';
+   collapseFolders.setAttribute('aria-label','Collapse project folders');
+   collapseFolders.addEventListener('click',()=>{
+     expanded.clear();
+     expanded.add('');
+     renderTree();
+   });
+   projectActions.appendChild(collapseFolders);
    heading.append(projectTitle,projectActions);
    tree.appendChild(heading);
    function appendRow(entry, depth, isRoot=false) {
