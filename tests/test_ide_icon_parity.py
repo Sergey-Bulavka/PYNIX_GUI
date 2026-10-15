@@ -10,7 +10,7 @@ from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog, check_svg
 def test_bundled_icons_are_original_licensed_vectors():
     svg_root = BUNDLED_ICONS / "svg"
     icons = sorted(svg_root.rglob("*.svg"))
-    assert len(icons) >= 16, "The first approved New UI vector pack must be present"
+    assert len(icons) >= 36, "The expanded licensed New UI vector pack must be present"
     for icon in icons:
         ok, reason = check_svg(icon, relative_path=icon.relative_to(svg_root))
         assert ok, f"{icon}: {reason}"
@@ -19,7 +19,11 @@ def test_bundled_icons_are_original_licensed_vectors():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for name in ("toolwindows/project", "toolwindows/find", "toolwindows/vcs",
                  "toolwindows/run", "toolwindows/debug", "general/search",
-                 "general/settings", "general/refresh"):
+                 "general/settings", "general/refresh", "toolwindows/structure",
+                 "toolwindows/documentation", "toolwindows/problems",
+                 "toolwindows/notifications", "toolwindows/services",
+                 "toolwindows/commit", "general/help",
+                 "general/moreHorizontal", "run/run", "run/debug"):
         assert catalog.resolve(name, dark=True) is not None, name
         assert catalog.resolve(name, dark=False) is not None, name
     assert catalog.resolve("toolwindows/project", dark=True, tool_window=True).variant == "dark_20"
@@ -70,3 +74,27 @@ def test_all_imported_buttons_already_exist_and_have_semantic_bindings():
     assert any(".rail > .rail-item:nth-child(1)" in selector for selector in selectors)
     assert any(".workspace-toolbar" in selector for selector in selectors)
     assert not any("bottom" in selector for selector in selectors)
+
+
+def test_jetbrains_icons_are_attached_only_to_existing_rail_and_run_controls():
+    from pynix_gui.ide_icon_parity import ICON_BINDINGS
+
+    bindings = {selector: name for selector, name, _, _ in ICON_BINDINGS}
+    assert bindings[".workspace-mode .rail > .rail-item:nth-child(1)"] == "toolwindows/project"
+    assert bindings[".workspace-mode .rail > .rail-item:nth-child(2)"] == "toolwindows/find"
+    assert bindings[".workspace-mode .rail > .rail-item:nth-child(3)"] == "toolwindows/vcs"
+    assert bindings[".workspace-mode .rail > .rail-item:nth-child(4)"] == "toolwindows/run"
+    assert bindings[".workspace-mode .workspace-toolbar .pynix-run-action"] == "run/run"
+    assert bindings[".workspace-mode .workspace-toolbar .pynix-debug-primary"] == "run/debug"
+    assert bindings[".workspace-mode .right-tools > button[title='Outline']"] == "toolwindows/structure"
+    assert bindings[".workspace-mode .right-tools > button[title='Documentation']"] == "toolwindows/documentation"
+    assert not any("AI tools" in selector for selector in bindings)
+
+    html = (
+        Path(__file__).resolve().parents[1] / "examples" /
+        "icon_direction_preview.html"
+    ).read_text(encoding="utf-8")
+    assert "/* V5.25: native JetBrains New UI glyph scale" in html
+    assert ".workspace-mode .rail .rail-item > .pynix-jetbrains-icon" in html
+    assert ".workspace-mode .right-tools .pynix-jetbrains-icon" in html
+    assert ".workspace-mode .workspace-toolbar .pynix-jetbrains-icon" in html
