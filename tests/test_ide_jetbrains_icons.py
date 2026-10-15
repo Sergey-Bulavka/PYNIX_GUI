@@ -128,3 +128,14 @@ def test_gallery_covers_every_imported_category_and_is_searchable(tmp_path):
     assert 'id="query"' in html
     assert 'data-search="actions/add"' in html
     assert "3 licensed icons" in html
+
+
+def test_camel_case_product_logo_names_are_also_rejected(tmp_path):
+    path = create_icon(tmp_path, "actions/PyCharmLogo.svg")
+    assert check_svg(path, relative_path=Path("actions/PyCharmLogo.svg")) == (
+        False, "trademark"
+    )
+    path = create_icon(tmp_path, "products/JetBrainsPycharm.svg")
+    assert check_svg(path, relative_path=Path("products/JetBrainsPycharm.svg")) == (
+        False, "trademark"
+    )
