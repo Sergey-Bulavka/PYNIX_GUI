@@ -18,17 +18,11 @@ BUNDLED_ICONS = Path(__file__).parent / "assets" / "jetbrains_new_ui"
 # The current V4 workspace rail has fixed semantic positions; future native
 # UI controls should declare semantic data-pynix-icon attributes directly.
 # Do not add icons for tools that do not yet have an actual control/action.
+# Side rails are now owned exclusively by ide_edge_profile.py.
+# Keep these working action/status glyphs without painting old rail icons.
 ICON_BINDINGS = (
-    (".workspace-mode .rail > .rail-item:nth-child(1)", "toolwindows/project", True, False),
-    (".workspace-mode .rail > .rail-item:nth-child(2)", "toolwindows/find", True, False),
-    (".workspace-mode .rail > .rail-item:nth-child(3)", "toolwindows/vcs", True, False),
-    (".workspace-mode .rail > .rail-item:nth-child(4)", "toolwindows/run", True, False),
-    (".workspace-mode .rail > .rail-item:nth-child(6)", "general/settings", False, False),
-    (".workspace-mode .workspace-toolbar > button[title='Visual preview']", "general/settings", False, True),
     (".workspace-mode .workspace-toolbar .pynix-run-action", "run/run", False, False),
     (".workspace-mode .workspace-toolbar .pynix-debug-primary", "run/debug", False, False),
-    (".workspace-mode .right-tools > button[title='Outline']", "toolwindows/structure", True, True),
-    (".workspace-mode .right-tools > button[title='Documentation']", "toolwindows/documentation", True, True),
     (".workspace-mode .bottom > span:nth-of-type(1)", "nodes/ideaProject", False, False),
     (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='continue']", "run/resume", False, False),
     (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='pause']", "run/pause", False, False),
@@ -65,18 +59,19 @@ EXTENSION_ICON_NAMES = (
 
 # Project Explorer is rebuilt on expansion/search; these icons require live binding.
 # The native PYNIX and Python marks are kept; only standard file types use JB.
-DYNAMIC_ICON_BINDINGS = (
-    (".workspace-mode .project-glyph.folder-icon", "nodes/folder", False),
-    (".workspace-mode .project-glyph.file-json", "fileTypes/json", False),
-    (".workspace-mode .project-glyph.file-markdown", "fileTypes/markdown", False),
-    (".workspace-mode .project-glyph.file-text", "fileTypes/text", False),
+# Project semantic glyph slots deliberately have no legacy SVG fallback.
+# Python and PYNIX marks stay dedicated: neither is in licensed JetBrains pack.
+TREE_ICON_BINDINGS = (
+    (".workspace-mode .project-glyph[data-pynix-semantic='folder']", "nodes/folder", True),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic']", "fileTypes/text", True),
+)
+DYNAMIC_ICON_BINDINGS = TREE_ICON_BINDINGS + (
     (".workspace-mode .pynix-tab-file-glyph.file-json", "fileTypes/json", False),
     (".workspace-mode .pynix-tab-file-glyph.file-markdown", "fileTypes/markdown", False),
     (".workspace-mode .pynix-tab-file-glyph.file-text", "fileTypes/text", False),
 ) + tuple(
-    (f".workspace-mode {slot}[data-extension='{extension}']", icon, False)
+    (f".workspace-mode .pynix-tab-file-glyph[data-extension='{extension}']", icon, False)
     for extension, icon in EXTENSION_ICON_NAMES
-    for slot in (".project-glyph", ".pynix-tab-file-glyph")
 )
 
 # Interaction styling is restricted to actual IDE controls, not decorative icons.
@@ -169,6 +164,12 @@ ICON_BRIDGE_SCRIPT = r"""<script>
   icon.classList.add('pynix-jetbrains-icon');
   icon.setAttribute('aria-hidden','true');
   icon.setAttribute('focusable','false');
+  // Project nodes have exactly one authoritative icon.
+  if(target.classList.contains('project-glyph')){
+   target.replaceChildren(icon);
+   target.dataset.pynixIcon=item.name;
+   return;
+  }
   const old=target.querySelector('svg');
   if(old){
    for(const name of old.classList)icon.classList.add(name);
