@@ -160,3 +160,20 @@ def test_native_v4_unifies_macos_titlebar_and_toolbar():
     assert "setTitlebarAppearsTransparent_(True)" in native
     assert "padding-left:86px!important" in css
     assert "height:calc(100vh - 44px)!important" in css
+
+
+def test_v54_editor_gutter_stays_sticky_under_horizontal_scroll():
+    style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert ".workspace-mode .editor .code .source-line>.ln{" in style
+    assert "position:sticky!important;left:0!important;z-index:5!important" in style
+    assert "flex:0 0 64px!important;width:64px!important" in style
+    assert ".workspace-mode .editor .code .source-line>.source-text{" in style
+    assert "scrollbar-color:#585c64 transparent" in style
+
+
+def test_v54_terminal_and_tool_rail_have_scoped_visual_contracts():
+    style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert ".workspace-mode .integrated-terminal{" in style
+    assert ".workspace-mode .pynix-terminal-session-tab{" in style
+    assert ".workspace-mode .right-tools{width:35px!important" in style
+    assert ".workspace-mode .tree .project-entry.workspace-selected{" in style
