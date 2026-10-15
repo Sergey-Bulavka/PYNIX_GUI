@@ -671,3 +671,14 @@ def test_project_tool_window_rail_toggle_is_accessible_and_restores_tree():
     assert "setExplorerVisible(!explorerVisible)" in js
     assert "aria-label','Toggle Project tool window'" in js
     assert ".workspace-mode .tree[hidden],.workspace-mode .tree-resizer[hidden]" in css
+
+
+def test_keyboard_shortcuts_for_project_and_bottom_tool_windows():
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[1] / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "modifier&&event.altKey&&event.key==='1'" in source
+    assert "document.querySelectorAll('.rail-item')[0]?.click();" in source
+    assert "modifier&&event.altKey&&event.key==='4'" in source
+    assert "setToolWindowVisible(terminal?.classList.contains('pynix-tool-window-collapsed'));" in source
+    assert "event.key==='Escape'" in source
+    assert "const inDock=active&&(terminal?.contains(active)||active===dockRestore);" in source
