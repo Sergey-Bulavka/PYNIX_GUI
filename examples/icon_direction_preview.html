@@ -812,6 +812,28 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .ide>.rail .rail-item:nth-child(5){margin-top:auto!important}
 .workspace-mode .integrated-terminal{margin-left:43px!important}
 .workspace-mode .terminal-resizer{margin-left:40px!important}
+
+/* V5.7 editable editor: gutter is opaque and ABOVE the horizontally scrolling
+   highlight and transparent textarea. The read-only editor uses a separate gutter. */
+.workspace-mode .pynix-edit-layer{isolation:isolate!important;overflow:hidden!important}
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{
+ position:absolute!important;left:0!important;top:0!important;bottom:0!important;
+ width:64px!important;height:100%!important;box-sizing:border-box!important;
+ z-index:12!important;background:#1e1f22!important;color:#858994!important;
+ opacity:1!important;overflow:hidden!important;pointer-events:auto!important;
+ border-right:1px solid #383a40!important;
+ padding:15px 9px 15px 0!important;
+}
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight{
+ z-index:2!important;pointer-events:none!important;background:#1e1f22!important;
+}
+.workspace-mode .pynix-edit-layer .pynix-source-input{
+ z-index:3!important;left:0!important;background:transparent!important;
+}
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight,
+.workspace-mode .pynix-edit-layer .pynix-source-input{
+ padding-left:77px!important;
+}
 </style>
 <style>
 .workspace-mode .tree,
