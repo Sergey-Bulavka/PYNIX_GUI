@@ -620,6 +620,47 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .pynix-project-header-actions>span:first-child{opacity:.68!important}
 .workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){text-transform:none!important}
 .workspace-mode .terminal-tabs>.pynix-active-tab{font-weight:600!important}
+
+/* V5.1 JetBrains New UI alignment: explicit tab title vs close geometry. */
+.workspace-mode .editor-tabs .pynix-editor-tab{
+ display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;
+ height:30px!important;min-height:30px!important;max-height:30px!important;
+ gap:5px!important;padding:0 7px!important;border:0!important;border-radius:6px!important;
+ background:transparent!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab.active{background:#2b2d30!important;outline:0!important}
+.workspace-mode .editor-tabs .pynix-editor-tab:hover:not(.active){background:#26282b!important}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{
+ display:block!important;flex:0 1 auto!important;width:auto!important;min-width:0!important;
+ max-width:265px!important;height:24px!important;min-height:24px!important;
+ padding:0!important;margin:0!important;line-height:24px!important;
+ border:0!important;background:transparent!important;font-size:12px!important;
+ font-weight:400!important;color:#aeb2bb!important;overflow:hidden!important;
+ text-overflow:ellipsis!important;white-space:nowrap!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-label{
+ color:#e6e7eb!important;font-weight:500!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 18px!important;width:18px!important;min-width:18px!important;max-width:18px!important;
+ height:18px!important;min-height:18px!important;max-height:18px!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:4px!important;
+ background:transparent!important;color:#a5aab2!important;
+ visibility:hidden!important;pointer-events:none!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab:is(.active,:hover,:focus-within) .pynix-editor-tab-close{
+ visibility:visible!important;pointer-events:auto!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close:hover{
+ background:#42454c!important;color:#f1f1f3!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close svg{
+ width:13px!important;height:13px!important;display:block!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab :focus-visible{
+ outline:1px solid #8196c9!important;outline-offset:-1px!important
+}
 </style>
 <style>
 .workspace-mode .tree,
