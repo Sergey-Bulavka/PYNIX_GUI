@@ -1,0 +1,72 @@
+name: Vendor complete licensed JetBrains New UI catalog
+
+on:
+  push:
+    branches:
+      - feature/icon-system-v4
+    paths:
+      - ".github/workflows/vendor-jetbrains-icons.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pynix-full-icon-vendor-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  import-and-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout PYNIX branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: true
+          fetch-depth: 1
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install pytest
+        run: python -m pip install -U pip pytest
+      - name: Import complete licensed New UI collection
+        run: |
+          PYTHON=python bash scripts/import_full_new_ui_icons.sh --apply
+      - name: Audit every copied SVG and validate IDE compatibility
+        run: |
+          python -m pytest -q \
+            tests/test_ide_jetbrains_icons.py \
+            tests/test_ide_icon_parity.py \
+            tests/test_ide_native_v4.py \
+            tests/test_ide_workspace_preview.py
+      - name: Verify expected licensing and full catalog coverage
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog,check_svg
+          root=Path("pynix_gui/assets/jetbrains_new_ui")
+          catalog=JetBrainsIconCatalog(root)
+          all_files=list((root/"svg").rglob("*.svg"))
+          assert len(catalog)>=750,(len(catalog),len(all_files))
+          assert len(all_files)>=1600,len(all_files)
+          for icon in all_files:
+              ok,reason=check_svg(icon,relative_path=icon.relative_to(root/"svg"))
+              assert ok,(icon,reason)
+          print("Licensed names:",len(catalog))
+          print("Licensed SVG files:",len(all_files))
+          print("Source revision:",(root/"UPSTREAM_COMMIT").read_text().strip())
+          PY
+      - name: Commit and push only approved icon assets
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pynix_gui/assets/jetbrains_new_ui/
+          if git diff --cached --quiet; then
+            echo "Icon catalog already up to date"
+          else
+            git commit -m "Vendor 1642 licensed JetBrains New UI icon variants and catalog"
+            git push origin "HEAD:${{ github.ref_name }}"
+          fi
