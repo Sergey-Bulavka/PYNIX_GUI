@@ -648,3 +648,13 @@ def test_project_header_and_terminal_local_session_follow_tool_window_layout():
     assert "localTab.textContent='Local';" in js
     assert "terminalSession.hidden=name!=='TERMINAL';" in js
     assert ".workspace-mode .pynix-terminal-session-tab{" in css
+
+
+def test_project_tool_window_collapse_action_preserves_root():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "collapseFolders.setAttribute('aria-label','Collapse project folders');" in js
+    assert "expanded.clear();\n     expanded.add('');\n     renderTree();" in js
+    assert ".workspace-mode .pynix-project-header-button{" in css
