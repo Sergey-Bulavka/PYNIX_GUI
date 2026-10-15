@@ -2251,7 +2251,16 @@ editorInput.addEventListener('keydown',event=>{
      const label=document.createElement('button');
      label.type='button';
      label.textContent=fileName.split('/').pop()+(file?.dirty?' *':'');
+     label.title=fileName;
+     label.setAttribute('aria-current',fileName===current?'page':'false');
      label.addEventListener('click',()=>show(fileName));
+     // Middle-click follows IDE tab conventions; dirty documents still use the
+     // existing confirmation and Core close protocol, never a direct removal.
+     wrap.addEventListener('auxclick',event=>{
+       if(event.button!==1)return;
+       event.preventDefault();
+       requestCloseTab(fileName);
+     });
      const close=document.createElement('button');
      close.type='button';
      close.innerHTML='<svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
