@@ -548,3 +548,13 @@ def test_reference_dark_theme_matches_editor_gutter_and_debug_layers():
     assert ".workspace-mode .pynix-edit-layer .pynix-edit-gutter{background:#1e1f22!important" in html
     assert ".workspace-mode .pynix-edit-layer .pynix-debug-execution-line{background:rgba(183,156,88,.18)" in html
     assert ".workspace-mode .pynix-edit-keyword{color:#c49ddd!important}" in html
+
+
+def test_reference_toolbar_keeps_run_debug_visible_and_moves_secondary_actions():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "secondaryLabels=new Set(['Preview','Definition','References','Type','Restart'])" in js
+    assert "toolsMenuItems.appendChild(button);" in js
+    assert "window.addEventListener('load',()=>{" in js
+    assert "control.classList.add('pynix-debug-primary');" in js
