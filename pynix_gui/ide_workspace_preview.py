@@ -745,7 +745,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  dockToggle.type='button';
  dockToggle.className='pynix-tool-window-toggle';
  dockToggle.textContent='−';
- dockToggle.title='Hide bottom tool window';
+ dockToggle.title='Hide bottom tool window (Esc when focused)';
  dockToggle.setAttribute('aria-label','Hide bottom tool window');
  const dockRestore=document.createElement('button');
  dockRestore.type='button';
@@ -2438,6 +2438,7 @@ editorInput.addEventListener('keydown',event=>{
  explorerControl?.setAttribute('role','button');
  explorerControl?.setAttribute('tabindex','0');
  explorerControl?.setAttribute('aria-label','Toggle Project tool window');
+ explorerControl?.setAttribute('title','Project (⌘⌥1 / Ctrl+Alt+1)');
  explorerControl?.addEventListener('click',()=>setExplorerVisible(!explorerVisible));
  explorerControl?.addEventListener('keydown',e=>{
    if(e.key==='Enter'||e.key===' '){
