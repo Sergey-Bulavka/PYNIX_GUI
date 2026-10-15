@@ -241,8 +241,8 @@ def test_v515_rounded_surfaces_integrated_tabs_and_30px_status():
     assert "margin:0 5px 0 1px!important" in final
     assert "border:0!important;border-radius:9px!important" in final
     assert "margin:0!important" in final
-    assert "height:37px!important;min-height:37px!important;max-height:37px!important" in final
-    assert "align-items:flex-start!important;padding:5px 6px 3px!important" in final
+    assert "height:43px!important;min-height:43px!important;max-height:43px!important" in final
+    assert "align-items:flex-start!important;padding:5px 6px 9px!important" in final
     assert "height:29px!important;min-height:29px!important;max-height:29px!important" in final
     assert "border:0!important;border-radius:6px!important" in final
     assert "height:var(--terminal-height,315px)!important" in final
@@ -289,3 +289,28 @@ def test_v516_no_panel_strokes_and_wider_project_editor_gap():
     assert "border-top:0!important" in rule(".workspace-mode .bottom")
     assert "border-right:0!important" in rule(".workspace-mode .ide>.rail")
     assert "border-left:0!important" in rule(".workspace-mode .right-tools")
+
+
+def test_v517_tab_divider_real_gutter_and_centered_project_chevron():
+    import re
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    final = css.split("/* V5.15: measured three-surface New UI shell.", 1)[1]
+
+    def last_rule(selector):
+        rules = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", final)
+        assert rules, f"missing visual selector: {selector}"
+        return rules[-1]
+
+    tabs = last_rule(".workspace-mode .editor-tabs")
+    assert "height:43px!important" in tabs
+    assert "padding:5px 6px 9px!important" in tabs
+    assert "border-bottom:1px solid #34363c!important" in tabs
+    gutter = last_rule(".workspace-mode .pynix-edit-layer .pynix-edit-gutter")
+    assert "text-align:left!important" in gutter
+    assert "padding:15px 0 15px 11px!important" in gutter
+    readonly_gutter = last_rule(".workspace-mode .pynix-editor-gutter .pynix-gutter-line")
+    assert "text-align:left!important" in readonly_gutter
+    assert "align-items:center!important" in last_rule(
+        ".workspace-mode .workspace-toolbar .current-branch")
+    assert "width:14px!important;height:14px!important" in last_rule(
+        ".workspace-mode .workspace-toolbar .pynix-project-dropdown-chevron")
