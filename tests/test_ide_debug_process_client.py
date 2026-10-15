@@ -733,7 +733,7 @@ def test_project_toolbar_context_does_not_overlap_or_show_demo_read_only_label()
     root = Path(__file__).resolve().parents[1]
     source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
-    assert '"▾ main.pnx", "▾ " + escaped_name, 1' in source
+    assert '"▾ main.pnx", "▾ Current File", 1' in source
     assert '"⑂ main · 1 modified", escaped_name, 1' in source
     assert ".workspace-mode .workspace-toolbar>.current-branch{flex:0 1 185px!important" in css
     assert "text-overflow:ellipsis!important" in css
