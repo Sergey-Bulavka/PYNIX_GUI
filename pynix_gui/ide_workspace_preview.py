@@ -2109,6 +2109,9 @@ editorInput.addEventListener('keydown',event=>{
    return positions;
  }
  function renderCode(file) {
+   // Previous versions scrolled the outer code host; clear retained offsets.
+   code.scrollLeft=0;
+   code.scrollTop=0;
    code.replaceChildren();
    const viewport=document.createElement('div');
    viewport.className='pynix-editor-viewport';
