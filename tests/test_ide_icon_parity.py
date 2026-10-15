@@ -10,7 +10,7 @@ from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog, check_svg
 def test_bundled_icons_are_original_licensed_vectors():
     svg_root = BUNDLED_ICONS / "svg"
     icons = sorted(svg_root.rglob("*.svg"))
-    assert len(icons) >= 36, "The expanded licensed New UI vector pack must be present"
+    assert len(icons) >= 44, "The expanded licensed New UI vector pack must be present"
     for icon in icons:
         ok, reason = check_svg(icon, relative_path=icon.relative_to(svg_root))
         assert ok, f"{icon}: {reason}"
@@ -98,3 +98,38 @@ def test_jetbrains_icons_are_attached_only_to_existing_rail_and_run_controls():
     assert ".workspace-mode .rail .rail-item > .pynix-jetbrains-icon" in html
     assert ".workspace-mode .right-tools .pynix-jetbrains-icon" in html
     assert ".workspace-mode .workspace-toolbar .pynix-jetbrains-icon" in html
+
+
+def test_project_tree_icons_use_original_new_ui_nodes_and_file_types():
+    from pynix_gui.ide_icon_parity import DYNAMIC_ICON_BINDINGS, ICON_BRIDGE_SCRIPT
+
+    bindings = {selector: name for selector, name, _ in DYNAMIC_ICON_BINDINGS}
+    assert bindings[".workspace-mode .project-glyph.folder-icon"] == "nodes/folder"
+    assert bindings[".workspace-mode .project-glyph.file-json"] == "fileTypes/json"
+    assert bindings[".workspace-mode .project-glyph.file-markdown"] == "fileTypes/markdown"
+    assert bindings[".workspace-mode .project-glyph.file-text"] == "fileTypes/text"
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for icon in bindings.values():
+        for dark in (True, False):
+            resolved = catalog.resolve(icon, dark=dark)
+            assert resolved is not None
+            assert resolved.variant.startswith("dark" if dark else "light")
+    assert "new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true})" in ICON_BRIDGE_SCRIPT
+    assert "const tree=document.querySelector('.workspace-mode .tree')" in ICON_BRIDGE_SCRIPT
+    assert "if(!target||target.dataset.pynixIcon===item.name)return;" in ICON_BRIDGE_SCRIPT
+    assert "for(const target of tree.querySelectorAll(item.selector))activate(target,item)" in ICON_BRIDGE_SCRIPT
+    assert "new DOMParser()" in ICON_BRIDGE_SCRIPT
+    assert "old.replaceWith(icon)" in ICON_BRIDGE_SCRIPT
+    assert "target.addEventListener" not in ICON_BRIDGE_SCRIPT
+
+
+def test_dynamic_file_icons_are_serialized_without_raw_svg_script_injection():
+    document = "<html><body class='workspace-mode'></body></html>"
+    output = apply_new_ui_icons(document)
+    assert "fileTypes/json" in output
+    assert "fileTypes/markdown" in output
+    assert "fileTypes/text" in output
+    assert "nodes/folder" in output
+    assert "__DYNAMIC_ICON_DATA__" not in output
+    assert "<svg" not in output
+    assert "MutationObserver(synchronize)" in output
