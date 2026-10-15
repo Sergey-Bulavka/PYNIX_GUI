@@ -478,3 +478,16 @@ def test_workspace_status_strip_does_not_duplicate_sample_line_number(tmp_path):
     assert "<span>main · UTF-8" not in html
     assert "PYNIX · UTF-8 · Ln 7" not in html
     assert "pynix-cursor-status" in html
+
+
+def test_project_and_editor_tabs_expose_extensions_for_jetbrains_icons(tmp_path):
+    (tmp_path / "script.js").write_text("let a=1;", encoding="utf-8")
+    (tmp_path / "styles.css").write_text("body{}", encoding="utf-8")
+    (tmp_path / "config.toml").write_text("enabled=true", encoding="utf-8")
+    (tmp_path / "main.pnx").write_text("let main=1", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "glyph.dataset.extension=extension;" in js
+    assert "tabGlyph.dataset.extension=fileName.split('.').pop().toLowerCase();" in js
+    assert "const extension=entry.name.split('.').pop().toLowerCase();" in js
+    assert "glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+fileType));" in js
+    assert "label.prepend(tabGlyph);" in js
