@@ -2257,6 +2257,8 @@ editorInput.addEventListener('keydown',event=>{
      label.addEventListener('click',()=>show(fileName));
      label.addEventListener('keydown',event=>{
        if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;
+       // Modifier chords belong to the native IDE and must not be hijacked.
+       if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;
        const index=openTabs.indexOf(fileName);
        if(index<0||openTabs.length<2)return;
        event.preventDefault();
