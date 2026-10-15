@@ -371,3 +371,13 @@ def test_v425_project_results_are_positioned_below_search_and_escape_closes(tmp_
     assert "function closeProjectFind()" in js
     assert "e.stopImmediatePropagation();closeProjectFind()" in js
     assert "if(projectFindBar.hidden)return;" in js
+
+
+def test_editor_middle_click_uses_guarded_close_lifecycle(tmp_path):
+    (tmp_path / "example.pnx").write_text("print(1)", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "wrap.addEventListener('auxclick',event=>" in js
+    assert "if(event.button!==1)return;" in js
+    assert "requestCloseTab(fileName);" in js
+    assert "label.title=fileName;" in js
+    assert "label.setAttribute('aria-current',fileName===current?'page':'false')" in js
