@@ -121,3 +121,12 @@ def test_default_launch_never_silently_uses_demo_tree():
     assert 'project_path = args.project' in source
     assert 'raise SystemExit("No project selected.' in source
     assert 'session = WorkspaceSession(project_path)' in source
+
+
+def test_v4_tab_close_available_on_hover_and_keyboard_focus():
+    """Inactive tabs must offer a discoverable close control to mouse and keyboard users."""
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    assert ".pynix-editor-tab.active .pynix-editor-tab-close," in html
+    assert ".pynix-editor-tab:hover .pynix-editor-tab-close," in html
+    assert ".pynix-editor-tab:focus-within .pynix-editor-tab-close{" in html
+    assert "visibility:visible;pointer-events:auto;" in html
