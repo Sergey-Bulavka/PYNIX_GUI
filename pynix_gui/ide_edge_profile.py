@@ -159,8 +159,12 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.disabled=entry.state==='unavailable';
    button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
-   if(entry.svg){
-    const xml=new DOMParser().parseFromString(entry.svg,'image/svg+xml');
+   // PyCharm's Python Console uses the Python identity mark, not the
+   // generic Messages icon. Reuse the exact Python glyph from source tabs.
+   const visual=entry.label==='Python Console'?
+     (window.pynixPythonFileIcon?.()||entry.svg):entry.svg;
+   if(visual){
+    const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
      const node=document.importNode(xml.documentElement,true);
      node.setAttribute('aria-hidden','true');
