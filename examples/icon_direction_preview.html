@@ -541,6 +541,14 @@ body.workspace-mode>header{display:none!important}
 .workspace-mode .tree[hidden],.workspace-mode .tree-resizer[hidden]{display:none!important}
 .workspace-mode .rail-item:focus-visible{outline:2px solid #818dbe;outline-offset:1px}
 .workspace-mode .rail-item.active{background:#383b47;color:#dce2ec}
+
+/* Debugger inspection belongs to the dock: stable Frames and Variables panes. */
+.workspace-mode .pynix-debug-inspector-docked{display:grid!important;grid-template-columns:minmax(155px,35%) minmax(0,1fr);gap:0!important;margin-top:9px;border:1px solid #3c3d43;border-radius:6px;overflow:hidden}
+.workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-section{min-height:95px;min-width:0;margin:0!important;border:0!important;border-right:1px solid #3c3d43;border-radius:0!important}
+.workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-section:last-child{border-right:0!important}
+.workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-heading{font-size:10px;letter-spacing:.02em;background:#303137;border-bottom:1px solid #41434a;padding:6px 9px}
+.workspace-mode .pynix-debug-inspector-empty{color:#777b84;font-size:11px;padding:10px}
+@media(max-width:680px){.workspace-mode .pynix-debug-inspector-docked{grid-template-columns:1fr}.workspace-mode .pynix-debug-inspector-docked .pynix-debug-inspector-section{border-right:0!important;border-bottom:1px solid #3c3d43}}
 </style>
 <style>
 .workspace-mode .tree,
