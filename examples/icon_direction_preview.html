@@ -426,6 +426,21 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 .workspace-mode .bottom{min-height:24px;background:#2b2d30;border-top:1px solid #41434a;color:#b8bdc6;font-size:11px}
 .workspace-mode .pynix-debug-toolbar,.workspace-mode .pynix-tools-menu-items{background:#2b2d30;border-color:#4c4d55}
 @media(max-width:1050px){.workspace-mode .tree{width:210px}.workspace-mode .workspace-toolbar{gap:3px}}
+
+/* Reference editor metrics: neutral gutter, subdued current line, precise debug states. */
+.workspace-mode .pynix-edit-layer{background:#1e1f22!important}
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{background:#1e1f22!important;color:#777b83!important;border-right:1px solid #2a2c31!important;font-family:Menlo,ui-monospace,SFMono-Regular,monospace!important;font-size:12px!important;line-height:19px!important;font-weight:400!important}
+.workspace-mode .pynix-edit-layer .pynix-active-line{background:rgba(117,124,144,.12)!important;border:0!important;height:19px}
+.workspace-mode .pynix-edit-layer .pynix-debug-execution-line{background:rgba(183,156,88,.18)!important;border-left:3px solid #ad9459!important}
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight{color:#d0d2d8!important}
+.workspace-mode .pynix-edit-comment{color:#80868e!important}
+.workspace-mode .pynix-edit-keyword{color:#c49ddd!important}
+.workspace-mode .pynix-edit-string{color:#77b786!important}
+.workspace-mode .pynix-edit-number{color:#d1aa7d!important}
+.workspace-mode .pynix-edit-type{color:#7aaad6!important}
+.workspace-mode .pynix-edit-constant{color:#caa2c4!important}
+.workspace-mode .pynix-edit-layer .pynix-source-input{line-height:19px!important}
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight{line-height:19px!important}
 </style>
 <style>
 .workspace-mode .tree,
