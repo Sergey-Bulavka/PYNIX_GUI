@@ -521,7 +521,7 @@ def test_v5_debug_dock_is_session_scoped_and_console_tab_is_selected():
     css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
     assert "debugPanelBar.hidden=true;" in js
     assert "debugPanelBar.hidden=!debugActive;" in js
-    assert "debugTab.classList.add('pynix-active-tab');" in js
+    assert "debugTab?.click();" in js
     assert ".workspace-mode .pynix-debug-panel-toolbar[hidden]{display:none}" in css
     assert ".workspace-mode .editor-tabs button.active" in css
 
