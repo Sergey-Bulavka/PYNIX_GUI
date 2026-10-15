@@ -473,8 +473,9 @@ def test_v520_native_resize_retains_window_owned_content_and_drag_overlay():
     assert "view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)" in source
     assert "content_view.addSubview_(view)" in source
     assert "content_view.addSubview_(drag_area)" in source
-    assert "content_view.bounds().size.width" in source
-    assert "content_view.bounds().size.height" in source
+    assert "bounds = content_view.bounds().size" in source
+    assert "frame = title_drag_frame(bounds.width, bounds.height)" in source
+    assert "toolbar_drag_frame(bounds.width, bounds.height, area)" in source
     assert "window.setContentView_(container)" not in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
     assert "window.setMinSize_(AppKit.NSMakeSize(760, 520))" in source
