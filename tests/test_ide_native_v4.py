@@ -192,6 +192,8 @@ def test_v55_window_drag_and_separate_editor_gutter_contract():
 
 def test_v56_native_drag_is_handled_by_webview():
     source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "def hitTest_(self, point):" in source
+    assert "return self" in source
     assert "def mouseDown_(self, event):" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "super().mouseDown_(event)" in source
