@@ -596,6 +596,20 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){flex:0 1 140px!important;max-width:140px!important;min-width:70px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
 .workspace-mode .workspace-toolbar>.toolbar-spacer{flex:1 1 auto!important;min-width:8px!important}
 .workspace-mode .bottom>span:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
+
+/* V5 top shell: separate project/branch, center run controls, trailing tools. */
+.workspace-mode .workspace-toolbar{position:relative!important;gap:8px!important;padding:0 12px!important}
+.workspace-mode .workspace-toolbar>strong{flex:0 0 auto!important;margin-right:2px!important}
+.workspace-mode .workspace-toolbar>.current-branch{flex:0 1 160px!important;max-width:160px!important;color:#b7bac3!important;font-size:12px!important;margin-right:0!important}
+.workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){display:none!important}
+.workspace-mode .workspace-toolbar .pynix-run-mode{order:0!important;margin-left:0!important;max-width:145px!important}
+.workspace-mode .workspace-toolbar .pynix-run-action{order:1!important}
+.workspace-mode .workspace-toolbar .pynix-debug-primary{order:2!important}
+.workspace-mode .workspace-toolbar .pynix-debug-status{order:3!important}
+.workspace-mode .workspace-toolbar .pynix-tools-menu{order:9!important;margin-left:5px!important}
+.workspace-mode .workspace-toolbar>button:not(.pynix-run-action):not(.pynix-debug-primary):not(.pynix-debug-status){color:#9fa3ad!important}
+.workspace-mode .editor-tabs button.active{background:#2b2d30!important;border-radius:6px!important;font-weight:500!important;color:#e7e8ed!important}
+.workspace-mode .editor-tabs button:not(.active){font-weight:400!important}
 </style>
 <style>
 .workspace-mode .tree,
