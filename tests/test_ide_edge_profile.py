@@ -48,8 +48,7 @@ def test_native_preview_loads_roster_after_original_icon_bindings():
 def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
     style = EDGE_PROFILE_STYLE
     for expected in (
-        '.workspace-mode .ide>.rail>.rail-item:nth-child(-n+3)',
-        '.workspace-mode .ide>.rail>.rail-item:nth-child(n+4){display:none!important}',
+        '.workspace-mode .ide>.rail>.rail-item{display:none!important}',
         '.workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-top"]',
         '.workspace-mode .ide>.rail>.pynix-extra-tools[data-edge="left-bottom"]',
         '.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-top"]',
@@ -60,11 +59,14 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
     assert 'pointer-events:none' not in style
     assert "if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
     assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[index]?.click();" in EDGE_PROFILE_SCRIPT
+    assert "button.querySelectorAll('svg').forEach(svg=>svg.remove());" in EDGE_PROFILE_SCRIPT
 
 
 def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     from pynix_gui.ide_edge_profile import PINNED_TOOLS, EXISTING_ACTIONS
-    assert {"Run", "Debug", "Terminal", "Problems", "Notifications", "AI Assistant"} <= PINNED_TOOLS
+    assert {"Project","Search","Version Control",
+            "Run", "Debug", "Terminal", "Problems",
+            "Notifications", "AI Assistant"} <= PINNED_TOOLS
     assert "Commit" not in PINNED_TOOLS
     assert EXISTING_ACTIONS["Run"] == "rail:3"
     assert EXISTING_ACTIONS["Terminal"] == "rail:4"
