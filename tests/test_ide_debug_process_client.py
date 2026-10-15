@@ -536,3 +536,15 @@ def test_reference_workspace_has_compact_jetbrains_geometry_and_dark_chrome():
     assert ".workspace-mode .tree{width:var(--explorer-width,238px)" in template
     assert ".workspace-mode .editor-tabs{height:38px" in template
     assert ".workspace-mode .terminal-console{color:#cbd2e1;background:#1e1f25}" in template
+
+
+def test_reference_dark_theme_matches_editor_gutter_and_debug_layers():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "/* V5 reference shell: PyCharm New UI visual geometry" in html
+    assert "--ide-base:#1e1f22" in html
+    assert ".workspace-mode .rail{background:#2b2d30;width:42px" in html
+    assert ".workspace-mode .pynix-edit-layer .pynix-edit-gutter{background:#1e1f22!important" in html
+    assert ".workspace-mode .pynix-edit-layer .pynix-debug-execution-line{background:rgba(183,156,88,.18)" in html
+    assert ".workspace-mode .pynix-edit-keyword{color:#c49ddd!important}" in html
