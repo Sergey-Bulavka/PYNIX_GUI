@@ -617,3 +617,12 @@ def test_debug_inspection_actions_are_docked_below_editor_not_in_floating_menu()
     assert "for(const action of ['stack','variables']){" in js
     assert "if(control)debugPanelBar.appendChild(control);" in js
     assert "document.querySelector('.workspace-toolbar')?.append(debugMenu,debugInfoButton);" not in js
+
+
+def test_workspace_reference_uses_one_toolbar_and_inset_tool_windows():
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "body.workspace-mode>header{display:none!important}" in css
+    assert ".workspace-mode .layout{height:calc(100vh - 44px)!important}" in css
+    assert ".workspace-mode .workspace-toolbar{height:44px!important" in css
+    assert ".workspace-mode .integrated-terminal{border:0!important;border-radius:10px!important" in css
