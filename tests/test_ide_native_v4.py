@@ -196,7 +196,7 @@ def test_v56_native_drag_is_handled_by_webview():
     assert "return self" in source
     assert "def mouseDown_(self, event):" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
-    assert "super().mouseDown_(event)" in source
+    assert "objc.super(FirstClickWebView, self).mouseDown_(event)" in source
     assert "class TitlebarDragArea" not in source
 
 
@@ -221,3 +221,12 @@ def test_v58_side_rails_and_project_outline_share_shell_edges():
     assert "border:1px solid #34363c!important" in style
     assert "margin-left:43px!important;margin-right:39px!important" in style
     assert ".workspace-mode .right-tools{" in style
+
+
+def test_objc_subclass_uses_objc_super_not_python_super():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "import objc" in source
+    assert "objc.super(FirstClickWebView, self).hitTest_(point)" in source
+    assert "objc.super(FirstClickWebView, self).mouseDown_(event)" in source
+    assert "return super().hitTest_(point)" not in source
+    assert "super().mouseDown_(event)" not in source.replace("objc.super().mouseDown_(event)", "")
