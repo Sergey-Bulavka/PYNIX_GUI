@@ -73,7 +73,11 @@ def test_all_imported_buttons_already_exist_and_have_semantic_bindings():
     assert len(selectors) >= 5
     assert any(".rail > .rail-item:nth-child(1)" in selector for selector in selectors)
     assert any(".workspace-toolbar" in selector for selector in selectors)
-    assert not any("bottom" in selector for selector in selectors)
+    # The real project breadcrumb in the bottom status strip is a legitimate
+    # non-interactive icon target; all other controls retain their actions.
+    assert [sel for sel in selectors if ".bottom" in sel] == [
+        ".workspace-mode .bottom > span:nth-of-type(1)"
+    ]
 
 
 def test_jetbrains_icons_are_attached_only_to_existing_rail_and_run_controls():
