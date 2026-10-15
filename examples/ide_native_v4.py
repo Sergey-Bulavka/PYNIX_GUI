@@ -49,11 +49,14 @@ def main() -> None:
         AppKit.NSWindowStyleMaskTitled
         | AppKit.NSWindowStyleMaskClosable
         | AppKit.NSWindowStyleMaskMiniaturizable
-        | AppKit.NSWindowStyleMaskResizable,
+        | AppKit.NSWindowStyleMaskResizable
+        | AppKit.NSWindowStyleMaskFullSizeContentView,
         AppKit.NSBackingStoreBuffered,
         False,
     )
     window.setTitle_("PYNIX IDE")
+    window.setTitleVisibility_(AppKit.NSWindowTitleHidden)
+    window.setTitlebarAppearsTransparent_(True)
     window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
     view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
