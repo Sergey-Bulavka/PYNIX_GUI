@@ -90,3 +90,12 @@ def test_overflow_menu_escapes_scroll_clipping_and_stays_on_screen():
     assert "edge.startsWith('left')?" in EDGE_PROFILE_SCRIPT
     assert "Math.min(window.innerWidth-width-4,left)" in EDGE_PROFILE_SCRIPT
     assert "Math.min(window.innerHeight-height-4,bounds.top)" in EDGE_PROFILE_SCRIPT
+
+def test_python_console_and_project_reuse_one_python_file_identity():
+    from pynix_gui.ide_edge_profile import EDGE_PROFILE_SCRIPT
+    source = (Path(__file__).resolve().parents[1] /
+              "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "window.pynixPythonFileIcon=()=>fileIconMarkup('python');" in source
+    assert "entry.label==='Python Console'" in EDGE_PROFILE_SCRIPT
+    assert "window.pynixPythonFileIcon?.()" in EDGE_PROFILE_SCRIPT
+    assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
