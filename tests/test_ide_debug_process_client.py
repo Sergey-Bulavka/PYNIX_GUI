@@ -558,3 +558,13 @@ def test_reference_toolbar_keeps_run_debug_visible_and_moves_secondary_actions()
     assert "toolsMenuItems.appendChild(button);" in js
     assert "window.addEventListener('load',()=>{" in js
     assert "control.classList.add('pynix-debug-primary');" in js
+
+
+def test_reference_gutter_breakpoint_replaces_line_number():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "(marked.has(i+1)?'●':String(i+1).padStart(3,' '))" in source
+    assert ".pynix-edit-gutter{width:48px!important" in html
+    assert "padding-left:60px!important" in html
