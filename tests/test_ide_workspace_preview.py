@@ -393,3 +393,14 @@ def test_editor_tabs_support_focus_preserving_arrow_navigation(tmp_path):
     assert "if(event.altKey||event.ctrlKey||event.metaKey||event.shiftKey)return;" in js
     assert "const neighbor=openTabs[target];" in js
     assert "nextLabels[openTabs.indexOf(neighbor)]?.focus();" in js
+
+
+def test_readonly_editor_uses_separate_gutter_and_code_scroll(tmp_path):
+    (tmp_path / "long.pnx").write_text("x" * 300, encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "viewport.className='pynix-editor-viewport'" in js
+    assert "gutterPane.className='pynix-editor-gutter'" in js
+    assert "codeScroll.className='pynix-editor-scroll'" in js
+    assert "gutterInner.appendChild(gutter);" in js
+    assert "codeInner.appendChild(row);" in js
+    assert "gutterInner.style.transform='translateY('" in js
