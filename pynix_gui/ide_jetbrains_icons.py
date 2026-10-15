@@ -147,10 +147,28 @@ class JetBrainsIconCatalog:
 
     def __init__(self, directory: Path):
         self.directory = Path(directory).resolve()
-        manifest = json.loads((self.directory / "manifest.json").read_text(encoding="utf-8"))
-        if manifest.get("version") != MANIFEST_VERSION:
-            raise ValueError("Unsupported icon manifest version")
-        self.icons: dict[str, dict] = manifest["icons"]
+        manifest_path = self.directory / "manifest.json"
+        if manifest_path.is_file():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if manifest.get("version") != MANIFEST_VERSION:
+                raise ValueError("Unsupported icon manifest version")
+            self.icons: dict[str, dict] = manifest["icons"]
+        else:
+            # The small PYNIX bundled pack can be used immediately without a
+            # generated manifest. Imported full packs use the indexed manifest
+            # and avoid this (more expensive) one-time directory walk.
+            self.icons = {}
+            svg_root = self.directory / "svg"
+            for path in sorted(svg_root.rglob("*.svg")):
+                relative = path.relative_to(svg_root)
+                accepted, _ = check_svg(path, relative_path=relative)
+                if not accepted:
+                    continue
+                key, variant = _source_key(relative)
+                self.icons.setdefault(key, {})[variant] = {
+                    "path": (Path("svg") / relative).as_posix(),
+                    "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                }
 
     def __len__(self) -> int:
         return len(self.icons)
