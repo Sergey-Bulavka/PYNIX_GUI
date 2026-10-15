@@ -695,7 +695,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      debugToolbar.appendChild(control);
    }
  }
- document.querySelector('.workspace-toolbar')?.append(debugMenu,debugInfoButton);
+ document.querySelector('.workspace-toolbar')?.append(debugInfoButton);
  // During debugging keep execution controls in the dedicated lower tool window.
  const debugPanelBar=document.createElement('div');
  debugPanelBar.className='pynix-debug-panel-toolbar';
@@ -703,6 +703,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  debugPanelLabel.textContent='DEBUG';
  debugPanelBar.appendChild(debugPanelLabel);
  for(const action of ['continue','pause','stepInto','stepOver','stepOut','stop']){
+   const control=debugControls.get(action);
+   if(control){
+     control.title=control.textContent;
+     control.classList.add('pynix-debug-icon-action');
+     debugPanelBar.appendChild(control);
+   }
+ }
+ // Inspection actions belong to the debugger tool window, never a popup over code.
+ for(const action of ['stack','variables']){
    const control=debugControls.get(action);
    if(control)debugPanelBar.appendChild(control);
  }
