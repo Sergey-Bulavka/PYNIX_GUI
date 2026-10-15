@@ -264,3 +264,19 @@ def test_bottom_dock_icons_bind_after_dynamic_controls_mount():
     assert "general/hide" in output
     assert "toolwindows/messages" in output
     assert "target.addEventListener" not in ICON_BRIDGE_SCRIPT
+
+
+def test_perimeter_icon_geometry_has_consistent_scales_without_click_overlays():
+    from pynix_gui.ide_icon_parity import ICON_STATE_STYLE
+    style = ICON_STATE_STYLE
+    for selector in (
+        ".workspace-mode .rail > .rail-item > .pynix-jetbrains-icon",
+        ".workspace-mode .right-tools > button > .pynix-jetbrains-icon",
+    ):
+        assert selector in style
+    assert "width:20px!important;height:20px!important" in style
+    assert "width:16px!important;height:16px!important" in style
+    assert ".workspace-mode .pynix-tool-window-toggle:has(>.pynix-jetbrains-icon)" in style
+    assert ".workspace-mode .pynix-tool-window-restore:has(>.pynix-jetbrains-icon)" in style
+    assert "pointer-events:none" not in style
+    assert "position:absolute" not in style
