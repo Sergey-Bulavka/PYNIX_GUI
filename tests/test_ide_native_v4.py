@@ -201,3 +201,11 @@ def test_v56_outer_editor_scroll_is_disabled_and_terminal_right_edge_aligned():
     style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
     assert "overflow-x:clip!important;overflow-y:clip!important" in style
     assert ".workspace-mode .integrated-terminal{margin-right:4px!important}" in style
+
+
+def test_editable_editor_gutter_occludes_scrolling_highlight_layer():
+    style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert ".workspace-mode .pynix-edit-layer .pynix-edit-gutter{" in style
+    assert "z-index:12!important;background:#1e1f22!important" in style
+    assert ".workspace-mode .pynix-edit-layer .pynix-source-input{" in style
+    assert "z-index:3!important;left:0!important;background:transparent!important" in style
