@@ -39,6 +39,12 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
+    class TitlebarDragArea(AppKit.NSView):
+        """Native empty titlebar region: WebKit CSS drag is unsupported on macOS."""
+
+        def mouseDown_(self, event):
+            self.window().performWindowDragWithEvent_(event)
+
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
     app.setDelegate_(delegate)
@@ -62,6 +68,13 @@ def main() -> None:
 
     view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
+    # Dedicated blank titlebar area: above WebKit, away from window buttons
+    # and from interactive project / run controls. Anchored to the top edge.
+    drag_area = TitlebarDragArea.alloc().initWithFrame_(
+        AppKit.NSMakeRect(300, window.contentView().bounds().size.height - 43, 340, 43)
+    )
+    drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
+    window.contentView().addSubview_(drag_area)
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
