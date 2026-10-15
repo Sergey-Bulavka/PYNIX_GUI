@@ -190,14 +190,12 @@ def test_v55_window_drag_and_separate_editor_gutter_contract():
     assert ".workspace-mode .integrated-terminal{margin-left:43px!important}" in style
 
 
-def test_v56_native_drag_is_handled_by_webview():
+def test_v56_native_window_drag_uses_appkit_background():
     source = Path(app.__file__).read_text(encoding="utf-8")
-    assert "def hitTest_(self, point):" in source
-    assert "return self" in source
-    assert "def mouseDown_(self, event):" in source
-    assert "self.window().performWindowDragWithEvent_(event)" in source
-    assert "objc.super(FirstClickWebView, self).mouseDown_(event)" in source
+    assert "def mouseDownCanMoveWindow(self):" in source
+    assert "window.setMovableByWindowBackground_(True)" in source
     assert "class TitlebarDragArea" not in source
+    assert "def hitTest_(self, point):" not in source
 
 
 def test_v56_outer_editor_scroll_is_disabled_and_terminal_right_edge_aligned():
@@ -223,10 +221,16 @@ def test_v58_side_rails_and_project_outline_share_shell_edges():
     assert ".workspace-mode .right-tools{" in style
 
 
-def test_objc_subclass_uses_objc_super_not_python_super():
+def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     source = Path(app.__file__).read_text(encoding="utf-8")
-    assert "import objc" in source
-    assert "objc.super(FirstClickWebView, self).hitTest_(point)" in source
-    assert "objc.super(FirstClickWebView, self).mouseDown_(event)" in source
-    assert "return super().hitTest_(point)" not in source
-    assert "super().mouseDown_(event)" not in source.replace("objc.super().mouseDown_(event)", "")
+    assert "class FirstClickWebView(WebKit.WKWebView):" in source
+    assert "def acceptsFirstMouse_(self, event):" in source
+    assert "def mouseDownCanMoveWindow(self):" in source
+    assert "def mouseDown_(self, event):" not in source
+
+
+def test_v59_tab_attachment_and_status_height():
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    assert "height:38px!important;min-height:38px!important;max-height:38px!important" in css
+    assert "height:28px!important;min-height:28px!important" in css
+    assert ".workspace-mode .ide>.rail{bottom:28px!important}" in css
