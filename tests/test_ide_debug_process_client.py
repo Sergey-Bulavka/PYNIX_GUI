@@ -626,3 +626,12 @@ def test_workspace_reference_uses_one_toolbar_and_inset_tool_windows():
     assert ".workspace-mode .layout{height:calc(100vh - 44px)!important}" in css
     assert ".workspace-mode .workspace-toolbar{height:44px!important" in css
     assert ".workspace-mode .integrated-terminal{border:0!important;border-radius:10px!important" in css
+
+
+def test_compact_toolbar_uses_vector_debug_and_run_actions():
+    from pathlib import Path
+    css = (Path(__file__).resolve().parents[1] / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".workspace-mode .workspace-toolbar .pynix-debug-primary::before" in css
+    assert "data:image/svg+xml" in css
+    assert ".workspace-mode .workspace-toolbar .pynix-run-action::before" in css
+    assert "button:focus-visible" in css
