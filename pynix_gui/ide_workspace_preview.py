@@ -722,6 +722,25 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  // tab event handlers in place; this controller only owns dock visibility.
  const terminalResizer=document.querySelector('.terminal-resizer');
  const toolTabs=terminal?.querySelector('.terminal-tabs');
+ // Each tool keeps its own detached DOM snapshot when another tool is selected.
+ // Moving nodes (rather than serializing HTML) retains scroll positions and state.
+ const toolConsole=terminal?.querySelector('.terminal-console');
+ const toolViews=new Map();
+ let selectedTool='TERMINAL';
+ function saveToolView(name){
+   if(!toolConsole)return;
+   const snapshot=document.createDocumentFragment();
+   while(toolConsole.firstChild)snapshot.appendChild(toolConsole.firstChild);
+   toolViews.set(name,snapshot);
+ }
+ function activateToolView(name){
+   if(!toolConsole||name===selectedTool)return;
+   saveToolView(selectedTool);
+   selectedTool=name;
+   const saved=toolViews.get(name);
+   if(saved)toolConsole.appendChild(saved);
+ }
+
  const terminalSession=document.createElement('div');
  terminalSession.className='pynix-terminal-session';
  terminalSession.hidden=true;
@@ -805,6 +824,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      child.classList.remove('pynix-active-tab');
    tab.classList.add('pynix-active-tab');
    if(['TERMINAL','PROBLEMS','OUTPUT','DEBUG CONSOLE'].includes(tab.textContent.trim())){
+     activateToolView(tab.textContent.trim());
      setToolWindowVisible(true);
      for(const child of toolTabs.children){
        if(child.getAttribute('role')==='tab')
