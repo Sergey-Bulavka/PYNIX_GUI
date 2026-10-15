@@ -259,7 +259,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const count=value.split('\\n').length;
    const marked=breakpoints.get(current)||new Set();
    gutter.textContent=Array.from({length:count},(_,i)=>
-     (marked.has(i+1)?'● ':'  ')+String(i+1)).join('\\n');
+     (marked.has(i+1)?'●':String(i+1).padStart(3,' '))).join('\\n');
    coloredSource.scrollTop=editorInput.scrollTop;
    coloredSource.scrollLeft=editorInput.scrollLeft;
    gutter.scrollTop=editorInput.scrollTop;
@@ -278,7 +278,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    gutter.textContent=Array.from({length:count},(_,i)=>
      (marked.has(i+1)?'● ':'  ')+String(i+1)).join('\\n');
  }
- gutter.title='Click a line number to toggle a breakpoint (experimental)';
+ gutter.title='Click line numbers to toggle breakpoints';
  gutter.style.cursor='pointer';
  gutter.addEventListener('click',event=>{
    if(!current||debugBusy||debugActive)return;
