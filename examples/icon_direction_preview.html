@@ -129,7 +129,9 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
  height:22px;border:0;border-radius:4px;
  visibility:hidden;pointer-events:none;color:#afbed0;
 }
-.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-close{
+.workspace-mode .editor-tabs .pynix-editor-tab.active .pynix-editor-tab-close,
+.workspace-mode .editor-tabs .pynix-editor-tab:hover .pynix-editor-tab-close,
+.workspace-mode .editor-tabs .pynix-editor-tab:focus-within .pynix-editor-tab-close{
  visibility:visible;pointer-events:auto;
 }
 .workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close:hover{
