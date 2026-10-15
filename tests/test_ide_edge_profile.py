@@ -68,3 +68,11 @@ def test_more_tool_windows_tracks_expansion_and_closes_on_escape():
     assert "popover.hidden=!open;" in script
     assert "if(event.key==='Escape'){setOpen(false);more.focus();}" in script
     assert "if(!container.contains(event.target))setOpen(false);" in script
+
+
+def test_overflow_menu_escapes_scroll_clipping_and_stays_on_screen():
+    assert "position:fixed;z-index:600" in EDGE_PROFILE_STYLE
+    assert "const bounds=more.getBoundingClientRect();" in EDGE_PROFILE_SCRIPT
+    assert "edge.startsWith('left')?" in EDGE_PROFILE_SCRIPT
+    assert "Math.min(window.innerWidth-width-4,left)" in EDGE_PROFILE_SCRIPT
+    assert "Math.min(window.innerHeight-height-4,bounds.top)" in EDGE_PROFILE_SCRIPT
