@@ -936,14 +936,20 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    header.textContent='PYNIX Debug (experimental) · '+(state||event||'unknown');
    panel.appendChild(header);
    const inspector=document.createElement('div');
-   inspector.className='pynix-debug-inspector';
+   inspector.className='pynix-debug-inspector pynix-debug-inspector-docked';
    const renderSection=(heading,items,format)=>{
-     if(!Array.isArray(items)||!items.length)return;
+     if(!Array.isArray(items))items=[];
      const section=document.createElement('section');
      section.className='pynix-debug-inspector-section';
      const title=document.createElement('div');title.textContent=heading;
      title.className='pynix-debug-inspector-heading';
      section.appendChild(title);
+     if(!items.length){
+       const empty=document.createElement('div');
+       empty.className='pynix-debug-inspector-empty';
+       empty.textContent='No data available';
+       section.appendChild(empty);
+     }
      for(const item of items.slice(0,100)){
        const row=document.createElement('div');
        row.textContent=format(item);
