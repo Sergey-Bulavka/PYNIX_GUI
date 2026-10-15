@@ -92,6 +92,37 @@ def title_drag_frame(bounds_width: float, bounds_height: float):
     return (92, bounds_height - 35, 62, 24)
 
 
+def corner_resize_geometry(bounds_width: float, bounds_height: float):
+    """Bottom-right 22pt native hit target, independent of WebKit loading."""
+    return (max(0.0, float(bounds_width) - 24.0), 2.0, 22.0, 22.0)
+
+
+def resized_window_frame(original, mouse_start, mouse_now, minimum=(760, 520)):
+    """Resize from bottom-right, keeping the opposite (top-left) corner fixed.
+
+    NSEvent.mouseLocation uses global screen coordinates; independent of
+    NSView frame changes, pointer capture, the current screen and window scale.
+    """
+    import math
+
+    try:
+        x, y, width, height = (float(value) for value in original)
+        start_x, start_y = (float(value) for value in mouse_start)
+        now_x, now_y = (float(value) for value in mouse_now)
+        min_width, min_height = (float(value) for value in minimum)
+    except (ValueError, TypeError, OverflowError):
+        return None
+    if not all(math.isfinite(v) for v in
+               (x, y, width, height, start_x, start_y, now_x, now_y,
+                min_width, min_height)):
+        return None
+    if min_width <= 0 or min_height <= 0:
+        return None
+    new_width = max(min_width, width + now_x - start_x)
+    new_height = max(min_height, height + start_y - now_y)
+    return (x, y + height - new_height, new_width, new_height)
+
+
 def main() -> None:
     if sys.platform != "darwin":
         raise SystemExit("V4 native review requires macOS")
@@ -134,6 +165,53 @@ def main() -> None:
         def mouseDown_(self, event):
             self.window().performWindowDragWithEvent_(event)
 
+    resize_state = {"frame": None, "mouse": None}
+
+    class CornerResizeView(AppKit.NSView):
+        """An always-present native bottom-right resize handle.
+
+        This bypasses intermittent window-border hit testing in a WKWebView
+        hosted under NSWindowStyleMaskFullSizeContentView.
+        """
+
+        def acceptsFirstMouse_(self, event):
+            return True
+
+        def mouseDown_(self, event):
+            window = self.window()
+            if window is None:
+                return
+            frame = window.frame()
+            mouse = AppKit.NSEvent.mouseLocation()
+            resize_state["frame"] = (
+                frame.origin.x, frame.origin.y, frame.size.width, frame.size.height
+            )
+            resize_state["mouse"] = (mouse.x, mouse.y)
+
+        def mouseDragged_(self, event):
+            if resize_state["frame"] is None:
+                return
+            mouse = AppKit.NSEvent.mouseLocation()
+            frame = resized_window_frame(
+                resize_state["frame"], resize_state["mouse"], (mouse.x, mouse.y)
+            )
+            if frame is not None:
+                self.window().setFrame_display_(AppKit.NSMakeRect(*frame), True)
+
+        def mouseUp_(self, event):
+            resize_state["frame"] = None
+            resize_state["mouse"] = None
+
+        def drawRect_(self, dirty_rect):
+            # Subtle diagonal grip inside the bottom-right corner.
+            AppKit.NSColor.colorWithCalibratedWhite_alpha_(0.6, 0.9).setStroke()
+            for offset in (0.0, 5.0, 10.0):
+                line = AppKit.NSBezierPath.bezierPath()
+                line.setLineWidth_(1.0)
+                line.moveToPoint_(AppKit.NSMakePoint(10.0 + offset, 3.0))
+                line.lineToPoint_(AppKit.NSMakePoint(19.0, 12.0 - offset))
+                line.stroke()
+
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
     app.setDelegate_(delegate)
@@ -170,6 +248,17 @@ def main() -> None:
     title_drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
     title_drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
     content_view.addSubview_(title_drag_area)  # Always active over static PYNIX title.
+    # A dedicated grip guarantees resizing without relying on hidden AppKit
+    # edge hit targets or WebKit's readiness during initial window startup.
+    corner_resize = CornerResizeView.alloc().initWithFrame_(
+        AppKit.NSMakeRect(*corner_resize_geometry(
+            content_view.bounds().size.width, content_view.bounds().size.height
+        ))
+    )
+    corner_resize.setAutoresizingMask_(
+        AppKit.NSViewMinXMargin | AppKit.NSViewMaxYMargin
+    )
+    content_view.addSubview_(corner_resize)
     drag_geometry = {"area": None}
 
     def refresh_native_drag_areas():
