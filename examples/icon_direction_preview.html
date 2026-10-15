@@ -680,6 +680,20 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .terminal-tabs{height:31px!important;min-height:31px!important}
 .workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){height:31px!important;min-height:31px!important}
 .workspace-mode .bottom{height:22px!important;min-height:22px!important;flex:0 0 22px!important}
+
+/* V5.3: NSWindow full-size content view places traffic lights inside chrome.
+   Reserve their macOS titlebar region instead of rendering a second title row. */
+.workspace-mode .workspace-toolbar{
+  padding-left:86px!important;
+  min-height:44px!important;height:44px!important;flex:0 0 44px!important;
+  -webkit-app-region:drag;
+}
+.workspace-mode .workspace-toolbar button,
+.workspace-mode .workspace-toolbar select,
+.workspace-mode .workspace-toolbar input{
+  -webkit-app-region:no-drag;
+}
+.workspace-mode .layout{height:calc(100vh - 44px)!important}
 </style>
 <style>
 .workspace-mode .tree,
