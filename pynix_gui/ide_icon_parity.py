@@ -108,6 +108,30 @@ ICON_STATE_STYLE = """<style id="pynix-new-ui-icon-states">
  outline:2px solid #80b8f4!important;
  outline-offset:-2px!important;
 }
+/* Consistent 20px side-window icons and compact 16px action icons. */
+.workspace-mode .rail > .rail-item,
+.workspace-mode .right-tools > button{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ box-sizing:border-box!important;
+}
+.workspace-mode .rail > .rail-item > .pynix-jetbrains-icon,
+.workspace-mode .right-tools > button > .pynix-jetbrains-icon{
+ display:block!important;width:20px!important;height:20px!important;
+ flex:0 0 20px!important;margin:0!important;
+}
+.workspace-mode .workspace-toolbar > button > .pynix-jetbrains-icon,
+.workspace-mode .pynix-tool-window-toggle > .pynix-jetbrains-icon,
+.workspace-mode .pynix-tool-window-restore > .pynix-jetbrains-icon{
+ display:block!important;width:16px!important;height:16px!important;
+ flex:0 0 16px!important;
+}
+.workspace-mode .pynix-tool-window-toggle:has(>.pynix-jetbrains-icon){
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ min-width:28px!important;min-height:26px!important;
+}
+.workspace-mode .pynix-tool-window-restore:has(>.pynix-jetbrains-icon){
+ display:inline-flex!important;align-items:center!important;gap:5px!important;
+}
 @media (prefers-reduced-motion:reduce){
  .workspace-mode .rail > .rail-item,
  .workspace-mode .right-tools > button,
