@@ -485,6 +485,16 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 /* One selected tool tab only; the static Terminal <strong> is not always active. */
 .workspace-mode .terminal-tabs>strong:not(.pynix-active-tab){border-bottom-color:transparent!important;color:#a7aab4!important;font-weight:500!important}
 .workspace-mode .terminal-tabs>.pynix-active-tab{border-bottom-color:#8d93d5!important;color:#e4e5ea!important;font-weight:600!important}
+
+/* PyCharm-like in-dock debugger controls: no floating inspection palette. */
+.workspace-mode .pynix-debug-panel-toolbar{order:1;gap:3px;height:34px;min-height:34px;padding:2px 11px;background:#25262b;border-bottom:1px solid #3a3c42}
+.workspace-mode .pynix-debug-panel-toolbar>strong{font-size:10px;color:#aeb2bc;min-width:52px;letter-spacing:.02em}
+.workspace-mode .pynix-debug-panel-toolbar>button{display:inline-flex;align-items:center;justify-content:center;min-width:32px;height:27px;border-radius:5px;padding:3px 8px;font-size:11px;color:#bec3cc}
+.workspace-mode .pynix-debug-panel-toolbar>button:hover:not(:disabled){background:#393c45}
+.workspace-mode .pynix-debug-panel-toolbar>button:disabled{opacity:.38}
+.workspace-mode .pynix-debug-panel-toolbar>button:nth-last-child(-n+2){margin-left:5px;border-left:1px solid #3c3d45}
+.workspace-mode .terminal-tabs{order:0}
+.workspace-mode .terminal-console{order:2}
 </style>
 <style>
 .workspace-mode .tree,
