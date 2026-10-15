@@ -2250,6 +2250,7 @@ editorInput.addEventListener('keydown',event=>{
      wrap.className='pynix-editor-tab'+(fileName===current?' active':'');
      const label=document.createElement('button');
      label.type='button';
+     label.className='pynix-editor-tab-label';
      label.textContent=fileName.split('/').pop()+(file?.dirty?' *':'');
      label.title=fileName;
      label.setAttribute('aria-current',fileName===current?'page':'false');
