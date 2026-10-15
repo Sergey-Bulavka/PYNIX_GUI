@@ -747,6 +747,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  debugPanelBar.hidden=true;
  refreshDebugControls();
  window.pynixDebugResult=packet=>{
+   setToolWindowVisible(true);
    debugBusy=false;
    const event=packet?.event||'';
    const command=packet?.command||'';
@@ -956,6 +957,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const tabs=document.querySelector('.terminal-tabs');
    const consolePanel=document.querySelector('.terminal-console');
    const consoleTab=[...tabs?.children||[]].find(item=>item.textContent.trim()==='TERMINAL');
+   setToolWindowVisible(true);
    consoleTab?.click();
    if(!consolePanel)return;
    if(state==='running')consolePanel.textContent='Running PYNIX project…';
