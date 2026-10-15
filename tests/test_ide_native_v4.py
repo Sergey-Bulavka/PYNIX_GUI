@@ -238,7 +238,7 @@ def test_v515_rounded_surfaces_integrated_tabs_and_30px_status():
     assert "/* V5.14 structural chrome:" not in final
     assert ".workspace-mode .ide{" in final
     assert "background:#2b2d30!important;padding-left:40px!important;padding-right:35px!important" in final
-    assert "margin:0 3px 4px 1px!important" in final
+    assert "margin:0 1px 4px 1px!important" in final
     assert "border:0!important;border-radius:9px!important" in final
     assert "margin:0 0 4px 0!important" in final
     assert "height:37px!important;min-height:37px!important;max-height:37px!important" in final
