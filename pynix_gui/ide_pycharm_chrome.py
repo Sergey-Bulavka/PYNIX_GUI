@@ -22,7 +22,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .workspace-toolbar>button[title="Visual preview"]{display:none!important}
 .workspace-mode .workspace-toolbar .pynix-pycharm-center{
- position:absolute;left:54%;top:3px;transform:translateX(-50%);
+ position:absolute;left:70%;top:3px;transform:translateX(-50%);
  height:37px;display:flex;align-items:center;gap:8px;
  white-space:nowrap;z-index:5
 }
@@ -168,6 +168,8 @@ CHROME_SCRIPT = r"""<script>
    const items=tools.querySelector('.pynix-tools-menu-items');
    const save=toolbar.querySelector('.pynix-save-action');
    if(items&&save)items.prepend(save);
+   const debugStatus=toolbar.querySelector('.pynix-debug-status');
+   if(items&&debugStatus)items.appendChild(debugStatus);
   }
   right.append(
    toolButton('Search in project','general/search',()=>{
