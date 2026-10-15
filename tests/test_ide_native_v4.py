@@ -190,11 +190,12 @@ def test_v55_window_drag_and_separate_editor_gutter_contract():
     assert ".workspace-mode .integrated-terminal{margin-left:43px!important}" in style
 
 
-def test_v56_native_drag_surface_is_installed_after_webview():
+def test_v56_native_drag_is_handled_by_webview():
     source = Path(app.__file__).read_text(encoding="utf-8")
-    assert "class TitlebarDragArea(AppKit.NSView):" in source
-    assert "performWindowDragWithEvent_(event)" in source
-    assert source.index("window.setContentView_(view)") < source.index("window.contentView().addSubview_(drag_area)")
+    assert "def mouseDown_(self, event):" in source
+    assert "self.window().performWindowDragWithEvent_(event)" in source
+    assert "super().mouseDown_(event)" in source
+    assert "class TitlebarDragArea" not in source
 
 
 def test_v56_outer_editor_scroll_is_disabled_and_terminal_right_edge_aligned():
@@ -209,3 +210,12 @@ def test_editable_editor_gutter_occludes_scrolling_highlight_layer():
     assert "z-index:12!important;background:#1e1f22!important" in style
     assert ".workspace-mode .pynix-edit-layer .pynix-source-input{" in style
     assert "z-index:3!important;left:0!important;background:transparent!important" in style
+
+
+def test_v58_side_rails_and_project_outline_share_shell_edges():
+    style=app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>",1)[0]
+    assert ".workspace-mode .ide>.rail{" in style
+    assert "top:0!important;bottom:22px!important" in style
+    assert "border:1px solid #34363c!important" in style
+    assert "margin-left:43px!important;margin-right:39px!important" in style
+    assert ".workspace-mode .right-tools{" in style
