@@ -834,6 +834,30 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .pynix-edit-layer .pynix-source-input{
  padding-left:77px!important;
 }
+
+/* V5.8: fix rail anchoring and retain the tool-window outline. */
+.workspace-mode .layout>.section:first-child>.card:first-child{position:relative!important}
+.workspace-mode .ide>.rail{
+ top:0!important;bottom:22px!important;padding-top:4px!important;
+ box-sizing:border-box!important;background:#2b2d30!important;
+ border-right:1px solid #393b42!important
+}
+.workspace-mode .tree{
+ border:1px solid #34363c!important;border-radius:8px!important;
+ box-sizing:border-box!important
+}
+.workspace-mode .tree-resizer{background:#2b2d30!important}
+.workspace-mode .integrated-terminal{
+ margin-left:43px!important;margin-right:39px!important;
+ border:1px solid #34363c!important;border-radius:8px!important;
+ box-sizing:border-box!important
+}
+.workspace-mode .terminal-resizer{margin-left:40px!important;margin-right:36px!important}
+.workspace-mode .right-tools{
+ position:absolute!important;right:0!important;top:0!important;bottom:22px!important;
+ height:auto!important;box-sizing:border-box!important;z-index:4!important
+}
+.workspace-mode .ide{padding-right:35px!important}
 </style>
 <style>
 .workspace-mode .tree,
