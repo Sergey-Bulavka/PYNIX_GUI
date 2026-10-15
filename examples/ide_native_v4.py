@@ -35,6 +35,17 @@ TOOLBAR_DRAG_SCRIPT = """<script>
     const area = {x:region.left+12, y:bar.top+10,
                   width:Math.max(0,region.width-24),
                   height:Math.max(0,bar.height-18)};
+    // The PyCharm-style Run/Debug cluster is visually centered above the flex
+    // spacer. Never put an AppKit drag overlay on top of those live controls.
+    for (const selector of ['.pynix-pycharm-center','.pynix-pycharm-right']) {
+      const control = toolbar.querySelector(selector);
+      if (!control) continue;
+      const occupied = control.getBoundingClientRect();
+      const areaRight = area.x + area.width;
+      if (occupied.left < areaRight && occupied.right > area.x) {
+        area.width = Math.max(0, occupied.left - area.x - 8);
+      }
+    }
     const encoded = JSON.stringify(area);
     if(encoded===last)return;
     last=encoded;
