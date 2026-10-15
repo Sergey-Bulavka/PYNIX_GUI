@@ -682,3 +682,13 @@ def test_keyboard_shortcuts_for_project_and_bottom_tool_windows():
     assert "setToolWindowVisible(terminal?.classList.contains('pynix-tool-window-collapsed'));" in source
     assert "event.key==='Escape'" in source
     assert "const inDock=active&&(terminal?.contains(active)||active===dockRestore);" in source
+
+
+def test_tool_tabs_keyboard_activation_and_aria_selection():
+    from pathlib import Path
+    source = (Path(__file__).resolve().parents[1] / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "tab.setAttribute('role','tab');" in source
+    assert "tab.setAttribute('tabindex','0');" in source
+    assert "tab.click();" in source
+    assert "child.setAttribute('aria-selected',String(child===tab));" in source
+    assert "debugPanelBar.hidden=tab.textContent.trim()!=='DEBUG CONSOLE'||!debugActive;" in source
