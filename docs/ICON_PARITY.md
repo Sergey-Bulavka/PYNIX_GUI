@@ -45,6 +45,15 @@ The command does not download files or bundle them by itself. It does not
 claim to include icons from proprietary PyCharm modules. Do not blindly import
 the entire product asset directory: files are screened individually.
 
+Generate a **searchable visual index of every imported icon** and review
+light/dark variants directly in a local browser:
+
+```bash
+./.venv/bin/python -m examples.icon_catalog_gallery \
+  ./pynix_gui/assets/jetbrains_new_ui
+open ./pynix_gui/assets/jetbrains_new_ui/gallery.html
+```
+
 For an imported collection use:
 
 ```python
