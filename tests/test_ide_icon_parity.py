@@ -169,3 +169,24 @@ def test_original_icon_source_for_status_and_tabs_is_available():
                 "fileTypes/markdown", "fileTypes/text"):
         assert catalog.resolve(key, dark=True) is not None
         assert catalog.resolve(key, dark=False) is not None
+
+
+def test_extended_file_extension_catalog_bindings_are_correct_and_licensed():
+    from pynix_gui.ide_icon_parity import DYNAMIC_ICON_BINDINGS, EXTENSION_ICON_NAMES
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    role_by_extension = dict(EXTENSION_ICON_NAMES)
+    expected = {
+        "js": "fileTypes/javaScript", "ts": "fileTypes/typeScript",
+        "css": "fileTypes/css", "html": "fileTypes/html",
+        "xml": "fileTypes/xml", "yaml": "fileTypes/yaml",
+        "toml": "fileTypes/toml", "sh": "fileTypes/shell",
+        "svg": "fileTypes/image", "zip": "fileTypes/archive",
+    }
+    for extension, name in expected.items():
+        assert role_by_extension[extension] == name
+    for extension, name in EXTENSION_ICON_NAMES:
+        assert catalog.resolve(name, dark=True) is not None, (extension, name)
+        for host in (".project-glyph", ".pynix-tab-file-glyph"):
+            selector = f".workspace-mode {host}[data-extension='{extension}']"
+            assert (selector, name, False) in DYNAMIC_ICON_BINDINGS
+    assert len({key for key, _, _ in DYNAMIC_ICON_BINDINGS}) == len(DYNAMIC_ICON_BINDINGS)
