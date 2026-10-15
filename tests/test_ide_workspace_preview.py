@@ -418,3 +418,13 @@ def test_project_dropdown_uses_crisp_svg_instead_of_font_chevron(tmp_path):
     assert 'stroke-linecap="round" stroke-linejoin="round"' in output
     assert "⌄ " not in output
     assert 'feature/icon-system-v4' not in output
+
+
+def test_scrollable_editor_viewport_keeps_custom_caret_aligned_with_fixed_gutter(tmp_path):
+    (tmp_path / "wide.pnx").write_text("print(" + "x"*250 + ")", encoding="utf-8")
+    js=workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "editorInput.offsetLeft+parseFloat(metrics.paddingLeft)" in js
+    assert "editorInput.scrollLeft" in js
+    assert "coloredSource.scrollLeft=editorInput.scrollLeft" in js
+    assert "gutter.scrollTop=editorInput.scrollTop" in js
+    assert "codeScroll.addEventListener('scroll'" in js
