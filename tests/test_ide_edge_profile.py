@@ -43,3 +43,19 @@ def test_native_preview_loads_roster_after_original_icon_bindings():
     assert source.index("document = apply_new_ui_icons(document)") < source.index(
         "document = apply_edge_profile(document)"
     )
+
+
+def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
+    style = EDGE_PROFILE_STYLE
+    for expected in (
+        '.workspace-mode .rail>.rail-item:nth-child(-n+4){order:0!important',
+        '.workspace-mode .rail>.pynix-extra-tools[data-edge="left-top"]{order:1!important',
+        '.workspace-mode .rail>.pynix-extra-tools[data-edge="left-bottom"]{order:2!important',
+        '.workspace-mode .rail>.rail-item:nth-child(n+5){order:3!important',
+        '.workspace-mode .right-tools>.pynix-extra-tools[data-edge="right-bottom"]{order:2!important',
+        'margin-top:auto!important',
+        'overflow-y:auto!important',
+    ):
+        assert expected in style
+    assert 'pointer-events:none' not in style
+    assert 'display:none!important' not in style
