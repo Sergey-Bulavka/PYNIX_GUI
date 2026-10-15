@@ -694,6 +694,72 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
   -webkit-app-region:no-drag;
 }
 .workspace-mode .layout{height:calc(100vh - 44px)!important}
+
+/* V5.4: one scroll viewport, non-scrolling gutter and compact dark tool windows. */
+.workspace-mode .editor .code{
+ box-sizing:border-box!important;position:relative!important;overflow:auto!important;
+ padding:12px 0 16px!important;background:#1e1f22!important;
+ scrollbar-color:#585c64 transparent;scrollbar-width:thin
+}
+.workspace-mode .editor .code .source-line{
+ display:flex!important;position:relative!important;align-items:stretch!important;
+ width:max-content!important;min-width:100%!important;min-height:23px!important;
+ line-height:23px!important;white-space:pre!important;
+}
+.workspace-mode .editor .code .source-line>.ln{
+ position:sticky!important;left:0!important;z-index:5!important;
+ display:inline-flex!important;align-items:center!important;justify-content:flex-end!important;
+ box-sizing:border-box!important;flex:0 0 64px!important;width:64px!important;
+ min-width:64px!important;max-width:64px!important;padding:0 11px 0 3px!important;
+ margin:0!important;border-right:1px solid #34363b!important;
+ background:#1e1f22!important;color:#777d88!important;white-space:nowrap!important
+}
+.workspace-mode .editor .code .source-line>.source-text{
+ display:inline-block!important;box-sizing:border-box!important;flex:0 0 auto!important;
+ min-width:0!important;padding:0 13px!important;margin:0!important;
+ white-space:pre!important
+}
+.workspace-mode .editor .code .source-line.source-line-target>.ln{background:#2b303a!important}
+.workspace-mode .editor .code .source-line.source-line-target>.source-text{background:#2b303a!important}
+.workspace-mode .editor .code .source-line:hover>.ln{color:#b5bbc5!important}
+.workspace-mode .tree,.workspace-mode .editor .code,.workspace-mode .terminal-console,
+.workspace-mode .pynix-source-input{scrollbar-color:#585c64 transparent;scrollbar-width:thin}
+.workspace-mode ::-webkit-scrollbar{width:9px;height:9px}
+.workspace-mode ::-webkit-scrollbar-track{background:transparent}
+.workspace-mode ::-webkit-scrollbar-thumb{
+ background:#565a62;border:2px solid transparent;background-clip:padding-box;border-radius:8px
+}
+.workspace-mode ::-webkit-scrollbar-thumb:hover{background-color:#737983}
+.workspace-mode ::-webkit-scrollbar-corner{background:transparent}
+.workspace-mode .integrated-terminal{
+ background:#1e1f22!important;border:0!important;border-radius:8px!important;
+ margin:4px 5px 4px 4px!important;box-shadow:none!important
+}
+.workspace-mode .terminal-tabs{
+ height:32px!important;min-height:32px!important;background:#242529!important;
+ padding:0 12px!important;gap:18px!important;border-bottom:1px solid #35373d!important;
+ border-radius:8px 8px 0 0!important
+}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){
+ height:32px!important;min-height:32px!important;padding:0!important;font-size:11px!important
+}
+.workspace-mode .pynix-terminal-session{
+ height:31px!important;min-height:31px!important;background:#242529!important;
+ border-bottom:1px solid #36383d!important;padding:0 12px!important
+}
+.workspace-mode .pynix-terminal-session-tab{
+ height:23px!important;padding:0 9px!important;background:#353c4c!important;
+ display:inline-flex!important;align-items:center!important;border-radius:5px!important
+}
+.workspace-mode .terminal-console{
+ background:#1e1f22!important;padding:11px 13px!important;
+ font:12px/20px ui-monospace,SFMono-Regular,Menlo,monospace!important
+}
+.workspace-mode .right-tools{width:35px!important;min-width:35px!important;padding-top:7px!important;gap:8px!important}
+.workspace-mode .right-tools button{width:29px!important;height:29px!important;font-size:16px!important}
+.workspace-mode .tree .project-entry.workspace-selected{background:#30343c!important}
+.workspace-mode .tree .project-entry:hover:not(.workspace-selected){background:#282a2f!important}
+.workspace-mode .bottom{font-size:11px!important;gap:12px!important}
 </style>
 <style>
 .workspace-mode .tree,
