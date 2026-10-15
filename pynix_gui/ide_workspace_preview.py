@@ -2281,6 +2281,14 @@ editorInput.addEventListener('keydown',event=>{
      label.type='button';
      label.className='pynix-editor-tab-label';
      label.textContent=fileName.split('/').pop()+(file?.dirty?' *':'');
+     // Preserve the native PYNIX/Python/file-type icon in editor tabs; the
+     // licensed New UI bridge substitutes known generic file glyphs in place.
+     const tabGlyph=document.createElement('span');
+     const tabFileType=file?.icon||'file';
+     tabGlyph.className='pynix-tab-file-glyph file-'+tabFileType;
+     tabGlyph.setAttribute('aria-hidden','true');
+     tabGlyph.innerHTML=fileIconMarkup(tabFileType);
+     label.prepend(tabGlyph);
      label.title=fileName;
      label.setAttribute('aria-current',fileName===current?'page':'false');
      label.addEventListener('click',()=>show(fileName));
