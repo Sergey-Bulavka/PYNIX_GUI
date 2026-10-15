@@ -904,10 +904,9 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    const tabs=document.querySelector('.terminal-tabs');
    const panel=document.querySelector('.terminal-console');
    const debugTab=[...tabs?.children||[]].find(el=>el.textContent.trim()==='DEBUG CONSOLE');
-   if(debugTab){
-     for(const tab of tabs.children)tab.classList.remove('pynix-active-tab');
-     debugTab.classList.add('pynix-active-tab');
-   }
+   // Activate through the same tab controller used by keyboard/mouse input.
+   // This also synchronizes ARIA selection and hides Terminal's Local header.
+   debugTab?.click();
    if(!panel){debugInfoButton.title=packet?.message||state||event;return;}
    const view={event,state,frames:debugFrames,variables:debugVariables,
      message:packet?.message||'',session:packet?.session||'',
