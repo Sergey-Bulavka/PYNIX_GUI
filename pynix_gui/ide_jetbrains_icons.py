@@ -208,7 +208,13 @@ class JetBrainsIconCatalog:
             return None
         data = icon.svg_path.read_bytes()
         if hashlib.sha256(data).hexdigest() != icon.sha256:
-            raise ValueError(f"SVG differs from licensed manifest: {name}")
+            # Git with core.autocrlf=true (notably Windows CI) may rewrite
+            # LF into CRLF at checkout. Accept ONLY that newline transform;
+            # the manifest still verifies the original byte content.
+            canonical = data.replace(b"\r\n", b"\n")
+            if hashlib.sha256(canonical).hexdigest() != icon.sha256:
+                raise ValueError(f"SVG differs from licensed manifest: {name}")
+            data = canonical
         return data.decode("utf-8-sig")
 
 
