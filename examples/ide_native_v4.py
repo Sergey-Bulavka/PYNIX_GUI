@@ -839,6 +839,8 @@ def main() -> None:
     document = apply_new_ui_icons(document)
     from pynix_gui.ide_edge_profile import apply_edge_profile
     document = apply_edge_profile(document)
+    from pynix_gui.ide_pycharm_chrome import apply_pycharm_chrome
+    document = apply_pycharm_chrome(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
