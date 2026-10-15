@@ -258,8 +258,15 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    decorateFindMatches();
    const count=value.split('\\n').length;
    const marked=breakpoints.get(current)||new Set();
-   gutter.textContent=Array.from({length:count},(_,i)=>
-     (marked.has(i+1)?'●':String(i+1).padStart(3,' '))).join('\\n');
+   gutter.replaceChildren();
+   const fragment=document.createDocumentFragment();
+   for(let i=1;i<=count;i++){
+     const row=document.createElement('span');
+     row.className=marked.has(i)?'pynix-gutter-breakpoint':'pynix-gutter-number';
+     row.textContent=marked.has(i)?'●':String(i).padStart(3,' ');
+     fragment.appendChild(row);
+   }
+   gutter.appendChild(fragment);
    coloredSource.scrollTop=editorInput.scrollTop;
    coloredSource.scrollLeft=editorInput.scrollLeft;
    gutter.scrollTop=editorInput.scrollTop;
