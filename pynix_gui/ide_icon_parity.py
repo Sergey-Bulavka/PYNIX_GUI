@@ -79,6 +79,44 @@ DYNAMIC_ICON_BINDINGS = (
     for slot in (".project-glyph", ".pynix-tab-file-glyph")
 )
 
+# Interaction styling is restricted to actual IDE controls, not decorative icons.
+# Original SVG colors and geometry are retained; the host gets the state surface.
+ICON_STATE_STYLE = """<style id="pynix-new-ui-icon-states">
+.workspace-mode .rail > .rail-item,
+.workspace-mode .right-tools > button,
+.workspace-mode .workspace-toolbar > button,
+.workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action]{
+ transition:background-color 110ms ease,box-shadow 110ms ease;
+ border-radius:6px;
+}
+.workspace-mode .rail > .rail-item:hover,
+.workspace-mode .right-tools > button:hover,
+.workspace-mode .workspace-toolbar > button:hover,
+.workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action]:hover{
+ background-color:#393b40!important;
+}
+.workspace-mode .rail > .rail-item.active,
+.workspace-mode .rail > .rail-item[aria-pressed="true"],
+.workspace-mode .right-tools > button[aria-pressed="true"],
+.workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action][aria-pressed="true"]{
+ background-color:#43474e!important;
+}
+.workspace-mode .rail > .rail-item:focus-visible,
+.workspace-mode .right-tools > button:focus-visible,
+.workspace-mode .workspace-toolbar > button:focus-visible,
+.workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action]:focus-visible{
+ outline:2px solid #80b8f4!important;
+ outline-offset:-2px!important;
+}
+@media (prefers-reduced-motion:reduce){
+ .workspace-mode .rail > .rail-item,
+ .workspace-mode .right-tools > button,
+ .workspace-mode .workspace-toolbar > button,
+ .workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action]{transition:none!important}
+}
+</style>"""
+
+
 ICON_BRIDGE_SCRIPT = r"""<script>
 (() => {
  const items=__ICON_DATA__;
@@ -178,4 +216,4 @@ def apply_new_ui_icons(
     script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized).replace(
         "__DYNAMIC_ICON_DATA__", serialized_dynamic
     )
-    return document.replace("</body>", script + "</body>", 1)
+    return document.replace("</body>", ICON_STATE_STYLE + script + "</body>", 1)
