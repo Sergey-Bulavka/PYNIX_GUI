@@ -2110,18 +2110,30 @@ editorInput.addEventListener('keydown',event=>{
  }
  function renderCode(file) {
    code.replaceChildren();
+   const viewport=document.createElement('div');
+   viewport.className='pynix-editor-viewport';
+   const gutterPane=document.createElement('div');
+   gutterPane.className='pynix-editor-gutter';
+   const gutterInner=document.createElement('div');
+   gutterInner.className='pynix-editor-gutter-inner';
+   gutterPane.appendChild(gutterInner);
+   const codeScroll=document.createElement('div');
+   codeScroll.className='pynix-editor-scroll';
+   const codeInner=document.createElement('div');
+   codeInner.className='pynix-editor-code';
+   codeScroll.appendChild(codeInner);
+   viewport.append(gutterPane,codeScroll);
+   code.appendChild(viewport);
    const foldable=foldableLines(file.text);
    const folded=file.foldedLines||(file.foldedLines=new Set());
    let hiddenThrough=-1;
-   file.text.split('\\n').forEach((line, i) => {
+   file.text.split('\\n').forEach((line,i)=>{
      if(i<=hiddenThrough)return;
      if(folded.has(i)&&foldable.has(i))hiddenThrough=foldable.get(i);
-     const row = document.createElement('div');
-     row.className='source-line';
-     row.dataset.line=String(i+1);
-     const gutter = document.createElement('span');
-     gutter.className = 'ln';
-     gutter.textContent = String(i + 1);
+     const gutter=document.createElement('div');
+     gutter.className='pynix-gutter-line ln';
+     gutter.dataset.line=String(i+1);
+     gutter.textContent=String(i+1);
      if(foldable.has(i)){
        gutter.classList.add('pynix-fold-control');
        gutter.title=folded.has(i)?'Expand block':'Collapse block';
@@ -2131,11 +2143,13 @@ editorInput.addEventListener('keydown',event=>{
          renderCode(file);
        });
      }
-     row.appendChild(gutter);
-     const content = document.createElement('span');
+     const row=document.createElement('div');
+     row.className='source-line pynix-code-line';
+     row.dataset.line=String(i+1);
+     const content=document.createElement('span');
      content.className='source-text';
      content.tabIndex=0;
-     if(file.tokens && file.tokens[i]) {
+     if(file.tokens&&file.tokens[i]){
        for(const token of file.tokens[i]){
          const span=document.createElement('span');
          span.className='pnx-token pnx-'+token.kind;
@@ -2144,8 +2158,12 @@ editorInput.addEventListener('keydown',event=>{
        }
      } else content.textContent=line;
      row.appendChild(content);
-     code.appendChild(row);
+     gutterInner.appendChild(gutter);
+     codeInner.appendChild(row);
    });
+   codeScroll.addEventListener('scroll',()=>{
+     gutterInner.style.transform='translateY('+(-codeScroll.scrollTop)+'px)';
+   },{passive:true});
  }
  let pendingCloseAfterSave=null;
  function cancelCoreBufferSync(name){
