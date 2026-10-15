@@ -2044,6 +2044,7 @@ editorInput.addEventListener('keydown',event=>{
      const extension=entry.name.split('.').pop().toLowerCase();
      const fileType=byName.get(entry.path)?.icon || 'file';
      glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+fileType));
+     glyph.dataset.extension=extension;
      glyph.innerHTML=entry.folder?(isOpen?icon['folder-open']:icon.folder):fileIconMarkup(fileType);
      line.appendChild(glyph);
      const label=document.createElement('span');
@@ -2286,6 +2287,7 @@ editorInput.addEventListener('keydown',event=>{
      const tabGlyph=document.createElement('span');
      const tabFileType=file?.icon||'file';
      tabGlyph.className='pynix-tab-file-glyph file-'+tabFileType;
+     tabGlyph.dataset.extension=fileName.split('.').pop().toLowerCase();
      tabGlyph.setAttribute('aria-hidden','true');
      tabGlyph.innerHTML=fileIconMarkup(tabFileType);
      label.prepend(tabGlyph);
