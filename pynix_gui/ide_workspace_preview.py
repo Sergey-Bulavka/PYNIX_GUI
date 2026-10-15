@@ -2406,9 +2406,25 @@ editorInput.addEventListener('keydown',event=>{
    renderTree();
  };
  const explorerControl=document.querySelectorAll('.rail-item')[0];
- explorerControl?.addEventListener('click',()=>renderTree());
+ const explorerResizeHandle=document.querySelector('.tree-resizer');
+ let explorerVisible=true;
+ function setExplorerVisible(visible){
+   explorerVisible=visible;
+   tree.hidden=!visible;
+   if(explorerResizeHandle)explorerResizeHandle.hidden=!visible;
+   explorerControl?.classList.toggle('active',visible);
+   explorerControl?.setAttribute('aria-expanded',String(visible));
+   if(visible)renderTree();
+ }
+ explorerControl?.setAttribute('role','button');
+ explorerControl?.setAttribute('tabindex','0');
+ explorerControl?.setAttribute('aria-label','Toggle Project tool window');
+ explorerControl?.addEventListener('click',()=>setExplorerVisible(!explorerVisible));
  explorerControl?.addEventListener('keydown',e=>{
-   if(e.key==='Enter'||e.key===' ')queueMicrotask(()=>renderTree());
+   if(e.key==='Enter'||e.key===' '){
+     e.preventDefault();
+     setExplorerVisible(!explorerVisible);
+   }
  });
  const sourceControl = document.querySelectorAll('.rail-item')[2];
  sourceControl?.addEventListener('click', () => {
