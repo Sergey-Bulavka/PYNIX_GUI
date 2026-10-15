@@ -140,3 +140,13 @@ def test_new_ui_precise_tab_title_and_close_geometry_are_scoped():
     assert "flex:0 0 18px!important" in style
     assert ".pynix-editor-tab:is(.active,:hover,:focus-within) .pynix-editor-tab-close" in style
     assert "visibility:hidden!important;pointer-events:none!important" in style
+
+
+def test_v52_workspace_geometry_keeps_adjustable_panel_sizes():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    style = html.split("</style>", 1)[0]
+    assert ".workspace-mode .layout{height:calc(100vh - 39px)!important}" in style
+    assert "height:var(--terminal-height,235px)!important" in style
+    assert "width:var(--explorer-width,220px)!important" in style
+    assert ".workspace-mode .editor-tabs{height:35px!important" in style
+    assert ".workspace-mode .bottom{height:22px!important" in style
