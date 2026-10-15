@@ -17,6 +17,10 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  position:relative!important;display:flex!important;align-items:center!important;
  gap:10px!important;background:#2b2932!important
 }
+.workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){
+ display:none!important
+}
+.workspace-mode .workspace-toolbar>button[title="Visual preview"]{display:none!important}
 .workspace-mode .workspace-toolbar .pynix-pycharm-center{
  position:absolute;left:54%;top:3px;transform:translateX(-50%);
  height:37px;display:flex;align-items:center;gap:8px;
