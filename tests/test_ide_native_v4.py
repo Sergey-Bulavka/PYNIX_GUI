@@ -238,7 +238,7 @@ def test_v515_rounded_surfaces_integrated_tabs_and_30px_status():
     assert "/* V5.14 structural chrome:" not in final
     assert ".workspace-mode .ide{" in final
     assert "background:#2b2d30!important;padding-left:40px!important;padding-right:35px!important" in final
-    assert "margin:0 1px 0 1px!important" in final
+    assert "margin:0 5px 0 1px!important" in final
     assert "border:0!important;border-radius:9px!important" in final
     assert "margin:0!important" in final
     assert "height:37px!important;min-height:37px!important;max-height:37px!important" in final
@@ -262,3 +262,30 @@ def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
     assert "report.readOnly=true" in html
     assert "['terminal','.integrated-terminal']" in html
     assert "['active tab','.editor-tabs .pynix-editor-tab.active']" in html
+
+
+def test_v516_no_panel_strokes_and_wider_project_editor_gap():
+    # Verify the last scoped rule set, not historical visual experiments.
+    import re
+
+    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
+    final = css.split("/* V5.15: measured three-surface New UI shell.", 1)[1]
+
+    def rule(selector):
+        matches = re.findall(re.escape(selector) + r"\s*\{([^}]*)\}", final)
+        assert matches, f"missing final visual selector: {selector}"
+        return matches[-1]
+
+    tree = rule(".workspace-mode .tree")
+    splitter = rule(".workspace-mode .tree-resizer")
+    assert "margin:0 5px 0 1px!important" in tree
+    assert "width:6px!important" in splitter
+    assert "background:transparent!important" in splitter
+    assert "border:0!important" in splitter
+    assert "border:0!important" in rule(".workspace-mode .terminal-resizer")
+    assert "background:transparent!important" in rule(".workspace-mode .terminal-resizer")
+    assert "border-bottom:0!important" in rule(".workspace-mode .workspace-toolbar")
+    assert "border-bottom:0!important" in rule(".workspace-mode .terminal-tabs")
+    assert "border-top:0!important" in rule(".workspace-mode .bottom")
+    assert "border-right:0!important" in rule(".workspace-mode .ide>.rail")
+    assert "border-left:0!important" in rule(".workspace-mode .right-tools")
