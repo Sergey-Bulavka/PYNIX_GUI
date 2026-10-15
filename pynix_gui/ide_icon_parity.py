@@ -184,9 +184,12 @@ ICON_BRIDGE_SCRIPT = r"""<script>
   for(const target of document.querySelectorAll(item.selector))activate(target,item);};
  syncStatic();
  // Toolbar and side-rail controls can mount after this bridge executes.
- const shell=document.querySelector(".workspace-mode .ide");
- if(shell&&items.length){
-  new MutationObserver(syncStatic).observe(shell,{childList:true,subtree:true});
+ for(const selector of [".workspace-mode .rail",".workspace-mode .right-tools",
+                        ".workspace-mode .workspace-toolbar",
+                        ".workspace-mode .pynix-debug-panel-toolbar"]){
+  const host=document.querySelector(selector);
+  if(host&&items.length)
+   new MutationObserver(syncStatic).observe(host,{childList:true,subtree:true});
  }
  // Project tree rows are recreated on folder expand, search and file changes.
  // Observe only that tree; avoid replacing click handlers or editor content.
