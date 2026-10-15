@@ -133,3 +133,35 @@ def test_dynamic_file_icons_are_serialized_without_raw_svg_script_injection():
     assert "__DYNAMIC_ICON_DATA__" not in output
     assert "<svg" not in output
     assert "MutationObserver(synchronize)" in output
+
+
+def test_editor_tabs_and_status_strip_are_native_icon_targets():
+    from pynix_gui.ide_icon_parity import (
+        DYNAMIC_ICON_BINDINGS, ICON_BINDINGS, ICON_BRIDGE_SCRIPT,
+    )
+    static = {selector: name for selector, name, _, _ in ICON_BINDINGS}
+    dynamic = {selector: name for selector, name, _ in DYNAMIC_ICON_BINDINGS}
+    assert static[".workspace-mode .bottom > span:nth-of-type(1)"] == "nodes/ideaProject"
+    assert dynamic[".workspace-mode .pynix-tab-file-glyph.file-json"] == "fileTypes/json"
+    assert dynamic[".workspace-mode .pynix-tab-file-glyph.file-markdown"] == "fileTypes/markdown"
+    assert dynamic[".workspace-mode .pynix-tab-file-glyph.file-text"] == "fileTypes/text"
+    assert not any("file-python" in selector or "file-pynix" in selector
+                   for selector in dynamic)
+    assert "const editorTabs=document.querySelector('.workspace-mode .editor-tabs')" in ICON_BRIDGE_SCRIPT
+    assert "new MutationObserver(synchronizeTabs).observe(editorTabs,{childList:true,subtree:true})" in ICON_BRIDGE_SCRIPT
+    assert "if(!target||target.dataset.pynixIcon===item.name)return;" in ICON_BRIDGE_SCRIPT
+
+    native_css = (Path(__file__).resolve().parents[1] / "examples" /
+                  "icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "/* V5.26: PyCharm-style file icons" in native_css
+    assert ".workspace-mode .pynix-tab-file-glyph svg" in native_css
+    assert ".workspace-mode .bottom .pynix-cursor-status" in native_css
+    assert ".workspace-mode .bottom > span:nth-of-type(1) > .pynix-jetbrains-icon" in native_css
+
+
+def test_original_icon_source_for_status_and_tabs_is_available():
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for key in ("nodes/ideaProject", "fileTypes/json",
+                "fileTypes/markdown", "fileTypes/text"):
+        assert catalog.resolve(key, dark=True) is not None
+        assert catalog.resolve(key, dark=False) is not None
