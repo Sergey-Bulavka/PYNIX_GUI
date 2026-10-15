@@ -39,6 +39,16 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
+        def hitTest_(self, point):
+            # Route empty titlebar clicks to the WKWebView itself rather than
+            # WebKit's internal content view, which otherwise consumes mouseDown.
+            local = self.convertPoint_fromView_(point, self.superview())
+            bounds = self.bounds()
+            if (bounds.size.height - 44 <= local.y <= bounds.size.height
+                    and 295 <= local.x <= min(975, bounds.size.width - 425)):
+                return self
+            return super().hitTest_(point)
+
         def mouseDown_(self, event):
             # WKWebView consumes mouse events: intercept the empty header directly.
             # Coordinate conversion uses the current webview bounds, so resizing
