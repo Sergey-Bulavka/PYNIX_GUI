@@ -448,3 +448,33 @@ def test_editor_line_numbers_have_no_fake_leading_spaces_and_folds_are_independe
     assert "gutter.addEventListener('click',()=>{" in js
     # Line-number synchronization remains tied to the input's scrollTop.
     assert "gutter.scrollTop=editorInput.scrollTop" in js
+
+
+def test_editor_tabs_reuse_known_file_types_without_changing_navigation(tmp_path):
+    (tmp_path / "readme.md").write_text("# Title", encoding="utf-8")
+    (tmp_path / "settings.json").write_text('{"debug": true}', encoding="utf-8")
+    (tmp_path / "main.pnx").write_text("let x=2", encoding="utf-8")
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "const tabGlyph=document.createElement('span');" in js
+    assert "tabGlyph.className='pynix-tab-file-glyph file-'+tabFileType;" in js
+    assert "tabGlyph.innerHTML=fileIconMarkup(tabFileType);" in js
+    assert "tabGlyph.setAttribute('aria-hidden','true');" in js
+    assert "label.prepend(tabGlyph);" in js
+    assert "label.addEventListener('click',()=>show(fileName));" in js
+    assert "close.addEventListener('click',()=>requestCloseTab(fileName));" in js
+    assert "label.setAttribute('aria-current',fileName===current?'page':'false');" in js
+
+
+def test_workspace_status_strip_does_not_duplicate_sample_line_number(tmp_path):
+    (tmp_path / "main.pnx").write_text("let x=2", encoding="utf-8")
+    template = (
+        '<html><body><div class="bottom">'
+        '<span>⑂ main · 1 modified</span>'
+        '<span>PYNIX · UTF-8 · Ln 7</span>'
+        '</div></body></html>'
+    )
+    html = attach_workspace(template, WorkspaceSession(tmp_path))
+    assert "<span>UTF-8 · LF</span>" in html
+    assert "<span>main · UTF-8" not in html
+    assert "PYNIX · UTF-8 · Ln 7" not in html
+    assert "pynix-cursor-status" in html
