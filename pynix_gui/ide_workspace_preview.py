@@ -765,6 +765,25 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  dockToggle.addEventListener('click',()=>setToolWindowVisible(false));
  dockRestore.addEventListener('click',()=>setToolWindowVisible(true));
+ // Match IDE tool-window keyboard navigation without intercepting editor typing.
+ document.addEventListener('keydown',event=>{
+   if(event.defaultPrevented||event.repeat)return;
+   const modifier=event.metaKey||event.ctrlKey;
+   if(modifier&&event.altKey&&event.key==='1'){
+     event.preventDefault();
+     document.querySelectorAll('.rail-item')[0]?.click();
+   }else if(modifier&&event.altKey&&event.key==='4'){
+     event.preventDefault();
+     setToolWindowVisible(terminal?.classList.contains('pynix-tool-window-collapsed'));
+   }else if(event.key==='Escape'&&!event.metaKey&&!event.ctrlKey&&!event.altKey){
+     const active=document.activeElement;
+     const inDock=active&&(terminal?.contains(active)||active===dockRestore);
+     if(inDock&&terminal&&!terminal.classList.contains('pynix-tool-window-collapsed')){
+       event.preventDefault();
+       setToolWindowVisible(false);
+     }
+   }
+ });
  toolTabs?.addEventListener('click',event=>{
    const tab=event.target.closest('strong,span');
    if(!tab||tab.classList.contains('term-spacer'))return;
