@@ -722,6 +722,25 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  // tab event handlers in place; this controller only owns dock visibility.
  const terminalResizer=document.querySelector('.terminal-resizer');
  const toolTabs=terminal?.querySelector('.terminal-tabs');
+ const terminalSession=document.createElement('div');
+ terminalSession.className='pynix-terminal-session';
+ terminalSession.hidden=true;
+ const localTab=document.createElement('span');
+ localTab.className='pynix-terminal-session-tab';
+ localTab.textContent='Local';
+ const terminalSessionIcon=document.createElement('span');
+ terminalSessionIcon.className='pynix-terminal-session-icon';
+ terminalSessionIcon.textContent='⌄';
+ terminalSession.append(localTab,terminalSessionIcon);
+ toolTabs?.after(terminalSession);
+ function selectTerminalSession(name){
+   terminalSession.hidden=name!=='TERMINAL';
+ }
+ toolTabs?.addEventListener('click',event=>{
+   const target=event.target.closest('span,strong');
+   if(target)selectTerminalSession(target.textContent.trim());
+ });
+ selectTerminalSession('TERMINAL');
  const dockToggle=document.createElement('button');
  dockToggle.type='button';
  dockToggle.className='pynix-tool-window-toggle';
