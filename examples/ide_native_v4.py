@@ -80,6 +80,18 @@ def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
 
 
 
+def title_drag_frame(bounds_width: float, bounds_height: float):
+    """Always-available drag handle over the static PYNIX toolbar title.
+
+    The title starts at x=86 in our 44-point native toolbar. This handle is
+    deliberately inset from the window's resize borders and traffic lights.
+    Unlike the optional flex-spacer handle, it never depends on WebKit layout.
+    """
+    if bounds_width < 760 or bounds_height < 520:
+        return None
+    return (92, bounds_height - 35, 62, 24)
+
+
 def main() -> None:
     if sys.platform != "darwin":
         raise SystemExit("V4 native review requires macOS")
@@ -94,9 +106,18 @@ def main() -> None:
         attach_navigation_controls, normalize_webkit_request, validate_request, result_script,
     )
 
+    drag_resize_callback = {"update": None}
+
     class PreviewDelegate(NSObject):
         def applicationShouldTerminateAfterLastWindowClosed_(self, sender):
             return True
+
+        def windowDidResize_(self, notification):
+            # Reposition both drag handles in CURRENT AppKit coordinates on
+            # every width/height change, even when JS geometry was unchanged.
+            update = drag_resize_callback["update"]
+            if update is not None:
+                update()
 
     class FirstClickWebView(WebKit.WKWebView):
         """Forward the first click even when the macOS window is inactive."""
@@ -145,7 +166,31 @@ def main() -> None:
     # superview through height-only resizes, even without a fresh JS message.
     drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
     drag_area.setHidden_(True)
-    content_view.addSubview_(drag_area)  # Native sibling above WebKit; only the toolbar spacer.
+    content_view.addSubview_(drag_area)  # Optional live toolbar spacer.
+    title_drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
+    title_drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
+    content_view.addSubview_(title_drag_area)  # Always active over static PYNIX title.
+    drag_geometry = {"area": None}
+
+    def refresh_native_drag_areas():
+        bounds = content_view.bounds().size
+        frame = title_drag_frame(bounds.width, bounds.height)
+        if frame is not None:
+            title_drag_area.setFrame_(AppKit.NSMakeRect(*frame))
+            title_drag_area.setHidden_(False)
+        else:
+            title_drag_area.setHidden_(True)
+        area = drag_geometry["area"]
+        frame = toolbar_drag_frame(bounds.width, bounds.height, area) if area is not None else None
+        if frame is not None:
+            drag_area.setFrame_(AppKit.NSMakeRect(*frame))
+            drag_area.setHidden_(False)
+        else:
+            drag_area.setHidden_(True)
+
+    drag_resize_callback["update"] = refresh_native_drag_areas
+    refresh_native_drag_areas()
+    window.setDelegate_(delegate)
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
@@ -678,16 +723,8 @@ def main() -> None:
     navigation_handler = NavigationHandler.alloc().init()
     class ToolbarDragRegionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
-            frame = toolbar_drag_frame(
-                content_view.bounds().size.width,
-                content_view.bounds().size.height,
-                message.body(),
-            )
-            if frame is None:
-                drag_area.setHidden_(True)
-                return
-            drag_area.setFrame_(AppKit.NSMakeRect(*frame))
-            drag_area.setHidden_(False)
+            drag_geometry["area"] = message.body()
+            refresh_native_drag_areas()
 
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
     controller = view.configuration().userContentController()
