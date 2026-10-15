@@ -589,3 +589,14 @@ def test_bottom_tool_window_can_collapse_and_restore_without_destroying_contents
     assert "dockRestore.addEventListener('click',()=>setToolWindowVisible(true));" in js
     assert "terminalResizer.hidden=!visible;" in js
     assert ".integrated-terminal.pynix-tool-window-collapsed{display:none!important}" in html
+
+
+def test_only_selected_bottom_tool_tab_has_active_reference_styling():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "toolTabs?.addEventListener('click',event=>{" in source
+    assert "child.classList.remove('pynix-active-tab');" in source
+    assert "tab.classList.add('pynix-active-tab');" in source
+    assert ".terminal-tabs>strong:not(.pynix-active-tab)" in css
