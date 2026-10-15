@@ -39,11 +39,17 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
-    class TitlebarDragArea(AppKit.NSView):
-        """Native empty titlebar region: WebKit CSS drag is unsupported on macOS."""
-
         def mouseDown_(self, event):
-            self.window().performWindowDragWithEvent_(event)
+            # WKWebView consumes mouse events: intercept the empty header directly.
+            # Coordinate conversion uses the current webview bounds, so resizing
+            # cannot move the drag hit region away from the visible toolbar.
+            point = self.convertPoint_fromView_(event.locationInWindow(), None)
+            bounds = self.bounds()
+            if (bounds.size.height - 44 <= point.y <= bounds.size.height
+                    and 295 <= point.x <= min(975, bounds.size.width - 425)):
+                self.window().performWindowDragWithEvent_(event)
+                return
+            super().mouseDown_(event)
 
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
@@ -617,13 +623,6 @@ def main() -> None:
     document = attach_navigation_controls(document)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     window.setContentView_(view)
-    # Dedicated blank titlebar area: above WebKit, away from window buttons
-    # and from interactive project / run controls. Anchored to the top edge.
-    drag_area = TitlebarDragArea.alloc().initWithFrame_(
-        AppKit.NSMakeRect(300, window.contentView().bounds().size.height - 43, 680, 43)
-    )
-    drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
-    window.contentView().addSubview_(drag_area)
     from pynix_gui.ide_native_menu import install_native_workspace_menu
     menu_dispatcher = install_native_workspace_menu(app, view, AppKit)
     window.makeKeyAndOrderFront_(None)
