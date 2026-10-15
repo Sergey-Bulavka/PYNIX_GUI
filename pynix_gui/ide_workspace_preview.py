@@ -784,12 +784,34 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      }
    }
  });
+ // Treat tool tabs as actual keyboard-accessible tool-window selectors.
+ if(toolTabs){
+   for(const tab of [...toolTabs.children]){
+     if(!['TERMINAL','PROBLEMS','OUTPUT','DEBUG CONSOLE'].includes(tab.textContent.trim()))continue;
+     tab.setAttribute('role','tab');
+     tab.setAttribute('tabindex','0');
+     tab.addEventListener('keydown',event=>{
+       if(event.key==='Enter'||event.key===' '){
+         event.preventDefault();
+         tab.click();
+       }
+     });
+   }
+ }
  toolTabs?.addEventListener('click',event=>{
    const tab=event.target.closest('strong,span');
    if(!tab||tab.classList.contains('term-spacer'))return;
    for(const child of toolTabs.children)
      child.classList.remove('pynix-active-tab');
    tab.classList.add('pynix-active-tab');
+   if(['TERMINAL','PROBLEMS','OUTPUT','DEBUG CONSOLE'].includes(tab.textContent.trim())){
+     setToolWindowVisible(true);
+     for(const child of toolTabs.children){
+       if(child.getAttribute('role')==='tab')
+         child.setAttribute('aria-selected',String(child===tab));
+     }
+     debugPanelBar.hidden=tab.textContent.trim()!=='DEBUG CONSOLE'||!debugActive;
+   }
  });
  debugPanelBar.hidden=true;
  refreshDebugControls();
