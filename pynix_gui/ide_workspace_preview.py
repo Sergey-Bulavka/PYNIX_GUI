@@ -709,6 +709,42 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  const terminal=document.querySelector('.integrated-terminal');
  terminal?.prepend(debugPanelBar);
  debugPanelBar.hidden=true;
+ // JetBrains-style tool window visibility. Leave each frontend's existing
+ // tab event handlers in place; this controller only owns dock visibility.
+ const terminalResizer=document.querySelector('.terminal-resizer');
+ const toolTabs=terminal?.querySelector('.terminal-tabs');
+ const dockToggle=document.createElement('button');
+ dockToggle.type='button';
+ dockToggle.className='pynix-tool-window-toggle';
+ dockToggle.textContent='−';
+ dockToggle.title='Hide bottom tool window';
+ dockToggle.setAttribute('aria-label','Hide bottom tool window');
+ const dockRestore=document.createElement('button');
+ dockRestore.type='button';
+ dockRestore.className='pynix-tool-window-restore';
+ dockRestore.textContent='Terminal ↑';
+ dockRestore.title='Show bottom tool window';
+ dockRestore.hidden=true;
+ const bottomBar=document.querySelector('.bottom');
+ bottomBar?.prepend(dockRestore);
+ toolTabs?.appendChild(dockToggle);
+ function setToolWindowVisible(visible){
+   if(!terminal)return;
+   terminal.classList.toggle('pynix-tool-window-collapsed',!visible);
+   if(terminalResizer)terminalResizer.hidden=!visible;
+   dockRestore.hidden=visible;
+   dockToggle.setAttribute('aria-expanded',String(visible));
+ }
+ dockToggle.addEventListener('click',()=>setToolWindowVisible(false));
+ dockRestore.addEventListener('click',()=>setToolWindowVisible(true));
+ toolTabs?.addEventListener('click',event=>{
+   const tab=event.target.closest('strong,span');
+   if(!tab||tab.classList.contains('term-spacer'))return;
+   for(const child of toolTabs.children)
+     child.classList.remove('pynix-active-tab');
+   tab.classList.add('pynix-active-tab');
+ });
+ debugPanelBar.hidden=true;
  refreshDebugControls();
  window.pynixDebugResult=packet=>{
    debugBusy=false;
