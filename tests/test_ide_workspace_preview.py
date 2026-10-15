@@ -404,3 +404,17 @@ def test_readonly_editor_uses_separate_gutter_and_code_scroll(tmp_path):
     assert "gutterInner.appendChild(gutter);" in js
     assert "codeInner.appendChild(row);" in js
     assert "gutterInner.style.transform='translateY('" in js
+
+
+def test_project_dropdown_uses_crisp_svg_instead_of_font_chevron(tmp_path):
+    (tmp_path / "main.pnx").write_text("print(1)", encoding="utf-8")
+    template = (
+        '<html><body><span class="current-branch">'
+        '⑂ feature/icon-system-v4</span></body></html>'
+    )
+    output = attach_workspace(template, WorkspaceSession(tmp_path))
+    assert '<span class="pynix-project-dropdown-chevron" aria-hidden="true">' in output
+    assert '<svg viewBox="0 0 16 16"' in output
+    assert 'stroke-linecap="round" stroke-linejoin="round"' in output
+    assert "⌄ " not in output
+    assert 'feature/icon-system-v4' not in output
