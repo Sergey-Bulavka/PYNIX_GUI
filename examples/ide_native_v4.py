@@ -620,7 +620,7 @@ def main() -> None:
     # Dedicated blank titlebar area: above WebKit, away from window buttons
     # and from interactive project / run controls. Anchored to the top edge.
     drag_area = TitlebarDragArea.alloc().initWithFrame_(
-        AppKit.NSMakeRect(300, window.contentView().bounds().size.height - 43, 340, 43)
+        AppKit.NSMakeRect(300, window.contentView().bounds().size.height - 43, 680, 43)
     )
     drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
     window.contentView().addSubview_(drag_area)
