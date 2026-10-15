@@ -835,6 +835,8 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
+    from pynix_gui.ide_icon_parity import apply_new_ui_icons
+    document = apply_new_ui_icons(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
