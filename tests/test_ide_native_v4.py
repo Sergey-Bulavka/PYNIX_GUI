@@ -268,9 +268,18 @@ def test_v58_side_rails_and_project_outline_share_shell_edges():
 def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     source = Path(app.__file__).read_text(encoding="utf-8")
     assert "class FirstClickWebView(WebKit.WKWebView):" in source
-    assert "def acceptsFirstMouse_(self, event):" in source
-    assert "def mouseDownCanMoveWindow(self):" not in source
-    assert "def mouseDown_(self, event):" not in source
+    assert "class ToolbarDragView(AppKit.NSView):" in source
+    webview = source.split("class FirstClickWebView(WebKit.WKWebView):", 1)[1].split(
+        "class ToolbarDragView(AppKit.NSView):", 1
+    )[0]
+    drag_view = source.split("class ToolbarDragView(AppKit.NSView):", 1)[1].split(
+        "    app = AppKit.NSApplication.sharedApplication()", 1
+    )[0]
+    assert "def acceptsFirstMouse_(self, event):" in webview
+    assert "def mouseDown_(self, event):" not in webview
+    assert "def mouseDownCanMoveWindow(self):" not in webview
+    assert "def mouseDown_(self, event):" in drag_view
+    assert "self.window().performWindowDragWithEvent_(event)" in drag_view
 
 
 def test_v515_rounded_surfaces_integrated_tabs_and_30px_status():
