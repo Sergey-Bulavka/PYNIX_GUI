@@ -350,6 +350,39 @@ body.workspace-mode{height:100vh;overflow:hidden;background:#101722}
 
 .workspace-mode .pynix-debug-panel-toolbar[hidden]{display:none}
 .workspace-mode .terminal-tabs>.pynix-active-tab{font-weight:700;color:#d8e8ff;border-bottom:2px solid #7ba9de}
+
+/* V5 JetBrains reference-layout pass. Match window geometry, not brand assets. */
+body.workspace-mode{background:#191a20;color:#cbd0d8}
+.workspace-mode header{height:44px;padding:0 16px;background:#2b2b33;border-bottom:1px solid #3b3b44}
+.workspace-mode header h1{font-size:13px;color:#d7d9df;font-weight:600}
+.workspace-mode .layout{height:calc(100vh - 44px)}
+.workspace-mode .workspace-toolbar{height:45px;min-height:45px;background:#292a32;border-bottom:1px solid #42424d;gap:8px;padding:0 12px}
+.workspace-mode .workspace-toolbar>strong{font-size:13px;color:#d1d5df;letter-spacing:.1px}
+.workspace-mode .workspace-toolbar button{background:#343742;border:1px solid #484d5d;color:#d3d8e1;border-radius:6px;padding:6px 9px}
+.workspace-mode .workspace-toolbar .pynix-debug-primary{background:#264d3d;border-color:#377b57;color:#b8f2d1}
+.workspace-mode .workspace-toolbar .pynix-debug-primary:hover{background:#306a4b}
+.workspace-mode .pynix-debug-menu>summary,.workspace-mode .pynix-tools-menu>summary{background:#363740;border-color:#50515d;color:#d6d9e1}
+.workspace-mode .ide{background:#1e1f25}
+.workspace-mode .rail{width:44px;background:#24252d;border-right:1px solid #363841;gap:6px}
+.workspace-mode .rail-item{border-radius:7px;margin:3px 4px;min-height:36px}
+.workspace-mode .tree{width:var(--explorer-width,238px);max-width:calc(100vw - 430px);background:#23242b;border-right:1px solid #3c3d47;color:#d0d2d9;font-size:12px}
+.workspace-mode .tree .tree-head,.workspace-mode .tree .tree-title{color:#c8cbd5}
+.workspace-mode .tree-resizer{background:#393a44;width:4px}
+.workspace-mode .editor{background:#1e1f25}
+.workspace-mode .editor-tabs{height:38px;min-height:38px;background:#282930;border-bottom:1px solid #393b43}
+.workspace-mode .editor-tabs button{height:38px;min-width:104px;font-size:12px;color:#aaadba;border-right:1px solid #3b3c44}
+.workspace-mode .editor-tabs button.active{background:#1e1f25;color:#f0f1f5;border-top:2px solid #929bd7}
+.workspace-mode .code{background:#1e1f25;font-size:13px;line-height:24px}
+.workspace-mode .right-tools{width:39px;background:#24252c;border-left:1px solid #383943}
+.workspace-mode .integrated-terminal{background:#1e1f25;border-top:1px solid #43444c}
+.workspace-mode .terminal-tabs{background:#292a32;color:#aeb1bf;border-bottom:1px solid #40414d}
+.workspace-mode .terminal-console{color:#cbd2e1;background:#1e1f25}
+.workspace-mode .pynix-debug-panel-toolbar{background:#282a32;border-bottom:1px solid #444752}
+.workspace-mode .pynix-debug-inspector-section{background:#242630;border-color:#404351}
+.workspace-mode .pynix-debug-inspector-heading{background:#2d3040;border-color:#444653}
+.workspace-mode .bottom{background:#30323e;border-top:1px solid #434651;color:#c7cad6;min-height:24px}
+.workspace-mode .pynix-debug-toolbar,.workspace-mode .pynix-tools-menu-items{background:#30313a;border-color:#555867}
+@media(max-width:1100px){.workspace-mode .tree{width:215px}}
 </style>
 <style>
 .workspace-mode .tree,
