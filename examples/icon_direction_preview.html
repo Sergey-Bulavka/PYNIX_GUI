@@ -892,10 +892,11 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 }
 .workspace-mode .editor-tabs{
  box-sizing:border-box!important;display:flex!important;
- height:37px!important;min-height:37px!important;max-height:37px!important;
- flex:0 0 37px!important;gap:4px!important;
- align-items:flex-start!important;padding:5px 6px 3px!important;margin:0!important;
- border:0!important;border-radius:9px 9px 0 0!important;
+ height:43px!important;min-height:43px!important;max-height:43px!important;
+ flex:0 0 43px!important;gap:4px!important;
+ align-items:flex-start!important;padding:5px 6px 9px!important;margin:0!important;
+ border:0!important;border-bottom:1px solid #34363c!important;
+ border-radius:9px 9px 0 0!important;
  background:#1e1f22!important;overflow:hidden!important
 }
 .workspace-mode .editor-tabs .pynix-editor-tab{
@@ -957,6 +958,28 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  background:#2b2d30!important;border-left:0!important;box-shadow:none!important
 }
 .workspace-mode .workspace-toolbar{border-bottom:0!important;box-shadow:none!important}
+
+/* V5.17: actual editable/read-only gutter and project dropdown elements. */
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{
+ text-align:left!important;
+ padding:15px 0 15px 11px!important;
+ background:#1e1f22!important;
+}
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line{
+ text-align:left!important;padding:0 0 0 11px!important;
+}
+.workspace-mode .workspace-toolbar .current-branch{
+ display:inline-flex!important;align-items:center!important;gap:5px!important;
+ height:28px!important;line-height:28px!important;vertical-align:middle!important;
+}
+.workspace-mode .workspace-toolbar .pynix-project-dropdown-chevron{
+ width:14px!important;height:14px!important;flex:0 0 14px!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ color:#aeb2bb!important;vertical-align:middle!important;
+}
+.workspace-mode .workspace-toolbar .pynix-project-dropdown-chevron svg{
+ display:block!important;width:14px!important;height:14px!important;
+}
 </style>
 <style>
 .workspace-mode .tree,
