@@ -2556,8 +2556,14 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
     escaped_name = html.escape(session.root.name)
     html_source = html_source.replace("PYNIX</b> / Icon System",
                                       "PYNIX</b> / " + escaped_name, 1)
+    project_chevron = (
+        '<span class="pynix-project-dropdown-chevron" aria-hidden="true">'
+        '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">'
+        '<path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.6"'
+        ' stroke-linecap="round" stroke-linejoin="round"/></svg></span>'
+    )
     html_source = html_source.replace("⑂ feature/icon-system-v4",
-                                      "⌄ " + escaped_name, 1)
+                                      project_chevron + escaped_name, 1)
     html_source = html_source.replace("▾ main.pnx", "▾ Current File", 1)
     html_source = html_source.replace("⑂ main · 1 modified", escaped_name, 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
