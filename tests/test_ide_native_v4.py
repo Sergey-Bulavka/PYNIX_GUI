@@ -426,10 +426,13 @@ def test_v519_titlebar_drag_is_a_native_overlay_above_webview_only():
     source = Path(app.__file__).read_text(encoding="utf-8")
     assert "class ToolbarDragView(AppKit.NSView):" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
-    assert "container.addSubview_(view)" in source
-    assert "container.addSubview_(drag_area)" in source
-    assert source.index("container.addSubview_(view)") < source.index("container.addSubview_(drag_area)")
-    assert "window.setContentView_(container)" in source
+    assert "content_view = window.contentView()" in source
+    assert "content_view.addSubview_(view)" in source
+    assert "content_view.addSubview_(drag_area)" in source
+    assert source.index("content_view.addSubview_(view)") < source.index("content_view.addSubview_(drag_area)")
+    assert "window.setContentView_(container)" not in source
+    assert "AppKit.NSWindowStyleMaskResizable" in source
+    assert "AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable" in source
     assert 'toolbar_drag_handler, "pynixToolbarDragRegion"' in source
     assert "drag_area.setHidden_(True)" in source
     assert "drag_area.setHidden_(False)" in source
@@ -447,3 +450,19 @@ def test_v519_toolbar_drag_region_comes_from_flex_spacer_not_fixed_pixels():
     assert "ResizeObserver(update)" in script
     assert "window.addEventListener('resize', update)" in script
     assert "document.replace(\"</body>\", TOOLBAR_DRAG_SCRIPT + \"</body>\", 1)" in source
+
+
+def test_v520_native_resize_retains_window_owned_content_and_drag_overlay():
+    source = Path(app.__file__).read_text(encoding="utf-8")
+    assert "content_view = window.contentView()" in source
+    assert "view = FirstClickWebView.alloc().initWithFrame_(content_view.bounds())" in source
+    assert "view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)" in source
+    assert "content_view.addSubview_(view)" in source
+    assert "content_view.addSubview_(drag_area)" in source
+    assert "content_view.bounds().size.width" in source
+    assert "content_view.bounds().size.height" in source
+    assert "window.setContentView_(container)" not in source
+    assert "AppKit.NSWindowStyleMaskResizable" in source
+    assert "window.setMinSize_(AppKit.NSMakeSize(760, 520))" in source
+    assert "self.window().performWindowDragWithEvent_(event)" in source
+    assert "window.setMovableByWindowBackground_(False)" in source
