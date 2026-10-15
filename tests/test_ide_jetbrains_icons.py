@@ -110,3 +110,21 @@ def test_source_path_does_not_falsely_trigger_trademark_restriction(tmp_path):
     path = create_icon(tmp_path / "JetBrains", "expui/actions/add.svg")
     assert check_svg(path)[0]
     assert check_svg(path, relative_path=Path("expui/actions/add.svg"))[0]
+
+
+def test_gallery_covers_every_imported_category_and_is_searchable(tmp_path):
+    from examples.icon_catalog_gallery import render_gallery
+
+    source, destination = tmp_path / "source", tmp_path / "destination"
+    create_icon(source, "actions/add.svg")
+    create_icon(source, "toolwindows/project@20x20_dark.svg")
+    create_icon(source, "nodes/folder.svg")
+    build_catalog(source, destination)
+    html = render_gallery(JetBrainsIconCatalog(destination))
+    assert "actions/add" in html
+    assert "toolwindows/project" in html
+    assert "nodes/folder" in html
+    assert "svg/toolwindows/project@20x20_dark.svg" in html
+    assert 'id="query"' in html
+    assert 'data-search="actions/add"' in html
+    assert "3 licensed icons" in html
