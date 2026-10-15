@@ -737,3 +737,13 @@ def test_project_toolbar_context_does_not_overlap_or_show_demo_read_only_label()
     assert '"⑂ main · 1 modified", escaped_name, 1' in source
     assert ".workspace-mode .workspace-toolbar>.current-branch{flex:0 1 185px!important" in css
     assert "text-overflow:ellipsis!important" in css
+
+
+def test_reference_toolbar_keeps_unique_project_context_and_compact_run_group():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    css = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert ".workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){display:none!important}" in css
+    assert ".workspace-mode .workspace-toolbar .pynix-run-action{order:1!important}" in css
+    assert ".workspace-mode .workspace-toolbar .pynix-debug-primary{order:2!important}" in css
+    assert ".workspace-mode .workspace-toolbar .pynix-tools-menu{order:9!important" in css
