@@ -576,3 +576,16 @@ def test_reference_breakpoint_is_red_and_number_rows_match_line_height():
     html = (Path(__file__).resolve().parents[1] / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
     assert ".pynix-edit-gutter>span{display:block;height:19px;line-height:19px" in html
     assert ".pynix-gutter-breakpoint{color:#e66b75!important" in html
+
+
+def test_bottom_tool_window_can_collapse_and_restore_without_destroying_contents():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    js = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "function setToolWindowVisible(visible){" in js
+    assert "terminal.classList.toggle('pynix-tool-window-collapsed',!visible);" in js
+    assert "dockToggle.addEventListener('click',()=>setToolWindowVisible(false));" in js
+    assert "dockRestore.addEventListener('click',()=>setToolWindowVisible(true));" in js
+    assert "terminalResizer.hidden=!visible;" in js
+    assert ".integrated-terminal.pynix-tool-window-collapsed{display:none!important}" in html
