@@ -2255,6 +2255,17 @@ editorInput.addEventListener('keydown',event=>{
  }
  toolsMenu.append(toolsMenuLabel,toolsMenuItems);
  document.querySelector('.workspace-toolbar')?.appendChild(toolsMenu);
+ // Keep the primary run/debug cluster visible; relocate context actions after
+ // all workspace augmentations register their own buttons and click handlers.
+ window.addEventListener('load',()=>{
+   const toolbar=document.querySelector('.workspace-toolbar');
+   if(!toolbar)return;
+   const secondaryLabels=new Set(['Preview','Definition','References','Type','Restart']);
+   for(const button of [...toolbar.querySelectorAll(':scope > button')]){
+     if(secondaryLabels.has(button.textContent.trim()))
+       toolsMenuItems.appendChild(button);
+   }
+ },{once:true});
  function requestProjectFileAction(action){
    persistBuffer();
    const source=selectedPath||current;
