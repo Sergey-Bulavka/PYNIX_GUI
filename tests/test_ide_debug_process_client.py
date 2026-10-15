@@ -509,7 +509,7 @@ def test_v5_debug_inspector_has_separate_stack_and_locals_sections():
     root = Path(__file__).resolve().parents[1]
     view = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
-    assert "inspector.className='pynix-debug-inspector';" in view
+    assert "inspector.className='pynix-debug-inspector pynix-debug-inspector-docked';" in view
     assert "section.className='pynix-debug-inspector-section';" in view
     assert "if(inspector.childElementCount)panel.appendChild(inspector);" in view
     assert ".workspace-mode .pynix-debug-inspector{display:grid;" in html
@@ -704,3 +704,13 @@ def test_bottom_tool_views_keep_independent_dom_snapshots():
     assert "saveToolView(selectedTool);" in source
     assert "if(saved)toolConsole.appendChild(saved);" in source
     assert "activateToolView(tab.textContent.trim());" in source
+
+
+def test_debug_frames_and_variables_stay_visible_in_docked_columns():
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+    assert "empty.textContent='No data available';" in source
+    assert ".pynix-debug-inspector-docked{display:grid!important" in html
+    assert "grid-template-columns:minmax(155px,35%) minmax(0,1fr)" in html
