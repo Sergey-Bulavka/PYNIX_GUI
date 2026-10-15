@@ -432,7 +432,7 @@ def test_scrollable_editor_viewport_keeps_custom_caret_aligned_with_fixed_gutter
 
 def test_editor_line_numbers_have_no_fake_leading_spaces_and_folds_are_independent(tmp_path):
     (tmp_path / "fold.pnx").write_text(
-        "function f():\\n    print(1)\\n    print(2)\\n", encoding="utf-8"
+        "function f():\n    print(1)\n    print(2)\n", encoding="utf-8"
     )
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "row.textContent=marked.has(i)?'●':String(i);" in js
