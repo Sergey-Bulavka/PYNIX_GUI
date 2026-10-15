@@ -15,6 +15,58 @@ from pathlib import Path
 
 PREVIEW_PATH = Path(__file__).with_name("icon_direction_preview.html")
 
+# A dedicated native drag surface tracks the actual EMPTY toolbar spacer.
+# No page-wide AppKit dragging: all scrollbars and editor interactions remain WebKit-owned.
+TOOLBAR_DRAG_SCRIPT = """<script>
+(() => {
+  const spacer = document.querySelector('.workspace-mode .workspace-toolbar > .toolbar-spacer');
+  const toolbar = document.querySelector('.workspace-mode .workspace-toolbar');
+  if (!spacer || !toolbar) return;
+  let last = '';
+  const update = () => {
+    const space = spacer.getBoundingClientRect();
+    const bar = toolbar.getBoundingClientRect();
+    const area = {x:space.left+4, y:bar.top+3,
+                  width:Math.max(0,space.width-8), height:Math.max(0,bar.height-6)};
+    const encoded = JSON.stringify(area);
+    if(encoded===last)return;
+    last=encoded;
+    window.webkit?.messageHandlers?.pynixToolbarDragRegion?.postMessage(area);
+  };
+  new ResizeObserver(update).observe(spacer);
+  new ResizeObserver(update).observe(toolbar);
+  window.addEventListener('resize', update);
+  requestAnimationFrame(update);
+})();
+</script>"""
+
+
+def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
+    """Map WebKit top-left CSS coordinates to AppKit bottom-left view points.
+
+    Only a sufficiently large region fully inside the top 44px toolbar is
+    eligible; never let a malformed message cover a Project pane or scrollbar.
+    """
+    import math
+
+    try:
+        x, top, width, height = (
+            float(area[key]) for key in ("x", "y", "width", "height")
+        )
+        bounds_width, bounds_height = float(bounds_width), float(bounds_height)
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return None
+    if not all(math.isfinite(v) for v in (x, top, width, height, bounds_width, bounds_height)):
+        return None
+    if (x < 86 or top < 0 or top > 12 or height < 16 or height > 44
+            or top + height > 44 or width < 32 or bounds_width < 760):
+        return None
+    width = min(width, bounds_width - x - 8)
+    if width < 32:
+        return None
+    return (x, bounds_height - top - height, width, height)
+
+
 
 def main() -> None:
     if sys.platform != "darwin":
@@ -40,6 +92,15 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
+    class ToolbarDragView(AppKit.NSView):
+        """Small transparent NSView over the toolbar's empty flex spacer only."""
+
+        def acceptsFirstMouse_(self, event):
+            return True
+
+        def mouseDown_(self, event):
+            self.window().performWindowDragWithEvent_(event)
+
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
     app.setDelegate_(delegate)
@@ -61,8 +122,14 @@ def main() -> None:
     window.setMovableByWindowBackground_(False)
     window.setMinSize_(AppKit.NSMakeSize(760, 520))
 
-    view = FirstClickWebView.alloc().initWithFrame_(window.contentView().bounds())
+    container = AppKit.NSView.alloc().initWithFrame_(window.contentView().bounds())
+    container.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
+    view = FirstClickWebView.alloc().initWithFrame_(container.bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
+    container.addSubview_(view)
+    drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
+    drag_area.setHidden_(True)
+    container.addSubview_(drag_area)  # Above WKWebView, but never above Project or Editor.
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
@@ -593,7 +660,23 @@ def main() -> None:
     symbols_handler = SymbolsHandler.alloc().init()
     diagnostics_handler = DiagnosticsHandler.alloc().init()
     navigation_handler = NavigationHandler.alloc().init()
+    class ToolbarDragRegionHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            frame = toolbar_drag_frame(
+                container.bounds().size.width,
+                container.bounds().size.height,
+                message.body(),
+            )
+            if frame is None:
+                drag_area.setHidden_(True)
+                return
+            drag_area.setFrame_(AppKit.NSMakeRect(*frame))
+            drag_area.setHidden_(False)
+
+    toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
     controller = view.configuration().userContentController()
+    controller.addScriptMessageHandler_name_(
+        toolbar_drag_handler, "pynixToolbarDragRegion")
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
@@ -610,8 +693,9 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(file_save_handler, "pynixFileSave")
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
+    document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
-    window.setContentView_(view)
+    window.setContentView_(container)
     from pynix_gui.ide_native_menu import install_native_workspace_menu
     menu_dispatcher = install_native_workspace_menu(app, view, AppKit)
     window.makeKeyAndOrderFront_(None)
