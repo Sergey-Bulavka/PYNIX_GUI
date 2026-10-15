@@ -16,7 +16,9 @@ def test_native_menu_commands_are_unique():
 def test_v4_installs_native_menu_on_actual_workspace():
     source = Path(ide_native_v4.__file__).read_text(encoding="utf-8")
     assert "install_native_workspace_menu(app, view, AppKit)" in source
-    assert "window.setContentView_(view)" in source
+    assert "content_view = window.contentView()" in source
+    assert "content_view.addSubview_(view)" in source
+    assert "window.setContentView_(view)" not in source
 
 
 def test_every_native_command_is_wired_to_existing_web_actions():
