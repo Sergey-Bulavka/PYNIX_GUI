@@ -1982,6 +1982,9 @@ editorInput.addEventListener('keydown',event=>{
    if(type==='terminal') return '<span class="file-mark file-mark-terminal">›_</span>';
    return type==='code'?icon['file-code']:icon.file;
  }
+ // Reuse the same Python brand mark in Project and the Python Console tool
+ // window; this is a distinct file-type identity, not a UI chrome vector.
+ window.pynixPythonFileIcon=()=>fileIconMarkup('python');
  function buildTree() {
    const root = {children: new Map(), path:'', folder:true};
    for(const path of [...folders, ...files.map(file=>file.name)]) {
