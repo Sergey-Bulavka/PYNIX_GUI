@@ -428,3 +428,23 @@ def test_scrollable_editor_viewport_keeps_custom_caret_aligned_with_fixed_gutter
     assert "coloredSource.scrollLeft=editorInput.scrollLeft" in js
     assert "gutter.scrollTop=editorInput.scrollTop" in js
     assert "codeScroll.addEventListener('scroll'" in js
+
+
+def test_editor_line_numbers_have_no_fake_leading_spaces_and_folds_are_independent(tmp_path):
+    (tmp_path / "fold.pnx").write_text(
+        "function f():\\n    print(1)\\n    print(2)\\n", encoding="utf-8"
+    )
+    js = workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert "row.textContent=marked.has(i)?'●':String(i);" in js
+    assert "String(i).padStart(3,' ')" not in js
+    assert "marked.has(i+1)?'●':String(i+1)" in js
+    assert "(marked.has(i+1)?'● ':'  ')" not in js
+    assert "gutter.textContent=String(i+1);" in js
+    assert "foldMarker.className='pynix-gutter-fold-marker';" in js
+    assert "foldMarker.textContent=folded.has(i)?'▸':'▾';" in js
+    assert "gutter.appendChild(foldMarker);" in js
+    assert "gutter.textContent=(folded.has(i)?" not in js
+    # Clickable folding remains attached to the entire gutter row.
+    assert "gutter.addEventListener('click',()=>{" in js
+    # Line-number synchronization remains tied to the input's scrollTop.
+    assert "gutter.scrollTop=editorInput.scrollTop" in js
