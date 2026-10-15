@@ -11,7 +11,8 @@ from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog
 def test_chrome_uses_licensed_original_glyphs_and_escapes_svg():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for name in ("general/search", "general/settings", "general/add",
-                 "general/locate", "general/expandAll", "general/hide"):
+                 "general/locate", "general/expandAll", "general/collapseAll",
+                 "general/moreVertical", "general/hide"):
         assert catalog.resolve(name, dark=True) is not None, name
         assert catalog.resolve(name, dark=False) is not None, name
     markup = "<html><body class='workspace-mode'></body></html>"
@@ -49,7 +50,7 @@ def test_top_toolbar_moves_existing_run_debug_and_tools_controls():
 
 def test_project_title_actions_bind_to_real_tree_and_new_file_handlers():
     for expected in (
-        "title.textContent='Proj'",
+        "title.textContent='Project'",
         "document.querySelector('.pynix-new-source')?.click()",
         ".project-entry.workspace-selected",
         "collapse?.click();more.open=false;",
@@ -58,6 +59,8 @@ def test_project_title_actions_bind_to_real_tree_and_new_file_handlers():
     ):
         assert expected in CHROME_SCRIPT
     assert ".pynix-project-quick-button:focus-visible" in CHROME_STYLE
+    assert "makeIcon('general/collapseAll')" in CHROME_SCRIPT
+    assert "makeIcon('general/moreVertical')" in CHROME_SCRIPT
 
 
 def test_status_breadcrumb_follows_current_editor_tab():
