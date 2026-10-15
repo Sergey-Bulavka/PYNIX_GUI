@@ -661,6 +661,25 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .editor-tabs .pynix-editor-tab :focus-visible{
  outline:1px solid #8196c9!important;outline-offset:-1px!important
 }
+
+/* V5.2 screenshot alignment: 2026-10-15 macOS comparison.
+   Geometry values are review defaults; splitter resizing stays authoritative. */
+.workspace-mode .workspace-toolbar{height:39px!important;min-height:39px!important;flex:0 0 39px!important}
+.workspace-mode .layout{height:calc(100vh - 39px)!important}
+.workspace-mode .tree{width:var(--explorer-width,220px)!important;min-width:180px!important}
+.workspace-mode .tree .pynix-project-header{height:32px!important;min-height:32px!important}
+.workspace-mode .tree .project-entry{height:23px!important;min-height:23px!important;line-height:23px!important}
+.workspace-mode .tree .project-entry .project-label{font-size:12px!important}
+.workspace-mode .tree-resizer{width:4px!important;background:#2b2d30!important}
+.workspace-mode .tree-resizer:hover,.workspace-mode .tree-resizer.dragging{background:#6e8dbb!important}
+.workspace-mode .terminal-resizer{height:5px!important;background:#2b2d30!important}
+.workspace-mode .terminal-resizer:hover,.workspace-mode .terminal-resizer.dragging{background:#6e8dbb!important}
+.workspace-mode .integrated-terminal{height:var(--terminal-height,235px)!important;min-height:90px!important}
+.workspace-mode .editor-tabs{height:35px!important;min-height:35px!important;max-height:35px!important;flex:0 0 35px!important}
+.workspace-mode .editor-tabs .pynix-editor-tab{height:29px!important;min-height:29px!important;max-height:29px!important}
+.workspace-mode .terminal-tabs{height:31px!important;min-height:31px!important}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){height:31px!important;min-height:31px!important}
+.workspace-mode .bottom{height:22px!important;min-height:22px!important;flex:0 0 22px!important}
 </style>
 <style>
 .workspace-mode .tree,
