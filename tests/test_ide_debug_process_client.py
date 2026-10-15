@@ -600,3 +600,11 @@ def test_only_selected_bottom_tool_tab_has_active_reference_styling():
     assert "child.classList.remove('pynix-active-tab');" in source
     assert "tab.classList.add('pynix-active-tab');" in source
     assert ".terminal-tabs>strong:not(.pynix-active-tab)" in css
+
+
+def test_tool_window_reopens_for_debug_run_and_diagnostics_results():
+    from pathlib import Path
+    src = (Path(__file__).resolve().parents[1] / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert "window.pynixDebugResult=packet=>{\n   setToolWindowVisible(true);" in src
+    assert "window.pynixLiveDiagnosticsResult=payload=>{\n   setToolWindowVisible(true);" in src
+    assert "dockRestore.textContent='Tool Windows ↑';" in src
