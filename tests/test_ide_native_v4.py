@@ -229,16 +229,17 @@ def test_native_host_no_longer_overrides_objc_mouse_dispatch():
     assert "def mouseDown_(self, event):" not in source
 
 
-def test_v511_compact_tabs_and_status_bar_visual_contract():
-    css = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>", 1)[0]
-    assert "height:34px!important;min-height:34px!important;max-height:34px!important" in css
-    assert "height:28px!important;min-height:28px!important;max-height:28px!important" in css
-    assert "border-radius:6px 6px 0 0!important" in css
-    assert "border-bottom-color:#2b2d30!important" in css
-    assert "height:26px!important;min-height:26px!important;max-height:26px!important" in css
-    assert ".workspace-mode .ide>.rail{bottom:26px!important}" in css
-    assert ".workspace-mode .right-tools{bottom:26px!important}" in css
-    assert ".workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important" in css
+def test_v514_continuous_workspace_shell():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    css = html.split("</style>", 1)[0]
+    assert "/* V5.14 structural chrome:" in css
+    final = css.split("/* V5.14 structural chrome:", 1)[1]
+    assert ".workspace-mode .editor{background:#1e1f22!important;border:0!important;border-radius:0!important" in final
+    assert ".workspace-mode .tree{background:#1e1f22!important;margin:0!important;padding:0 9px!important;border:0!important" in final
+    assert "position:static!important;top:auto!important;align-self:stretch!important" in final
+    assert "height:35px!important;min-height:35px!important;max-height:35px!important" in final
+    assert "margin:3px 35px 3px 40px!important;border:0!important" in final
+    assert ".workspace-mode .ide>.rail,.workspace-mode .right-tools{bottom:28px!important}" in final
 
 
 def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
