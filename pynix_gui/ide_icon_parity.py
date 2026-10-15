@@ -30,6 +30,12 @@ ICON_BINDINGS = (
     (".workspace-mode .right-tools > button[title='Outline']", "toolwindows/structure", True, True),
     (".workspace-mode .right-tools > button[title='Documentation']", "toolwindows/documentation", True, True),
     (".workspace-mode .bottom > span:nth-of-type(1)", "nodes/ideaProject", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='continue']", "run/resume", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='pause']", "run/pause", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='stepInto']", "run/stepInto", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='stepOver']", "run/stepOver", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='stepOut']", "run/stepOut", False, False),
+    (".workspace-mode .pynix-debug-panel-toolbar [data-pynix-debug-action='stop']", "run/stop", False, False),
 )
 
 # Keep extensions distinct even when the IDE model groups them as 'code'
