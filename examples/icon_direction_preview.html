@@ -588,6 +588,14 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
 .workspace-mode .bottom>span:first-child{margin-right:auto!important;max-width:55%;overflow:hidden;text-overflow:ellipsis}
 .workspace-mode .bottom>span:last-child{margin-left:auto!important;color:#b9bdc7!important}
 .workspace-mode .pynix-terminal-session[hidden]{display:none!important}
+
+/* Keep project and run configuration in distinct toolbar cells, without clipping. */
+.workspace-mode .workspace-toolbar{display:flex!important;align-items:center!important;flex-wrap:nowrap!important;overflow:hidden!important}
+.workspace-mode .workspace-toolbar>strong{flex:0 0 auto!important;white-space:nowrap!important}
+.workspace-mode .workspace-toolbar>.current-branch{flex:0 1 185px!important;max-width:185px!important;min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;margin-right:8px!important}
+.workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){flex:0 1 140px!important;max-width:140px!important;min-width:70px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.workspace-mode .workspace-toolbar>.toolbar-spacer{flex:1 1 auto!important;min-width:8px!important}
+.workspace-mode .bottom>span:first-child{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important}
 </style>
 <style>
 .workspace-mode .tree,
