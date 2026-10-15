@@ -25,15 +25,14 @@ SOURCE_REPOSITORY = "https://github.com/JetBrains/intellij-community"
 LICENSE_URL = "https://www.apache.org/licenses/LICENSE-2.0"
 MANIFEST_VERSION = 1
 MAX_SVG_SIZE = 256_000
-VARIANT_RE = re.compile(r"(?:(@(?:2x|20x20|16x16))?)(_dark)?$", re.I)
-APACHE_NOTICE = re.compile(r"(?:Apache(?:[- ](?:License[, ]*))?[- ]2(?:\\.0)?|governed by the Apache 2\\.0 license)", re.I)
+APACHE_NOTICE = re.compile(r"Apache(?:[- ](?:License[, ]*))?[- ]2(?:\.0)?", re.I)
 RESTRICTED_NAMES = re.compile(
-    r"(?:^|[._\\-/])(pycharm|intellijidea|intellij-idea|jetbrains|productlogos?|splash|aboutlogo)(?:$|[._\\-/])",
+    r"(?:^|[._/-])(pycharm|intellijidea|intellij-idea|jetbrains|productlogos?|splash|aboutlogo)(?:$|[._/-])",
     re.I,
 )
 SCRIPT_OR_REMOTE = re.compile(
-    r"<\\s*(?:script|foreignObject|iframe)\\b|\\bon[a-z]+\\s*=|"
-    r"(?:href|src)\\s*=\\s*['\"]\\s*(?:https?:|javascript:|data:)|<!DOCTYPE|<!ENTITY",
+    r"<\s*(?:script|foreignObject|iframe)\b|\bon[a-z]+\s*=|"
+    r"(?:href|src)\s*=\s*['\"]\s*(?:https?:|javascript:|data:)|<!DOCTYPE|<!ENTITY",
     re.I,
 )
 
@@ -55,11 +54,11 @@ def _source_key(relative: Path) -> tuple[str, str]:
     return key, ("dark_" if dark else "light_") + size
 
 
-def check_svg(path: Path) -> tuple[bool, str]:
+def check_svg(path: Path, *, relative_path: Path | None = None) -> tuple[bool, str]:
     """Reject unlicensed, unsafe, trademark-related or malformed SVG assets."""
     if path.suffix.lower() != ".svg":
         return False, "not-svg"
-    if RESTRICTED_NAMES.search(path.as_posix()):
+    if RESTRICTED_NAMES.search((relative_path or Path(path.name)).as_posix()):
         return False, "trademark"
     try:
         if path.stat().st_size > MAX_SVG_SIZE:
@@ -100,7 +99,7 @@ def build_catalog(source_dir: Path, destination: Path, *, dry_run: bool = False)
     skipped: dict[str, int] = {}
     for icon in sorted(source_dir.rglob("*.svg")):
         relative = icon.relative_to(source_dir)
-        safe, reason = check_svg(icon)
+        safe, reason = check_svg(icon, relative_path=relative)
         if not safe:
             skipped[reason] = skipped.get(reason, 0) + 1
             continue
@@ -187,3 +186,24 @@ class JetBrainsIconCatalog:
         if hashlib.sha256(data).hexdigest() != icon.sha256:
             raise ValueError(f"SVG differs from licensed manifest: {name}")
         return data.decode("utf-8-sig")
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Offline importer: point at a locally checked out JetBrains expui tree."""
+    import argparse
+    parser = argparse.ArgumentParser(description="Import licensed JetBrains New UI SVGs")
+    parser.add_argument("source", type=Path, help="Local expui directory from an IntelliJ checkout")
+    parser.add_argument("destination", type=Path, help="PYNIX icon assets directory")
+    parser.add_argument("--dry-run", action="store_true", help="Only count eligible icons")
+    args = parser.parse_args(argv)
+    manifest = build_catalog(args.source, args.destination, dry_run=args.dry_run)
+    variants = sum(len(value) for value in manifest["icons"].values())
+    print(f"Eligible icon names: {len(manifest['icons'])}; SVG variants: {variants}")
+    print(f"Skipped SVG files: {manifest['skipped']}")
+    if not args.dry_run:
+        print(f"Catalog: {args.destination / 'manifest.json'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
