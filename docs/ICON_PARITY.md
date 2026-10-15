@@ -107,19 +107,27 @@ icon catalog. Install icons only on controls that have an actual user action.
    tool windows; no inert controls just because icons exist.
 6. HiDPI inspection, focus/hover/active/disabled states and runtime tests.
 
-**Status (first production slice):** importer, manifest-backed lookup,
-offline gallery, and the first **36 original JetBrains New UI SVGs** are now in
-the PYNIX repository under `pynix_gui/assets/jetbrains_new_ui/svg/`.
-These cover Project, Find, VCS, Run, Debug, Settings, Search, Refresh,
-Structure, Documentation, Problems, Notifications, Services, Commit, Help,
-more-actions and Run/Debug toolbar actions in light and dark variants. The native V4 preview activates eligible icons on
-its existing left, top and right rails and falls back to existing artwork if
-a named icon is missing.
+**Status (licensed full catalog):** the complete audited upstream
+`platform/icons/src/expui` directory is imported from JetBrains commit
+`9c8a280703b02322663b2f476ff7dbac8922889b`:
 
-Full PyCharm icon parity has **not** yet been achieved. The user-visible
-status bar, full right rail, file type families and all secondary controls
-still need to be mapped as appropriate. Do not invent working controls.
-The full upstream `expui` directory has not yet been imported.
+- **787 icon names, 1,642 licensed light/dark and sized SVG variants**
+- 100 files excluded for lack of an explicit compatible license declaration
+- Original SVG license headers and SHA-256 manifest kept
+- Repeatable import job: `.github/workflows/vendor-jetbrains-icons.yml`
+- Searchable gallery generated from the complete manifest
+
+The running native V4 preview now applies licensed icons to its existing
+left/top/right tool controls, Project folders, specific file extensions,
+editor tabs, and the left project indicator of the bottom status strip.
+When no licensed matching SVG exists, the previous PYNIX icon is retained.
+The native PYNIX identity and Python logo remain distinct.
+
+**Remaining work:** full PyCharm **visual layout and usage** parity, including
+all menu/action command glyphs, debugger subpanels, contextual indicators,
+hover/active/focus states, secondary tool windows and pixel-level inspection on
+macOS. Import completeness alone does not mean all 787 icon names are used.
+Do not add inactive tool buttons merely to display the available glyphs.
 
 Validate this slice with:
 
