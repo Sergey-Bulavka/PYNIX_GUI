@@ -536,6 +536,11 @@ body.workspace-mode>header{display:none!important}
 .workspace-mode .pynix-project-header-button{appearance:none;background:transparent;border:0;color:#a8adb7;cursor:pointer;border-radius:4px;width:25px;height:25px;padding:0;font-size:17px;line-height:23px}
 .workspace-mode .pynix-project-header-button:hover{background:#3e4048;color:#e0e3e8}
 .workspace-mode .pynix-project-header-button:focus-visible{outline:2px solid #8091c1}
+
+/* Native Project tool-window toggle: remove pane and splitter from layout. */
+.workspace-mode .tree[hidden],.workspace-mode .tree-resizer[hidden]{display:none!important}
+.workspace-mode .rail-item:focus-visible{outline:2px solid #818dbe;outline-offset:1px}
+.workspace-mode .rail-item.active{background:#383b47;color:#dce2ec}
 </style>
 <style>
 .workspace-mode .tree,
