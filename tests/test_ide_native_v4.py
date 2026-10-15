@@ -258,6 +258,9 @@ def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
     assert "window.pynixVisualMetrics=snapshot;" in html
     assert "getBoundingClientRect()" in html
     assert "getComputedStyle(el)" in html
+    assert "canScrollVertically:el.scrollHeight>el.clientHeight+1" in html
+    assert "canScrollHorizontally:el.scrollWidth>el.clientWidth+1" in html
+    assert "['editor scroll','.pynix-editor-scroll']" in html
     assert "event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyM'" in html
     assert "report.readOnly=true" in html
     assert "['terminal','.integrated-terminal']" in html
