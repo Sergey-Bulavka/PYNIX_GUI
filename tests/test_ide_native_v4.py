@@ -130,3 +130,13 @@ def test_v4_tab_close_available_on_hover_and_keyboard_focus():
     assert ".pynix-editor-tab:hover .pynix-editor-tab-close," in html
     assert ".pynix-editor-tab:focus-within .pynix-editor-tab-close{" in html
     assert "visibility:visible;pointer-events:auto;" in html
+
+
+def test_new_ui_precise_tab_title_and_close_geometry_are_scoped():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    style = html.split("</style>", 1)[0]
+    assert ".workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-label{" in style
+    assert ".workspace-mode .editor-tabs .pynix-editor-tab .pynix-editor-tab-close{" in style
+    assert "flex:0 0 18px!important" in style
+    assert ".pynix-editor-tab:is(.active,:hover,:focus-within) .pynix-editor-tab-close" in style
+    assert "visibility:hidden!important;pointer-events:none!important" in style
