@@ -40,27 +40,9 @@ def main() -> None:
         def acceptsFirstMouse_(self, event):
             return True
 
-        def hitTest_(self, point):
-            # Route empty titlebar clicks to the WKWebView itself rather than
-            # WebKit's internal content view, which otherwise consumes mouseDown.
-            local = self.convertPoint_fromView_(point, self.superview())
-            bounds = self.bounds()
-            if (bounds.size.height - 44 <= local.y <= bounds.size.height
-                    and 295 <= local.x <= min(975, bounds.size.width - 425)):
-                return self
-            return objc.super(FirstClickWebView, self).hitTest_(point)
-
-        def mouseDown_(self, event):
-            # WKWebView consumes mouse events: intercept the empty header directly.
-            # Coordinate conversion uses the current webview bounds, so resizing
-            # cannot move the drag hit region away from the visible toolbar.
-            point = self.convertPoint_fromView_(event.locationInWindow(), None)
-            bounds = self.bounds()
-            if (bounds.size.height - 44 <= point.y <= bounds.size.height
-                    and 295 <= point.x <= min(975, bounds.size.width - 425)):
-                self.window().performWindowDragWithEvent_(event)
-                return
-            objc.super(FirstClickWebView, self).mouseDown_(event)
+        def mouseDownCanMoveWindow(self):
+            # Let AppKit drag the window from non-interactive WebView background.
+            return True
 
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
