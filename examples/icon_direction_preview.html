@@ -441,6 +441,26 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 .workspace-mode .pynix-edit-constant{color:#caa2c4!important}
 .workspace-mode .pynix-edit-layer .pynix-source-input{line-height:19px!important}
 .workspace-mode .pynix-edit-layer .pynix-edit-highlight{line-height:19px!important}
+
+/* Reference tool windows: a single dock with narrow tabs and optional local sessions. */
+.workspace-mode .integrated-terminal{height:var(--terminal-height,27vh);min-height:135px;max-height:55vh;flex:none}
+.workspace-mode .terminal-tabs{display:flex;align-items:stretch;height:35px;min-height:35px;gap:0;padding:0 10px}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){height:35px;display:flex;align-items:center;padding:0 11px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;font-weight:500}
+.workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>.pynix-active-tab{border-bottom-color:#8d93d5;color:#e3e5eb;font-weight:600}
+.workspace-mode .terminal-tabs>span:hover:not(.term-spacer){background:#363840}
+.workspace-mode .terminal-tabs .term-spacer{margin-left:auto;padding-top:8px}
+.workspace-mode .terminal-resizer{height:4px;background:#393b42}
+.workspace-mode .terminal-resizer:hover,.workspace-mode .terminal-resizer.dragging{background:#606b86}
+.workspace-mode .tree-resizer:hover,.workspace-mode .tree-resizer.dragging{background:#606b86}
+.workspace-mode .right-tools button{color:#9ca1ad;border-radius:6px}
+.workspace-mode .right-tools button:hover{background:#41434b;color:#d9dce4}
+@media(max-width:780px){
+ .workspace-mode .rail{width:36px}
+ .workspace-mode .right-tools{width:32px}
+ .workspace-mode .tree{width:170px}
+ .workspace-mode .terminal-tabs{padding-inline:4px}
+ .workspace-mode .terminal-tabs>strong,.workspace-mode .terminal-tabs>span:not(.term-spacer){padding-inline:7px;font-size:10px}
+}
 </style>
 <style>
 .workspace-mode .tree,
