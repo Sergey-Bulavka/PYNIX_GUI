@@ -1434,7 +1434,8 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
   ['left rail','.rail'],['right rail','.right-tools'],
   ['editor','.editor'],['tabs','.editor-tabs'],
   ['active tab','.editor-tabs .pynix-editor-tab.active'],
-  ['editor code','.editor .code'],['editor input','.pynix-source-input'],
+  ['editor code','.editor .code'],['editor scroll','.pynix-editor-scroll'],
+  ['editor input','.pynix-source-input'],
   ['edit gutter','.pynix-edit-gutter'],
   ['terminal','.integrated-terminal'],['terminal tabs','.terminal-tabs'],
   ['status','.bottom']
@@ -1450,7 +1451,10 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
     display:c.display,visibility:c.visibility,background:c.backgroundColor,border:c.border,
     radius:c.borderRadius,padding:c.padding,margin:c.margin,overflow:c.overflow,
     font:c.font,fontSize:c.fontSize,lineHeight:c.lineHeight,scrollLeft:el.scrollLeft,
-    scrollTop:el.scrollTop,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth};
+    scrollTop:el.scrollTop,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,
+    scrollHeight:el.scrollHeight,clientHeight:el.clientHeight,
+    canScrollVertically:el.scrollHeight>el.clientHeight+1,
+    canScrollHorizontally:el.scrollWidth>el.clientWidth+1};
   });
   return result;
  }
