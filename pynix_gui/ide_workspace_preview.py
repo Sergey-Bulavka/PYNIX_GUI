@@ -132,7 +132,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
    editorInput.parentElement.appendChild(measure);
    const advance=measure.getBoundingClientRect().width/10;
    measure.remove();
-   const left=parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
+   // The input scroll viewport starts after the fixed line-number gutter.
+   const left=editorInput.offsetLeft+parseFloat(metrics.paddingLeft)+colIndex*advance-editorInput.scrollLeft;
    const top=topPadding+(line-1)*lineHeight-editorInput.scrollTop;
    customCaret.style.height=lineHeight+'px';
    customCaret.style.transform='translate('+left+'px,'+top+'px)';
