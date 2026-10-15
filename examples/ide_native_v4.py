@@ -24,6 +24,7 @@ def main() -> None:
 
     import AppKit
     import WebKit
+    import objc
     from Foundation import NSObject, NSURL
     from pynix_gui.ide_navigation_bridge import (
         attach_navigation_controls, normalize_webkit_request, validate_request, result_script,
@@ -47,7 +48,7 @@ def main() -> None:
             if (bounds.size.height - 44 <= local.y <= bounds.size.height
                     and 295 <= local.x <= min(975, bounds.size.width - 425)):
                 return self
-            return super().hitTest_(point)
+            return objc.super(FirstClickWebView, self).hitTest_(point)
 
         def mouseDown_(self, event):
             # WKWebView consumes mouse events: intercept the empty header directly.
@@ -59,7 +60,7 @@ def main() -> None:
                     and 295 <= point.x <= min(975, bounds.size.width - 425)):
                 self.window().performWindowDragWithEvent_(event)
                 return
-            super().mouseDown_(event)
+            objc.super(FirstClickWebView, self).mouseDown_(event)
 
     app = AppKit.NSApplication.sharedApplication()
     delegate = PreviewDelegate.alloc().init()
