@@ -29,6 +29,7 @@ ICON_BINDINGS = (
     (".workspace-mode .workspace-toolbar .pynix-debug-primary", "run/debug", False, False),
     (".workspace-mode .right-tools > button[title='Outline']", "toolwindows/structure", True, True),
     (".workspace-mode .right-tools > button[title='Documentation']", "toolwindows/documentation", True, True),
+    (".workspace-mode .bottom > span:nth-of-type(1)", "nodes/ideaProject", False, False),
 )
 
 # Project Explorer is rebuilt on expansion/search; these icons require live binding.
@@ -38,6 +39,9 @@ DYNAMIC_ICON_BINDINGS = (
     (".workspace-mode .project-glyph.file-json", "fileTypes/json", False),
     (".workspace-mode .project-glyph.file-markdown", "fileTypes/markdown", False),
     (".workspace-mode .project-glyph.file-text", "fileTypes/text", False),
+    (".workspace-mode .pynix-tab-file-glyph.file-json", "fileTypes/json", False),
+    (".workspace-mode .pynix-tab-file-glyph.file-markdown", "fileTypes/markdown", False),
+    (".workspace-mode .pynix-tab-file-glyph.file-text", "fileTypes/text", False),
 )
 
 ICON_BRIDGE_SCRIPT = r"""<script>
@@ -80,6 +84,16 @@ ICON_BRIDGE_SCRIPT = r"""<script>
   };
   synchronize();
   new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true});
+ }
+ // Open tabs are rebuilt when a source changes or tabs are reordered.
+ const editorTabs=document.querySelector('.workspace-mode .editor-tabs');
+ if(editorTabs&&dynamic.length){
+  const synchronizeTabs=()=>{
+   for(const item of dynamic)
+    for(const target of editorTabs.querySelectorAll(item.selector))activate(target,item);
+  };
+  synchronizeTabs();
+  new MutationObserver(synchronizeTabs).observe(editorTabs,{childList:true,subtree:true});
  }
 })();
 </script>"""
