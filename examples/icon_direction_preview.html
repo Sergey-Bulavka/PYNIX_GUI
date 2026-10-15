@@ -495,6 +495,23 @@ body.workspace-mode{--ide-base:#1e1f22;--ide-panel:#2b2d30;--ide-panel-dark:#252
 .workspace-mode .pynix-debug-panel-toolbar>button:nth-last-child(-n+2){margin-left:5px;border-left:1px solid #3c3d45}
 .workspace-mode .terminal-tabs{order:0}
 .workspace-mode .terminal-console{order:2}
+
+/* V5 shell geometry acceptance: one compact toolbar below native titlebar. */
+body.workspace-mode>header{display:none!important}
+.workspace-mode .layout{height:calc(100vh - 44px)!important}
+.workspace-mode .workspace-toolbar{height:44px!important;min-height:44px!important;gap:8px!important;padding-inline:12px!important;border-bottom:0!important}
+.workspace-mode .workspace-toolbar>strong{font-size:13px!important;letter-spacing:0!important}
+.workspace-mode .workspace-toolbar>.current-branch{display:inline-flex!important;color:#adb2c2!important;max-width:120px!important;white-space:nowrap!important}
+.workspace-mode .workspace-toolbar>span:not(.current-branch):not(.toolbar-spacer){max-width:125px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-mode .workspace-toolbar .pynix-debug-status{max-width:80px!important}
+.workspace-mode .rail{border-right:0!important}
+.workspace-mode .tree{border-radius:9px 9px 9px 9px;margin:3px 0 5px 0!important;min-width:180px}
+.workspace-mode .editor-tabs{border-radius:9px 9px 0 0!important;overflow:hidden}
+.workspace-mode .editor{min-width:0;border-radius:9px 9px 0 0!important}
+.workspace-mode .integrated-terminal{border:0!important;border-radius:10px!important;margin:4px 4px 3px 0!important;overflow:hidden}
+.workspace-mode .terminal-tabs{border-radius:10px 10px 0 0}
+.workspace-mode .bottom{min-height:22px!important}
+.workspace-mode .workspace-toolbar>.run-control{display:none!important}
 </style>
 <style>
 .workspace-mode .tree,
