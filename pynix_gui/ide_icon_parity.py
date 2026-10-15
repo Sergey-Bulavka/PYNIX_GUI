@@ -32,6 +32,31 @@ ICON_BINDINGS = (
     (".workspace-mode .bottom > span:nth-of-type(1)", "nodes/ideaProject", False, False),
 )
 
+# Keep extensions distinct even when the IDE model groups them as 'code'
+# or 'settings'. The source and tab glyph slots expose data-extension.
+# This covers file types shown by the actual Project Explorer, including
+# those not yet eligible for editing in the source buffer.
+EXTENSION_ICON_NAMES = (
+    ("js", "fileTypes/javaScript"),
+    ("ts", "fileTypes/typeScript"),
+    ("css", "fileTypes/css"),
+    ("html", "fileTypes/html"),
+    ("htm", "fileTypes/html"),
+    ("xml", "fileTypes/xml"),
+    ("yaml", "fileTypes/yaml"),
+    ("yml", "fileTypes/yaml"),
+    ("toml", "fileTypes/toml"),
+    ("sh", "fileTypes/shell"),
+    ("bash", "fileTypes/shell"),
+    ("zsh", "fileTypes/shell"),
+    ("svg", "fileTypes/image"),
+    ("png", "fileTypes/image"),
+    ("jpg", "fileTypes/image"),
+    ("jpeg", "fileTypes/image"),
+    ("webp", "fileTypes/image"),
+    ("zip", "fileTypes/archive"),
+)
+
 # Project Explorer is rebuilt on expansion/search; these icons require live binding.
 # The native PYNIX and Python marks are kept; only standard file types use JB.
 DYNAMIC_ICON_BINDINGS = (
@@ -42,6 +67,10 @@ DYNAMIC_ICON_BINDINGS = (
     (".workspace-mode .pynix-tab-file-glyph.file-json", "fileTypes/json", False),
     (".workspace-mode .pynix-tab-file-glyph.file-markdown", "fileTypes/markdown", False),
     (".workspace-mode .pynix-tab-file-glyph.file-text", "fileTypes/text", False),
+) + tuple(
+    (f".workspace-mode {slot}[data-extension='{extension}']", icon, False)
+    for extension, icon in EXTENSION_ICON_NAMES
+    for slot in (".project-glyph", ".pynix-tab-file-glyph")
 )
 
 ICON_BRIDGE_SCRIPT = r"""<script>
