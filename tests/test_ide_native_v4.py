@@ -239,3 +239,14 @@ def test_v511_compact_tabs_and_status_bar_visual_contract():
     assert ".workspace-mode .ide>.rail{bottom:26px!important}" in css
     assert ".workspace-mode .right-tools{bottom:26px!important}" in css
     assert ".workspace-mode .tree{border:1px solid #34363c!important;border-radius:6px!important" in css
+
+
+def test_visual_diagnostics_are_read_only_and_include_computed_geometry():
+    html = app.PREVIEW_PATH.read_text(encoding="utf-8")
+    assert "window.pynixVisualMetrics=snapshot;" in html
+    assert "getBoundingClientRect()" in html
+    assert "getComputedStyle(el)" in html
+    assert "event.ctrlKey&&event.altKey&&event.shiftKey&&event.code==='KeyM'" in html
+    assert "report.readOnly=true" in html
+    assert "['terminal','.integrated-terminal']" in html
+    assert "['active tab','.editor-tabs .pynix-editor-tab.active']" in html
