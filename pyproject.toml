@@ -30,4 +30,11 @@ addopts = "-q"
 
 
 [tool.setuptools.package-data]
-pynix_gui = ["py.typed", "assets/icons/*.png"]
+pynix_gui = [
+    "py.typed",
+    "assets/icons/*.png",
+    "assets/jetbrains_new_ui/svg/*/*.svg",
+    "assets/jetbrains_new_ui/svg/*/*/*.svg",
+    "assets/jetbrains_new_ui/svg/*/*/*/*.svg",
+    "assets/jetbrains_new_ui/manifest.json",
+]
