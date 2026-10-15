@@ -177,3 +177,14 @@ def test_v54_terminal_and_tool_rail_have_scoped_visual_contracts():
     assert ".workspace-mode .pynix-terminal-session-tab{" in style
     assert ".workspace-mode .right-tools{width:35px!important" in style
     assert ".workspace-mode .tree .project-entry.workspace-selected{" in style
+
+
+def test_v55_window_drag_and_separate_editor_gutter_contract():
+    native = Path(app.__file__).read_text(encoding="utf-8")
+    style = app.PREVIEW_PATH.read_text(encoding="utf-8").split("</style>",1)[0]
+    assert "window.setMovableByWindowBackground_(True)" in native
+    assert ".workspace-mode .pynix-editor-viewport{" in style
+    assert ".workspace-mode .pynix-editor-gutter{" in style
+    assert ".workspace-mode .pynix-editor-scroll{" in style
+    assert ".workspace-mode .ide>.rail{" in style
+    assert ".workspace-mode .integrated-terminal{margin-left:43px!important}" in style
