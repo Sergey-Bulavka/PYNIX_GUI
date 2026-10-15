@@ -58,7 +58,13 @@ def check_svg(path: Path, *, relative_path: Path | None = None) -> tuple[bool, s
     """Reject unlicensed, unsafe, trademark-related or malformed SVG assets."""
     if path.suffix.lower() != ".svg":
         return False, "not-svg"
-    if RESTRICTED_NAMES.search((relative_path or Path(path.name)).as_posix()):
+    relative_text = (relative_path or Path(path.name)).as_posix()
+    # Trademark file stems can also use CamelCase without separators.
+    restricted = RESTRICTED_NAMES.search(relative_text) or any(
+        word in relative_text.lower()
+        for word in ("pycharm", "intellijidea", "jetbrains", "productlogo", "splashscreen")
+    )
+    if restricted:
         return False, "trademark"
     try:
         if path.stat().st_size > MAX_SVG_SIZE:
