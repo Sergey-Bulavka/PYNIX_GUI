@@ -1914,8 +1914,15 @@ editorInput.addEventListener('keydown',event=>{
    if(rails[2]?.classList.contains('active'))return;
    tree.replaceChildren();
    const heading=document.createElement('div');
-   heading.className='tree-title';
-   heading.textContent='EXPLORER · '+files.length+' FILES';
+   heading.className='tree-title pynix-project-header';
+   const projectTitle=document.createElement('span');
+   projectTitle.textContent='Project';
+   const projectActions=document.createElement('span');
+   projectActions.className='pynix-project-header-actions';
+   const projectCount=document.createElement('span');
+   projectCount.textContent=files.length+' files';
+   projectActions.appendChild(projectCount);
+   heading.append(projectTitle,projectActions);
    tree.appendChild(heading);
    function appendRow(entry, depth, isRoot=false) {
      const isOpen=expanded.has(entry.path);
