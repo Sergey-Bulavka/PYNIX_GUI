@@ -98,7 +98,8 @@ def test_python_console_and_project_reuse_one_python_file_identity():
               "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     assert "window.pynixPythonFileIcon=()=>fileIconMarkup('python');" in source
     assert "entry.label==='Python Console'" in EDGE_PROFILE_SCRIPT
-    assert "window.pynixPythonFileIcon?.()" in EDGE_PROFILE_SCRIPT
+    assert "window.pynixPythonFileIcon?.()" not in EDGE_PROFILE_SCRIPT
+    assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
     assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
 
 
@@ -111,7 +112,9 @@ def test_exact_requested_six_items_in_the_top_left():
     assert "entry.label==='Pull Requests'" in EDGE_PROFILE_SCRIPT
     assert "separator.className='pynix-extra-separator';" in EDGE_PROFILE_SCRIPT
     assert "separator.setAttribute('role','separator');" in EDGE_PROFILE_SCRIPT
-    assert "more.textContent=edge==='left-top'?'•••'" in EDGE_PROFILE_SCRIPT
+    assert "const moreIcon=__MORE_ICON_DATA__;" in EDGE_PROFILE_SCRIPT
+    assert "more.appendChild(node);" in EDGE_PROFILE_SCRIPT
+    assert "more.textContent=edge==='left-top'?'•••'" not in EDGE_PROFILE_SCRIPT
     assert '[data-edge="left-top"] .pynix-extra-tool' in EDGE_PROFILE_STYLE
     assert "width:36px!important;height:36px!important" in EDGE_PROFILE_STYLE
 
@@ -129,3 +132,5 @@ def test_top_left_icons_load_in_iconless_mode_without_loading_other_rails():
     assert r'\u003csvg' in result
     assert '"svg": null' in result
     assert "const pictogram=iconless&&edge==='left-top';" in EDGE_PROFILE_SCRIPT
+    assert "general/moreHorizontal" in result
+    assert '"name": "github/pullRequests"' in result
