@@ -114,11 +114,15 @@ catalog:
   negative spaces. The old approximated outline hexagon with nested, jagged
   strokes has been removed. Three full-size SVG fills preserve readability
   at 20×20, instead of stacked scale transforms.
-- `pynix_gui/assets/icons/pynix-packages.svg` is a single coherent
-  **isometric parcel with an integral simplified PYNIX P** on its right
-  face. Its 1.5px/1.4px body and 1.2px inset are drawn directly in 20×20
-  coordinates. No Python snake, transformed miniature logo or icon sticker
-  remains.
+- `pynix_gui/assets/icons/pynix-packages.svg` preserves the
+  **exact 20×20 JetBrains Python Packages box silhouette** from the licensed
+  `pythonPackages@20x20_dark.svg` (its final path is reproduced unchanged).
+  The four Python snake/eye paths are removed; the three exact existing
+  PYNIX Terminal logo paths replace them in the same lower-right region,
+  using a single uniform scale. Thus the proportions, bevels and outline
+  weight match the original PyCharm package icon rather than an invented
+  PYNIX cuboid. No bitmap, extra logo badge or edited upstream catalog file
+  is used.
 
 Vector quality is also managed consistently across the native IDE by the
 `geometricPrecision` SVG style and `image-rendering:auto`. The browser
@@ -127,11 +131,11 @@ WKWebView antialiasing instead of creating and rescaling bitmaps. **At very
 high screenshot magnification, discrete display pixels remain visible**;
 this does not by itself indicate a raster-source icon.
 
-Both are intentionally redrawn **PYNIX-owned** vectors, rather than falsely
-labeled copies of JetBrains artwork. The licensed original JetBrains package
-icons stay **untouched** and available in the catalog. The PYNIX copies use
-`currentColor`, are distributed as editable SVG assets, and are verified
-by geometry and no-bitmap regression tests.
+The terminal SVG is a PYNIX-owned vector; the adapted Packages SVG
+combines an unmodified Apache-2.0-licensed JetBrains package silhouette
+with our own PYNIX brand mark. The licensed JetBrains originals remain
+untouched in the catalog. Both use `currentColor`, are distributed as
+editable SVG assets, and are covered by geometry/no-bitmap tests.
 
 Inactive-window opacity, hover and active selection all use the existing
 New UI rail styles. No embedded PNGs, hardcoded dark/light palette in the
