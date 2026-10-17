@@ -44,7 +44,7 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
-/* Scope SVGs to the two left and the top-right screenshot-matched tool groups.
+/* Only the perimeter groups and two native project/Git buttons use icons.
    Other visual rails, tree badges and editor icons stay hidden. */
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
@@ -55,7 +55,9 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
 .workspace-mode.pynix-iconless
-.pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg{
+.pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-toolbar-project>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-toolbar-branch>svg{
  display:block!important;
 }
 /* The old shell also painted the PY badge, Run triangle and Debug bug
