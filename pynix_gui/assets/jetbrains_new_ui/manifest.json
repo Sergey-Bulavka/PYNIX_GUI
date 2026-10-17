@@ -4295,6 +4295,16 @@
         "sha256": "85e31b138b2b3a24ea79cc530dc1f41b98aaf2db9d524ab54acda11125febd4d"
       }
     },
+    "github/pullRequests": {
+      "light_normal": {
+        "path": "svg/github/pullRequests.svg",
+        "sha256": "37fa1f2c54530ac725752ad9fc46aff7d18d30b0cfa6eb825c26cb181c74130e"
+      },
+      "dark_normal": {
+        "path": "svg/github/pullRequests_dark.svg",
+        "sha256": "c266db019875673b60c3c5287b445847aeefdd2c63a7d79936d1435cf01e2fdc"
+      }
+    },
     "graph/graphLayout": {
       "light_normal": {
         "path": "svg/graph/graphLayout.svg",
