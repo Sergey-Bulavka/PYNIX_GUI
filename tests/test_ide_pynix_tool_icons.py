@@ -65,7 +65,8 @@ def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
     assert r"\u003csvg" in html
     assert '"isPynixBrand": true' in html
     assert "data:image/png;base64" not in html
-    assert "pnx-file.png" not in html
+    # The provenance comment may name the source PNG; no raster is displayed.
+    assert r"\u003cimage" not in html
     assert "<img" not in html
     assert "entry.brand" not in html
 
