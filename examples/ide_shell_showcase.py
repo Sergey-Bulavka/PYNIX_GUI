@@ -129,10 +129,12 @@ def _topbar(state):
 
 def _everywhere_panel(state):
     matches = search_everywhere_items(state["everywhere_query"])
+    # A file and a symbol in that file may share an action target.
+    # Result controls still need independent, unique identities.
     results = [
-        button("shell-search-hit:" + target,
+        button("shell-search-hit:" + str(index),
                category + "  ·  " + title, "quiet")
-        for category, title, target in matches
+        for index, (category, title, _target) in enumerate(matches)
     ]
     if not results:
         results = [text("Type a query to search files, symbols, actions and settings"
@@ -307,12 +309,14 @@ def dispatch(state, event):
             elif page == "Ide Settings":
                 state["settings_page"] = "IDE Settings"
         elif target.startswith("shell-search-hit:"):
-            hit = target[len("shell-search-hit:"):]
-            allowed = {item[2] for item in
-                       search_everywhere_items(state["everywhere_query"])}
-            if hit in allowed:
-                state["everywhere_open"] = False
-                dispatch(state, GUIEvent("ACTIVATE", target=hit))
+            result_id = target[len("shell-search-hit:"):]
+            matches = search_everywhere_items(state["everywhere_query"])
+            if result_id.isdecimal():
+                index = int(result_id)
+                if 0 <= index < len(matches):
+                    hit = matches[index][2]
+                    state["everywhere_open"] = False
+                    dispatch(state, GUIEvent("ACTIVATE", target=hit))
         elif target in ("shell-toggle-sidebar", "shell-activity-explorer"):
             state["sidebar"] = not state["sidebar"] if target == "shell-toggle-sidebar" else True
             state["activity"] = "Explorer"
