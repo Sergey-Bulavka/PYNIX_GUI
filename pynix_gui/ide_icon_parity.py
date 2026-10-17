@@ -286,7 +286,11 @@ def apply_new_ui_icons(
     No network access is used; source SVG license headers are retained in
     the packed icon strings.
     """
-    if "</body>" not in document or 'id="pynix-new-ui-icon-states"' in document:
+    marker = (
+        'id="pynix-native-project-file-icons"' if tree_only
+        else 'id="pynix-new-ui-icon-states"'
+    )
+    if "</body>" not in document or marker in document:
         return document
     try:
         catalog = JetBrainsIconCatalog(directory)
@@ -329,4 +333,8 @@ def apply_new_ui_icons(
     script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized).replace(
         "__DYNAMIC_ICON_DATA__", serialized_dynamic
     ).replace("__DOCK_ICON_DATA__", serialized_dock)
-    return document.replace("</body>", ("" if tree_only else ICON_STATE_STYLE) + script + "</body>", 1)
+    marker_style = (
+        '<style id="pynix-native-project-file-icons"></style>'
+        if tree_only else ICON_STATE_STYLE
+    )
+    return document.replace("</body>", marker_style + script + "</body>", 1)
