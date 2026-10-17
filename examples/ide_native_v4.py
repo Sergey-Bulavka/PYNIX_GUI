@@ -952,6 +952,9 @@ def main() -> None:
     # Final, editor-scoped theme layer: do not recolor toolbar, caret, selection.
     from pynix_gui.ide_editor_theme import apply_editor_darcula
     document = apply_editor_darcula(document)
+    # Synchronize Project header with real editor tab bounds, not only CSS.
+    from pynix_gui.ide_project_header_sync import apply_project_header_alignment
+    document = apply_project_header_alignment(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
