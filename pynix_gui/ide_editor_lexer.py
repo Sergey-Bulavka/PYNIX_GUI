@@ -26,11 +26,11 @@ EDITOR_LEXER_JS = r"""(() => {
  const TYPES = new Set(['Int','Float','Bool','String','Void','Any','List','Map']);
  const wordRE=/[A-Za-z_][A-Za-z_0-9]*/y;
  const numberRE=/(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|0[oO][0-7_]+|(?:\d[\d_]*(?:\.\d[\d_]*)?|\.\d[\d_]+)(?:[eE][+-]?\d[\d_]*)?)/y;
- const quotePrefixes=/^(?:[rRuUbBfF]{1,3})?(?:"{3}|'{3}|"|')/;
+ const quotePrefixes=/(?:[rRuUbBfF]{1,3})?(?:"{3}|'{3}|"|')/y;
  const isWord=ch=>ch!==undefined&&/[A-Za-z_0-9]/.test(ch);
  const kindForWord=(text,value,start,end,isPython)=>{
   const before=value.slice(value.lastIndexOf('\n',start-1)+1,start);
-  const after=value.slice(end);
+  const after=value.slice(end,end+64);
   if(isPython){
    if(['True','False','None'].includes(text))return 'python-constant';
    if(PYTHON_KEYWORDS.has(text))return 'python-keyword';
@@ -79,7 +79,8 @@ EDITOR_LEXER_JS = r"""(() => {
    }
    // Recognize f-strings, raw strings, byte strings and multi-line docstrings.
    // A prefix is accepted only at a lexical boundary.
-   const quoted=!isWord(value[i-1])?value.slice(i).match(quotePrefixes):null;
+   quotePrefixes.lastIndex=i;
+   const quoted=!isWord(value[i-1])?quotePrefixes.exec(value):null;
    if(quoted){
     const full=quoted[0],quote=full[full.length-1];
     const quoteAt=i+full.length-(full.endsWith(quote.repeat(3))?3:1);
