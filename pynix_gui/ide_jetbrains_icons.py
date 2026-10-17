@@ -30,6 +30,19 @@ RESTRICTED_NAMES = re.compile(
     r"(?:^|[._/-])(pycharm|intellijidea|intellij-idea|jetbrains|productlogos?|splash|aboutlogo)(?:$|[._/-])",
     re.I,
 )
+# The Python Process Output plugin ships these two ORIGINAL icons without
+# per-file license comments. Its upstream JetBrains repository is Apache-2.0.
+# This narrowly scoped whitelist is both path- and SHA-256-bound: unrelated
+# unheadered files still fail exactly as before. Original bytes are unchanged.
+OFFICIAL_UNHEADERED_ICONS = {
+    "pythonProcessOutput/process.svg": (
+        "5763214940abb30fd874af2b9c9ab163622440b78d97b64373382d7657a0a879"
+    ),
+    "pythonProcessOutput/process_dark.svg": (
+        "0573a2668f0c15b6a43a8d73680753f2cc47fb59d86b78adb4200451b598b94e"
+    ),
+}
+
 SCRIPT_OR_REMOTE = re.compile(
     r"<\s*(?:script|foreignObject|iframe)\b|\bon[a-z]+\s*=|"
     r"(?:href|src)\s*=\s*['\"]\s*(?:https?:|javascript:|data:)|<!DOCTYPE|<!ENTITY",
@@ -75,7 +88,13 @@ def check_svg(path: Path, *, relative_path: Path | None = None) -> tuple[bool, s
     # The original copyright/license header must travel with each icon.
     first_comment = source[:1500].split("-->", 1)[0]
     if "Copyright" not in first_comment or not APACHE_NOTICE.search(first_comment):
-        return False, "license-not-explicit"
+        pinned_digest = OFFICIAL_UNHEADERED_ICONS.get(relative_text)
+        if not pinned_digest:
+            return False, "license-not-explicit"
+        # Git on Windows may normalize LF to CRLF at checkout.
+        canonical = path.read_bytes().replace(b"\r\n", b"\n")
+        if hashlib.sha256(canonical).hexdigest() != pinned_digest:
+            return False, "unverified-unheadered-svg"
     if SCRIPT_OR_REMOTE.search(source):
         return False, "unsafe-svg"
     try:
