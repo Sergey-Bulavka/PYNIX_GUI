@@ -18,11 +18,14 @@ from .ide_native_tool_icons import native_tool_icon
 # The existing Project, Find, VCS, Run, Terminal and Settings hosts keep
 # their original implementation, accessibility and event handlers.
 TOOL_WINDOW_PROFILE = (
+    # The top-left order is pinned to the six supplied PyCharm references.
+    # The separator and More Tool Windows are structural controls, not tools.
     ("Project", "toolwindows/project", "left-top", "existing"),
+    ("Commit", "toolwindows/commit", "left-top", "unavailable"),
+    ("Pull Requests", "toolwindows/vcs", "left-top", "unavailable"),
+    ("Structure", "toolwindows/structure", "left-top", "unavailable"),
     ("Search", "toolwindows/find", "left-top", "existing"),
     ("Version Control", "toolwindows/vcs", "left-top", "existing"),
-    ("Structure", "toolwindows/structure", "left-top", "unavailable"),
-    ("Commit", "toolwindows/commit", "left-top", "unavailable"),
     ("Bookmarks", "toolwindows/bookmarks", "left-top", "unavailable"),
     ("Run", "toolwindows/run", "left-bottom", "existing"),
     ("Python Console", "toolwindows/messages", "left-bottom", "unavailable"),
@@ -43,10 +46,13 @@ TOOL_WINDOW_PROFILE = (
 # Matched to the supplied PyCharm screenshot. Tools not pinned remain in
 # More Tool Windows, where unavailable capabilities are clearly marked.
 PINNED_TOOLS = frozenset({
-    "Project", "Search", "Version Control", "Structure",
+    "Project", "Commit", "Pull Requests", "Structure",
     "Run", "Python Console", "Packages", "Debug",
     "Terminal", "Problems", "Git", "Notifications", "AI Assistant",
 })
+
+# Only this group is iconographic in the native iconless preview.
+TOP_LEFT_ICONS = frozenset({"Project", "Commit", "Pull Requests", "Structure"})
 
 # Existing native actions are invoked rather than copying event listeners.
 EXISTING_ACTIONS = {
@@ -112,6 +118,32 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  background:transparent;border:0;border-radius:6px;cursor:pointer
 }
 .workspace-mode .pynix-tool-profile-more:hover{background:#393b40}
+/* A screenshot-matched JetBrains tool stripe; other rails stay text-only. */
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"]{
+ gap:7px!important;padding-top:5px!important
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ width:36px!important;height:36px!important;
+ min-width:36px!important;min-height:36px!important;
+ padding:8px!important;border-radius:8px!important;
+ font-size:0!important;flex:0 0 36px!important
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool:disabled{
+ opacity:.82!important
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg{
+ width:20px!important;height:20px!important;flex:0 0 20px!important;
+}
+.workspace-mode .pynix-extra-separator{
+ width:24px;height:1px;min-height:1px;flex:0 0 1px;
+ background:#4a4c52;border-radius:1px;margin:2px 0 3px
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more{
+ width:36px!important;height:36px!important;min-height:36px!important;
+ padding:0!important;border-radius:8px!important;
+ font-size:17px!important;letter-spacing:2px!important
+}
 .workspace-mode .pynix-tool-profile-popover{
  position:fixed;z-index:600;width:220px;max-height:55vh;overflow-y:auto;
  padding:6px;border:1px solid #484a50;border-radius:8px;
@@ -176,11 +208,13 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.disabled=entry.state==='unavailable';
    button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
-   // No icons are built in native icon-free mode.
-   if(iconless)button.textContent=shortNames[entry.label]||entry.label;
-   // In ordinary icon mode the native Python identity remains supported.
-   const visual=iconless?null:(entry.label==='Python Console'?
-     (window.pynixPythonFileIcon?.()||entry.svg):entry.svg);
+   // Native icon-free mode has one deliberate exception: the four
+   // screenshot-matched, icon-only buttons at the top left.
+   const pictogram=iconless&&edge==='left-top';
+   if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
+   const visual=(iconless&&!pictogram)?null:
+     (entry.label==='Python Console'?
+      (window.pynixPythonFileIcon?.()||entry.svg):entry.svg);
    if(visual){
     const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
@@ -202,13 +236,20 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
    }
    container.appendChild(button);
+   if(edge==='left-top'&&entry.label==='Pull Requests'){
+    const separator=document.createElement('div');
+    separator.className='pynix-extra-separator';
+    separator.setAttribute('role','separator');
+    separator.setAttribute('aria-orientation','horizontal');
+    container.appendChild(separator);
+   }
   }
   // The right-bottom group has no pinned controls in the user's reference.
   if(!entries.some(x=>x.edge===edge&&x.pinned)&&edge.endsWith('bottom'))return;
   const more=document.createElement('button');
   more.type='button';
   more.className='pynix-tool-profile-more';
-  more.textContent=iconless?'More':'⋯';
+  more.textContent=edge==='left-top'?'•••':(iconless?'More':'⋯');
   more.title='More tool windows';
   more.setAttribute('aria-label','More tool windows');
   more.setAttribute('aria-expanded','false');
@@ -264,13 +305,23 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
     if '</body>' not in document or 'id="pynix-edge-profile-style"' in document:
         return document
     try:
-        catalog = None if iconless else JetBrainsIconCatalog(directory)
+        # Other regions remain truly iconless. Resolve just four SVGs for
+        # the requested top-left group, without running the legacy icon bridge.
+        catalog = JetBrainsIconCatalog(directory) if directory.is_dir() else None
+        if catalog is None and not iconless:
+            return document
+
+        def glyph(label: str, key: str, edge: str) -> str | None:
+            if iconless and (edge != "left-top" or label not in TOP_LEFT_ICONS):
+                return None
+            return native_tool_icon(label, dark=dark) or (
+                catalog.svg(key, dark=dark, tool_window=True)
+                if catalog is not None else None
+            )
+
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
-            "svg": None if iconless else (
-                native_tool_icon(label, dark=dark) or
-                catalog.svg(key, dark=dark, tool_window=True)
-            ),
+            "svg": glyph(label, key, edge),
             "pinned": label in PINNED_TOOLS,
             "action": EXISTING_ACTIONS.get(label, ""),
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
