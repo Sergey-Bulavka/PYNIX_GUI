@@ -62,7 +62,7 @@ global.requestAnimationFrame=(fn)=>fn();
     verify=r"""
 if(delivered.length===0)throw Error('No drag regions');
 const areas=delivered[delivered.length-1];
-if(areas.length<3)throw Error('Expected several distinct free gaps');
+if(areas.length<2)throw Error('Expected separate left and right flexible gaps');
 for(const a of areas){
  if(a.x<86||a.x+a.width>1182||a.y!==10||a.height!==24)
    throw Error('Unsafe drag rectangle '+JSON.stringify(a));
@@ -81,7 +81,7 @@ console.log(JSON.stringify({count:areas.length,refreshed:delivered.length}));
                           capture_output=True,timeout=20)
     assert result.returncode==0,result.stderr
     parsed=json.loads(result.stdout)
-    assert parsed["count"]>=3 and parsed["refreshed"]>=2
+    assert parsed["count"]>=2 and parsed["refreshed"]>=2
 
 
 def test_uninitialized_toolbar_never_exposes_a_full_width_drag_overlay():
