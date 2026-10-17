@@ -37,6 +37,24 @@ ICON_BINDINGS = (
 # This covers file types shown by the actual Project Explorer, including
 # those not yet eligible for editing in the source buffer.
 EXTENSION_ICON_NAMES = (
+    ("json", "fileTypes/json"),
+    ("jsonc", "fileTypes/json"),
+    ("md", "fileTypes/markdown"),
+    ("markdown", "fileTypes/markdown"),
+    ("txt", "fileTypes/text"),
+    ("csv", "fileTypes/csv"),
+    ("sql", "fileTypes/sql"),
+    ("properties", "fileTypes/properties"),
+    ("gradle", "fileTypes/gradle"),
+    ("dockerfile", "fileTypes/docker"),
+    ("gitignore", "fileTypes/gitignore"),
+    ("java", "fileTypes/java"),
+    ("jsp", "fileTypes/jsp"),
+    ("jspf", "fileTypes/jsp"),
+    ("jsx", "fileTypes/javaScript"),
+    ("mjs", "fileTypes/javaScript"),
+    ("cjs", "fileTypes/javaScript"),
+    ("tsx", "fileTypes/typeScript"),
     ("js", "fileTypes/javaScript"),
     ("ts", "fileTypes/typeScript"),
     ("css", "fileTypes/css"),
@@ -55,6 +73,13 @@ EXTENSION_ICON_NAMES = (
     ("jpeg", "fileTypes/image"),
     ("webp", "fileTypes/image"),
     ("zip", "fileTypes/archive"),
+    ("jar", "fileTypes/archive"),
+    ("gz", "fileTypes/archive"),
+    ("tar", "fileTypes/archive"),
+    ("woff", "fileTypes/font"),
+    ("woff2", "fileTypes/font"),
+    ("ttf", "fileTypes/font"),
+    ("otf", "fileTypes/font"),
 )
 
 # Project Explorer is rebuilt on expansion/search; these icons require live binding.
@@ -66,7 +91,21 @@ TREE_ICON_BINDINGS = (
     (".workspace-mode .project-glyph[data-pynix-semantic='folder']", "nodes/folder", True),
     (".workspace-mode .project-glyph[data-pynix-semantic='generic']", "fileTypes/text", True),
 )
-DYNAMIC_ICON_BINDINGS = TREE_ICON_BINDINGS + (
+# Extension-specific icons are painted in both the Project tree and tabs.
+# Do not replace PYNIX (.pnx) or Python (.py/.pyi) identity marks.
+# Bind generic fallback before specific extensions, and do not overwrite a
+# previously matched specific glyph on the next MutationObserver pass.
+TREE_EXTENSION_BINDINGS = tuple(
+    (f".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-extension='{extension}']", icon, False)
+    for extension, icon in EXTENSION_ICON_NAMES
+)
+TREE_FILENAME_BINDINGS = (
+    (".workspace-mode .project-glyph[data-file-name='dockerfile']", "fileTypes/docker", False),
+    (".workspace-mode .project-glyph[data-file-name='.gitignore']", "fileTypes/gitignore", False),
+    (".workspace-mode .project-glyph[data-file-name='.editorconfig']", "fileTypes/editorConfig", False),
+    (".workspace-mode .project-glyph[data-file-name='makefile']", "fileTypes/config", False),
+)
+DYNAMIC_ICON_BINDINGS = TREE_ICON_BINDINGS + TREE_EXTENSION_BINDINGS + TREE_FILENAME_BINDINGS + (
     (".workspace-mode .pynix-tab-file-glyph.file-json", "fileTypes/json", False),
     (".workspace-mode .pynix-tab-file-glyph.file-markdown", "fileTypes/markdown", False),
     (".workspace-mode .pynix-tab-file-glyph.file-text", "fileTypes/text", False),
@@ -153,6 +192,12 @@ ICON_BRIDGE_SCRIPT = r"""<script>
  // Cache the parsed SVG template once for each icon, rather than every row.
  function activate(target,item){
   if(!target)return;
+  // Generic file is a fallback, not an instruction to overwrite a matched
+  // extension-specific icon. Prevent observer-driven generic/specific loops.
+  if(target.classList.contains('project-glyph') &&
+     item.name==='fileTypes/text' &&
+     item.selector.includes("[data-pynix-semantic='generic']") &&
+     target.dataset.pynixIcon && target.dataset.pynixIcon!=='fileTypes/text')return;
   if(target.dataset.pynixIcon===item.name && target.querySelector(".pynix-jetbrains-icon"))return;
   let source=parsed.get(item.name);
   if(!source){
@@ -233,6 +278,7 @@ def apply_new_ui_icons(
     directory: Path = BUNDLED_ICONS,
     *,
     dark: bool = True,
+    tree_only: bool = False,
 ) -> str:
     """Inject a no-op-safe icon substitution script at the end of the page.
 
@@ -247,7 +293,7 @@ def apply_new_ui_icons(
     except (OSError, ValueError, KeyError, json.JSONDecodeError):
         return document
     data = []
-    for selector, name, tool_window, replace_label in ICON_BINDINGS:
+    for selector, name, tool_window, replace_label in (() if tree_only else ICON_BINDINGS):
         source = catalog.svg(name, dark=dark, tool_window=tool_window)
         if source is None:
             continue
@@ -258,7 +304,11 @@ def apply_new_ui_icons(
             "replaceLabel": replace_label,
         })
     dynamic = []
-    for selector, name, replace_label in DYNAMIC_ICON_BINDINGS:
+    bindings = (
+        TREE_ICON_BINDINGS + TREE_EXTENSION_BINDINGS + TREE_FILENAME_BINDINGS
+        if tree_only else DYNAMIC_ICON_BINDINGS
+    )
+    for selector, name, replace_label in bindings:
         source = catalog.svg(name, dark=dark)
         if source is not None:
             dynamic.append({
@@ -266,7 +316,7 @@ def apply_new_ui_icons(
                 "svg": source, "replaceLabel": replace_label,
             })
     dock = []
-    for selector, name, replace_label in DOCK_ICON_BINDINGS:
+    for selector, name, replace_label in (() if tree_only else DOCK_ICON_BINDINGS):
         source = catalog.svg(name, dark=dark)
         if source is not None:
             dock.append({"selector": selector, "name": name, "svg": source,
@@ -279,4 +329,4 @@ def apply_new_ui_icons(
     script = ICON_BRIDGE_SCRIPT.replace("__ICON_DATA__", serialized).replace(
         "__DYNAMIC_ICON_DATA__", serialized_dynamic
     ).replace("__DOCK_ICON_DATA__", serialized_dock)
-    return document.replace("</body>", ICON_STATE_STYLE + script + "</body>", 1)
+    return document.replace("</body>", ("" if tree_only else ICON_STATE_STYLE) + script + "</body>", 1)
