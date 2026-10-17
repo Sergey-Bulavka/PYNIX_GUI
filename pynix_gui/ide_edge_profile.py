@@ -8,6 +8,7 @@ state. Disabled entries never impersonate supported PYNIX functionality.
 """
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 from .ide_jetbrains_icons import JetBrainsIconCatalog
@@ -27,19 +28,20 @@ TOOL_WINDOW_PROFILE = (
     ("Search", "toolwindows/find", "left-top", "existing"),
     ("Version Control", "toolwindows/vcs", "left-top", "existing"),
     ("Bookmarks", "toolwindows/bookmarks", "left-top", "unavailable"),
+    # Screenshot-matched lower-left PYNIX tool stripe.
     ("Run", "toolwindows/run", "left-bottom", "existing"),
-    ("Python Console", "toolwindows/messages", "left-bottom", "unavailable"),
-    ("Packages", "nodes/services", "left-bottom", "unavailable"),
-    ("Debug", "toolwindows/debug", "left-bottom", "existing"),
-    ("Terminal", "toolwindows/messages", "left-bottom", "existing"),
+    ("PYNIX Terminal", "terminal/terminal", "left-bottom", "existing"),
+    ("PYNIX Packages", "python/pythonPackages", "left-bottom", "unavailable"),
+    ("Services", "toolwindows/services", "left-bottom", "unavailable"),
+    ("Terminal", "terminal/terminal", "left-bottom", "existing"),
     ("Problems", "toolwindows/problems", "left-bottom", "existing"),
     ("Git", "toolwindows/vcs", "left-bottom", "existing"),
+    ("Debug", "toolwindows/debug", "left-bottom", "existing"),
     ("Build", "toolwindows/build", "left-bottom", "unavailable"),
     ("TODO", "toolwindows/todo", "left-bottom", "unavailable"),
     ("Notifications", "toolwindows/notifications", "right-top", "unavailable"),
     ("AI Assistant", "toolwindows/learn", "right-top", "unavailable"),
     ("Documentation", "toolwindows/documentation", "right-top", "unavailable"),
-    ("Services", "toolwindows/services", "right-bottom", "unavailable"),
     ("Profiler", "toolwindows/profiler", "right-bottom", "unavailable"),
 )
 
@@ -47,9 +49,17 @@ TOOL_WINDOW_PROFILE = (
 # More Tool Windows, where unavailable capabilities are clearly marked.
 PINNED_TOOLS = frozenset({
     "Project", "Commit", "Pull Requests", "Structure",
-    "Run", "Python Console", "Packages", "Debug",
+    "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
     "Terminal", "Problems", "Git", "Notifications", "AI Assistant",
 })
+
+# The only requested iconographic stripes in otherwise text-only native IDE.
+TOP_LEFT_ICONS = frozenset({"Project", "Commit", "Pull Requests", "Structure"})
+BOTTOM_LEFT_ICONS = (
+    "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+    "Terminal", "Problems", "Git",
+)
+PYNIX_BRANDED_TOOLS = frozenset({"PYNIX Terminal", "PYNIX Packages"})
 
 # The left-top More Tool Windows menu follows the supplied PyCharm screenshot.
 # (label, exact original JetBrains icon key or None, displayed macOS shortcut,
@@ -67,12 +77,11 @@ MORE_TOOL_WINDOWS = (
 )
 
 # Only this group is iconographic in the native iconless preview.
-TOP_LEFT_ICONS = frozenset({"Project", "Commit", "Pull Requests", "Structure"})
-
 # Existing native actions are invoked rather than copying event listeners.
 EXISTING_ACTIONS = {
     "Project": "rail:0", "Search": "rail:1",
     "Version Control": "rail:2", "Run": "rail:3",
+    "PYNIX Terminal": "rail:4",
     "Terminal": "rail:4", "Git": "rail:2",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
 }
@@ -149,6 +158,48 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 }
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg{
  width:20px!important;height:20px!important;flex:0 0 20px!important;
+}
+/* Screenshot-matched lower-left rail: seven original JetBrains icons.
+   The two PYNIX actions additionally use our OWN existing PNX brand image;
+   all upstream JetBrains SVG artwork stays unchanged. */
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"]{
+ gap:7px!important;padding-bottom:7px!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool{
+ position:relative!important;display:flex!important;
+ align-items:center!important;justify-content:center!important;
+ width:36px!important;height:36px!important;min-height:36px!important;
+ min-width:36px!important;flex:0 0 36px!important;
+ padding:8px!important;border-radius:8px!important;
+ font-size:0!important
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool:disabled{
+ opacity:.78!important
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
+ display:block;width:20px;height:20px;flex:0 0 20px
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-brand-terminal{
+ width:19px!important;height:22px!important;object-fit:contain!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-brand-package{
+ position:absolute!important;right:0!important;bottom:1px!important;
+ width:11px!important;height:13px!important;object-fit:contain!important;
+ background:#2b2d33;border-radius:2px
+}
+.workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
+.workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+ transition:opacity 120ms ease
+}
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+ opacity:.48!important
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
+ .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+  transition:none!important
+ }
 }
 .workspace-mode .pynix-tool-profile-more svg{
  display:block;width:20px;height:20px;flex:0 0 20px
@@ -268,8 +319,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
 
  const shortNames={
   'Project':'Proj','Search':'Find','Version Control':'Git',
-  'Structure':'Struct','Run':'Run','Python Console':'Py',
-  'Packages':'Pkg','Debug':'Debug','Terminal':'Term',
+  'Structure':'Struct','Run':'Run','PYNIX Terminal':'PNX',
+  'PYNIX Packages':'Pkg','Services':'Srv','Debug':'Debug','Terminal':'Term',
   'Problems':'Err','Notifications':'Alerts','AI Assistant':'AI',
   'Commit':'Commit','Bookmarks':'Marks','Git':'Git'
  };
@@ -308,11 +359,12 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.disabled=entry.state==='unavailable';
    button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
-   // Native icon-free mode has one deliberate exception: the four
-   // screenshot-matched, icon-only buttons at the top left.
-   const pictogram=iconless&&edge==='left-top';
+   // Only the two screenshot-matched left stripes use pictograms.
+   const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom');
    if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
-   const visual=(iconless&&!pictogram)?null:entry.svg;
+   // The PYNIX Terminal uses the existing project brand, not a Python snake.
+   const brandTerminal=entry.label==='PYNIX Terminal'&&!!entry.brand;
+   const visual=(iconless&&!pictogram||brandTerminal)?null:entry.svg;
    if(visual){
     const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
@@ -322,7 +374,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
      button.appendChild(node);
     }
    }
-   if(!visual&&pictogram)button.textContent=shortNames[entry.label]||entry.label;
+   if(entry.brand&&edge==='left-bottom'){
+    const badge=document.createElement('img');
+    badge.src=entry.brand;
+    badge.alt='';
+    badge.setAttribute('aria-hidden','true');
+    badge.className=brandTerminal?'pynix-brand-terminal':'pynix-brand-package';
+    button.appendChild(badge);
+   }
+   if(!visual&&pictogram&&!entry.brand)
+    button.textContent=shortNames[entry.label]||entry.label;
    if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));
    if(entry.action?.startsWith('rail:')){
     const index=Number(entry.action.slice(5));
@@ -342,6 +403,11 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     separator.setAttribute('aria-orientation','horizontal');
     container.appendChild(separator);
    }
+  }
+  // The lower-left screenshot has exactly seven icons, without More.
+  if(edge==='left-bottom'){
+   host.appendChild(container);
+   return;
   }
   // The right-bottom group has no pinned controls in the user's reference.
   if(!entries.some(x=>x.edge===edge&&x.pinned)&&edge.endsWith('bottom'))return;
@@ -450,14 +516,21 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
     if '</body>' not in document or 'id="pynix-edge-profile-style"' in document:
         return document
     try:
-        # Other regions remain truly iconless. Resolve just four SVGs for
-        # the requested top-left group, without running the legacy icon bridge.
+        # Resolve original JetBrains SVGs only for the requested left rails.
         catalog = JetBrainsIconCatalog(directory) if directory.is_dir() else None
+        # This is our pre-existing, original PYNIX project-file artwork.
+        brand_file = Path(__file__).parent / "assets/icons/pnx-file.png"
+        pynix_brand = ("data:image/png;base64," +
+                       base64.b64encode(brand_file.read_bytes()).decode("ascii")
+                       if brand_file.is_file() else None)
         if catalog is None and not iconless:
             return document
 
         def glyph(label: str, key: str, edge: str) -> str | None:
-            if iconless and (edge != "left-top" or label not in TOP_LEFT_ICONS):
+            if iconless and not (
+                (edge == "left-top" and label in TOP_LEFT_ICONS) or
+                (edge == "left-bottom" and label in BOTTOM_LEFT_ICONS)
+            ):
                 return None
             # Fail closed: never synthesize or substitute another icon.
             return catalog.svg(key, dark=dark, tool_window=True) if catalog else None
@@ -465,6 +538,7 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
             "svg": glyph(label, key, edge),
+            "brand": pynix_brand if label in PYNIX_BRANDED_TOOLS else None,
             "pinned": label in PINNED_TOOLS,
             "action": EXISTING_ACTIONS.get(label, ""),
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
