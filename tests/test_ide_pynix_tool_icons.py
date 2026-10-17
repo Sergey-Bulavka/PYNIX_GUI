@@ -44,24 +44,46 @@ def test_pynix_terminal_preserves_original_solid_geometric_mark_at_20px():
     assert not list(root.iter(NS + "g"))
 
 
-def test_pynix_packages_is_coherent_20px_box_with_integral_readable_monogram():
+def test_pynix_packages_preserves_exact_jetbrains_outer_silhouette():
     root = ET.fromstring((ICON_DIR / "pynix-packages.svg").read_text("utf-8"))
     paths = _paths("pynix-packages.svg")
-    assert len(paths) == 3
-    box, folded_edges, inset = paths
+    original = (ICON_DIR.parent / "jetbrains_new_ui" / "svg" / "python" /
+                "pythonPackages@20x20_dark.svg")
+    original_paths = list(ET.fromstring(original.read_text("utf-8")).iter(NS + "path"))
+    assert len(original_paths) == 5
+    assert len(paths) == 4
+    # The cube's original JetBrains path is preserved byte-for-byte, including
+    # all geometry, openings, bevels, and visual weight.
+    assert paths[0].attrib["d"] == original_paths[-1].attrib["d"]
+    assert paths[0].attrib["fill"] == "currentColor"
     assert root.attrib["shape-rendering"] == "geometricPrecision"
-    assert box.attrib["d"] == "M10 1.85 17.5 6v8L10 18.1 2.5 14V6Z"
-    assert folded_edges.attrib["d"] == (
-        "M2.5 6 10 10.15 17.5 6M10 10.15V18"
-    )
-    assert inset.attrib["d"] == "M12 15.7V12.1L13.5 11.2 15.1 12.1 13 13.4"
-    assert [p.attrib["stroke-width"] for p in paths] == ["1.5", "1.4", "1.2"]
-    assert all(p.attrib["stroke"] == "currentColor" for p in paths)
-    assert all("transform" not in p.attrib for p in paths)
-    assert not list(root.iter(NS + "g"))
-    assert not list(root.iter(NS + "clipPath"))
+    assert not list(root.iter(NS + "image"))
     assert not list(root.iter(NS + "mask"))
-    assert "pythonPackages" not in (ICON_DIR / "pynix-packages.svg").read_text("utf-8")
+    assert not list(root.iter(NS + "clipPath"))
+    assert not list(root.iter(NS + "rect"))
+    assert not any("stroke" in path.attrib for path in paths)
+
+
+def test_pynix_packages_replaces_only_python_with_exact_approved_pynix_mark():
+    root = ET.fromstring((ICON_DIR / "pynix-packages.svg").read_text("utf-8"))
+    paths = _paths("pynix-packages.svg")
+    terminal = _paths("pynix-terminal.svg")
+    assert [p.attrib["d"] for p in paths[1:]] == [
+        p.attrib["d"] for p in terminal
+    ]
+    groups = list(root.iter(NS + "g"))
+    assert len(groups) == 1
+    assert groups[0].attrib["transform"] == "translate(6.5 7.3) scale(0.6)"
+    assert groups[0].attrib["fill"] == "currentColor"
+    assert len(list(groups[0].iter(NS + "path"))) == 3
+    assert all("transform" not in p.attrib for p in paths)
+    # The original two Python-snake curves and eye-dot paths are absent.
+    upstream = (ICON_DIR.parent / "jetbrains_new_ui" / "svg" / "python" /
+                "pythonPackages@20x20_dark.svg")
+    original_paths = list(ET.fromstring(upstream.read_text("utf-8")).iter(NS + "path"))
+    assert not any(p.attrib["d"] in [q.attrib["d"] for q in paths]
+                   for p in original_paths[:4])
+
 
 
 def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
