@@ -17,7 +17,10 @@ def test_root_shows_actual_local_project_path_with_safe_js_quoting(tmp_path):
     js=workspace_bootstrap(WorkspaceSession(root))
     assert "const PROJECT_PATH = " in js
     import json
-    assert json.dumps(str(root),ensure_ascii=False) in js
+    resolved=root.resolve()
+    expected=("~/" + resolved.relative_to(Path.home()).as_posix()
+              if resolved.is_relative_to(Path.home()) else str(resolved))
+    assert json.dumps(expected,ensure_ascii=False) in js
     assert "path.textContent=PROJECT_PATH;" in js
     assert "path.title=PROJECT_PATH;" in js
     assert "label.classList.add('pynix-project-root-name');" in js
