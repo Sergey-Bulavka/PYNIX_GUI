@@ -567,6 +567,24 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  flex:0 0 33px!important;min-width:33px!important;width:33px!important;
  font-size:0!important;padding:0!important
 }
+
+/* The Explorer header and editor tab strip belong to the same 43px row.
+   Scrolling Project only moves entries; the toolbar stays above them.
+   No extra wrapper or separate scroller is needed. */
+.workspace-mode .tree .pynix-project-header{
+ box-sizing:border-box!important;position:sticky!important;top:0!important;
+ z-index:35!important;height:43px!important;min-height:43px!important;
+ max-height:43px!important;margin:0!important;
+ padding:0 8px!important;display:flex!important;align-items:center!important;
+ background:#1e1f22!important;border-bottom:1px solid #34363c!important;
+ border-radius:9px 9px 0 0!important;
+}
+.workspace-mode .tree{
+ scroll-padding-top:43px!important;
+}
+.workspace-mode .editor-tabs{
+ height:43px!important;min-height:43px!important;max-height:43px!important;
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
