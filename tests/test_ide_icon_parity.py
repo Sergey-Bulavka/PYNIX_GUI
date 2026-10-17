@@ -123,7 +123,11 @@ def test_project_tree_icons_use_original_new_ui_nodes_and_file_types():
         for dark in (True, False):
             resolved = catalog.resolve(icon, dark=dark)
             assert resolved is not None
-            assert resolved.variant.startswith("dark" if dark else "light")
+            # Some official JetBrains icons ship in one theme variant only.
+            # The catalog may correctly fall back to that original SVG.
+            light = catalog.resolve(icon, dark=False)
+            assert (resolved.variant.startswith("dark" if dark else "light")
+                    or (dark and resolved.svg_path == light.svg_path))
     assert "new MutationObserver(synchronize).observe(tree,{childList:true,subtree:true})" in ICON_BRIDGE_SCRIPT
     assert "const tree=document.querySelector('.workspace-mode .tree')" in ICON_BRIDGE_SCRIPT
     assert 'if(target.dataset.pynixIcon===item.name && target.querySelector(".pynix-jetbrains-icon"))return;' in ICON_BRIDGE_SCRIPT
