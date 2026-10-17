@@ -892,6 +892,9 @@ def main() -> None:
     document = apply_native_tooltips(document)
     from pynix_gui.ide_search_everywhere import apply_search_everywhere
     document = apply_search_everywhere(document)
+    # Final, editor-scoped theme layer: do not recolor toolbar, caret, selection.
+    from pynix_gui.ide_editor_theme import apply_editor_darcula
+    document = apply_editor_darcula(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.

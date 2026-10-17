@@ -9,6 +9,7 @@ import json
 
 from .ide_workspace_session import WorkspaceSession
 from .ide_syntax_highlight import highlight_document
+from .ide_editor_lexer import EDITOR_LEXER_JS
 from .ide_file_icons import file_icon_type, ICON_BY_EXTENSION, SPECIAL_NAMES
 
 
@@ -57,6 +58,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
     # This script is appended after the gallery's own scripts, so the initial
     # design preview retains its independent, self-contained state.
     return """<script>
+__PYNIX_DISPLAY_LEXER__
 (() => {
  const files = PAYLOAD;
  const PROJECT_NAME = PROJECT_NAME_PAYLOAD;
@@ -223,11 +225,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
  }
  function recolorSource(){
    const value=editorInput.value;
-   // The lexer consumes one token at a time. Strings/comments are atomic:
-   // numbers inside // comments, # comments or quoted strings stay in that color.
-   const token=/(?:\\/\\/[^\\n]*|#[^\\n]*|"(?:\\\\.|[^"\\\\])*"|'(?:\\\\.|[^'\\\\])*'|[(){}\\[\\]]|\\b[A-Za-z_][A-Za-z_0-9]*\\b|\\b\\d+(?:\\.\\d+)?\\b)/g;
-   const words=new Set(['function','module','import','from','as','let','var','const','if','else','elif','while','for','in','return','break','continue','and','or','not','class','interface','type','enum','match','case','try','catch','finally','raise','public','private','async','await']);
-   const types=new Set(['Int','Float','Bool','String','Void','Any','List','Map']);
+   // The display lexer preserves every character in the source textarea.
+   const lexical=window.pynixHighlightTokens(value,current||'');
    const matching=matchingBracketPositions(value,editorInput.selectionStart);
    const secondary=byName.get(current)?.extraSelections||[];
    function decorateSegment(segment,at){
@@ -251,22 +250,14 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
      }
      return result;
    }
-   let html='',last=0,match;
-   while((match=token.exec(value))){
-     html+=decorateSegment(value.slice(last,match.index),last);
-     const t=match[0];
-     let kind='plain';
-     if(t.startsWith('//')||t.startsWith('#'))kind='comment';
-     else if(t[0]==='"'||t[0]==="'")kind='string';
-     else if(/^\\d/.test(t))kind='number';
-     else if(matching.has(match.index))kind='bracket-match';
-     else if(words.has(t))kind='keyword';
-     else if(types.has(t))kind='type';
-     else if(['print','input','len','range','str','int','float'].includes(t))kind='builtin';
-     else if(/^[A-Za-z_]/.test(t)&&/^\\s*\\(/.test(value.slice(token.lastIndex)))kind='call';
-     else if(['true','false','none','null'].includes(t))kind='constant';
-     html+='<span class="pynix-edit-'+kind+'">'+decorateSegment(t,match.index)+'</span>';
-     last=token.lastIndex;
+   let html='',last=0;
+   for(const part of lexical){
+     html+=decorateSegment(value.slice(last,part.start),last);
+     const kind=part.kind==='bracket'?
+       (matching.has(part.start)?'bracket-match':'plain'):part.kind;
+     html+='<span class="pynix-edit-'+kind+'">'+
+       decorateSegment(value.slice(part.start,part.end),part.start)+'</span>';
+     last=part.end;
    }
    coloredSource.innerHTML=html+decorateSegment(value.slice(last),last)+'\\n';
    decorateFindMatches();
@@ -2160,7 +2151,12 @@ editorInput.addEventListener('keydown',event=>{
    const foldable=foldableLines(file.text);
    const folded=file.foldedLines||(file.foldedLines=new Set());
    let hiddenThrough=-1;
+   // Read-only Python preview uses the same lexical categories as edit mode.
+   const previewTokens=file.tokens?[]:window.pynixHighlightTokens(file.text,file.name);
+   let documentOffset=0,previewCursor=0;
    file.text.split('\\n').forEach((line,i)=>{
+     const lineStart=documentOffset,lineEnd=lineStart+line.length;
+     documentOffset=lineEnd+1;
      if(i<=hiddenThrough)return;
      if(folded.has(i)&&foldable.has(i))hiddenThrough=foldable.get(i);
      const gutter=document.createElement('div');
@@ -2195,6 +2191,25 @@ editorInput.addEventListener('keydown',event=>{
          span.textContent=token.text;
          content.appendChild(span);
        }
+     } else if(previewTokens.length){
+       while(previewCursor<previewTokens.length&&previewTokens[previewCursor].end<=lineStart)
+         previewCursor++;
+       let at=lineStart,index=previewCursor;
+       while(index<previewTokens.length&&previewTokens[index].start<lineEnd){
+         const token=previewTokens[index];
+         const from=Math.max(at,token.start),to=Math.min(lineEnd,token.end);
+         if(from>at)content.appendChild(document.createTextNode(file.text.slice(at,from)));
+         if(to>from){
+           const span=document.createElement('span');
+           span.className='pynix-edit-'+(token.kind==='bracket'?'plain':token.kind);
+           span.textContent=file.text.slice(from,to);
+           content.appendChild(span);at=to;
+         }
+         if(token.end<=lineEnd)index++;
+         else break;
+       }
+       if(at<lineEnd)content.appendChild(document.createTextNode(file.text.slice(at,lineEnd)));
+       previewCursor=index;
      } else content.textContent=line;
      row.appendChild(content);
      gutterInner.appendChild(gutter);
@@ -2629,7 +2644,7 @@ editorInput.addEventListener('keydown',event=>{
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
-</script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
+</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
