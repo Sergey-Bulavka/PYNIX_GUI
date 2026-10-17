@@ -14,6 +14,10 @@ import sys
 
 from pynix_gui.ide_iconography import draw_icon
 
+# Visual fixtures only; this preview has no connected IDE Core or update service.
+PREVIEW_IDE_VERSION = "1.1.26-dev"
+PREVIEW_UPDATES_AVAILABLE = True
+
 
 PALETTE = {
     "canvas": "#10151E",
@@ -112,6 +116,17 @@ def native_shell_class(appkit):
             self._label(x+12, y+6, label, size=12,
                         color="text" if active else "subtle", weight="bold" if active else "regular")
 
+        @objc.python_method
+        def _beta_outline(self, x, y, width):
+            # The beta indicator is a release-status label, never an upgrade CTA.
+            outline = appkit.NSBezierPath.bezierPathWithRoundedRect_xRadius_yRadius_(
+                appkit.NSMakeRect(x, y, width, 34), 17, 17)
+            outline.setLineWidth_(1.8)
+            _rgb(appkit, "green").setStroke()
+            outline.stroke()
+            self._label(x + 14, y + 8, "Beta Version  ·  " + PREVIEW_IDE_VERSION,
+                        size=12, color="green")
+
         def drawRect_(self, dirty):
             w, h = self.bounds().size
             w, h = float(w), float(h)
@@ -119,7 +134,7 @@ def native_shell_class(appkit):
             if context is not None:
                 context.setShouldAntialias_(True)
             self._fill(0, 0, w, h, "canvas")
-            title_h, toolbar_h, status_h = 47, 43, 27
+            title_h, toolbar_h, status_h = 62, 0, 27
             body_top, body_bottom = title_h+toolbar_h, h-status_h
             rail_w = 49
             sidebar_w = min(270, max(208, w*0.19))
@@ -129,20 +144,30 @@ def native_shell_class(appkit):
             terminal_y = body_bottom-bottom_h
             tabs_h, crumb_h = 39, 28
 
-            # Integrated window chrome and primary toolbar
+            # One compact title/command row aligned with the PyCharm reference.
+            # Glyphs are original PYNIX vector paths, not borrowed JetBrains assets.
             self._fill(0, 0, w, title_h, "title")
-            self._label(24, 13, "PYNIX", size=16, color="text", weight="bold")
-            self._label(89, 15, "IDE", size=12, color="accent", weight="bold")
-            self._label(max(220, w*0.46), 16, "PYNIX  /  src  /  main.pnx",
-                        size=12, color="subtle")
-            self._rule(0, title_h-1, w)
-            self._fill(0, title_h, w, toolbar_h, "toolbar")
-            for i, name in enumerate(("File", "Edit", "View", "Navigate", "Code", "Run", "Tools", "Help")):
-                self._label(20 + (0 if i==0 else sum([44,47,52,79,57,42,52,47][:i])),
-                            title_h+13, name, color="subtle", size=12)
-            self._fill(w-156, title_h+6, 118, 30, "selected", 6)
-            self._icon(w-143, title_h+12, "run", "accent")
-            self._label(w-120, title_h+12, "Run main.pnx", size=12, weight="bold")
+            self._fill(22, 14, 34, 34, "#75469D", 8)
+            self._label(26, 21, "PY", size=16, color="text", weight="bold")
+            self._label(68, 21, "PYNIX", size=16, color="text")
+            self._icon(135, 24, "chevron-down", "subtle")
+            self._icon(198, 24, "branch", "subtle")
+            self._label(225, 21, "main", size=16, color="subtle")
+            self._icon(281, 24, "chevron-down", "subtle")
+            self._label(336, 21, "Current File", size=14, color="subtle")
+            self._icon(429, 24, "chevron-down", "subtle")
+            self._icon(484, 24, "run", "green")
+            self._icon(525, 24, "debug", "green")
+            self._icon(567, 24, "more", "subtle")
+            beta_width = 222
+            beta_x = w - beta_width - 18
+            settings_x = beta_x - 44
+            search_x = settings_x - 49
+            self._icon(search_x, 24, "search", "subtle")
+            self._icon(settings_x, 24, "settings", "subtle")
+            if PREVIEW_UPDATES_AVAILABLE:
+                self._fill(settings_x + 15, 21, 7, 7, "yellow", 3.5)
+            self._beta_outline(beta_x, 14, beta_width)
             self._rule(0, body_top-1, w)
 
             # Left activity rail with actual vector icons
