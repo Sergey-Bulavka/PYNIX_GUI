@@ -69,3 +69,10 @@ def test_native_ide_defaults_to_iconless_and_retains_opt_in_catalog():
     assert "document = apply_iconless_mode(document)" in native
     optin = native.index("if args.with_icons:")
     assert optin < native.index("document = apply_new_ui_icons(document)") 
+
+
+def test_iconless_workspace_keeps_original_svg_for_left_top_more_only():
+    assert '.pynix-tool-profile-popover[data-edge="left-top"]' in ICONLESS_STYLE
+    assert ".pynix-more-item .pynix-menu-icon svg" in ICONLESS_STYLE
+    assert "display:block!important" in ICONLESS_STYLE
+    assert ".workspace-mode svg" in ICONLESS_STYLE
