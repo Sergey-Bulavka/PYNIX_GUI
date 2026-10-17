@@ -95,7 +95,7 @@ def test_uninitialized_toolbar_never_exposes_a_full_width_drag_overlay():
     assert "content_view.addSubview_(drag_view)" in native
     assert "drag_view.setHidden_(True)" in native
     assert "drag_view.setHidden_(False)" in native
-    assert 'drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []' in native
+    assert 'drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)' in native
     assert "title_drag_area = ToolbarDragView.alloc()" not in native
 
 

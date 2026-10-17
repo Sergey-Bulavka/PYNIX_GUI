@@ -82,6 +82,32 @@ TOOLBAR_DRAG_SCRIPT = """<script>
 })();
 </script>"""
 
+def normalize_toolbar_drag_areas(payload, *, limit: int = 20):
+    """Accept WebKit/Objective-C NSArray as well as native Python sequences.
+
+    WKScriptMessage.body is an Objective-C NSArray on macOS; checking only
+    isinstance(payload, list) silently discarded every valid drag region.
+    Unknown scalar/mapping payloads fail closed. AppKit validates EACH rect
+    before installing an overlay above WKWebView controls.
+    """
+    if payload is None or isinstance(payload, (str, bytes, bytearray, dict)):
+        return []
+    try:
+        source = iter(payload)
+        result = []
+        for area in source:
+            if len(result) >= limit:
+                break
+            if not hasattr(area, "__getitem__") or isinstance(
+                area, (str, bytes, bytearray)
+            ):
+                continue
+            result.append(area)
+        return result
+    except (TypeError, ValueError, OverflowError):
+        return []
+
+
 def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
     """Map WebKit top-left CSS coordinates to AppKit bottom-left view points.
 
@@ -877,7 +903,7 @@ def main() -> None:
             payload = message.body()
             # A hostile or malformed page must never install an AppKit view
             # over arbitrary content. Geometry is independently validated.
-            drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []
+            drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)
             refresh_native_drag_areas()
 
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
@@ -926,6 +952,9 @@ def main() -> None:
     # Final, editor-scoped theme layer: do not recolor toolbar, caret, selection.
     from pynix_gui.ide_editor_theme import apply_editor_darcula
     document = apply_editor_darcula(document)
+    # Synchronize Project header with real editor tab bounds, not only CSS.
+    from pynix_gui.ide_project_header_sync import apply_project_header_alignment
+    document = apply_project_header_alignment(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
