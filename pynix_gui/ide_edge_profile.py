@@ -421,6 +421,10 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    const unavailable=entry.state==='unavailable';
    button.setAttribute('aria-disabled',String(unavailable));
    button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');
+   // Preserve a candid status in the single delegated tooltip. The icon can
+   // highlight on hover while still having NO command when unavailable.
+   button.dataset.pynixTooltip=entry.label+
+    (unavailable?' (not available yet)':'');
    button.setAttribute('aria-label',button.title);
    button.dataset.toolWindow=entry.label;
    // The blue notification dot matches the PyCharm visual reference.
