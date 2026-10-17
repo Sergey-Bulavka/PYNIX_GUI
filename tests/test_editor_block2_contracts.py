@@ -20,7 +20,7 @@ def test_matching_brackets_update_on_caret_moves():
     source = SCRIPT.read_text(encoding="utf-8")
     html = HTML.read_text(encoding="utf-8")
     assert "function matchingBracketPositions(value,caret)" in source
-    assert "matching.has(match.index)" in source
+    assert "matching.has(part.start)" in source
     assert "recolorSource();" in source.split("editorInput.addEventListener('select'", 1)[1][:85]
     assert ".pynix-edit-bracket-match{" in html
 
