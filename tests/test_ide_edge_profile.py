@@ -212,7 +212,11 @@ def test_left_top_more_popup_visual_scope_and_overflow_placement():
     from pynix_gui.ide_edge_profile import EDGE_PROFILE_STYLE, EDGE_PROFILE_SCRIPT
     assert '.pynix-tool-profile-popover[data-edge="left-top"]' in EDGE_PROFILE_STYLE
     assert "width:296px!important" in EDGE_PROFILE_STYLE
-    assert "min-height:36px!important" in EDGE_PROFILE_STYLE
+    # PyCharm's screenshot has ~24 CSS px per row, not our old 36 px.
+    assert "min-height:24px!important;height:24px!important" in EDGE_PROFILE_STYLE
+    assert "padding:2px 10px!important" in EDGE_PROFILE_STYLE
+    assert "popover.childElementCount*(edge==='left-top'?24:30)+18" in EDGE_PROFILE_SCRIPT
+    assert "font:13px/1.25 system-ui" in EDGE_PROFILE_STYLE
     assert ".pynix-more-shortcut" in EDGE_PROFILE_STYLE
     assert "const width=edge==='left-top'?296:220;" in EDGE_PROFILE_SCRIPT
     assert "popover.dataset.edge=edge;" in EDGE_PROFILE_SCRIPT
