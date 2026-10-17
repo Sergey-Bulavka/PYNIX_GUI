@@ -32,9 +32,7 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode.pynix-iconless
 .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item .pynix-menu-icon svg,
 .workspace-mode.pynix-iconless
-.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
-.workspace-mode.pynix-iconless
-.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
  display:block!important;
 }
 /* The old shell also painted the PY badge, Run triangle and Debug bug
