@@ -33,6 +33,7 @@ addopts = "-q"
 pynix_gui = [
     "py.typed",
     "assets/icons/*.png",
+    "assets/icons/*.svg",
     "assets/jetbrains_new_ui/svg/*/*.svg",
     "assets/jetbrains_new_ui/svg/*/*/*.svg",
     "assets/jetbrains_new_ui/svg/*/*/*/*.svg",
