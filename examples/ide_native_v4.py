@@ -15,53 +15,61 @@ from pathlib import Path
 
 PREVIEW_PATH = Path(__file__).with_name("icon_direction_preview.html")
 
-# A dedicated native drag surface tracks the actual EMPTY toolbar spacer.
-# No page-wide AppKit dragging: all scrollbars and editor interactions remain WebKit-owned.
+# Native AppKit drag targets cover every free topbar gap, not only one spacer.
+# Interactive WebKit controls are exclusions; they remain WebKit-owned.
 TOOLBAR_DRAG_SCRIPT = """<script>
 (() => {
-  const spacer = document.querySelector('.workspace-mode .workspace-toolbar > .toolbar-spacer');
-  const toolbar = document.querySelector('.workspace-mode .workspace-toolbar');
-  if (!spacer || !toolbar) return;
-  // In narrow windows the flex spacer can collapse. The static PYNIX title
-  // remains a safe drag target (unlike editor tabs or toolbar buttons).
-  const title = toolbar.querySelector('strong');
-  let last = '';
-  const update = () => {
-    const space = spacer.getBoundingClientRect();
-    const bar = toolbar.getBoundingClientRect();
-    const label = title?.getBoundingClientRect();
-    const region = space.width >= 64 ? space : (label || space);
-    // Keep clear of the macOS top resize edge and right resize corner.
-    const area = {x:region.left+12, y:bar.top+10,
-                  width:Math.max(0,region.width-24),
-                  height:Math.max(0,bar.height-18)};
-    // The PyCharm-style Run/Debug cluster is visually centered above the flex
-    // spacer. Never put an AppKit drag overlay on top of those live controls.
-    for (const selector of ['.pynix-pycharm-center','.pynix-pycharm-right']) {
-      const control = toolbar.querySelector(selector);
-      if (!control) continue;
-      const occupied = control.getBoundingClientRect();
-      const areaRight = area.x + area.width;
-      if (occupied.left < areaRight && occupied.right > area.x) {
-        area.width = Math.max(0, occupied.left - area.x - 8);
-      }
+  const toolbar=document.querySelector('.workspace-mode .workspace-toolbar');
+  if(!toolbar)return;
+  const selector='button,summary,input,select,textarea,a[href],[role="button"],[contenteditable="true"]';
+  let previous='';
+  const update=()=>{
+    const bar=toolbar.getBoundingClientRect();
+    if(bar.width<1||bar.height<25)return;
+    // Native macOS traffic lights, resize edges, and the 8px toolbar border
+    // are never converted into drag targets.
+    const minX=Math.max(86,bar.left+86), maxX=bar.right-18;
+    const blocked=[];
+    for(const node of toolbar.querySelectorAll(selector)){
+      const rect=node.getBoundingClientRect();
+      if(rect.width<=0||rect.height<=0||rect.bottom<=bar.top+9||
+         rect.top>=bar.top+bar.height-8)continue;
+      blocked.push([Math.max(minX,rect.left-5),Math.min(maxX,rect.right+5)]);
     }
-    const encoded = JSON.stringify(area);
-    if(encoded===last)return;
-    last=encoded;
-    window.webkit?.messageHandlers?.pynixToolbarDragRegion?.postMessage(area);
+    blocked.sort((a,b)=>a[0]-b[0]);
+    const areas=[];
+    let cursor=minX;
+    const append=(right)=>{
+      const start=cursor+2,end=right-2;
+      if(end-start>=12)areas.push({
+        x:start,y:bar.top+10,width:end-start,
+        height:Math.min(24,bar.height-18)
+      });
+    };
+    for(const [left,right] of blocked){
+      if(left>cursor)append(left);
+      cursor=Math.max(cursor,right);
+    }
+    if(maxX>cursor)append(maxX);
+    // Verify available gaps on every layout pass. This message changes only
+    // AppKit hit areas, never the visual placement of buttons.
+    const encoded=JSON.stringify(areas);
+    if(encoded===previous)return;
+    previous=encoded;
+    window.webkit?.messageHandlers?.pynixToolbarDragRegion?.postMessage(areas);
   };
-  const observer = new ResizeObserver(update);
-  observer.observe(spacer);
+  const observer=new ResizeObserver(update);
   observer.observe(toolbar);
-  if(title)observer.observe(title);
-  // Native NSViewMinYMargin holds the drag view at the top when the height
-  // changes; a resize event also refreshes horizontal spacer geometry.
-  window.addEventListener('resize', update);
+  for(const node of toolbar.querySelectorAll(selector))observer.observe(node);
+  const mutation=new MutationObserver(()=>{
+    for(const node of toolbar.querySelectorAll(selector))observer.observe(node);
+    update();
+  });
+  mutation.observe(toolbar,{childList:true,subtree:true});
+  window.addEventListener('resize',update);
   requestAnimationFrame(update);
 })();
 </script>"""
-
 
 def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
     """Map WebKit top-left CSS coordinates to AppKit bottom-left view points.
@@ -80,12 +88,12 @@ def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
         return None
     if not all(math.isfinite(v) for v in (x, top, width, height, bounds_width, bounds_height)):
         return None
-    # Reserve the top border for resizing and never cover window corners.
+    # Reserve traffic lights, resize boundaries, and the editor below.
     if (x < 86 or top < 8 or top > 16 or height < 16 or height > 30
-            or top + height > 40 or width < 32 or bounds_width < 760):
+            or top + height > 40 or width < 12 or bounds_width < 760):
         return None
     width = min(width, bounds_width - x - 18)
-    if width < 32:
+    if width < 12:
         return None
     return (x, bounds_height - top - height, width, height)
 
@@ -166,8 +174,8 @@ def main() -> None:
                 update(False)
 
         def windowDidResize_(self, notification):
-            # Reposition both drag handles in CURRENT AppKit coordinates on
-            # every width/height change, even when JS geometry was unchanged.
+            # Reposition all safe drag gaps in CURRENT AppKit coordinates.
+            # Refresh on native resize even before another WebKit measurement.
             update = drag_resize_callback["update"]
             if update is not None:
                 update()
@@ -261,15 +269,16 @@ def main() -> None:
     view = FirstClickWebView.alloc().initWithFrame_(content_view.bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
     content_view.addSubview_(view)
-    drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
-    # Flexible MIN-Y (bottom) margin pins the region to the TOP of its
-    # superview through height-only resizes, even without a fresh JS message.
-    drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
-    drag_area.setHidden_(True)
-    content_view.addSubview_(drag_area)  # Optional live toolbar spacer.
-    title_drag_area = ToolbarDragView.alloc().initWithFrame_(AppKit.NSMakeRect(0, 0, 0, 0))
-    title_drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)
-    content_view.addSubview_(title_drag_area)  # Always active over static PYNIX title.
+    # A fixed pool of disjoint overlay strips follows actual free DOM gaps.
+    # Hidden strips never intercept WebKit mouse input over live controls.
+    toolbar_drag_areas = []
+    for _ in range(20):
+        drag_view = ToolbarDragView.alloc().initWithFrame_(
+            AppKit.NSMakeRect(0, 0, 0, 0))
+        drag_view.setAutoresizingMask_(AppKit.NSViewMinYMargin)
+        drag_view.setHidden_(True)
+        content_view.addSubview_(drag_view)
+        toolbar_drag_areas.append(drag_view)
     # A dedicated grip guarantees resizing without relying on hidden AppKit
     # edge hit targets or WebKit's readiness during initial window startup.
     corner_resize = CornerResizeView.alloc().initWithFrame_(
@@ -281,23 +290,19 @@ def main() -> None:
         AppKit.NSViewMinXMargin | AppKit.NSViewMaxYMargin
     )
     content_view.addSubview_(corner_resize)
-    drag_geometry = {"area": None}
+    drag_geometry = {"areas": []}
 
     def refresh_native_drag_areas():
         bounds = content_view.bounds().size
-        frame = title_drag_frame(bounds.width, bounds.height)
-        if frame is not None:
-            title_drag_area.setFrame_(AppKit.NSMakeRect(*frame))
-            title_drag_area.setHidden_(False)
-        else:
-            title_drag_area.setHidden_(True)
-        area = drag_geometry["area"]
-        frame = toolbar_drag_frame(bounds.width, bounds.height, area) if area is not None else None
-        if frame is not None:
-            drag_area.setFrame_(AppKit.NSMakeRect(*frame))
-            drag_area.setHidden_(False)
-        else:
-            drag_area.setHidden_(True)
+        areas = drag_geometry["areas"]
+        for index, drag_view in enumerate(toolbar_drag_areas):
+            area = areas[index] if index < len(areas) else None
+            frame = toolbar_drag_frame(bounds.width, bounds.height, area) if area is not None else None
+            if frame is not None:
+                drag_view.setFrame_(AppKit.NSMakeRect(*frame))
+                drag_view.setHidden_(False)
+            else:
+                drag_view.setHidden_(True)
 
     drag_resize_callback["update"] = refresh_native_drag_areas
     refresh_native_drag_areas()
@@ -870,7 +875,10 @@ def main() -> None:
     navigation_handler = NavigationHandler.alloc().init()
     class ToolbarDragRegionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
-            drag_geometry["area"] = message.body()
+            payload = message.body()
+            # A hostile or malformed page must never install an AppKit view
+            # over arbitrary content. Geometry is independently validated.
+            drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []
             refresh_native_drag_areas()
 
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
