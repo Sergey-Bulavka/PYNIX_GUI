@@ -222,7 +222,12 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  width:20px!important;height:20px!important
 }
 .workspace-mode .workspace-toolbar .pynix-run-with-params[aria-disabled="true"]{
- opacity:.72!important;cursor:default!important
+ opacity:1!important;cursor:default!important
+}
+.workspace-mode .workspace-toolbar .pynix-run-with-params:hover,
+.workspace-mode .workspace-toolbar .pynix-run-with-params:focus-visible{
+ background:#304d7f!important;color:#f1f4fc!important;
+ outline:none!important
 }
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-stop-action:disabled{
  display:none!important
@@ -527,13 +532,15 @@ CHROME_SCRIPT = r"""<script>
     // disabled menu item rather than pretending arguments are forwarded.
     const params=document.createElement('button');
     params.type='button';params.className='pynix-run-with-params';
-    params.textContent='Run with Parameters…';
+    params.textContent='Run with Parameters...';
     const edit=makeIcon('general/edit');
     if(edit)params.prepend(edit);
     params.setAttribute('aria-disabled','true');
     params.setAttribute('aria-label','Run with Parameters (not yet supported)');
-    params.title='Run parameters are not supported by PYNIX yet';
-    params.disabled=true;
+    params.dataset.pynixTooltip='Run with Parameters (not yet supported by PYNIX)';
+    params.setAttribute('tabindex','0');
+    // Do not use HTML disabled: allow hover and keyboard focus for the
+    // explanatory tooltip. No click listener means no fake run command.
     items.prepend(params);
    }
    const debugStatus=toolbar.querySelector('.pynix-debug-status');
