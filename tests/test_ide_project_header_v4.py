@@ -124,3 +124,22 @@ def test_tooltips_are_delegated_and_shortcuts_preserved():
     assert "'.pynix-project-header-button'" in TOOLTIP_SCRIPT
     assert "event.key==='+'||event.key==='='" in CHROME_SCRIPT
     assert "event.key==='-'" in CHROME_SCRIPT
+
+
+def test_generated_project_header_javascript_is_valid_when_node_is_available(tmp_path):
+    import re
+    import shutil
+    import subprocess
+    import pytest
+
+    node=shutil.which("node")
+    if not node:
+        pytest.skip("Node is unavailable; WKWebView syntax check pending")
+    html=apply_pycharm_chrome('<html><body class="workspace-mode"></body></html>',
+                             iconless=True)
+    scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S)
+    assert scripts
+    for script in scripts:
+        result=subprocess.run([node,"--check"],input=script,text=True,
+                              capture_output=True,timeout=20)
+        assert result.returncode==0,result.stderr
