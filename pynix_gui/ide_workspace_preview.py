@@ -57,7 +57,8 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
     payload = json.dumps(records, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     # This script is appended after the gallery's own scripts, so the initial
     # design preview retains its independent, self-contained state.
-    return EDITOR_LEXER_JS + """<script>
+    return """<script>
+__PYNIX_DISPLAY_LEXER__
 (() => {
  const files = PAYLOAD;
  const PROJECT_NAME = PROJECT_NAME_PAYLOAD;
@@ -2643,7 +2644,7 @@ editorInput.addEventListener('keydown',event=>{
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
-</script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
+</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
