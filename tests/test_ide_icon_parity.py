@@ -194,8 +194,12 @@ def test_extended_file_extension_catalog_bindings_are_correct_and_licensed():
         assert catalog.resolve(name, dark=True) is not None, (extension, name)
         selector = f".workspace-mode .pynix-tab-file-glyph[data-extension='{extension}']"
         assert (selector, name, False) in DYNAMIC_ICON_BINDINGS
-        # Project uses neutral JetBrains glyphs rather than legacy extension colors.
-        assert not any(".project-glyph[data-extension=" in x for x, _, _ in DYNAMIC_ICON_BINDINGS)
+        # Explorer gets the same extension-specific glyphs as editor tabs.
+        tree_selector = (
+            f".workspace-mode .project-glyph"
+            f"[data-pynix-semantic='generic'][data-extension='{extension}']"
+        )
+        assert (tree_selector, name, False) in DYNAMIC_ICON_BINDINGS
     assert len({key for key, _, _ in DYNAMIC_ICON_BINDINGS}) == len(DYNAMIC_ICON_BINDINGS)
 
 
@@ -300,3 +304,55 @@ def test_icon_bridge_reapplication_is_idempotent_and_repairs_removed_icons():
     assert 'const shell=document.querySelector' not in ICON_BRIDGE_SCRIPT
     assert '".workspace-mode .workspace-toolbar"' in ICON_BRIDGE_SCRIPT
     assert '".workspace-mode .right-tools"' in ICON_BRIDGE_SCRIPT
+
+
+
+def test_project_tree_icons_are_extension_specific_with_safe_generic_fallback():
+    from pynix_gui.ide_icon_parity import (
+        TREE_EXTENSION_BINDINGS, TREE_FILENAME_BINDINGS,
+        DYNAMIC_ICON_BINDINGS, ICON_BRIDGE_SCRIPT, EXTENSION_ICON_NAMES,
+    )
+    catalog=JetBrainsIconCatalog(BUNDLED_ICONS)
+    specialized=dict(EXTENSION_ICON_NAMES)
+    for extension, key in {
+        "json":"fileTypes/json",
+        "md":"fileTypes/markdown",
+        "toml":"fileTypes/toml",
+        "yaml":"fileTypes/yaml",
+        "css":"fileTypes/css",
+        "js":"fileTypes/javaScript",
+        "ts":"fileTypes/typeScript",
+        "sql":"fileTypes/sql",
+        "png":"fileTypes/image",
+        "zip":"fileTypes/archive",
+        "ttf":"fileTypes/font",
+    }.items():
+        assert specialized[extension]==key
+        selector=(
+            ".workspace-mode .project-glyph"
+            f"[data-pynix-semantic='generic'][data-extension='{extension}']"
+        )
+        assert (selector,key,False) in TREE_EXTENSION_BINDINGS
+        assert catalog.resolve(key,dark=True) is not None
+    assert any("data-file-name='dockerfile'" in selector
+               for selector,_,_ in TREE_FILENAME_BINDINGS)
+    assert any("data-file-name='.gitignore'" in selector
+               for selector,_,_ in TREE_FILENAME_BINDINGS)
+    assert "item.name==='fileTypes/text'" in ICON_BRIDGE_SCRIPT
+    assert "target.dataset.pynixIcon && target.dataset.pynixIcon!=='fileTypes/text'" in ICON_BRIDGE_SCRIPT
+    assert len({s for s,_,_ in DYNAMIC_ICON_BINDINGS})==len(DYNAMIC_ICON_BINDINGS)
+
+
+def test_default_mode_tree_only_bridge_does_not_take_over_perimeter_icons():
+    source="<html><body class='workspace-mode'></body></html>"
+    output=apply_new_ui_icons(source,tree_only=True)
+    assert output!=source
+    assert output.count('id="pynix-native-project-file-icons"')==1
+    assert apply_new_ui_icons(output,tree_only=True)==output
+    assert "nodes/folder" in output and "fileTypes/json" in output
+    assert '"selector": ".workspace-mode .project-glyph' in output
+    assert '"name": "run/run"' not in output
+    assert '"name": "toolwindows/messages"' not in output
+    assert "__ICON_DATA__" not in output
+    assert "__DYNAMIC_ICON_DATA__" not in output
+    assert "<svg" not in output
