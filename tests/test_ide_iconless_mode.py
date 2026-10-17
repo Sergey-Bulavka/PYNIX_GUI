@@ -54,8 +54,9 @@ def test_top_controls_use_text_instead_of_logo_svg():
     assert "const icons={};" in output
     assert "<svg" not in output
     assert "else button.textContent=label;" in CHROME_SCRIPT
-    assert "document.createTextNode('More')" in CHROME_SCRIPT
-    assert "document.createTextNode('Fold')" in CHROME_SCRIPT
+    assert "else summary.textContent=label;" in CHROME_SCRIPT
+    assert "document.createTextNode('Collapse')" in CHROME_SCRIPT
+    assert "const svg=makeIcon(icon);" in CHROME_SCRIPT
 
 
 def test_native_ide_defaults_to_iconless_and_retains_opt_in_catalog():
