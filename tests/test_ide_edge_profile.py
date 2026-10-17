@@ -132,3 +132,31 @@ def test_top_left_icons_load_in_iconless_mode_without_loading_other_rails():
     assert "const pictogram=iconless&&edge==='left-top';" in EDGE_PROFILE_SCRIPT
     assert "general/moreHorizontal" in result
     assert '"name": "github/pullRequests"' in result
+
+
+def test_window_focus_changes_brightness_not_original_svg_variants():
+    from pynix_gui.ide_edge_profile import EDGE_PROFILE_STYLE, EDGE_PROFILE_SCRIPT
+    assert "window.pynixSetWindowActive=setWindowActive;" in EDGE_PROFILE_SCRIPT
+    assert "window.addEventListener('focus',()=>setWindowActive(true));" in EDGE_PROFILE_SCRIPT
+    assert "window.addEventListener('blur',()=>setWindowActive(false));" in EDGE_PROFILE_SCRIPT
+    assert "workspace.classList.toggle('pynix-window-inactive',!active);" in EDGE_PROFILE_SCRIPT
+    assert "setWindowActive(document.hasFocus());" in EDGE_PROFILE_SCRIPT
+    assert ".workspace-mode.pynix-window-inactive" in EDGE_PROFILE_STYLE
+    assert "opacity:.48!important" in EDGE_PROFILE_STYLE
+    assert "background:#3a3b41!important" in EDGE_PROFILE_STYLE
+    assert "@media(prefers-reduced-motion:reduce)" in EDGE_PROFILE_STYLE
+    assert "catalog.svg(key, dark=dark, tool_window=True)" in (
+        Path(__file__).resolve().parents[1] / "pynix_gui" /
+        "ide_edge_profile.py").read_text(encoding="utf-8")
+
+
+def test_macos_native_window_key_resign_events_notify_icon_layer():
+    source = (Path(__file__).resolve().parents[1] /
+              "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert 'window_focus_callback = {"update": None}' in source
+    assert "def windowDidBecomeKey_(self, notification):" in source
+    assert "def windowDidResignKey_(self, notification):" in source
+    assert "update(True)" in source
+    assert "update(False)" in source
+    assert 'window_focus_callback["update"] = publish_window_focus' in source
+    assert 'f"window.pynixSetWindowActive?.({literal});"' in source
