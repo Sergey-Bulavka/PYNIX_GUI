@@ -561,7 +561,7 @@ def test_v523_native_corner_grip_stays_responsive_through_relaunch_and_resize():
     assert "AppKit.NSWindowStyleMaskResizable" in source
     assert "window.setMovableByWindowBackground_(False)" in source
     assert "content_view.addSubview_(view)" in source
-    assert "content_view.addSubview_(drag_area)" in source
+    assert "content_view.addSubview_(drag_view)" in source
     assert "content_view.addSubview_(title_drag_area)" in source
 
 
