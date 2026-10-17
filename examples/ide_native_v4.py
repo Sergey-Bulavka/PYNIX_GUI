@@ -887,6 +887,8 @@ def main() -> None:
     # including tool windows and dynamically rebuilt Project controls.
     from pynix_gui.ide_tooltips import apply_native_tooltips
     document = apply_native_tooltips(document)
+    from pynix_gui.ide_search_everywhere import apply_search_everywhere
+    document = apply_search_everywhere(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
