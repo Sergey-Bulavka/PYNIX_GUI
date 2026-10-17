@@ -8,9 +8,9 @@ Run: python -m examples.ide_shell_showcase
 from pynix_gui import (
     GUIRuntime, button, column, fill, max_size, min_size, padding,
     rich_editor, row, text, text_span, tree, tree_node, toolbar, status_bar,
-    separator, menu, menu_bar, menu_item, search_field,
+    separator, menu, menu_bar, menu_item, search_field, tooltip, badge,
 )
-from pynix_gui.ide_components import ide_command_bar, ide_editor_tab_strip, ide_tool_window_header, ide_status_strip
+from pynix_gui.ide_components import ide_editor_tab_strip, ide_tool_window_header, ide_status_strip
 from pynix_gui.backends import default_backend
 
 SOURCES = {
@@ -19,6 +19,14 @@ SOURCES = {
     "tooling.pnx": 'function inspect(source: String)\n    return source.len\n',
     "test_main.pnx": 'function test_main()\n    assert 1 + 1 == 2\n',
 }
+# Version supplied by the IDE product, not the independently versioned GUI toolkit.
+# Keep this preview fixture aligned with PYNIX_IDE/docs/VERSIONING.md.
+IDE_VERSION = "1.1.26-dev"
+SEARCH_HELP = (
+    "Search Everywhere  ⇧ ⇧\n"
+    "Searches for:\n"
+    "- Classes\n- Files\n- Tool Windows\n- Actions\n- Settings"
+)
 SOURCE = SOURCES["main.pnx"]
 FILES = [
     tree_node("src", "src", [
@@ -40,6 +48,10 @@ def initial_state():
         "tool_tab": "Terminal",
         "tool_message": "pynix$  Ready — visual preview, no live subprocess",
         "search": "", "activity": "Explorer", "message": "Ready",
+        "everywhere_open": False, "everywhere_query": "",
+        "settings_open": False, "settings_page": "IDE Settings",
+        # This is supplied by the future update service, not inferred from a date.
+        "updates_available": False,
     }
 
 
@@ -52,6 +64,104 @@ def source_spans(source):
         if start >= 0:
             spans.append(text_span(start, start + len(token), role))
     return spans
+
+
+
+# Search Everywhere is deliberately scoped to known preview data.
+# No project indexing, remote update check or source execution is implied.
+SEARCH_ACTIONS = (
+    ("Show Explorer", "shell-activity-explorer"),
+    ("Run Current File", "shell-run"),
+    ("Debug Current File", "shell-debug"),
+    ("Toggle Bottom Panel", "shell-toggle-bottom"),
+)
+SEARCH_TOOLS = ("Problems", "Output", "Terminal", "Debug Console")
+SEARCH_SETTINGS = ("IDE Settings", "Project Settings")
+
+
+def search_everywhere_items(query):
+    """Return deterministic (category, title, target) matches from available data."""
+    term = query.strip().casefold()
+    if not term:
+        return []
+    entries = [("Files", name, "shell-file-" + name) for name in SOURCES]
+    for name, contents in SOURCES.items():
+        for line in contents.splitlines():
+            stripped = line.strip()
+            for prefix, category in (("class ", "Classes"), ("function ", "Symbols")):
+                if stripped.startswith(prefix):
+                    symbol = stripped[len(prefix):].split("(", 1)[0].split(":", 1)[0].strip()
+                    entries.append((category, symbol + " · " + name, "shell-file-" + name))
+    entries.extend(("Tool Windows", name,
+                    "shell-tool-" + name.lower().replace(" ", "-"))
+                   for name in SEARCH_TOOLS)
+    entries.extend(("Actions", name, target) for name, target in SEARCH_ACTIONS)
+    entries.extend(("Settings", name, "shell-settings-" + name.lower().replace(" ", "-"))
+                   for name in SEARCH_SETTINGS)
+    return [entry for entry in entries if term in entry[1].casefold()][:12]
+
+
+def _topbar(state):
+    active = state["active"]
+    update_label = (
+        "Updates available. IDE and Project Settings"
+        if state["updates_available"] else "IDE and Project Settings"
+    )
+    return toolbar(row([
+        tooltip(button("shell-project", "▣ PYNIX ⌄", "quiet"), "PYNIX Project"),
+        tooltip(button("shell-branch", "⑂  main ⌄", "quiet"), "Git branch: main"),
+        tooltip(button("shell-current-file", "Current File ⌄", "quiet"),
+                "Select a run configuration"),
+        tooltip(button("shell-run", "▷  '" + active + "'", "quiet"),
+                "Run '" + active + "'"),
+        tooltip(button("shell-debug", "⚙  '" + active + "'", "quiet"),
+                "Debug '" + active + "'"),
+        tooltip(button("shell-more-actions", "⋮", "quiet"), "More Actions"),
+        fill(text("", "caption")),
+        tooltip(button("shell-search-everywhere", "⌕", "quiet"), SEARCH_HELP),
+        tooltip(button("shell-ide-settings",
+                       "⚙ •" if state["updates_available"] else "⚙", "quiet"),
+                update_label),
+        tooltip(badge("Beta Version · " + IDE_VERSION, "success"),
+                "PYNIX IDE " + IDE_VERSION + " — development preview"),
+    ], 8))
+
+
+def _everywhere_panel(state):
+    matches = search_everywhere_items(state["everywhere_query"])
+    results = [
+        button("shell-search-hit:" + target,
+               category + "  ·  " + title, "quiet")
+        for category, title, target in matches
+    ]
+    if not results:
+        results = [text("Type a query to search files, symbols, actions and settings"
+                        if not state["everywhere_query"].strip()
+                        else "No matches in this preview project", "caption")]
+    return column([
+        row([text("Search Everywhere", "subheading"),
+             fill(text("Demo workspace only", "caption")),
+             button("shell-search-close", "×", "quiet")], 8),
+        search_field("shell-everywhere-query", state["everywhere_query"],
+                     "Files, classes, symbols, tool windows, actions, settings"),
+        column(results, 3),
+    ], 8)
+
+
+def _settings_panel(state):
+    return column([
+        row([text("IDE and Project Settings", "subheading"),
+             fill(text("", "caption")),
+             button("shell-settings-close", "×", "quiet")], 8),
+        row([
+            button("shell-settings-ide-settings", "IDE Settings", "quiet"),
+            button("shell-settings-project-settings", "Project Settings", "quiet"),
+            button("shell-settings-check-updates", "Check for Updates", "quiet"),
+        ], 8),
+        text(state["settings_page"], "body"),
+        text("Settings and update services are not connected in this preview.",
+             "caption"),
+    ], 8)
 
 
 def _activity_rail(state):
@@ -111,7 +221,7 @@ def _bottom(state):
 
 
 def build(state):
-    top = ide_command_bar("PYNIX / Visual workspace")
+    top = _topbar(state)
     rail = _activity_rail(state)
     center = _editor(state)
     if state["bottom"]:
@@ -138,8 +248,14 @@ def build(state):
         workspace = row([fill(workspace),
                          min_size(inspector, 195, 0)], 8)
     status = ide_status_strip(state["message"], state["active"])
+    transient_panels = []
+    if state["everywhere_open"]:
+        transient_panels.append(_everywhere_panel(state))
+    if state["settings_open"]:
+        transient_panels.append(_settings_panel(state))
     return column([
         top,
+        *transient_panels,
         padding(row([
             button("shell-toggle-sidebar", "☰", "quiet"),
             text("PROJECT", "overline"),
@@ -157,6 +273,8 @@ def dispatch(state, event):
     target = event.target or ""
     if event.kind == "CHANGE" and target == "shell-search":
         state["search"] = event.text or ""
+    elif event.kind == "CHANGE" and target == "shell-everywhere-query":
+        state["everywhere_query"] = event.text or ""
     elif event.kind == "EXPANSION" and target == "shell-tree":
         expanded = set(state["expanded"])
         if event.checked:
@@ -169,9 +287,41 @@ def dispatch(state, event):
         if event.item_id in SOURCES:
             _open_file(state, event.item_id)
     elif event.kind == "ACTIVATE":
-        if target in ("shell-toggle-sidebar", "shell-activity-explorer"):
+        if target == "shell-search-everywhere":
+            state["everywhere_open"] = not state["everywhere_open"]
+            state["settings_open"] = False
+        elif target == "shell-search-close":
+            state["everywhere_open"] = False
+        elif target == "shell-ide-settings":
+            state["settings_open"] = not state["settings_open"]
+            state["everywhere_open"] = False
+        elif target == "shell-settings-close":
+            state["settings_open"] = False
+        elif target.startswith("shell-settings-"):
+            page = target[len("shell-settings-"):].replace("-", " ").title()
+            if page == "Check Updates":
+                state["message"] = "Update checking is not connected in the preview"
+            else:
+                state["settings_page"] = page
+        elif target.startswith("shell-search-hit:"):
+            hit = target[len("shell-search-hit:"):]
+            allowed = {item[2] for item in
+                       search_everywhere_items(state["everywhere_query"])}
+            if hit in allowed:
+                state["everywhere_open"] = False
+                dispatch(state, type("SearchAction", (), {"kind": "ACTIVATE", "target": hit})())
+        elif target in ("shell-toggle-sidebar", "shell-activity-explorer"):
             state["sidebar"] = not state["sidebar"] if target == "shell-toggle-sidebar" else True
             state["activity"] = "Explorer"
+        elif target == "shell-branch":
+            state["message"] = "Branch: main (read-only preview)"
+        elif target == "shell-current-file":
+            state["message"] = "Run configuration: '" + state["active"] + "'"
+        elif target == "shell-more-actions":
+            state["message"] = "More actions are available through Run and View"
+        elif target == "shell-debug":
+            state["bottom"], state["tool_tab"] = True, "Debug Console"
+            state["tool_message"] = "Debugger is not connected in the visual preview"
         elif target == "shell-activity-search":
             state["activity"], state["sidebar"] = "Search", True
         elif target == "shell-toggle-inspector":
@@ -203,7 +353,7 @@ def dispatch(state, event):
         elif target in ("shell-project", "shell-menu-project"):
             state["sidebar"], state["activity"] = True, "Explorer"
         elif target == "shell-activity-settings":
-            state["inspector"] = True
+            state["settings_open"] = True
     return True
 
 
@@ -224,6 +374,8 @@ def shell_menus():
                        menu_item("shell-menu-bottom", "Toggle Bottom Panel"),
                        menu_item("shell-toggle-inspector", "Toggle Inspector")]),
         menu("Run", [menu_item("shell-menu-run", "Run Current File")]),
+        menu("Navigate", [menu_item("shell-search-everywhere", "Search Everywhere")]),
+        menu("Settings", [menu_item("shell-ide-settings", "IDE and Project Settings")]),
     ])
 
 
