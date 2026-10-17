@@ -26,6 +26,16 @@ TOOLBAR_DRAG_SCRIPT = """<script>
   const update=()=>{
     const bar=toolbar.getBoundingClientRect();
     if(bar.width<1||bar.height<25)return;
+    // The chrome controls are added on load. Do not temporarily overlay
+    // an uninitialized toolbar before their real hit targets exist.
+    if(!toolbar.querySelector('.pynix-pycharm-center')||
+       !toolbar.querySelector('.pynix-toolbar-identity')){
+      if(previous!=='[]'){
+        previous='[]';
+        window.webkit?.messageHandlers?.pynixToolbarDragRegion?.postMessage([]);
+      }
+      return;
+    }
     // Native macOS traffic lights, resize edges, and the 8px toolbar border
     // are never converted into drag targets.
     const minX=Math.max(86,bar.left+86), maxX=bar.right-18;
@@ -67,6 +77,7 @@ TOOLBAR_DRAG_SCRIPT = """<script>
   });
   mutation.observe(toolbar,{childList:true,subtree:true});
   window.addEventListener('resize',update);
+  window.addEventListener('load',update,{once:true});
   requestAnimationFrame(update);
 })();
 </script>"""
@@ -97,18 +108,6 @@ def toolbar_drag_frame(bounds_width: float, bounds_height: float, area: dict):
         return None
     return (x, bounds_height - top - height, width, height)
 
-
-
-def title_drag_frame(bounds_width: float, bounds_height: float):
-    """Always-available drag handle over the static PYNIX toolbar title.
-
-    The title starts at x=86 in our 44-point native toolbar. This handle is
-    deliberately inset from the window's resize borders and traffic lights.
-    Unlike the optional flex-spacer handle, it never depends on WebKit layout.
-    """
-    if bounds_width < 760 or bounds_height < 520:
-        return None
-    return (92, bounds_height - 35, 62, 24)
 
 
 def corner_resize_geometry(bounds_width: float, bounds_height: float):
