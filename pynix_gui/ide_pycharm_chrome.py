@@ -373,6 +373,116 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
   padding:0 8px;font-size:11px
  }
 }
+
+/* Project V4: one quiet toolbar on hover anywhere within the tree, not only
+   within its 32px header. No action moves or changes the tree row geometry. */
+.workspace-mode .tree{container-type:inline-size}
+.workspace-mode .tree .pynix-project-header{
+ position:relative!important;isolation:isolate!important;overflow:visible!important;
+}
+.workspace-mode .tree .pynix-project-header-actions{
+ display:flex!important;align-items:center!important;justify-content:flex-end!important;
+ flex:0 0 auto!important;gap:1px!important;
+ opacity:0!important;pointer-events:none!important;
+}
+.workspace-mode .tree:hover .pynix-project-header-actions,
+.workspace-mode .tree:focus-within .pynix-project-header-actions,
+.workspace-mode .tree .pynix-project-header-actions:has(details[open]){
+ opacity:1!important;pointer-events:auto!important;
+}
+.workspace-mode .tree .pynix-project-view-switcher{flex:0 0 auto;min-width:0}
+.workspace-mode .tree .pynix-project-view-switcher>summary{
+ width:auto!important;min-width:68px!important;padding:0 4px!important;
+ display:inline-flex!important;align-items:center!important;gap:6px!important;
+ color:#d0d2d7!important;font-size:12px!important;font-weight:600!important
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary svg{
+ width:14px!important;height:14px!important;
+}
+.workspace-mode .tree .pynix-project-view-label{
+ display:inline-block;min-width:0;white-space:nowrap;
+}
+.workspace-mode .tree .pynix-project-quick-button,
+.workspace-mode .tree .pynix-project-header-button{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:22px!important;height:26px!important;min-width:22px!important;
+ flex:0 0 22px!important;padding:3px!important;
+ box-sizing:border-box!important;border:0!important;border-radius:6px!important;
+ background:transparent!important;color:#b5b7be!important;
+}
+.workspace-mode .tree .pynix-project-quick-button>svg,
+.workspace-mode .tree .pynix-project-header-button>svg{
+ display:block!important;width:18px!important;height:18px!important;
+ max-width:18px!important;max-height:18px!important;
+}
+.workspace-mode .tree .pynix-project-quick-button:hover,
+.workspace-mode .tree .pynix-project-header-button:hover,
+.workspace-mode .tree .pynix-project-quick-button:focus-visible,
+.workspace-mode .tree .pynix-project-header-button:focus-visible,
+.workspace-mode .tree details[open]>summary.pynix-project-quick-button{
+ background:#3a3d45!important;outline:none!important;color:#e1e3e8!important;
+}
+.workspace-mode .tree .pynix-project-header-separator{
+ display:block!important;align-self:center;flex:0 0 1px!important;
+ width:1px!important;height:21px!important;min-width:1px!important;
+ margin:0 3px!important;background:#505158!important
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary,
+.workspace-mode .tree .pynix-project-create-menu>summary,
+.workspace-mode .tree .pynix-project-more-menu>summary{
+ list-style:none!important;cursor:pointer!important;
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary::-webkit-details-marker,
+.workspace-mode .tree .pynix-project-create-menu>summary::-webkit-details-marker,
+.workspace-mode .tree .pynix-project-more-menu>summary::-webkit-details-marker{
+ display:none!important;
+}
+.workspace-mode .tree .pynix-project-create-menu>summary:after{
+ content:"";position:absolute;bottom:3px;right:2px;width:5px;height:5px;
+ border-right:1px solid #aeb0b8;transform:rotate(45deg);
+}
+.workspace-mode .tree .pynix-project-create-menu,
+.workspace-mode .tree .pynix-project-more-menu,
+.workspace-mode .tree .pynix-project-view-switcher{position:relative!important}
+.workspace-mode .tree .pynix-project-popup{
+ position:absolute!important;top:30px!important;right:0!important;
+ z-index:400!important;min-width:158px!important;width:max-content!important;
+ max-width:min(265px,90vw)!important;background:#303137!important;
+ border:1px solid #53565f!important;border-radius:8px!important;padding:5px!important;
+ box-shadow:0 12px 28px #0008!important
+}
+.workspace-mode .tree .pynix-project-popup>button{
+ display:block!important;width:100%!important;min-height:28px!important;
+ border:0!important;border-radius:5px!important;padding:4px 9px!important;
+ text-align:left!important;color:#dadbe0!important;background:transparent!important;
+ white-space:nowrap!important;font:12px/1.4 -apple-system,system-ui,sans-serif!important
+}
+.workspace-mode .tree .pynix-project-popup>button:hover,
+.workspace-mode .tree .pynix-project-popup>button:focus-visible{
+ background:#3a4c69!important;color:#fff!important
+}
+.workspace-mode .tree .project-root .pynix-project-root-name{
+ flex:0 0 auto!important;font-weight:600!important;
+ color:#c7c9ce!important;overflow:visible!important;
+}
+.workspace-mode .tree .project-root .pynix-project-root-path{
+ flex:1 1 auto!important;min-width:0!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ color:#767980!important;font-weight:400!important;font-size:12px!important;
+}
+.workspace-mode .tree .project-root{overflow:hidden!important}
+@container (max-width:250px){
+ .pynix-project-header-actions>.pynix-project-quick-button:nth-of-type(1),
+ .pynix-project-header-actions>.pynix-project-quick-button:nth-of-type(2),
+ .pynix-project-header-actions>.pynix-project-header-button{
+  display:none!important;
+ }
+ /* Narrow panes keep New, Options and Hide accessible; the three hidden
+    actions remain available in Options until the user widens the pane. */
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .tree .pynix-project-header-actions{transition:none!important}
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
