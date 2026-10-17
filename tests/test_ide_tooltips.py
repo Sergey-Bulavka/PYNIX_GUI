@@ -46,6 +46,8 @@ def test_tooltips_cover_all_perimeter_and_project_buttons_via_delegation():
         ".pynix-project-quick-button",
         ".pynix-project-header-button",
         ".pynix-project-more-menu>summary",
+        ".pynix-toolbar-project",
+        ".pynix-toolbar-branch",
         ".pynix-pycharm-icon-button",
         ".pynix-pycharm-center>.pynix-run-action",
         ".pynix-pycharm-center>.pynix-debug-primary",
