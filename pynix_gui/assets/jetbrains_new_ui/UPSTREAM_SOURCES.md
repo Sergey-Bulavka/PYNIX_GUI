@@ -54,10 +54,26 @@ covered by the [JetBrains repository's Apache-2.0 license](https://github.com/Je
 Both original files retain their exact bytes and SHA-256 checksums in
 `manifest.json`.
 
-**Endpoints:** The JetBrains SVG for the specific Endpoints tool window has
-not yet been verified as a redistributable original. The row stays present
-in the correct position with its icon slot empty; no home-made or unrelated
-replacement is used.
+**Endpoints:** This is a JetBrains IDE product-specific asset, but a
+redistributable upstream SVG is not present in the public Apache icon pack.
+PYNIX therefore **does not bundle or imitate** it. The `Endpoints` item
+loads the unmodified original SVG directly from a locally installed PyCharm
+or IntelliJ IDEA `.app` Java archive when that official resource is found.
+This is implemented in `pynix_gui/ide_local_jetbrains_icons.py`.
+The bundle is searched only on the user's computer; nothing is downloaded
+or committed. The `localJetBrains/endpoints` key explicitly marks this
+local-only origin.
+
+Supported install paths include `/Applications/PyCharm.app`, user
+`~/Applications` and JetBrains Toolbox apps. For other locations, point
+`PYNIX_JETBRAINS_APP_PATH` at a local `PyCharm.app` bundle or the
+specific official JetBrains `.jar` containing
+`icons/expui/toolwindows/endpoints_dark.svg`.
+
+**If the official Endpoints resource is absent** from the user's installed
+IDE, the row will remain without artwork. Never use another SVG as a
+lookalike. The original vector's availability and final visual appearance
+must be checked in the user's macOS PyCharm installation.
 
 The Bookmarks, Find and Debug macOS shortcut **labels** match the screenshot
 (`⌘2`, `⌘3`, `⌘5`); a displayed shortcut does not by itself register
