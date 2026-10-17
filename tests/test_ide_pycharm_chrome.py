@@ -51,17 +51,19 @@ def test_top_toolbar_moves_existing_run_debug_and_tools_controls():
 
 def test_project_title_actions_bind_to_real_tree_and_new_file_handlers():
     for expected in (
-        "title.textContent='Project'",
-        "document.querySelector('.pynix-new-source')?.click()",
-        ".project-entry.workspace-selected",
-        "collapse?.click();more.open=false;",
+        "viewLabel.textContent='Project'",
+        "window.pynixCreateProjectEntry?.('file')",
+        "window.pynixCreateProjectEntry?.('directory')",
+        "window.pynixProjectSelectOpenedFile?.()",
+        "window.pynixProjectExpandSelected?.()",
+        "window.pynixProjectCollapseAll?.()",
         "document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();",
         "new MutationObserver(initProjectHeader).observe(tree,{childList:true})",
     ):
         assert expected in CHROME_SCRIPT
     assert ".pynix-project-quick-button:focus-visible" in CHROME_STYLE
     assert "makeIcon('general/collapseAll')" in CHROME_SCRIPT
-    assert "makeIcon('general/moreVertical')" in CHROME_SCRIPT
+    assert "menu('pynix-project-more-menu','Options','general/moreVertical'" in CHROME_SCRIPT
 
 
 def test_status_breadcrumb_follows_current_editor_tab():
