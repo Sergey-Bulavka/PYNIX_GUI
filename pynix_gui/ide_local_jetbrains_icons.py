@@ -25,7 +25,9 @@ from zipfile import BadZipFile, ZipFile
 # Prefer the canonical tool-window glyph over action/gutter variants.
 _ENDPOINT_PATHS = (
     "icons/expui/toolwindows/endpoints.svg",
+    "icons/expui/toolwindows/endpoints@20x20.svg",
     "icons/expui/endpoints.svg",
+    "icons/expui/endpoints@20x20.svg",
     "icons/newui/endpoints.svg",
     "icons/expui/rails/endpoints.svg",
     "icons/rails/endpoints.svg",
