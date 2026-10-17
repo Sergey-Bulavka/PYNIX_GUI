@@ -102,12 +102,12 @@ TREE_EXTENSION_BINDINGS = tuple(
     for extension, icon in EXTENSION_ICON_NAMES
 )
 TREE_FILENAME_BINDINGS = (
-    (".workspace-mode .project-glyph[data-file-name='dockerfile']", "fileTypes/docker", False),
-    (".workspace-mode .project-glyph[data-file-name='.gitignore']", "fileTypes/gitignore", False),
-    (".workspace-mode .project-glyph[data-file-name='.gitattributes']", "fileTypes/gitignore", False),
-    (".workspace-mode .project-glyph[data-file-name='.dockerignore']", "fileTypes/docker", False),
-    (".workspace-mode .project-glyph[data-file-name='.editorconfig']", "fileTypes/editorConfig", False),
-    (".workspace-mode .project-glyph[data-file-name='makefile']", "fileTypes/config", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='dockerfile']", "fileTypes/docker", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='.gitignore']", "fileTypes/gitignore", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='.gitattributes']", "fileTypes/gitignore", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='.dockerignore']", "fileTypes/docker", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='.editorconfig']", "fileTypes/editorConfig", False),
+    (".workspace-mode .project-glyph[data-pynix-semantic='generic'][data-file-name='makefile']", "fileTypes/config", False),
 )
 DYNAMIC_ICON_BINDINGS = TREE_ICON_BINDINGS + TREE_EXTENSION_BINDINGS + TREE_FILENAME_BINDINGS + (
     (".workspace-mode .pynix-tab-file-glyph.file-json", "fileTypes/json", False),
