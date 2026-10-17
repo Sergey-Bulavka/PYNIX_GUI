@@ -23,30 +23,49 @@ def _paths(name: str):
     return list(root.iter(NS + "path"))
 
 
-def test_pynix_terminal_is_the_pure_existing_logo_mark():
+def test_pynix_terminal_uses_crisp_strokes_at_jetbrains_20px_scale():
+    root = ET.fromstring((ICON_DIR / "pynix-terminal.svg").read_text("utf-8"))
     paths = _paths("pynix-terminal.svg")
-    assert len(paths) == 1
-    logo = paths[0]
-    assert logo.attrib["fill"] == "currentColor"
-    assert logo.attrib["fill-rule"] == "evenodd"
-    assert logo.attrib["transform"] == "translate(-4.88 -8.29) scale(0.62)"
-    assert "M24 16L12 23V35L24 43L36 35V23L24 16Z" in logo.attrib["d"]
-
-
-def test_pynix_packages_replaces_python_with_exact_same_pynix_logo():
-    source = _paths("pynix-terminal.svg")[0]
-    paths = _paths("pynix-packages.svg")
     assert len(paths) == 2
-    box, mark = paths
-    assert box.attrib["fill"] == "currentColor"
-    assert box.attrib["d"].startswith("M1 5.65028C1 5.25509")
-    assert mark.attrib["d"] == source.attrib["d"]
-    assert "translate(8.8 8.5)" in mark.attrib["transform"]
-    assert mark.attrib["fill-rule"] == "evenodd"
-    # Exactly two paths: the unchanged JetBrains box silhouette and our
-    # PYNIX mark. None of the original Python snake paths are present.
-    assert "M10.75 17C10.75 16.5858" not in (ICON_DIR / "pynix-packages.svg").read_text(
-        encoding="utf-8")
+    assert root.attrib["fill"] == "none"
+    outer, logo = paths
+    assert outer.attrib["d"] == "M10 2 17 6v8l-7 4-7-4V6Z"
+    assert outer.attrib["stroke-width"] == "1.45"
+    assert logo.attrib["d"] == (
+        "M6.8 12.8V7.1L10 5.3l3.4 2V9L10 11"
+        "l-1.1-.6v3.15L10 14.3l3.4-1.9"
+    )
+    assert logo.attrib["stroke-width"] == "1.3"
+    assert all(p.attrib["stroke"] == "currentColor" for p in paths)
+    assert all("transform" not in p.attrib for p in paths)
+    assert all("fill-rule" not in p.attrib for p in paths)
+    assert all("fill" not in p.attrib for p in paths)
+
+
+def test_packages_has_one_unbroken_box_and_shared_pynix_symbol_not_a_sticker():
+    root = ET.fromstring((ICON_DIR / "pynix-packages.svg").read_text("utf-8"))
+    paths = _paths("pynix-packages.svg")
+    assert len(paths) == 3
+    box, folded_edges, logo = paths
+    assert box.attrib["d"] == "M10 1.9 17.5 6.1v8L10 18.1 2.5 14.1v-8Z"
+    assert folded_edges.attrib["d"] == (
+        "M2.7 6.25 10 10.1l7.3-3.85M10 10.1v7.8"
+    )
+    assert box.attrib["stroke-width"] == "1.5"
+    assert folded_edges.attrib["stroke-width"] == "1.45"
+    assert logo.attrib["d"] == _paths("pynix-terminal.svg")[1].attrib["d"]
+    assert logo.attrib["stroke-width"] == "2"
+    groups = list(root.iter(NS + "g"))
+    assert len(groups) == 1
+    # A *single* explicit scale/translate (unlike the previously stacked,
+    # miniature bitmap tracing). Effective inset stroke width = 2 * .55 = 1.1.
+    assert groups[0].attrib["transform"] == "matrix(.55 0 0 .55 8.2 7.1)"
+    assert all(p.attrib["stroke"] == "currentColor" for p in paths)
+    assert all("fill" not in p.attrib for p in paths)
+    assert not list(root.iter(NS + "clipPath"))
+    assert not list(root.iter(NS + "mask"))
+    assert "pythonPackages" not in (ICON_DIR / "pynix-packages.svg").read_text("utf-8")
+
 
 
 def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
