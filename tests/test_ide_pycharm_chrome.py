@@ -12,7 +12,8 @@ def test_chrome_uses_licensed_original_glyphs_and_escapes_svg():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for name in ("general/search", "general/settings", "general/add",
                  "general/locate", "general/expandAll", "general/collapseAll",
-                 "general/moreVertical", "general/hide"):
+                 "general/moreVertical", "general/hide",
+                 "general/chevronDown", "toolwindows/vcs"):
         assert catalog.resolve(name, dark=True) is not None, name
         assert catalog.resolve(name, dark=False) is not None, name
     markup = "<html><body class='workspace-mode'></body></html>"
@@ -77,3 +78,53 @@ def test_native_toolbar_drag_overlay_excludes_centered_working_controls():
     assert "control.getBoundingClientRect()" in TOOLBAR_DRAG_SCRIPT
     assert "area.width = Math.max(0, occupied.left - area.x - 8);" in TOOLBAR_DRAG_SCRIPT
     assert "width:Math.max(0,region.width-24)" in TOOLBAR_DRAG_SCRIPT
+
+
+def test_project_logo_name_chevron_form_one_button_and_not_three_elements():
+    from pynix_gui.ide_pycharm_chrome import CHROME_SCRIPT, CHROME_STYLE
+    assert "const initIdentity=()=>{" in CHROME_SCRIPT
+    assert "project=build('pynix-toolbar-project'" in CHROME_SCRIPT
+    assert "brand.className='pynix-toolbar-project-badge';" in CHROME_SCRIPT
+    assert "brand.textContent='PY';" in CHROME_SCRIPT
+    assert "projectText.className='pynix-toolbar-project-name';" in CHROME_SCRIPT
+    assert "projectText.textContent=projectLabel;" in CHROME_SCRIPT
+    assert "project.append(brand,projectText);" in CHROME_SCRIPT
+    assert "project.appendChild(projectArrow);" in CHROME_SCRIPT
+    assert "legacyProject?.remove();" in CHROME_SCRIPT
+    assert "title?.remove();" in CHROME_SCRIPT
+    assert "initToolbar();initIdentity();initProjectHeader();" in CHROME_SCRIPT
+    assert ".pynix-toolbar-project:hover" in CHROME_STYLE
+    assert "gap:7px!important;padding-left:5px!important;padding-right:8px!important" in CHROME_STYLE
+
+
+def test_git_branch_uses_live_snapshot_not_project_caption_or_hardcoded_main():
+    from pynix_gui.ide_pycharm_chrome import CHROME_SCRIPT, CHROME_STYLE
+    from pynix_gui.ide_workspace_preview import attach_git_snapshot
+    from pynix_gui.ide_git_snapshot import GitSnapshot
+    assert "const snapshot=window.pynixGitSnapshot;" in CHROME_SCRIPT
+    assert "snapshot?.available&&snapshot.branch?" in CHROME_SCRIPT
+    assert "branchTitle=branchName?'Git Branch: '+branchName:" in CHROME_SCRIPT
+    assert "branchIcon=makeIcon('toolwindows/vcs');" in CHROME_SCRIPT
+    assert "branchArrow=makeIcon('general/chevronDown');" in CHROME_SCRIPT
+    assert "branch.appendChild(branchArrow);" in CHROME_SCRIPT
+    assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[2]?.click();" in CHROME_SCRIPT
+    assert "branch.textContent='main'" not in CHROME_SCRIPT
+    assert "branchName='main'" not in CHROME_SCRIPT
+    source = "<html><body class='workspace-mode'></body></html>"
+    rendered = attach_git_snapshot(source, GitSnapshot("feature/live-branch",(),()))
+    assert "window.pynixGitSnapshot" in rendered
+    assert '"feature/live-branch"' in rendered
+    assert "available:!!data.available" in rendered
+    assert ".workspace-toolbar .pynix-toolbar-branch-icon" in CHROME_STYLE
+
+
+def test_iconless_native_identity_keeps_only_real_git_and_chevron_icons():
+    from pynix_gui.ide_pycharm_chrome import apply_pycharm_chrome
+    source = "<html><body class='workspace-mode'></body></html>"
+    rendered = apply_pycharm_chrome(source, iconless=True)
+    assert '"general/chevronDown"' in rendered
+    assert '"toolwindows/vcs"' in rendered
+    assert '"general/search"' not in rendered
+    assert 'const iconless=true;' in rendered
+    assert 'classList.add(\'pynix-toolbar-branch-chevron\');' in rendered
+    assert 'classList.add(\'pynix-toolbar-branch-icon\');' in rendered
