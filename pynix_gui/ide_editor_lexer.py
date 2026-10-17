@@ -33,10 +33,10 @@ EDITOR_LEXER_JS = r"""<script id="pynix-v4-editor-lexer">
   const before=value.slice(value.lastIndexOf('\n',start-1)+1,start);
   const after=value.slice(end);
   if(isPython){
+   if(['True','False','None'].includes(text))return 'python-constant';
    if(PYTHON_KEYWORDS.has(text))return 'python-keyword';
    if(/\bdef\s+$/.test(before))return 'python-definition';
    if(/\bclass\s+$/.test(before))return 'python-class';
-   if(['True','False','None'].includes(text))return 'python-constant';
    if(BUILTINS.has(text)&&/^\s*\(/.test(after))return 'python-builtin';
    if(/^\s*\(/.test(after))return 'python-call';
    return 'python-plain';
