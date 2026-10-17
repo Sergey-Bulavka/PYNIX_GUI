@@ -6,7 +6,7 @@ Run: python -m examples.ide_shell_showcase
 """
 
 from pynix_gui import (
-    GUIRuntime, GUIEvent, button, column, fill, max_size, min_size, padding,
+    GUIRuntime, GUIEvent, button, column, fill, focused, max_size, min_size, padding,
     rich_editor, row, text, text_span, tree, tree_node, toolbar, status_bar,
     separator, menu, menu_bar, menu_item, search_field, tooltip, badge,
 )
@@ -142,8 +142,8 @@ def _everywhere_panel(state):
         row([text("Search Everywhere", "subheading"),
              fill(text("Demo workspace only", "caption")),
              button("shell-search-close", "×", "quiet")], 8),
-        search_field("shell-everywhere-query", state["everywhere_query"],
-                     "Files, classes, symbols, tool windows, actions, settings"),
+        focused(search_field("shell-everywhere-query", state["everywhere_query"],
+                             "Files, classes, symbols, tool windows, actions, settings"), True),
         column(results, 3),
     ], 8)
 
