@@ -8,7 +8,6 @@ state. Disabled entries never impersonate supported PYNIX functionality.
 """
 from __future__ import annotations
 
-import base64
 import json
 from pathlib import Path
 from .ide_jetbrains_icons import JetBrainsIconCatalog
@@ -30,8 +29,8 @@ TOOL_WINDOW_PROFILE = (
     ("Bookmarks", "toolwindows/bookmarks", "left-top", "unavailable"),
     # Screenshot-matched lower-left PYNIX tool stripe.
     ("Run", "toolwindows/run", "left-bottom", "existing"),
-    ("PYNIX Terminal", "terminal/terminal", "left-bottom", "existing"),
-    ("PYNIX Packages", "python/pythonPackages", "left-bottom", "unavailable"),
+    ("PYNIX Terminal", "pynix/pynix-terminal", "left-bottom", "existing"),
+    ("PYNIX Packages", "pynix/pynix-packages", "left-bottom", "unavailable"),
     ("Services", "toolwindows/services", "left-bottom", "unavailable"),
     ("Terminal", "terminal/terminal", "left-bottom", "existing"),
     ("Problems", "toolwindows/problems", "left-bottom", "existing"),
@@ -60,6 +59,10 @@ BOTTOM_LEFT_ICONS = (
     "Terminal", "Problems", "Git",
 )
 PYNIX_BRANDED_TOOLS = frozenset({"PYNIX Terminal", "PYNIX Packages"})
+PYNIX_BRAND_ICON_FILES = {
+    "PYNIX Terminal": "pynix-terminal.svg",
+    "PYNIX Packages": "pynix-packages.svg",
+}
 
 # The left-top More Tool Windows menu follows the supplied PyCharm screenshot.
 # (label, exact original JetBrains icon key or None, displayed macOS shortcut,
@@ -179,13 +182,13 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
  display:block;width:20px;height:20px;flex:0 0 20px
 }
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-brand-terminal{
- width:19px!important;height:22px!important;object-fit:contain!important;
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"]
+.pynix-extra-tool[data-pynix-brand]{
+ color:#CED0D6!important;
 }
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-brand-package{
- position:absolute!important;right:0!important;bottom:1px!important;
- width:11px!important;height:13px!important;object-fit:contain!important;
- background:#2b2d33;border-radius:2px
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"]
+.pynix-extra-tool[data-pynix-brand][aria-pressed="true"]{
+ color:#FFFFFF!important;
 }
 .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
 .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
@@ -362,9 +365,10 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    // Only the two screenshot-matched left stripes use pictograms.
    const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom');
    if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
-   // The PYNIX Terminal uses the existing project brand, not a Python snake.
-   const brandTerminal=entry.label==='PYNIX Terminal'&&!!entry.brand;
-   const visual=(iconless&&!pictogram||brandTerminal)?null:entry.svg;
+   // Both PYNIX pictograms are their own monochrome 20px SVG vectors.
+   // Neither the old document PNG nor any Python snake is painted.
+   if(entry.isPynixBrand)button.dataset.pynixBrand=entry.label;
+   const visual=(iconless&&!pictogram)?null:entry.svg;
    if(visual){
     const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
@@ -374,15 +378,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
      button.appendChild(node);
     }
    }
-   if(entry.brand&&edge==='left-bottom'){
-    const badge=document.createElement('img');
-    badge.src=entry.brand;
-    badge.alt='';
-    badge.setAttribute('aria-hidden','true');
-    badge.className=brandTerminal?'pynix-brand-terminal':'pynix-brand-package';
-    button.appendChild(badge);
-   }
-   if(!visual&&pictogram&&!entry.brand)
+   if(!visual&&pictogram)
     button.textContent=shortNames[entry.label]||entry.label;
    if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));
    if(entry.action?.startsWith('rail:')){
@@ -518,11 +514,7 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
     try:
         # Resolve original JetBrains SVGs only for the requested left rails.
         catalog = JetBrainsIconCatalog(directory) if directory.is_dir() else None
-        # This is our pre-existing, original PYNIX project-file artwork.
-        brand_file = Path(__file__).parent / "assets/icons/pnx-file.png"
-        pynix_brand = ("data:image/png;base64," +
-                       base64.b64encode(brand_file.read_bytes()).decode("ascii")
-                       if brand_file.is_file() else None)
+        branded_icons_dir = Path(__file__).parent / "assets/icons"
         if catalog is None and not iconless:
             return document
 
@@ -532,13 +524,18 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
                 (edge == "left-bottom" and label in BOTTOM_LEFT_ICONS)
             ):
                 return None
-            # Fail closed: never synthesize or substitute another icon.
+            if label in PYNIX_BRAND_ICON_FILES:
+                # Native PYNIX artwork, not a substituted JetBrains/Python logo.
+                return (branded_icons_dir / PYNIX_BRAND_ICON_FILES[label]).read_text(
+                    encoding="utf-8"
+                )
+            # All non-PYNIX tools stay the original JetBrains SVG.
             return catalog.svg(key, dark=dark, tool_window=True) if catalog else None
 
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
             "svg": glyph(label, key, edge),
-            "brand": pynix_brand if label in PYNIX_BRANDED_TOOLS else None,
+            "isPynixBrand": label in PYNIX_BRANDED_TOOLS,
             "pinned": label in PINNED_TOOLS,
             "action": EXISTING_ACTIONS.get(label, ""),
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
