@@ -23,6 +23,19 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
+/* The old shell also painted the PY badge, Run triangle and Debug bug
+   through CSS pseudo-elements and data-URI backgrounds. They are icons too. */
+.workspace-mode .workspace-toolbar>strong::before,
+.workspace-mode .workspace-toolbar .pynix-run-action::before,
+.workspace-mode .workspace-toolbar .pynix-debug-primary::before,
+.workspace-mode .pynix-debug-primary::after {
+ content:none!important;display:none!important;
+ background-image:none!important;
+}
+.workspace-mode .workspace-toolbar .pynix-run-action,
+.workspace-mode .workspace-toolbar .pynix-debug-primary {
+ background-image:none!important;
+}
 /* Keep text-only controls readable and keyboard-operable. */
 .workspace-mode .pynix-extra-tool,
 .workspace-mode .pynix-pycharm-icon-button,
