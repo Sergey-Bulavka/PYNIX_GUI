@@ -70,7 +70,8 @@ def test_hover_reveals_toolbar_on_whole_tree_and_keyboard_focus():
         assert rule in CHROME_STYLE,rule
     assert "new MutationObserver(initProjectHeader).observe(tree,{childList:true})" in CHROME_SCRIPT
     assert "if(!head||head.dataset.pynixPyCharmHeader)return;" in CHROME_SCRIPT
-    assert "if(details.open&&!details.contains(event.target))details.open=false;" in CHROME_SCRIPT
+    assert "document.querySelectorAll('.tree .pynix-project-header details[open]').forEach" in CHROME_SCRIPT
+    assert "if(!details.contains(event.target))details.open=false;" in CHROME_SCRIPT
 
 
 def test_project_toolbar_glyphs_work_in_default_and_full_icon_modes():
