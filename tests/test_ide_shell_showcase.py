@@ -142,7 +142,7 @@ def test_search_everywhere_indexes_real_preview_data_and_opens_results():
                for category, _, _ in search_everywhere_items("terminal"))
     assert any(category == "Settings"
                for category, _, _ in search_everywhere_items("project settings"))
-    dispatch(state, event("ACTIVATE", "shell-search-hit:shell-file-gui.pnx"))
+    dispatch(state, event("ACTIVATE", "shell-search-hit:0"))
     assert state["active"] == "gui.pnx"
     assert not state["everywhere_open"]
     assert_shell_valid(build(state))
@@ -156,6 +156,18 @@ def test_search_everywhere_does_not_dispatch_hidden_or_fabricated_results():
     dispatch(state, event("ACTIVATE", "shell-search-hit:shell-file-gui.pnx"))
     assert state["active"] == before
     assert state["everywhere_open"]
+    assert_shell_valid(build(state))
+
+
+def test_search_everywhere_file_symbol_overlap_uses_unique_result_targets():
+    state = initial_state()
+    dispatch(state, event("ACTIVATE", "shell-search-everywhere"))
+    dispatch(state, event("CHANGE", "shell-everywhere-query", text="main"))
+    assert len(search_everywhere_items("main")) >= 2
+    nodes = list(walk_view(build(state)))
+    targets = [node.target for node in nodes
+               if node.target and node.target.startswith("shell-search-hit:")]
+    assert len(targets) == len(set(targets))
     assert_shell_valid(build(state))
 
 
@@ -180,7 +192,7 @@ def test_search_everywhere_settings_result_opens_correct_settings_page():
     state = initial_state()
     dispatch(state, event("ACTIVATE", "shell-search-everywhere"))
     dispatch(state, event("CHANGE", "shell-everywhere-query", text="project settings"))
-    dispatch(state, event("ACTIVATE", "shell-search-hit:shell-settings-project-settings"))
+    dispatch(state, event("ACTIVATE", "shell-search-hit:0"))
     assert not state["everywhere_open"]
     assert state["settings_open"]
     assert state["settings_page"] == "Project Settings"
