@@ -41,3 +41,38 @@ def test_python_svg_is_valid_javascript_template_literal():
     assert "</svg>`;" in statement
     assert statement.count("`") == 2
     assert "xmlns='http://www.w3.org/2000/svg'" in statement
+
+
+
+def test_additional_source_resource_types_use_stable_file_extensions():
+    from pynix_gui.ide_file_icons import ICON_BY_EXTENSION, SPECIAL_NAMES
+    expected={
+        "styles/main.css":"code", "src/main.js":"code", "src/App.tsx":"code",
+        "db/schema.sql":"code", "config/dev.yaml":"settings",
+        "assets/logo.svg":"image", "assets/photo.webp":"image",
+        "assets/snapshot.png":"image", "fonts/app.woff2":"font",
+        "artifacts/source.zip":"archive", "gradle/build.gradle":"settings",
+        "docs/table.csv":"text",
+    }
+    assert {path:file_icon_type(path) for path in expected}==expected
+    assert all(value in ICON_TINT for value in expected.values())
+    assert SPECIAL_NAMES["dockerfile"]=="settings"
+    assert ICON_BY_EXTENSION[".jsx"]=="code"
+
+
+def test_binary_resource_files_are_listed_as_nontext_not_dispatched_to_editor(tmp_path):
+    (tmp_path/"main.pnx").write_text("function main()",encoding="utf-8")
+    (tmp_path/"assets").mkdir()
+    (tmp_path/"assets"/"logo.png").write_bytes(b"\x89PNG\r\n")
+    (tmp_path/"assets"/"archive.zip").write_bytes(b"PK\x03\x04")
+    (tmp_path/"assets"/"page.css").write_text("body {}")
+    bootstrap=workspace_bootstrap(WorkspaceSession(tmp_path))
+    assert '"name": "assets/logo.png"' in bootstrap
+    assert '"name": "assets/archive.zip"' in bootstrap
+    assert '"name": "assets/page.css"' in bootstrap
+    assert bootstrap.count('"nonText": true') == 2
+    assert '"icon": "image"' in bootstrap
+    assert '"icon": "archive"' in bootstrap
+    assert 'if(!file.nonText){' in bootstrap
+    assert "if(bridge)bridge.postMessage({source:name});" in bootstrap
+    assert "file.name.endsWith('.pnx')" in bootstrap
