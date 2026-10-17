@@ -140,3 +140,25 @@ editable SVG assets, and are covered by geometry/no-bitmap tests.
 Inactive-window opacity, hover and active selection all use the existing
 New UI rail styles. No embedded PNGs, hardcoded dark/light palette in the
 PYNIX icons or extra overlay badges are used.
+
+## Right-side PyCharm Notifications and AI Chat
+
+The screenshot-matched **Notifications** tool uses the untouched
+`toolwindows/notifications@20x20_dark.svg` icon from the imported
+JetBrains New UI collection. Its blue notification dot is a separate
+presentation-layer CSS decoration and **does not indicate actual unread
+notifications** until the PYNIX notification subsystem is implemented.
+
+The screenshot-matched **AI Chat** icon uses the unmodified official
+[JetBrains/Kotlin documentation icon](https://github.com/JetBrains/kotlin-web-site/blob/master/docs/images/ide-icons/toolWindowChat@20x20.svg)
+(`JetBrains/kotlin-web-site` is published under Apache-2.0). Its SVG is
+distributed as `svg/chat/toolWindowChat@20x20.svg`, SHA-256
+`6ab00849a4aaa1cf682411b80b1e45be9624b1198b842addfa9adc1d2477d5dd`.
+The official file has no per-file copyright header, so the importer
+validates its exact path and SHA-256 in `OFFICIAL_UNHEADERED_ICONS`.
+There is only one official file: both light and dark catalog variants
+reference the **same unchanged original SVG**; the displayed grey color
+is adjusted through PYNIX CSS rather than editing the source asset.
+
+Both tool buttons stay clearly marked as unimplemented in accessibility
+labels and tooltips, and no extra right-side More menu is introduced.
