@@ -104,6 +104,8 @@ TREE_EXTENSION_BINDINGS = tuple(
 TREE_FILENAME_BINDINGS = (
     (".workspace-mode .project-glyph[data-file-name='dockerfile']", "fileTypes/docker", False),
     (".workspace-mode .project-glyph[data-file-name='.gitignore']", "fileTypes/gitignore", False),
+    (".workspace-mode .project-glyph[data-file-name='.gitattributes']", "fileTypes/gitignore", False),
+    (".workspace-mode .project-glyph[data-file-name='.dockerignore']", "fileTypes/docker", False),
     (".workspace-mode .project-glyph[data-file-name='.editorconfig']", "fileTypes/editorConfig", False),
     (".workspace-mode .project-glyph[data-file-name='makefile']", "fileTypes/config", False),
 )
