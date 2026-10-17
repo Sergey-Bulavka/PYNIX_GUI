@@ -129,3 +129,19 @@ def test_actual_v4_installs_dynamic_alignment_after_theme():
     assert native.index("document = apply_project_header_alignment(document)") > native.index(
         "document = apply_editor_darcula(document)"
     )
+
+
+def test_real_foundation_nsarray_bridge_on_macos_when_pyobjc_is_available():
+    import sys
+    if sys.platform != "darwin":
+        pytest.skip("Objective-C Foundation is macOS-only")
+    try:
+        from Foundation import NSArray
+    except ImportError:
+        pytest.skip("PyObjC Foundation not installed in runner")
+    body = NSArray.arrayWithArray_([
+        {"x": 333, "y": 10, "width": 45, "height": 24}
+    ])
+    rects = normalize_toolbar_drag_areas(body)
+    assert len(rects) == 1
+    assert toolbar_drag_frame(1300, 900, rects[0]) == (333, 866, 45, 24)
