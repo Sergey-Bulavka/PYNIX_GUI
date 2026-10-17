@@ -237,7 +237,7 @@ def test_editable_gutter_and_cursor_are_kept_per_file(tmp_path):
 def test_v418_editor_lexer_comments_and_strings_are_atomic(tmp_path):
     (tmp_path / "main.pnx").write_text('// 123 comment\\nfunction main()')
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
-    assert "t.startsWith('//')||t.startsWith('#')" in js
+    assert "value[i]==='#'||(isPynix&&value.startsWith('//',i))" in js
     assert "kind='comment'" in js
     assert "kind='string'" in js
     assert "kind='type'" in js
@@ -278,7 +278,7 @@ def test_active_line_uses_computed_font_metrics(tmp_path):
 def test_edit_lexer_distinguishes_comments_and_calls(tmp_path):
     (tmp_path / "main.pnx").write_text("// number 123\\nfunction main()")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
-    assert "t.startsWith('//')||t.startsWith('#')" in js
+    assert "value[i]==='#'||(isPynix&&value.startsWith('//',i))" in js
     assert "kind='call'" in js
     assert "kind='builtin'" in js
 
