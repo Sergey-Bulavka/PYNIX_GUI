@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from .ide_jetbrains_icons import JetBrainsIconCatalog
+from .ide_local_jetbrains_icons import original_endpoints_svg
 from .ide_icon_parity import BUNDLED_ICONS
 
 # (label, licensed icon key, edge, availability)
@@ -58,7 +59,7 @@ MORE_TOOL_WINDOWS = (
     ("Find", "toolwindows/find", "⌘3", "rail:1"),
     ("Debug", "toolwindows/debug", "⌘5", "dock:DEBUG CONSOLE"),
     ("Coverage", "toolwindows/coverage", "", ""),
-    ("Endpoints", None, "", ""),
+    ("Endpoints", "localJetBrains/endpoints", "", ""),
     ("Hierarchy", "toolwindows/hierarchy", "", ""),
     ("Learn", "toolwindows/learn", "", ""),
     ("Python Process Output", "pythonProcessOutput/process", "", ""),
@@ -474,8 +475,9 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
     # No missing-icon fallbacks: use only verified original SVGs.
     menu_entries = [{
         "label": label, "name": name, "shortcut": shortcut, "action": action,
-        "svg": catalog.svg(name, dark=dark, tool_window=True)
-               if name and catalog is not None else None,
+        "svg": (original_endpoints_svg(dark=dark) if label == "Endpoints"
+               else catalog.svg(name, dark=dark, tool_window=True)
+               if name and catalog is not None else None),
     } for label, name, shortcut, action in MORE_TOOL_WINDOWS]
     payload = json.dumps(entries, ensure_ascii=True).replace("<", "\\u003c")
     more_payload = json.dumps(more_svg, ensure_ascii=True).replace("<", "\\u003c")
