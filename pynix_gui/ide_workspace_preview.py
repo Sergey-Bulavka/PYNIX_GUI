@@ -2615,6 +2615,12 @@ def attach_git_snapshot(html_source: str, snapshot) -> str:
 (() => {
  const data = GIT_PAYLOAD;
  if (!document.body.classList.contains('workspace-mode')) return;
+ // The top toolbar must reflect the actual repository branch, not a static
+ // preview or the project name. The snapshot remains read-only.
+ window.pynixGitSnapshot={
+  available:!!data.available,
+  branch:String(data.branch||'')
+ };
  const rail = document.querySelectorAll('.rail-item')[2];
  const tree = document.querySelector('.tree');
  if (!rail || !tree) return;
