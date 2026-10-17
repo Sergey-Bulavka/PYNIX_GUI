@@ -28,6 +28,9 @@ def test_all_four_edge_groups_share_one_hover_rule():
             '.pynix-extra-tool:focus-visible:not([aria-pressed="true"])'
             in EDGE_PROFILE_STYLE)
     assert "background:#3a3d45!important;" in EDGE_PROFILE_STYLE
+    # Disabled button's idle dimming must not dim the hover rectangle.
+    assert ('.pynix-extra-tool[aria-disabled="true"]:hover' in EDGE_PROFILE_STYLE)
+    assert "opacity:1!important;" in EDGE_PROFILE_STYLE
     assert ':hover:not([aria-pressed="true"]):not([aria-disabled="true"])' not in EDGE_PROFILE_STYLE
 
 
