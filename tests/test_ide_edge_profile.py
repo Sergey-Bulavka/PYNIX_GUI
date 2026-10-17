@@ -188,7 +188,9 @@ def test_left_top_more_icons_are_verifiable_jetbrains_art_not_drawn_fallbacks():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for label, key, _, _ in MORE_TOOL_WINDOWS:
         if label == "Endpoints":
-            assert key is None
+            # JetBrains' proprietary Endpoints glyph is read directly from
+            # the user's installed PyCharm app, never bundled as a copy.
+            assert key == "localJetBrains/endpoints"
             continue
         assert key is not None, label
         for dark in (True, False):
@@ -206,6 +208,7 @@ def test_left_top_more_icons_are_verifiable_jetbrains_art_not_drawn_fallbacks():
     assert "pythonProcessOutput/process_dark.svg" not in html
     assert "const leftTopMore=__MORE_WINDOW_DATA__;" not in html
     assert "<svg" not in html
+    assert "localJetBrains/endpoints" in html
 
 
 def test_left_top_more_popup_visual_scope_and_overflow_placement():
@@ -221,3 +224,22 @@ def test_left_top_more_popup_visual_scope_and_overflow_placement():
     assert "const width=edge==='left-top'?296:220;" in EDGE_PROFILE_SCRIPT
     assert "popover.dataset.edge=edge;" in EDGE_PROFILE_SCRIPT
     assert "popover.hidden=!open;" in EDGE_PROFILE_SCRIPT
+
+
+def test_more_menu_resolves_original_endpoints_from_local_pycharm(monkeypatch):
+    from pynix_gui import ide_edge_profile
+    bundled = BUNDLED_ICONS / "svg/toolwindows/find_dark.svg"
+    # The production resolver only returns bytes sourced from a local IDE
+    # archive. Inject known original JetBrains artwork for this bridge test.
+    official_vector = bundled.read_text(encoding="utf-8")
+    calls = []
+    def local_vector(*, dark):
+        calls.append(dark)
+        return official_vector
+    monkeypatch.setattr(ide_edge_profile, "original_endpoints_svg", local_vector)
+    html = ide_edge_profile.apply_edge_profile(
+        "<html><body class='workspace-mode'></body></html>", iconless=True,
+    )
+    assert calls == [True]
+    assert '"name": "localJetBrains/endpoints"' in html
+    assert official_vector[:10].replace("<", r"\\u003c") in html
