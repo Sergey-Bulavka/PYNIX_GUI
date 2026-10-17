@@ -338,6 +338,28 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 @media(max-height:720px){
  .workspace-mode .pynix-extra-tool{height:30px;min-height:30px}
 }
+/* Every V4 edge glyph occupies an equal, visible button hit target.
+   Earlier rules made aria-disabled tools skip hover, and the right-top
+   rule's transparent!important suppressed even enabled button highlights.
+   Availability affects click routing, NOT hover/focus feedback.
+   Keep the selected (aria-pressed) blue state authoritative. */
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool:hover:not([aria-pressed="true"]),
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool:focus-visible:not([aria-pressed="true"]),
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-tool-profile-more:hover,
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-tool-profile-more:focus-visible,
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-tool-profile-more[aria-expanded="true"]{
+ background:#3a3d45!important;
+}
+/* Unavailable controls still respond visually; opacity of their idle
+   artwork must not also dim the hover rectangle on the left edge. */
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-disabled="true"]:hover,
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-disabled="true"]:focus-visible{
+ opacity:1!important;
+}
+/* Do not let a hovered icon impersonate the active tool window. */
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-pressed="true"]{
+ background:#3574d6!important;color:#fff!important;
+}
 </style>"""
 
 EDGE_PROFILE_SCRIPT = r"""<script>
@@ -405,6 +427,10 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    const unavailable=entry.state==='unavailable';
    button.setAttribute('aria-disabled',String(unavailable));
    button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');
+   // Preserve a candid status in the single delegated tooltip. The icon can
+   // highlight on hover while still having NO command when unavailable.
+   button.dataset.pynixTooltip=entry.label+
+    (unavailable?' (not available yet)':'');
    button.setAttribute('aria-label',button.title);
    button.dataset.toolWindow=entry.label;
    // The blue notification dot matches the PyCharm visual reference.
