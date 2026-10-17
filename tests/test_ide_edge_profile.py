@@ -70,7 +70,7 @@ def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     assert {"Project", "Commit", "Pull Requests", "Structure",
             "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
             "Terminal", "Problems", "Git",
-            "Notifications", "AI Assistant"} <= PINNED_TOOLS
+            "Notifications", "AI Chat"} <= PINNED_TOOLS
     assert "Debug" not in PINNED_TOOLS
     assert "Search" not in PINNED_TOOLS
     assert "Version Control" not in PINNED_TOOLS
@@ -134,7 +134,7 @@ def test_top_left_icons_load_in_iconless_mode_without_loading_other_rails():
     assert "toolwindows/structure" in result
     assert r'\u003csvg' in result
     assert '"svg": null' in result
-    assert "const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom');" in EDGE_PROFILE_SCRIPT
+    assert "const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom'||edge==='right-top');" in EDGE_PROFILE_SCRIPT
     assert "general/moreHorizontal" in result
     assert '"name": "github/pullRequests"' in result
 
@@ -319,3 +319,65 @@ def test_lower_left_icons_visible_in_iconless_mode_and_dim_on_blur():
     assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg' in ICONLESS_STYLE
     assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img' not in ICONLESS_STYLE
     assert ".workspace-mode.pynix-window-inactive" in EDGE_PROFILE_STYLE
+
+
+def test_right_top_uses_exact_jetbrains_notifications_and_chat_icons():
+    from pynix_gui.ide_edge_profile import RIGHT_TOP_ICONS, PINNED_TOOLS
+    actual = tuple(label for label, _, edge, _ in TOOL_WINDOW_PROFILE
+                   if edge == "right-top" and label in PINNED_TOOLS)
+    assert actual == RIGHT_TOP_ICONS == ("Notifications", "AI Chat")
+    icons = {label: key for label, key, edge, _ in TOOL_WINDOW_PROFILE
+             if edge == "right-top" and label in RIGHT_TOP_ICONS}
+    assert icons == {
+        "Notifications": "toolwindows/notifications",
+        "AI Chat": "chat/toolWindowChat",
+    }
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    notification = catalog.resolve("toolwindows/notifications", dark=True,
+                                   tool_window=True)
+    chat = catalog.resolve("chat/toolWindowChat", dark=True,
+                           tool_window=True)
+    assert notification is not None and notification.variant == "dark_20"
+    assert chat is not None and chat.variant == "dark_20"
+    assert chat.svg_path.name == "toolWindowChat@20x20.svg"
+    assert 'viewBox="0 0 20 20"' in catalog.svg("chat/toolWindowChat",
+                                               dark=True,tool_window=True)
+    assert "toolWindowChat@20x20.svg" in str(chat.svg_path)
+
+
+def test_right_top_buttons_keep_source_svg_and_state_dot_separate():
+    from pynix_gui.ide_edge_profile import (
+        EDGE_PROFILE_SCRIPT, EDGE_PROFILE_STYLE, apply_edge_profile,
+    )
+    from pynix_gui.ide_iconless_mode import ICONLESS_STYLE
+    html = apply_edge_profile(
+        "<html><body class='workspace-mode'></body></html>",
+        iconless=True,
+    )
+    assert '"label": "Notifications"' in html
+    assert '"label": "AI Chat"' in html
+    assert '"name": "chat/toolWindowChat"' in html
+    assert "button.dataset.toolWindow=entry.label;" in EDGE_PROFILE_SCRIPT
+    assert "button.dataset.previewBadge='true';" in EDGE_PROFILE_SCRIPT
+    assert "if(edge==='left-bottom'||edge==='right-top'){" in EDGE_PROFILE_SCRIPT
+    assert "right-top" in ICONLESS_STYLE
+    assert "data-preview-badge" in EDGE_PROFILE_STYLE
+    assert "background:#467de4" in EDGE_PROFILE_STYLE
+    assert "stroke:#9498a3" in EDGE_PROFILE_STYLE
+    assert "fill:#9498a3" in EDGE_PROFILE_STYLE
+    assert "opacity:.48!important" in EDGE_PROFILE_STYLE
+    assert 'data-edge="right-top"] .pynix-extra-tool svg' in ICONLESS_STYLE
+
+
+def test_right_top_no_more_menu_and_no_fake_ready_status():
+    from pynix_gui.ide_edge_profile import (
+        TOOL_WINDOW_PROFILE, EXISTING_ACTIONS, EDGE_PROFILE_SCRIPT,
+    )
+    state = {label: status for label, _, edge, status in TOOL_WINDOW_PROFILE
+             if edge == "right-top"}
+    assert state["Notifications"] == "unavailable"
+    assert state["AI Chat"] == "unavailable"
+    assert "Notifications" not in EXISTING_ACTIONS
+    assert "AI Chat" not in EXISTING_ACTIONS
+    assert "entry.state==='unavailable'" in EDGE_PROFILE_SCRIPT
+    assert "button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');" in EDGE_PROFILE_SCRIPT
