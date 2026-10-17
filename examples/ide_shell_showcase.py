@@ -301,8 +301,10 @@ def dispatch(state, event):
             page = target[len("shell-settings-"):].replace("-", " ").title()
             if page == "Check Updates":
                 state["message"] = "Update checking is not connected in the preview"
-            else:
+            elif page in SEARCH_SETTINGS:
                 state["settings_page"] = page
+            elif page == "Ide Settings":
+                state["settings_page"] = "IDE Settings"
         elif target.startswith("shell-search-hit:"):
             hit = target[len("shell-search-hit:"):]
             allowed = {item[2] for item in
