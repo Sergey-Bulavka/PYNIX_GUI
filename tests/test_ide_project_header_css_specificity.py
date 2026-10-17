@@ -18,6 +18,7 @@ from pynix_gui.ide_project_header_sync import (
 def _declarations(css, property_name):
     """Extract CSS declarations from simple class-selector blocks."""
     matches = []
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
     for rule in re.finditer(r"([^{}]+)\{([^{}]*)\}", css):
         selectors = rule.group(1).strip()
         if not selectors.startswith(".workspace-mode"):
