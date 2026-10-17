@@ -653,68 +653,93 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-project-quick-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=iconless?null:makeIcon(icon);
-  if(svg)button.appendChild(svg);
-  else button.textContent=({'New PYNIX file':'New','Select opened file':'Find',
-   'Expand visible folders (up to 30)':'Expand',
-   'Hide Project tool window':'Hide'})[label]||label;
+  const svg=makeIcon(icon);
+  if(svg)button.appendChild(svg);else button.textContent=label;
   button.addEventListener('click',action);
   return button;
+ };
+ const menu=(className,label,icon,items)=>{
+  const details=document.createElement('details');
+  details.className=className;
+  const summary=document.createElement('summary');
+  summary.className='pynix-project-quick-button';
+  summary.title=label;summary.setAttribute('aria-label',label);
+  summary.setAttribute('aria-haspopup','menu');
+  const glyph=makeIcon(icon);
+  if(glyph)summary.appendChild(glyph);else summary.textContent=label;
+  const popup=document.createElement('div');
+  popup.className='pynix-project-popup';popup.setAttribute('role','menu');
+  for(const [caption,handler] of items){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=caption;button.setAttribute('role','menuitem');
+   button.addEventListener('click',()=>{details.open=false;handler();});
+   popup.appendChild(button);
+  }
+  details.append(summary,popup);
+  details.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&details.open){event.preventDefault();details.open=false;summary.focus();}
+  });
+  document.addEventListener('pointerdown',event=>{
+   if(details.open&&!details.contains(event.target))details.open=false;
+  });
+  return details;
  };
  const initProjectHeader=()=>{
   const head=document.querySelector('.workspace-mode .tree .pynix-project-header');
   if(!head||head.dataset.pynixPyCharmHeader)return;
   head.dataset.pynixPyCharmHeader='1';
   const title=head.querySelector(':scope>span:first-child');
-  if(title){title.textContent='Project';title.title='Project';}
   const actions=head.querySelector('.pynix-project-header-actions');
   if(!actions)return;
   const collapse=actions.querySelector('.pynix-project-header-button');
-  const count=actions.querySelector(':scope>span:first-child');
-  if(count)head.title=count.textContent;
-  const create=quick('New PYNIX file','general/add',()=>{
-   document.querySelector('.pynix-new-source')?.click();
+  const view=menu('pynix-project-view-switcher','Project view','general/chevronDown',[
+   ['✓ Project',()=>{}]
+  ]);
+  const viewLabel=document.createElement('span');
+  viewLabel.className='pynix-project-view-label';viewLabel.textContent='Project';
+  view.querySelector('summary').prepend(viewLabel);
+  if(title)title.replaceWith(view);
+  const create=menu('pynix-project-create-menu','New File or Directory…','general/add',[
+   ['New File…',()=>window.pynixCreateProjectEntry?.('file')],
+   ['New Directory…',()=>window.pynixCreateProjectEntry?.('directory')],
+  ]);
+  const divider=document.createElement('span');
+  divider.className='pynix-project-header-separator';
+  divider.setAttribute('role','separator');divider.setAttribute('aria-orientation','vertical');
+  const locate=quick('Select Opened File','general/locate',()=>{
+   window.pynixProjectSelectOpenedFile?.();
   });
-  const locate=quick('Select opened file','general/locate',()=>{
-   document.querySelector('.workspace-mode .project-entry.workspace-selected')
-    ?.scrollIntoView({block:'nearest'});
+  locate.dataset.pynixShortcut='⌥F1, 1';
+  const expand=quick('Expand Selected','general/expandAll',()=>{
+   window.pynixProjectExpandSelected?.();
   });
-  const expand=quick('Expand visible folders (up to 30)','general/expandAll',()=>{
-   // Tree rows are rebuilt on every expansion. Re-query between clicks and
-   // cap the work so a large project remains responsive.
-   for(let i=0;i<30;i++){
-    const row=document.querySelector(
-     '.workspace-mode .tree .project-entry:has(.project-chevron.collapsed)');
-    if(!row)break;
-    row.click();
-   }
+  expand.dataset.pynixTooltip='Expand Selected\nPress ⇧⌘+ to expand all nodes';
+  const collapseAction=collapse||quick('Collapse All','general/collapseAll',()=>{
+   window.pynixProjectCollapseAll?.();
   });
-  const more=document.createElement('details');
-  more.className='pynix-project-more-menu';
-  const summary=document.createElement('summary');
-  summary.className='pynix-project-quick-button';
-  summary.replaceChildren(iconless?document.createTextNode('More'):
-   (makeIcon('general/moreVertical')||document.createTextNode('⋮')));
-  summary.title='Project view options';
-  summary.setAttribute('aria-label','Project view options');
-  const menu=document.createElement('div');
-  const collapseItem=document.createElement('button');
-  collapseItem.type='button';collapseItem.textContent='Collapse all folders';
-  collapseItem.addEventListener('click',()=>{collapse?.click();more.open=false;});
-  menu.appendChild(collapseItem);
-  more.append(summary,menu);
-  const minimize=quick('Hide Project tool window','general/hide',()=>{
+  collapseAction.replaceChildren(makeIcon('general/collapseAll')||
+   document.createTextNode('Collapse'));
+  collapseAction.title='Collapse All';
+  collapseAction.setAttribute('aria-label','Collapse All');
+  const more=menu('pynix-project-more-menu','Options','general/moreVertical',[
+   ['Select Opened File',()=>window.pynixProjectSelectOpenedFile?.()],
+   ['Expand All',()=>window.pynixProjectExpandSelected?.(true)],
+   ['Collapse All',()=>window.pynixProjectCollapseAll?.()],
+  ]);
+  const hide=quick('Hide','general/hide',()=>{
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
   });
-  if(collapse){
-   collapse.replaceChildren(iconless?document.createTextNode('Fold'):
-    (makeIcon('general/collapseAll')||document.createTextNode('⌃')));
-   collapse.title='Collapse project folders';
-  }
-  actions.replaceChildren(create,locate,expand);
-  if(collapse)actions.appendChild(collapse);
-  actions.append(more,minimize);
+  hide.dataset.pynixShortcut='⇧⎋';
+  actions.replaceChildren(create,divider,locate,expand,collapseAction,more,hide);
  };
+ document.addEventListener('keydown',event=>{
+  if(!event.shiftKey||!event.metaKey||event.altKey||event.ctrlKey)return;
+  if(event.key==='+'||event.key==='='){
+   event.preventDefault();window.pynixProjectExpandSelected?.(true);
+  }else if(event.key==='-'){
+   event.preventDefault();window.pynixProjectCollapseAll?.();
+  }
+ });
  const updateBreadcrumb=()=>{
   const host=document.querySelector('.workspace-mode .bottom>span:nth-of-type(1)');
   if(!host)return;
