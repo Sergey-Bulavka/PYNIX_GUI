@@ -488,6 +488,85 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 @media(prefers-reduced-motion:reduce){
  .workspace-mode .tree .pynix-project-header-actions{transition:none!important}
 }
+
+/* V4 live window-resize invariant: one flex row owns all three toolbar
+   groups. Never absolutely position Current File / Run / Debug at 70%. */
+.workspace-mode .workspace-toolbar{
+ display:flex!important;align-items:center!important;flex-wrap:nowrap!important;
+ min-width:0!important;gap:8px!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-identity{
+ flex:0 1 auto!important;min-width:0!important;max-width:100%!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch{
+ min-width:0!important;flex:0 1 auto!important
+}
+.workspace-mode .workspace-toolbar>.toolbar-spacer{
+ display:block!important;flex:1 1 0px!important;min-width:0!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-center{
+ position:relative!important;left:auto!important;top:auto!important;
+ transform:none!important;flex:0 0 auto!important;
+ min-width:0!important;margin:0!important;
+ display:flex!important;align-items:center!important;gap:7px!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-right{
+ position:relative!important;flex:0 1 auto!important;min-width:0!important;
+ margin:0!important;display:flex!important;align-items:center!important;
+ justify-content:flex-end!important;gap:6px!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-right .pynix-pycharm-icon-button{
+ flex:0 0 31px!important;min-width:31px!important;width:31px!important;
+ height:31px!important;padding:5px!important;font-size:0!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-right .pynix-ide-beta{
+ box-sizing:border-box!important;flex:0 1 auto!important;min-width:0!important;
+ max-width:100%!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ padding-inline:9px!important;white-space:nowrap!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project-name,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-name{
+ min-width:0!important;flex:0 1 auto!important
+}
+@media(max-width:1060px){
+ .workspace-mode .workspace-toolbar{gap:6px!important}
+ .workspace-mode .workspace-toolbar .pynix-toolbar-identity{gap:5px!important}
+ .workspace-mode .workspace-toolbar .pynix-pycharm-center{gap:4px!important}
+ .workspace-mode .workspace-toolbar .pynix-pycharm-right{gap:3px!important}
+ .workspace-mode .workspace-toolbar .pynix-toolbar-project-name,
+ .workspace-mode .workspace-toolbar .pynix-toolbar-branch-name{max-width:64px!important}
+}
+/* Breakpoints shorten labels, never switch between position models. */
+@media(max-width:930px){
+ .workspace-mode .workspace-toolbar .pynix-current-config{
+  flex-basis:104px!important;max-width:104px!important
+ }
+ .workspace-mode .workspace-toolbar .pynix-pycharm-right .pynix-ide-beta{
+  font-size:0!important;padding-inline:7px!important
+ }
+ .workspace-mode .workspace-toolbar .pynix-pycharm-right .pynix-ide-beta::before{
+  content:attr(data-compact);
+  font:500 11px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif
+ }
+ .workspace-mode .workspace-toolbar .pynix-toolbar-project-name,
+ .workspace-mode .workspace-toolbar .pynix-toolbar-branch-name{max-width:52px!important}
+}
+/* Restored SVG controls use 29/31px hit areas even with iconless mode on.
+   Otherwise old text fallback min-width 43/48px can reintroduce collisions. */
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-right .pynix-pycharm-icon-button{
+ min-width:31px!important;width:31px!important;font-size:0!important;
+ padding:5px!important
+}
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-run-action,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary{
+ flex:0 0 29px!important;min-width:29px!important;width:29px!important;
+ font-size:0!important;padding:5px!important
+}
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu>summary{
+ flex:0 0 33px!important;min-width:33px!important;width:33px!important;
+ font-size:0!important;padding:0!important
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
@@ -759,6 +838,7 @@ CHROME_SCRIPT = r"""<script>
   const beta=document.createElement('span');
   beta.className='pynix-ide-beta';
   beta.textContent='Beta Version · __IDE_VERSION__';
+  beta.dataset.compact='β · __IDE_VERSION__';
   beta.setAttribute('aria-label','PYNIX IDE beta version __IDE_VERSION__');
   right.append(search,settings,beta);
   toolbar.append(center,right);
