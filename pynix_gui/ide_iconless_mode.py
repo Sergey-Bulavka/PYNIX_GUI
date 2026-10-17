@@ -64,7 +64,9 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu>summary>svg,
 .workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center .pynix-run-with-params>svg,
 .workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-right .pynix-ide-search>svg,
-.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-right .pynix-ide-settings>svg{
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-right .pynix-ide-settings>svg,
+.workspace-mode.pynix-iconless .tree .pynix-project-header .pynix-project-quick-button>svg,
+.workspace-mode.pynix-iconless .tree .pynix-project-header .pynix-project-header-button>svg{
  display:block!important;
 }
 /* The restored PyCharm Run/Debug SVGs use the verified JetBrains source
