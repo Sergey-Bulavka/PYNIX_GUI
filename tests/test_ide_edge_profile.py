@@ -160,3 +160,60 @@ def test_macos_native_window_key_resign_events_notify_icon_layer():
     assert "update(False)" in source
     assert 'window_focus_callback["update"] = publish_window_focus' in source
     assert 'f"window.pynixSetWindowActive?.({literal});"' in source
+
+
+def test_left_top_more_popup_matches_pycharm_reference_in_exact_order():
+    from pynix_gui.ide_edge_profile import MORE_TOOL_WINDOWS, EDGE_PROFILE_SCRIPT
+    labels = [item[0] for item in MORE_TOOL_WINDOWS]
+    assert labels == [
+        "Bookmarks", "Find", "Debug", "Coverage", "Endpoints",
+        "Hierarchy", "Learn", "Python Process Output", "TODO",
+    ]
+    assert [item[2] for item in MORE_TOOL_WINDOWS] == [
+        "⌘2", "⌘3", "⌘5", "", "", "", "", "", "",
+    ]
+    assert MORE_TOOL_WINDOWS[1][3] == "rail:1"
+    assert MORE_TOOL_WINDOWS[2][3] == "dock:DEBUG CONSOLE"
+    assert all(not item[3] for item in MORE_TOOL_WINDOWS[3:])
+    assert "const leftTopMore=__MORE_WINDOW_DATA__;" in EDGE_PROFILE_SCRIPT
+    assert "if(edge==='left-top'){" in EDGE_PROFILE_SCRIPT
+    assert "row.className='pynix-more-item';" in EDGE_PROFILE_SCRIPT
+    assert "shortcut.textContent=entry.shortcut;" in EDGE_PROFILE_SCRIPT
+    assert "if(entry.label==='Bookmarks')row.classList.add('is-highlighted');" in EDGE_PROFILE_SCRIPT
+    assert "row.disabled=!entry.action;" in EDGE_PROFILE_SCRIPT
+
+
+def test_left_top_more_icons_are_verifiable_jetbrains_art_not_drawn_fallbacks():
+    from pynix_gui.ide_edge_profile import MORE_TOOL_WINDOWS
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for label, key, _, _ in MORE_TOOL_WINDOWS:
+        if label == "Endpoints":
+            assert key is None
+            continue
+        assert key is not None, label
+        for dark in (True, False):
+            resolved = catalog.resolve(key, dark=dark, tool_window=True)
+            assert resolved is not None, (label, dark)
+            assert catalog.svg(key, dark=dark, tool_window=True), label
+    html = apply_edge_profile(
+        "<html><body class='workspace-mode'></body></html>",
+        iconless=True,
+    )
+    assert html.count('"label": "Bookmarks"') >= 1
+    assert '"label": "Endpoints"' in html
+    assert '"svg": null' in html
+    assert '"name": "pythonProcessOutput/process"' in html
+    assert "pythonProcessOutput/process_dark.svg" not in html
+    assert "const leftTopMore=__MORE_WINDOW_DATA__;" not in html
+    assert "<svg" not in html
+
+
+def test_left_top_more_popup_visual_scope_and_overflow_placement():
+    from pynix_gui.ide_edge_profile import EDGE_PROFILE_STYLE, EDGE_PROFILE_SCRIPT
+    assert '.pynix-tool-profile-popover[data-edge="left-top"]' in EDGE_PROFILE_STYLE
+    assert "width:296px!important" in EDGE_PROFILE_STYLE
+    assert "min-height:36px!important" in EDGE_PROFILE_STYLE
+    assert ".pynix-more-shortcut" in EDGE_PROFILE_STYLE
+    assert "const width=edge==='left-top'?296:220;" in EDGE_PROFILE_SCRIPT
+    assert "popover.dataset.edge=edge;" in EDGE_PROFILE_SCRIPT
+    assert "popover.hidden=!open;" in EDGE_PROFILE_SCRIPT
