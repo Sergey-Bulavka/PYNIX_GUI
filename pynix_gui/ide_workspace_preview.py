@@ -2575,6 +2575,32 @@ editorInput.addEventListener('keydown',event=>{
  sourceControl?.addEventListener('click', () => {
    // Source Control remains the visual-only demonstration mode.
  });
+ // Search Everywhere reads actual in-memory project buffers, including unsaved text.
+ window.pynixSearchEverywhereCatalog=()=>{
+   persistBuffer();
+   const matches=[];
+   for(const file of files){
+     matches.push({category:'Files',label:file.name,source:file.name});
+     if(file.unloaded||typeof file.text!=='string')continue;
+     const lines=file.text.split(/\r?\n/);
+     for(let i=0;i<lines.length;i++){
+       const definition=lines[i].match(/^\s*(?:(?:public|private)\s+)?(class|function)\s+([A-Za-z_][A-Za-z_0-9]*)\b/);
+       if(!definition)continue;
+       matches.push({
+         category:definition[1]==='class'?'Classes':'Symbols',
+         label:definition[2],
+         source:file.name,
+         line:i+1
+       });
+     }
+   }
+   return matches;
+ };
+ window.pynixOpenSourceFromSearch=source=>{
+   if(!byName.has(source))return false;
+   show(source);
+   return true;
+ };
  show(files[0].name);
 })();
 </script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
