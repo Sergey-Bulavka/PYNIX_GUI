@@ -2582,9 +2582,9 @@ editorInput.addEventListener('keydown',event=>{
    for(const file of files){
      matches.push({category:'Files',label:file.name,source:file.name});
      if(file.unloaded||typeof file.text!=='string')continue;
-     const lines=file.text.split(/\r?\n/);
+     const lines=file.text.split(/\\r?\\n/);
      for(let i=0;i<lines.length;i++){
-       const definition=lines[i].match(/^\s*(?:(?:public|private)\s+)?(class|function)\s+([A-Za-z_][A-Za-z_0-9]*)\b/);
+       const definition=lines[i].match(/^\\s*(?:(?:public|private)\\s+)?(class|function)\\s+([A-Za-z_][A-Za-z_0-9]*)\\b/);
        if(!definition)continue;
        matches.push({
          category:definition[1]==='class'?'Classes':'Symbols',
