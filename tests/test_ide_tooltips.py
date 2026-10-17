@@ -105,3 +105,18 @@ def test_native_v4_always_installs_single_tooltip_layer_both_theme_modes():
         "document = apply_iconless_mode(document)")
     assert source.index("document = apply_native_tooltips(document)") < source.index(
         "document = document.replace(\"</body>\", TOOLBAR_DRAG_SCRIPT")
+
+
+def test_run_and_debug_use_dynamic_filenames_with_native_macos_shortcuts():
+    from pynix_gui.ide_pycharm_chrome import CHROME_SCRIPT
+    assert "'⌃R'" in CHROME_SCRIPT
+    assert "'⌃D'" in CHROME_SCRIPT
+    assert "control.dataset.pynixShortcut=shortcut;" in CHROME_SCRIPT
+    assert "button.dataset.pynixShortcut||shortcuts[label]||''" in TOOLTIP_SCRIPT
+    assert "button.dataset.pynixTooltip||button.dataset.toolWindow" in TOOLTIP_SCRIPT
+    assert "'.pynix-current-config'" in TOOLTIP_SCRIPT
+    assert "'.pynix-config-options button'" in TOOLTIP_SCRIPT
+    assert "'.pynix-pycharm-center>.pynix-run-action'" in TOOLTIP_SCRIPT
+    assert "'.pynix-pycharm-center>.pynix-debug-primary'" in TOOLTIP_SCRIPT
+    assert "nameNode.textContent=label;" in TOOLTIP_SCRIPT
+    assert "shortcutNode.textContent=shortcut;" in TOOLTIP_SCRIPT
