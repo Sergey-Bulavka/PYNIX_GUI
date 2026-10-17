@@ -76,6 +76,7 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
   '.pynix-pycharm-center>.pynix-run-mode',
   '.pynix-current-config',
   '.pynix-config-options button',
+  '.pynix-run-with-params',
   '.pynix-pycharm-center>.pynix-tools-menu>summary',
   '.workspace-toolbar button[title]',
   '.pynix-tool-window-toggle',
