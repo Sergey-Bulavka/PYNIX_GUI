@@ -44,6 +44,7 @@ TOOLTIP_STYLE = """<style id="pynix-native-tooltips-style">
 }
 .workspace-mode .pynix-native-tooltip-name{
  min-width:0;overflow:hidden;text-overflow:ellipsis;
+ white-space:pre-line;
 }
 .workspace-mode .pynix-native-tooltip-shortcut{
  flex:0 0 auto;white-space:nowrap;color:#afb2bb;
