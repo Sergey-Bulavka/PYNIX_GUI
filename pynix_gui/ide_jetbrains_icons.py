@@ -35,6 +35,11 @@ RESTRICTED_NAMES = re.compile(
 # This narrowly scoped whitelist is both path- and SHA-256-bound: unrelated
 # unheadered files still fail exactly as before. Original bytes are unchanged.
 OFFICIAL_UNHEADERED_ICONS = {
+    # JetBrains/kotlin-web-site is Apache-2.0; its official AI Chat SVG
+    # does not carry a per-file header. Accept only the exact upstream bytes.
+    "chat/toolWindowChat@20x20.svg": (
+        "6ab00849a4aaa1cf682411b80b1e45be9624b1198b842addfa9adc1d2477d5dd"
+    ),
     "pythonProcessOutput/process.svg": (
         "5763214940abb30fd874af2b9c9ab163622440b78d97b64373382d7657a0a879"
     ),
