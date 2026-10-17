@@ -6,8 +6,7 @@ This small browser lexer emits ranges instead of modifying text. The source
 textarea remains authoritative for caret, selection, undo and IME.
 """
 
-EDITOR_LEXER_JS = r"""<script id="pynix-v4-editor-lexer">
-(() => {
+EDITOR_LEXER_JS = r"""(() => {
  const PYTHON_KEYWORDS = new Set([
   'False','None','True','and','as','assert','async','await','break','class',
   'continue','def','del','elif','else','except','finally','for','from',
@@ -114,4 +113,4 @@ EDITOR_LEXER_JS = r"""<script id="pynix-v4-editor-lexer">
  };
  window.pynixHighlightTokens=tokenize;
 })();
-</script>"""
+"""
