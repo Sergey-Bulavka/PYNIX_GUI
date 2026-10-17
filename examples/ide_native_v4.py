@@ -883,6 +883,9 @@ def main() -> None:
         document = apply_edge_profile(document, iconless=True)
         document = apply_pycharm_chrome(document, iconless=True)
         document = apply_iconless_mode(document)
+        # The regular V4 launch still uses compact perimeter icons, while
+        # Project Explorer gets original JetBrains file/folder type glyphs.
+        document = apply_new_ui_icons(document, tree_only=True)
     # One delegated hover/focus layer for every JetBrains-style icon,
     # including tool windows and dynamically rebuilt Project controls.
     from pynix_gui.ide_tooltips import apply_native_tooltips
