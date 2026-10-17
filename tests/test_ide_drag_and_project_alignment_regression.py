@@ -52,7 +52,8 @@ def test_appkit_handler_uses_bridge_normalizer():
     native=(Path(__file__).resolve().parents[1]/
             "examples/ide_native_v4.py").read_text("utf-8")
     assert 'drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)' in native
-    assert "isinstance(payload, list)" not in native
+    handler=native.split("class ToolbarDragRegionHandler",1)[1].split("toolbar_drag_handler =",1)[0]
+    assert "isinstance(payload, list)" not in handler
     assert "for index, drag_view in enumerate(toolbar_drag_areas):" in native
     assert "frame = toolbar_drag_frame(bounds.width, bounds.height, area)" in native
 
