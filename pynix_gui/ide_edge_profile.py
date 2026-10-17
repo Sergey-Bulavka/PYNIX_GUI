@@ -12,7 +12,6 @@ import json
 from pathlib import Path
 from .ide_jetbrains_icons import JetBrainsIconCatalog
 from .ide_icon_parity import BUNDLED_ICONS
-from .ide_native_tool_icons import native_tool_icon
 
 # (label, licensed icon key, edge, availability)
 # The existing Project, Find, VCS, Run, Terminal and Settings hosts keep
@@ -22,7 +21,7 @@ TOOL_WINDOW_PROFILE = (
     # The separator and More Tool Windows are structural controls, not tools.
     ("Project", "toolwindows/project", "left-top", "existing"),
     ("Commit", "toolwindows/commit", "left-top", "unavailable"),
-    ("Pull Requests", "toolwindows/vcs", "left-top", "unavailable"),
+    ("Pull Requests", "github/pullRequests", "left-top", "unavailable"),
     ("Structure", "toolwindows/structure", "left-top", "unavailable"),
     ("Search", "toolwindows/find", "left-top", "existing"),
     ("Version Control", "toolwindows/vcs", "left-top", "existing"),
@@ -135,6 +134,9 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg{
  width:20px!important;height:20px!important;flex:0 0 20px!important;
 }
+.workspace-mode .pynix-tool-profile-more svg{
+ display:block;width:20px;height:20px;flex:0 0 20px
+}
 .workspace-mode .pynix-extra-separator{
  width:24px;height:1px;min-height:1px;flex:0 0 1px;
  background:#4a4c52;border-radius:1px;margin:2px 0 3px
@@ -166,6 +168,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
 (() => {
  const entries=__PROFILE_DATA__;
  const iconless=__ICONLESS__;
+ const moreIcon=__MORE_ICON_DATA__;
  const shortNames={
   'Project':'Proj','Search':'Find','Version Control':'Git',
   'Structure':'Struct','Run':'Run','Python Console':'Py',
@@ -212,9 +215,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    // screenshot-matched, icon-only buttons at the top left.
    const pictogram=iconless&&edge==='left-top';
    if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
-   const visual=(iconless&&!pictogram)?null:
-     (entry.label==='Python Console'?
-      (window.pynixPythonFileIcon?.()||entry.svg):entry.svg);
+   const visual=(iconless&&!pictogram)?null:entry.svg;
    if(visual){
     const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
@@ -224,6 +225,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
      button.appendChild(node);
     }
    }
+   if(!visual&&pictogram)button.textContent=shortNames[entry.label]||entry.label;
    if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));
    if(entry.action?.startsWith('rail:')){
     const index=Number(entry.action.slice(5));
@@ -249,7 +251,17 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   const more=document.createElement('button');
   more.type='button';
   more.className='pynix-tool-profile-more';
-  more.textContent=edge==='left-top'?'•••':(iconless?'More':'⋯');
+  // The three-dot glyph is the actual JetBrains general/moreHorizontal SVG.
+  // In icon-free zones retain the accessible text label.
+  if(moreIcon&&(!iconless||edge==='left-top')){
+   const xml=new DOMParser().parseFromString(moreIcon,'image/svg+xml');
+   if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
+    const node=document.importNode(xml.documentElement,true);
+    node.setAttribute('aria-hidden','true');
+    node.setAttribute('focusable','false');
+    more.appendChild(node);
+   }else more.textContent='More';
+  }else more.textContent='More';
   more.title='More tool windows';
   more.setAttribute('aria-label','More tool windows');
   more.setAttribute('aria-expanded','false');
@@ -314,10 +326,8 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         def glyph(label: str, key: str, edge: str) -> str | None:
             if iconless and (edge != "left-top" or label not in TOP_LEFT_ICONS):
                 return None
-            return native_tool_icon(label, dark=dark) or (
-                catalog.svg(key, dark=dark, tool_window=True)
-                if catalog is not None else None
-            )
+            # Fail closed: never synthesize or substitute another icon.
+            return catalog.svg(key, dark=dark, tool_window=True) if catalog else None
 
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
@@ -327,8 +337,12 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
     except (OSError, ValueError, KeyError, json.JSONDecodeError):
         return document
+    more_svg = catalog.svg("general/moreHorizontal", dark=dark,
+                           tool_window=True) if catalog is not None else None
     payload = json.dumps(entries, ensure_ascii=True).replace("<", "\\u003c")
+    more_payload = json.dumps(more_svg, ensure_ascii=True).replace("<", "\\u003c")
     return document.replace('</body>',
         EDGE_PROFILE_STYLE + EDGE_PROFILE_SCRIPT.replace('__PROFILE_DATA__', payload).replace(
-            '__ICONLESS__', 'true' if iconless else 'false')
+            '__ICONLESS__', 'true' if iconless else 'false').replace(
+            '__MORE_ICON_DATA__', more_payload)
         + '</body>', 1)
