@@ -9,7 +9,7 @@ import json
 
 from .ide_workspace_session import WorkspaceSession
 from .ide_syntax_highlight import highlight_document
-from .ide_file_icons import file_icon_type
+from .ide_file_icons import file_icon_type, ICON_BY_EXTENSION, SPECIAL_NAMES
 
 
 def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
@@ -17,11 +17,24 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
     records = []
     folders = session.list_directories()
     loaded = 0
+    # Present recognized resources in Explorer without decoding binary assets.
+    nontext_suffixes = {
+        ".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp",
+        ".zip", ".jar", ".tar", ".gz",
+        ".woff", ".woff2", ".ttf", ".otf",
+    }
     for name in session.list_files(limit=10000):
-        if not name.lower().endswith((".pnx", ".py", ".md", ".json", ".toml", ".txt")):
+        basename = name.rsplit("/", 1)[-1].lower()
+        suffix = "." + basename.rsplit(".", 1)[-1] if "." in basename else ""
+        if suffix not in ICON_BY_EXTENSION and basename not in SPECIAL_NAMES:
             continue
         try:
             path = session.resolve_file(name)
+            if suffix in nontext_suffixes:
+                records.append({"name": name, "text": "", "tokens": None,
+                                "icon": file_icon_type(name),
+                                "unloaded": True, "nonText": True})
+                continue
             if path.stat().st_size > max_bytes:
                 records.append({"name": name, "text": "", "tokens": None,
                                 "icon": file_icon_type(name), "unloaded": True})
@@ -2370,11 +2383,15 @@ editorInput.addEventListener('keydown',event=>{
      code.replaceChildren();
      const info=document.createElement('div');
      info.className='source-unloaded';
-     info.textContent='Loading '+name+'...';
+     info.textContent=file.nonText?
+      'Binary resource · preview not available: '+name:
+      'Loading '+name+'...';
      code.appendChild(info);
-     const bridge=window.webkit?.messageHandlers?.pynixFileOpen;
-     if(bridge)bridge.postMessage({source:name});
-     else info.textContent='File contents unavailable outside the native IDE.';
+     if(!file.nonText){
+       const bridge=window.webkit?.messageHandlers?.pynixFileOpen;
+       if(bridge)bridge.postMessage({source:name});
+       else info.textContent='File contents unavailable outside the native IDE.';
+     }
    } else renderCode(file);
    updateEditingView();
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
@@ -2607,7 +2624,10 @@ editorInput.addEventListener('keydown',event=>{
    }
    return true;
  };
- show(files[0].name);
+ // Do not open an image/archive as the initial editor tab.
+ const initial=files.find(file=>file.name.endsWith('.pnx')&&!file.unloaded)||
+   files.find(file=>!file.nonText)||files[0];
+ show(initial.name);
 })();
 </script>""".replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
