@@ -16,7 +16,8 @@ def test_root_shows_actual_local_project_path_with_safe_js_quoting(tmp_path):
     (root / "main.pnx").write_text("function main()\n",encoding="utf-8")
     js=workspace_bootstrap(WorkspaceSession(root))
     assert "const PROJECT_PATH = " in js
-    assert str(root) in js
+    import json
+    assert json.dumps(str(root),ensure_ascii=False) in js
     assert "path.textContent=PROJECT_PATH;" in js
     assert "path.title=PROJECT_PATH;" in js
     assert "label.classList.add('pynix-project-root-name');" in js
@@ -141,5 +142,5 @@ def test_generated_project_header_javascript_is_valid_when_node_is_available(tmp
     assert scripts
     for script in scripts:
         result=subprocess.run([node,"--check"],input=script,text=True,
-                              capture_output=True,timeout=20)
+                              encoding="utf-8",capture_output=True,timeout=20)
         assert result.returncode==0,result.stderr
