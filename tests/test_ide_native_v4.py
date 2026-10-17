@@ -562,7 +562,7 @@ def test_v523_native_corner_grip_stays_responsive_through_relaunch_and_resize():
     assert "window.setMovableByWindowBackground_(False)" in source
     assert "content_view.addSubview_(view)" in source
     assert "content_view.addSubview_(drag_view)" in source
-    assert "content_view.addSubview_(title_drag_area)" in source
+    assert "title_drag_area = ToolbarDragView.alloc()" not in source
 
 
 def test_v524_line_numbers_share_left_edge_without_changing_scroll_geometry():
