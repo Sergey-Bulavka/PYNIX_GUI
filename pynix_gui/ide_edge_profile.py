@@ -122,8 +122,8 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  padding:7px;border:0;border-radius:6px;
  color:#afb2bb;background:transparent
 }
-.workspace-mode .pynix-extra-tool:not(:disabled){cursor:pointer}
-.workspace-mode .pynix-extra-tool:not(:disabled):hover{background:#3a3d45}
+.workspace-mode .pynix-extra-tool:not([aria-disabled="true"]){cursor:pointer}
+.workspace-mode .pynix-extra-tool:not([aria-disabled="true"]):hover{background:#3a3d45}
 .workspace-mode .pynix-extra-tool[aria-pressed="true"]{
  background:#3574d6;color:#ffffff
 }
@@ -133,7 +133,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode .pynix-extra-tool[aria-pressed="true"] svg [fill]:not([fill="none"]){
  fill:#ffffff!important
 }
-.workspace-mode .pynix-extra-tool:disabled{opacity:.56;cursor:not-allowed}
+.workspace-mode .pynix-extra-tool[aria-disabled="true"]{opacity:.56;cursor:default}
 .workspace-mode .pynix-extra-tool svg{display:block;width:20px;height:20px;flex:0 0 20px}
 .workspace-mode .pynix-extra-tool:focus-visible,
 .workspace-mode .pynix-tool-profile-more:focus-visible{
@@ -157,7 +157,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  padding:8px!important;border-radius:8px!important;
  font-size:0!important;flex:0 0 36px!important
 }
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool:disabled{
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool[aria-disabled="true"]{
  opacity:.82!important
 }
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg{
@@ -177,7 +177,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  padding:8px!important;border-radius:8px!important;
  font-size:0!important
 }
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool:disabled{
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool[aria-disabled="true"]{
  opacity:.78!important
 }
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
@@ -216,7 +216,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  padding:8px!important;border-radius:8px!important;
  font-size:0!important;background:transparent!important;
 }
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool:disabled{
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[aria-disabled="true"]{
  opacity:1!important;
 }
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg{
@@ -400,8 +400,11 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    const button=document.createElement('button');
    button.type='button';
    button.className='pynix-extra-tool';
-   button.disabled=entry.state==='unavailable';
-   button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
+   // Native disabled buttons suppress hover in some WebKit builds.
+   // aria-disabled preserves disabled semantics while allowing hover/focus.
+   const unavailable=entry.state==='unavailable';
+   button.setAttribute('aria-disabled',String(unavailable));
+   button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
    button.dataset.toolWindow=entry.label;
    // The blue notification dot matches the PyCharm visual reference.
@@ -425,7 +428,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    }
    if(!visual&&pictogram)
     button.textContent=shortNames[entry.label]||entry.label;
-   if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));
+   if(!unavailable)button.addEventListener('click',()=>clickExisting(entry));
    if(entry.action?.startsWith('rail:')){
     const index=Number(entry.action.slice(5));
     const target=document.querySelectorAll('.workspace-mode .rail>.rail-item')[index];
