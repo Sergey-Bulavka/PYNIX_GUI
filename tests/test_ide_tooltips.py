@@ -116,6 +116,7 @@ def test_run_and_debug_use_dynamic_filenames_with_native_macos_shortcuts():
     assert "button.dataset.pynixTooltip||button.dataset.toolWindow" in TOOLTIP_SCRIPT
     assert "'.pynix-current-config'" in TOOLTIP_SCRIPT
     assert "'.pynix-config-options button'" in TOOLTIP_SCRIPT
+    assert "'.pynix-run-with-params'" in TOOLTIP_SCRIPT
     assert "'.pynix-pycharm-center>.pynix-run-action'" in TOOLTIP_SCRIPT
     assert "'.pynix-pycharm-center>.pynix-debug-primary'" in TOOLTIP_SCRIPT
     assert "nameNode.textContent=label;" in TOOLTIP_SCRIPT
