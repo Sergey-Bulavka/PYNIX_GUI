@@ -53,7 +53,11 @@ class WorkspaceSession:
             dirs[:] = sorted(d for d in dirs if d not in ignored and not d.startswith("."))
             for filename in sorted(files):
                 path = Path(directory) / filename
-                if path.is_symlink() or filename.startswith("."):
+                # Show only safe IDE metadata dotfiles, never hidden secrets.
+                visible_dotfiles = {".gitignore", ".gitattributes", ".editorconfig"}
+                if path.is_symlink() or (
+                    filename.startswith(".") and filename.lower() not in visible_dotfiles
+                ):
                     continue
                 found.append(path.relative_to(self.root).as_posix())
                 if len(found) >= limit:

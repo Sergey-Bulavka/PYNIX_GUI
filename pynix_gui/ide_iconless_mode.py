@@ -139,6 +139,30 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 }
 .workspace-mode .pynix-editor-tab-label{gap:0!important}
 .workspace-mode .pynix-editor-tab .pynix-tab-file-glyph{display:none!important}
+/* Project Explorer is not iconless: file extensions and folder disclosure
+   must match the PyCharm tree in the normal, default IDE startup mode.
+   Other old/iconless surfaces stay unchanged. */
+.workspace-mode.pynix-iconless .tree .project-glyph{
+ display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;width:16px!important;height:16px!important;
+ min-width:16px!important;flex:0 0 16px!important;
+}
+.workspace-mode.pynix-iconless .tree .project-chevron{
+ display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;width:14px!important;min-width:14px!important;
+}
+.workspace-mode.pynix-iconless .tree .project-glyph>svg,
+.workspace-mode.pynix-iconless .tree .project-chevron>svg{
+ display:block!important;width:16px!important;height:16px!important;
+ max-width:16px!important;max-height:16px!important;
+}
+.workspace-mode.pynix-iconless .tree .project-chevron>svg{
+ width:13px!important;height:13px!important;
+}
+.workspace-mode.pynix-iconless .tree .project-glyph>.file-mark{
+ display:inline-flex!important;
+}
+.workspace-mode.pynix-iconless .tree .project-entry{gap:4px!important}
 .workspace-mode .tree .project-entry{gap:2px!important}
 .workspace-mode .pynix-tool-profile-more{font-size:10px!important}
 .workspace-mode .pynix-status-breadcrumb::before{content:''!important}

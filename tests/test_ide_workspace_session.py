@@ -80,3 +80,19 @@ def test_external_disk_changes_block_save(tmp_path):
         session.save("main.pnx")
     assert file.read_text(encoding="utf-8") == "external change"
     assert session.documents["main.pnx"].dirty
+
+
+
+def test_safe_metadata_dotfiles_visible_but_secret_files_still_hidden(tmp_path):
+    from pynix_gui.ide_workspace_session import WorkspaceSession
+    (tmp_path / ".gitignore").write_text("*.pyc\n")
+    (tmp_path / ".gitattributes").write_text("*.pnx text\n")
+    (tmp_path / ".editorconfig").write_text("root = true\n")
+    (tmp_path / ".env").write_text("secret=do-not-display\n")
+    (tmp_path / "main.pnx").write_text("function main()\n")
+    visible=WorkspaceSession(tmp_path).list_files()
+    assert ".gitignore" in visible
+    assert ".gitattributes" in visible
+    assert ".editorconfig" in visible
+    assert "main.pnx" in visible
+    assert ".env" not in visible
