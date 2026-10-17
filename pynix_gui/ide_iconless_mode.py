@@ -9,7 +9,7 @@ preserved but is not activated in icon-free native sessions.
 from __future__ import annotations
 
 ICONLESS_STYLE = """<style id="pynix-iconless-style">
-/* No pictograms or file-type badges anywhere in the native IDE. */
+/* Hide legacy pictograms; restore only user-selected top/bottom left rails. */
 .workspace-mode svg,
 .workspace-mode img,
 .workspace-mode .pynix-jetbrains-icon,
@@ -23,14 +23,18 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
-/* The user explicitly restored icons for this one PyCharm-matched
-   group only. No other SVG can escape the global iconless contract. */
+/* Scope SVGs to the two screenshot-matched left tool-window groups.
+   Other visual rails, tree badges and editor icons stay hidden. */
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more svg,
 .workspace-mode.pynix-iconless
-.pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item .pynix-menu-icon svg{
+.pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item .pynix-menu-icon svg,
+.workspace-mode.pynix-iconless
+.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
+.workspace-mode.pynix-iconless
+.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
  display:block!important;
 }
 /* The old shell also painted the PY badge, Run triangle and Debug bug
