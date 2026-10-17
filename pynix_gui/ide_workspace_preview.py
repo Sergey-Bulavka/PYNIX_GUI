@@ -2051,6 +2051,7 @@ editorInput.addEventListener('keydown',event=>{
      const fileType=byName.get(entry.path)?.icon || 'file';
      glyph.className='project-glyph '+(entry.folder?'folder-icon':('file-'+fileType));
      glyph.dataset.extension=extension;
+     glyph.dataset.fileName=entry.name.toLowerCase();
      // JetBrains icon bridge is the single visible painter for standard
      // Project rows. Do not paint the legacy Lucide/file-type icons first.
      // The Python and native PYNIX identities remain intentional exceptions:
