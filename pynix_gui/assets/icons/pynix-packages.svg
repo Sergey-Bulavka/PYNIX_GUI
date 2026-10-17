@@ -1,8 +1,14 @@
-<!-- PYNIX-specific package glyph: a single 20px parcel with an integral
-     simplified PYNIX monogram on its right face. No Python mark, bitmap,
-     nested scale transform, badge, or overlaid file pictogram. -->
+<!-- Copyright 2000-2024 JetBrains s.r.o. and contributors.
+     The package silhouette is reproduced unchanged from the upstream
+     pythonPackages@20x20_dark.svg under the Apache 2.0 license.
+     Original vector: pynix_gui/assets/jetbrains_new_ui/svg/python/pythonPackages@20x20_dark.svg
+     Python glyph removed. Native PYNIX monogram replaces it, drawn from the
+     approved 20px pynix-terminal.svg. This is a PYNIX-specific derivative. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" shape-rendering="geometricPrecision">
-  <path d="M10 1.85 17.5 6v8L10 18.1 2.5 14V6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-  <path d="M2.5 6 10 10.15 17.5 6M10 10.15V18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M12 15.7V12.1L13.5 11.2 15.1 12.1 13 13.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M1 5.65028C1 5.25509 1.23273 4.89697 1.59386 4.73647L9.59386 1.18092C9.85243 1.066 10.1476 1.066 10.4061 1.18091L18.4061 4.73647C18.7673 4.89697 19 5.25509 19 5.65028V10.1273C18.5625 9.82218 18.052 9.61441 17.5 9.53545V6.4878L16.0236 7.14397C15.4523 6.73841 14.754 6.5 14 6.5H13.7792L16.23 5.41077L10 2.64189L3.76998 5.41078L9.24322 7.84333C8.93599 8.2355 8.71062 8.69488 8.59284 9.19575L2.5 6.48782V14.0256L5.5 15.3589V17.0004L1.59386 15.2643C1.23273 15.1038 1 14.7457 1 14.3505V5.65028Z" fill="currentColor"/>
+  <g transform="translate(6.5 7.3) scale(0.6)" fill="currentColor">
+    <path d="M10 1.35 18 5.8V10.65L15.15 12.3V7.6L10 4.7 5.15 7.6V17L2 15.2V5.8Z"/>
+    <path d="M8 9.3 10 8.1 12.6 9.6 8 12.45Z"/>
+    <path d="M8 12.45 11 14.25 18 10.25V15L10 19 8 17.9Z"/>
+  </g>
 </svg>
