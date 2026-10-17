@@ -393,7 +393,9 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-pycharm-icon-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=iconless?null:makeIcon(icon);
+  // Titlebar Search/Settings glyphs remain visible in iconless mode.
+  const allowedInIconless=icon==='general/search'||icon==='general/settings';
+  const svg=(iconless&&!allowedInIconless)?null:makeIcon(icon);
   if(svg)button.appendChild(svg);
   else button.textContent=label;
   button.addEventListener('click',action);
@@ -760,7 +762,7 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
             # original JetBrains SVGs in an otherwise iconless native chrome.
             identity_keys = ("general/chevronDown", "toolwindows/vcs",
                              "general/moreVertical", "general/edit",
-                             "run/run", "run/debug")
+                             "run/run", "run/debug", "general/search", "general/settings")
             keys = identity_keys if iconless else identity_keys + (
                 "general/search","general/settings","general/add",
                 "general/locate","general/expandAll","general/collapseAll",
