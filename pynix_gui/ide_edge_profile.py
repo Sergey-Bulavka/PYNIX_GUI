@@ -39,7 +39,7 @@ TOOL_WINDOW_PROFILE = (
     ("Build", "toolwindows/build", "left-bottom", "unavailable"),
     ("TODO", "toolwindows/todo", "left-bottom", "unavailable"),
     ("Notifications", "toolwindows/notifications", "right-top", "unavailable"),
-    ("AI Assistant", "toolwindows/learn", "right-top", "unavailable"),
+    ("AI Chat", "chat/toolWindowChat", "right-top", "unavailable"),
     ("Documentation", "toolwindows/documentation", "right-top", "unavailable"),
     ("Profiler", "toolwindows/profiler", "right-bottom", "unavailable"),
 )
@@ -49,7 +49,7 @@ TOOL_WINDOW_PROFILE = (
 PINNED_TOOLS = frozenset({
     "Project", "Commit", "Pull Requests", "Structure",
     "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
-    "Terminal", "Problems", "Git", "Notifications", "AI Assistant",
+    "Terminal", "Problems", "Git", "Notifications", "AI Chat",
 })
 
 # The only requested iconographic stripes in otherwise text-only native IDE.
@@ -58,6 +58,7 @@ BOTTOM_LEFT_ICONS = (
     "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
     "Terminal", "Problems", "Git",
 )
+RIGHT_TOP_ICONS = ("Notifications", "AI Chat")
 PYNIX_BRANDED_TOOLS = frozenset({"PYNIX Terminal", "PYNIX Packages"})
 PYNIX_BRAND_ICON_FILES = {
     "PYNIX Terminal": "pynix-terminal.svg",
@@ -201,6 +202,49 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
   transition:none!important
  }
 }
+/* PyCharm right-top stripe: two genuine JetBrains vectors.
+   AI Chat is the exact toolWindowChat@20x20.svg from JetBrains' Kotlin docs;
+   theme-specific color is applied in CSS, never by modifying the asset. */
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"]{
+ display:flex!important;gap:7px!important;padding-top:5px!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool{
+ position:relative!important;display:flex!important;
+ align-items:center!important;justify-content:center!important;
+ flex:0 0 36px!important;width:36px!important;height:36px!important;
+ min-width:36px!important;min-height:36px!important;
+ padding:8px!important;border-radius:8px!important;
+ font-size:0!important;background:transparent!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool:disabled{
+ opacity:1!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg{
+ display:block!important;width:20px!important;height:20px!important;
+ flex:0 0 20px!important;max-width:20px!important;max-height:20px!important;
+ transition:opacity 120ms ease;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[data-tool-window="Notifications"] svg [stroke]{
+ stroke:#9498a3!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[data-tool-window="AI Chat"] svg [fill="#6C707E"]{
+ fill:#9498a3!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[data-tool-window="AI Chat"] svg [stroke="#6C707E"]{
+ stroke:#9498a3!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[data-preview-badge="true"]::after{
+ content:"";position:absolute;width:7px;height:7px;
+ top:6px;right:5px;border-radius:50%;background:#467de4;
+ border:1.5px solid #292b31;pointer-events:none;
+}
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg,
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool::after{
+ opacity:.48!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg{transition:none!important}
+}
 .workspace-mode .pynix-tool-profile-more svg{
  display:block;width:20px;height:20px;flex:0 0 20px
 }
@@ -321,7 +365,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   'Project':'Proj','Search':'Find','Version Control':'Git',
   'Structure':'Struct','Run':'Run','PYNIX Terminal':'PNX',
   'PYNIX Packages':'Pkg','Services':'Srv','Debug':'Debug','Terminal':'Term',
-  'Problems':'Err','Notifications':'Alerts','AI Assistant':'AI',
+  'Problems':'Err','Notifications':'Alerts','AI Chat':'AI',
   'Commit':'Commit','Bookmarks':'Marks','Git':'Git'
  };
  const clickExisting=entry=>{
@@ -359,8 +403,12 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.disabled=entry.state==='unavailable';
    button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
-   // Only the two screenshot-matched left stripes use pictograms.
-   const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom');
+   button.dataset.toolWindow=entry.label;
+   // The blue notification dot matches the PyCharm visual reference.
+   // It is purely decorative until PYNIX has unread-notification state.
+   if(entry.label==='Notifications')button.dataset.previewBadge='true';
+   // Only the screenshot-matched left and top-right strips use pictograms.
+   const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom'||edge==='right-top');
    if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
    // Both PYNIX pictograms are their own monochrome 20px SVG vectors.
    // Neither the old document PNG nor any Python snake is painted.
@@ -397,8 +445,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     container.appendChild(separator);
    }
   }
-  // The lower-left screenshot has exactly seven icons, without More.
-  if(edge==='left-bottom'){
+  // Both the lower-left and top-right screenshot groups have no More menu.
+  if(edge==='left-bottom'||edge==='right-top'){
    host.appendChild(container);
    return;
   }
@@ -518,7 +566,8 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         def glyph(label: str, key: str, edge: str) -> str | None:
             if iconless and not (
                 (edge == "left-top" and label in TOP_LEFT_ICONS) or
-                (edge == "left-bottom" and label in BOTTOM_LEFT_ICONS)
+                (edge == "left-bottom" and label in BOTTOM_LEFT_ICONS) or
+                (edge == "right-top" and label in RIGHT_TOP_ICONS)
             ):
                 return None
             if label in PYNIX_BRAND_ICON_FILES:
