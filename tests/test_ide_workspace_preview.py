@@ -238,11 +238,11 @@ def test_v418_editor_lexer_comments_and_strings_are_atomic(tmp_path):
     (tmp_path / "main.pnx").write_text('// 123 comment\\nfunction main()')
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "value[i]==='#'||(isPynix&&value.startsWith('//',i))" in js
-    assert "kind='comment'" in js
-    assert "kind='string'" in js
-    assert "kind='type'" in js
-    assert "kind='constant'" in js
-    assert "last=token.lastIndex" in js
+    assert "push(start,i,isPython?'python-comment':'comment')" in js
+    assert "isPython?'python-string':'string'" in js
+    assert "if(TYPES.has(text))return 'type';" in js
+    assert "return 'constant';" in js
+    assert "last=part.end;" in js
 
 
 def test_v418_indent_and_selected_line_shortcuts(tmp_path):
@@ -279,8 +279,8 @@ def test_edit_lexer_distinguishes_comments_and_calls(tmp_path):
     (tmp_path / "main.pnx").write_text("// number 123\\nfunction main()")
     js = workspace_bootstrap(WorkspaceSession(tmp_path))
     assert "value[i]==='#'||(isPynix&&value.startsWith('//',i))" in js
-    assert "kind='call'" in js
-    assert "kind='builtin'" in js
+    assert "return 'call';" in js
+    assert "return 'builtin';" in js
 
 
 def test_v420_per_file_undo_redo_and_automatic_indents(tmp_path):
