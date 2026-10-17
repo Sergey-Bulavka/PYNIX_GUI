@@ -12,6 +12,9 @@ from pathlib import Path
 from .ide_icon_parity import BUNDLED_ICONS
 from .ide_jetbrains_icons import JetBrainsIconCatalog
 
+# The IDE product version, independently documented in PYNIX_IDE/docs/VERSIONING.md.
+IDE_BETA_VERSION = "1.1.26-dev"
+
 CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .workspace-toolbar{
  position:relative!important;display:flex!important;align-items:center!important;
@@ -302,6 +305,74 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 @media(prefers-reduced-motion:reduce){
  .workspace-mode .workspace-toolbar .pynix-current-config{transition:none!important}
 }
+
+/* Search Everywhere and release/status elements belong to IDE V4 chrome. */
+.workspace-mode .pynix-pycharm-right .pynix-ide-beta{
+ display:inline-flex;align-items:center;justify-content:center;
+ box-sizing:border-box;white-space:nowrap;flex:0 0 auto;height:33px;
+ padding:0 14px;border:2px solid #416e50;border-radius:20px;
+ background:rgba(43,90,54,.07);color:#73b887;
+ font:500 12px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif
+}
+.workspace-mode .pynix-pycharm-right .pynix-ide-settings{position:relative}
+.workspace-mode .pynix-pycharm-right .pynix-ide-settings[data-updates-available="true"]::after{
+ content:"";position:absolute;top:4px;right:4px;display:block;
+ width:7px;height:7px;border:1px solid #2b2932;border-radius:50%;
+ background:#c29b55;pointer-events:none
+}
+.workspace-mode .pynix-search-everywhere-backdrop{
+ position:fixed;inset:0;z-index:8100;background:rgba(0,0,0,.25);
+ display:flex;align-items:flex-start;justify-content:center;
+ padding:65px 12px 16px;box-sizing:border-box
+}
+.workspace-mode .pynix-search-everywhere-backdrop[hidden]{display:none!important}
+.workspace-mode .pynix-search-everywhere-dialog{
+ box-sizing:border-box;width:100%;max-width:670px;
+ max-height:min(600px,calc(100vh - 85px));
+ border:1px solid #656971;border-radius:11px;background:#2d2e34;
+ box-shadow:0 16px 46px #0009;color:#dedfe5;
+ display:flex;flex-direction:column;overflow:hidden;
+ font:13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif
+}
+.workspace-mode .pynix-search-everywhere-heading{
+ font-weight:600;padding:13px 15px 3px;font-size:14px
+}
+.workspace-mode .pynix-search-everywhere-input{
+ box-sizing:border-box;width:calc(100% - 24px);height:38px;margin:9px 12px;
+ border:1px solid #777b85;border-radius:7px;background:#202127;color:#f1f2f4;
+ padding:0 12px;font:14px -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+ outline:none
+}
+.workspace-mode .pynix-search-everywhere-input:focus{border-color:#8ca9d9}
+.workspace-mode .pynix-search-everywhere-results{
+ overflow-y:auto;min-height:36px;padding:0 8px 9px
+}
+.workspace-mode .pynix-search-everywhere-result{
+ box-sizing:border-box;display:flex;align-items:center;gap:10px;width:100%;
+ min-height:34px;padding:6px 8px;border:0;border-radius:5px;
+ color:#e2e3e7;background:transparent;text-align:left;cursor:pointer
+}
+.workspace-mode .pynix-search-everywhere-result[aria-selected="true"],
+.workspace-mode .pynix-search-everywhere-result:hover{background:#36557c}
+.workspace-mode .pynix-search-everywhere-kind{
+ color:#9da4b4;font-size:11px;flex:0 0 84px
+}
+.workspace-mode .pynix-search-everywhere-name{
+ font-size:13px;min-width:0;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap
+}
+.workspace-mode .pynix-search-everywhere-path{
+ color:#a8acb7;font-size:11px;margin-left:auto;min-width:0;
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.workspace-mode .pynix-search-everywhere-empty{
+ padding:12px;color:#a8aab3
+}
+@media(max-width:930px){
+ .workspace-mode .pynix-pycharm-right .pynix-ide-beta{
+  padding:0 8px;font-size:11px
+ }
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
@@ -322,7 +393,9 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-pycharm-icon-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=iconless?null:makeIcon(icon);
+  // Titlebar Search/Settings glyphs remain visible in iconless mode.
+  const allowedInIconless=icon==='general/search'||icon==='general/settings';
+  const svg=(iconless&&!allowedInIconless)?null:makeIcon(icon);
   if(svg)button.appendChild(svg);
   else button.textContent=label;
   button.addEventListener('click',action);
@@ -546,14 +619,33 @@ CHROME_SCRIPT = r"""<script>
    const debugStatus=toolbar.querySelector('.pynix-debug-status');
    if(items&&debugStatus)items.appendChild(debugStatus);
   }
-  right.append(
-   toolButton('Search in project','general/search',()=>{
-    document.querySelectorAll('.workspace-mode .rail>.rail-item')[1]?.click();
-   }),
-   toolButton('Settings','general/settings',()=>{
-    document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();
-   })
-  );
+  const search=toolButton('Search Everywhere','general/search',()=>{
+   window.pynixOpenSearchEverywhere?.();
+  });
+  search.classList.add('pynix-ide-search');
+  search.dataset.pynixTooltip=[
+   'Search Everywhere ⇧ ⇧','Searches for:',
+   '- Classes','- Files','- Tool Windows','- Actions','- Settings'
+  ].join('\n');
+  const settings=toolButton('IDE and Project Settings','general/settings',()=>{
+   document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();
+  });
+  settings.classList.add('pynix-ide-settings');
+  const updateSettingsIndicator=()=>{
+   // The signal is false until a real update service explicitly sets it.
+   const available=window.pynixIDEUpdatesAvailable===true;
+   settings.dataset.updatesAvailable=String(available);
+   settings.dataset.pynixTooltip=available?
+    'Updates available. IDE and Project Settings':'IDE and Project Settings';
+   settings.setAttribute('aria-label',settings.dataset.pynixTooltip);
+  };
+  updateSettingsIndicator();
+  document.addEventListener('pynix:updates-available',updateSettingsIndicator);
+  const beta=document.createElement('span');
+  beta.className='pynix-ide-beta';
+  beta.textContent='Beta Version · __IDE_VERSION__';
+  beta.setAttribute('aria-label','PYNIX IDE beta version __IDE_VERSION__');
+  right.append(search,settings,beta);
   toolbar.append(center,right);
   updateRunActionTooltips();
  };
@@ -670,7 +762,7 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
             # original JetBrains SVGs in an otherwise iconless native chrome.
             identity_keys = ("general/chevronDown", "toolwindows/vcs",
                              "general/moreVertical", "general/edit",
-                             "run/run", "run/debug")
+                             "run/run", "run/debug", "general/search", "general/settings")
             keys = identity_keys if iconless else identity_keys + (
                 "general/search","general/settings","general/add",
                 "general/locate","general/expandAll","general/collapseAll",
@@ -685,4 +777,5 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
     script = CHROME_SCRIPT.replace("__CHROME_ICONS__",payload).replace(
         "__ICONLESS__", "true" if iconless else "false"
     )
+    script = script.replace("__IDE_VERSION__", IDE_BETA_VERSION)
     return document.replace("</body>",CHROME_STYLE+script+"</body>",1)
