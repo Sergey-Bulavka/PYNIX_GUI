@@ -88,3 +88,24 @@ def test_iconless_toolbar_restores_jetbrains_current_file_run_debug_and_more():
     ):
         assert selector in ICONLESS_STYLE, selector
     assert 'width:19px!important;height:19px!important' in ICONLESS_STYLE
+
+
+
+def test_default_iconless_v4_preserves_perimeter_but_restores_pycharmlike_tree_icons():
+    native=(Path(__file__).resolve().parents[1] /
+            "examples" / "ide_native_v4.py").read_text("utf-8")
+    assert "document = apply_iconless_mode(document)" in native
+    assert "document = apply_new_ui_icons(document, tree_only=True)" in native
+    assert native.index("document = apply_iconless_mode(document)") < native.index(
+        "document = apply_new_ui_icons(document, tree_only=True)"
+    )
+    for selector in (
+        ".workspace-mode.pynix-iconless .tree .project-glyph",
+        ".workspace-mode.pynix-iconless .tree .project-chevron",
+        ".workspace-mode.pynix-iconless .tree .project-glyph>svg",
+        ".workspace-mode.pynix-iconless .tree .project-chevron>svg",
+        ".workspace-mode.pynix-iconless .tree .project-glyph>.file-mark",
+    ):
+        assert selector in ICONLESS_STYLE
+    assert "width:16px!important;height:16px!important" in ICONLESS_STYLE
+    assert "width:13px!important;height:13px!important" in ICONLESS_STYLE
