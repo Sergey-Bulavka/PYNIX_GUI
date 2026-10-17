@@ -419,9 +419,9 @@ def test_v519_toolbar_drag_frame_respects_only_blank_header():
     assert toolbar_drag_frame(
         1500, 950, {"x": 350, "y": 10, "width": 420, "height": 38}) is None
     assert toolbar_drag_frame(
-        1500, 950, {"x": 350, "y": 10, "width": 12, "height": 26}) is None
+        1500, 950, {"x": 350, "y": 10, "width": 11, "height": 26}) is None
     assert toolbar_drag_frame(
-        760, 520, {"x": 700, "y": 10, "width": 20, "height": 26}) is None
+        760, 520, {"x": 700, "y": 10, "width": 10, "height": 26}) is None
     assert toolbar_drag_frame(
         1500, 950, {"x": 350, "y": 10, "width": float("nan"), "height": 26}) is None
     assert toolbar_drag_frame(1500, 950, {}) is None
@@ -430,51 +430,46 @@ def test_v519_toolbar_drag_frame_respects_only_blank_header():
         760, 520, {"x": 700, "y": 10, "width": 500, "height": 26}) == (700, 484, 42, 26)
 
 
-def test_v519_titlebar_drag_is_a_native_overlay_above_webview_only():
-    source = Path(app.__file__).read_text(encoding="utf-8")
+def test_v519_native_free_drag_strips_are_above_webview_and_exclude_widgets():
+    source=Path(app.__file__).read_text(encoding="utf-8")
     assert "class ToolbarDragView(AppKit.NSView):" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "content_view = window.contentView()" in source
     assert "content_view.addSubview_(view)" in source
-    assert "content_view.addSubview_(drag_area)" in source
-    assert source.index("content_view.addSubview_(view)") < source.index("content_view.addSubview_(drag_area)")
+    assert "toolbar_drag_areas = []" in source
+    assert "content_view.addSubview_(drag_view)" in source
+    assert source.index("content_view.addSubview_(view)") < source.index(
+        "content_view.addSubview_(drag_view)")
     assert "window.setContentView_(container)" not in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
-    assert "AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable" in source
+    assert "drag_view.setHidden_(True)" in source
+    assert "drag_view.setHidden_(False)" in source
     assert 'toolbar_drag_handler, "pynixToolbarDragRegion"' in source
-    assert "drag_area.setHidden_(True)" in source
-    assert "drag_area.setHidden_(False)" in source
     assert "window.setMovableByWindowBackground_(False)" in source
-    assert "def mouseDownCanMoveWindow(self):" not in source
 
-
-def test_v519_toolbar_drag_region_comes_from_flex_spacer_not_fixed_pixels():
-    source = Path(app.__file__).read_text(encoding="utf-8")
-    script = app.TOOLBAR_DRAG_SCRIPT
-    assert ".workspace-toolbar > .toolbar-spacer" in script
-    assert "spacer.getBoundingClientRect()" in script
+def test_v519_toolbar_drag_regions_cover_every_free_gap_not_buttons():
+    source=Path(app.__file__).read_text(encoding="utf-8")
+    script=app.TOOLBAR_DRAG_SCRIPT
     assert "toolbar.getBoundingClientRect()" in script
-    assert "pynixToolbarDragRegion?.postMessage(area)" in script
-    assert "const observer = new ResizeObserver(update)" in script
-    assert "observer.observe(spacer)" in script
-    assert "observer.observe(toolbar)" in script
-    assert "if(title)observer.observe(title)" in script
-    assert "space.width >= 64 ? space : (label || space)" in script
-    assert "y:bar.top+10" in script
-    assert "Math.max(0,bar.height-18)" in script
-    assert "window.addEventListener('resize', update)" in script
-    assert "document.replace(\"</body>\", TOOLBAR_DRAG_SCRIPT + \"</body>\", 1)" in source
+    assert "toolbar.querySelectorAll(selector)" in script
+    assert "const minX=Math.max(86,bar.left+86)" in script
+    assert "rect.left-5" in script and "rect.right+5" in script
+    assert "blocked.sort((a,b)=>a[0]-b[0])" in script
+    assert "if(end-start>=12)areas.push({" in script
+    assert "pynixToolbarDragRegion?.postMessage(areas)" in script
+    assert "new ResizeObserver(update)" in script
+    assert "new MutationObserver(" in script
+    assert "window.addEventListener('resize',update)" in script
+    assert 'document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)' in source
 
-
-def test_v520_native_resize_retains_window_owned_content_and_drag_overlay():
-    source = Path(app.__file__).read_text(encoding="utf-8")
+def test_v520_native_resize_retains_webview_and_safe_drag_overlays():
+    source=Path(app.__file__).read_text(encoding="utf-8")
     assert "content_view = window.contentView()" in source
     assert "view = FirstClickWebView.alloc().initWithFrame_(content_view.bounds())" in source
     assert "view.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)" in source
     assert "content_view.addSubview_(view)" in source
-    assert "content_view.addSubview_(drag_area)" in source
+    assert "content_view.addSubview_(drag_view)" in source
     assert "bounds = content_view.bounds().size" in source
-    assert "frame = title_drag_frame(bounds.width, bounds.height)" in source
     assert "toolbar_drag_frame(bounds.width, bounds.height, area)" in source
     assert "window.setContentView_(container)" not in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
@@ -482,62 +477,44 @@ def test_v520_native_resize_retains_window_owned_content_and_drag_overlay():
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "window.setMovableByWindowBackground_(False)" in source
 
-
-def test_v521_toolbar_drag_area_survives_repeated_resize_and_preserves_resize_edges():
-    source = Path(app.__file__).read_text(encoding="utf-8")
-    assert "drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
+def test_v521_drag_gaps_follow_resizes_and_never_cover_edges():
+    source=Path(app.__file__).read_text(encoding="utf-8")
+    script=app.TOOLBAR_DRAG_SCRIPT
+    assert "drag_view.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
+    assert "drag_view.setFrame_(AppKit.NSMakeRect(*frame))" in source
+    assert "drag_view.setHidden_(False)" in source
     assert "window.setMovableByWindowBackground_(False)" in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
-    assert "content_view = window.contentView()" in source
-    assert "drag_area.setFrame_(AppKit.NSMakeRect(*frame))" in source
-    assert "drag_area.setHidden_(False)" in source
-    script = app.TOOLBAR_DRAG_SCRIPT
-    assert "const title = toolbar.querySelector('strong')" in script
-    assert "space.width >= 64 ? space : (label || space)" in script
-    assert "window.addEventListener('resize', update)" in script
+    assert "window.addEventListener('resize',update)" in script
     assert "observer.observe(toolbar)" in script
-    assert "observer.observe(spacer)" in script
-    assert "observer.observe(title)" in script
-    assert "width:Math.max(0,region.width-24)" in script
-    assert "height:Math.max(0,bar.height-18)" in script
+    assert "width:end-start" in script
+    assert "height:Math.min(24,bar.height-18)" in script
     assert "bounds_width - x - 18" in source
 
+def test_v522_no_fixed_drag_handle_can_intercept_project_controls():
+    source=Path(app.__file__).read_text(encoding="utf-8")
+    assert "title_drag_area = ToolbarDragView.alloc()" not in source
+    assert 'drag_geometry = {"areas": []}' in source
+    assert "for _ in range(20):" in source
+    assert 'drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []' in source
 
-def test_v522_permanent_title_drag_handle_remains_at_top_for_all_window_sizes():
-    from examples.ide_native_v4 import title_drag_frame
-
-    # x and dimensions never depend on the HTML spacer or window width.
-    assert title_drag_frame(760, 520) == (92, 485, 62, 24)
-    assert title_drag_frame(1500, 950) == (92, 915, 62, 24)
-    assert title_drag_frame(2400, 1400) == (92, 1365, 62, 24)
-    assert title_drag_frame(760, 1400) == (92, 1365, 62, 24)
-    assert title_drag_frame(2399, 1400) == (92, 1365, 62, 24)
-    # Minimum window size is respected; no oversized overlay in invalid bounds.
-    assert title_drag_frame(759, 520) is None
-    assert title_drag_frame(760, 519) is None
-
-
-def test_v522_native_resize_delegate_repositions_both_drag_handles():
-    source = Path(app.__file__).read_text(encoding="utf-8")
+def test_v522_native_resize_delegate_repositions_dynamic_drag_strips():
+    source=Path(app.__file__).read_text(encoding="utf-8")
     assert "def windowDidResize_(self, notification):" in source
     assert 'update = drag_resize_callback["update"]' in source
     assert "if update is not None:" in source
     assert "window.setDelegate_(delegate)" in source
     assert 'drag_resize_callback["update"] = refresh_native_drag_areas' in source
     assert "refresh_native_drag_areas()" in source
-    assert "title_drag_area = ToolbarDragView.alloc().initWithFrame_" in source
-    assert "content_view.addSubview_(title_drag_area)" in source
-    assert "content_view.addSubview_(drag_area)" in source
-    assert "title_drag_area.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
-    assert "frame = title_drag_frame(bounds.width, bounds.height)" in source
-    assert 'area = drag_geometry["area"]' in source
+    assert "drag_view.setAutoresizingMask_(AppKit.NSViewMinYMargin)" in source
+    assert "content_view.addSubview_(drag_view)" in source
+    assert 'areas = drag_geometry["areas"]' in source
     assert "toolbar_drag_frame(bounds.width, bounds.height, area)" in source
-    assert 'drag_geometry["area"] = message.body()' in source
+    assert 'drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []' in source
     assert "window.setMovableByWindowBackground_(False)" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
     assert "window.setContentView_(container)" not in source
-
 
 def test_v523_corner_resize_frame_is_independent_of_webkit_and_window_size():
     from examples.ide_native_v4 import corner_resize_geometry
