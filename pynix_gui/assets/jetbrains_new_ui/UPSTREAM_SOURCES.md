@@ -78,3 +78,31 @@ must be checked in the user's macOS PyCharm installation.
 The Bookmarks, Find and Debug macOS shortcut **labels** match the screenshot
 (`⌘2`, `⌘3`, `⌘5`); a displayed shortcut does not by itself register
 a new native keyboard accelerator.
+
+
+## Lower-left PYNIX tool-window stripe
+
+The seven tools are ordered to match the user's PyCharm screenshot:
+
+`Run`, `PYNIX Terminal`, `PYNIX Packages`, `Services`,
+`Terminal`, `Problems`, `Git`.
+
+Five ordinary tools use unchanged, checksum-pinned JetBrains icons
+`toolwindows/run`, `toolwindows/services`, `terminal/terminal`,
+`toolwindows/problems`, and `toolwindows/vcs`.
+
+The original JetBrains **Terminal** SVGs in the `terminal/terminal` key
+were imported without changes from
+[JetBrains/intellij-community/plugins/terminal/resources/icons/expui/toolwindow](https://github.com/JetBrains/intellij-community/tree/master/plugins/terminal/resources/icons/expui/toolwindow)
+(16 and 20px, normal and dark).
+
+The original JetBrains **Python Packages** SVGs in
+`python/pythonPackages` were likewise imported without changes from
+[JetBrains/intellij-community/python/pluginResources/icons/com/jetbrains/pythonCore/python/expui](https://github.com/JetBrains/intellij-community/tree/master/python/pluginResources/icons/com/jetbrains/pythonCore/python/expui).
+
+**PYNIX branding is an explicit exception** to JetBrains-only pictograms:
+we reuse our own already-bundled `pynix_gui/assets/icons/pnx-file.png`.
+PYNIX Terminal uses the existing PYNIX identity image instead of a
+Python logo; PYNIX Packages layers a small PYNIX identity badge on top
+of the unchanged original JetBrains package SVG. The JetBrains SVG files
+are not edited or recolored. No new Python/PYNIX logo was invented.
