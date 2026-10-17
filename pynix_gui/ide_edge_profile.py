@@ -133,6 +133,14 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 EDGE_PROFILE_SCRIPT = r"""<script>
 (() => {
  const entries=__PROFILE_DATA__;
+ const iconless=__ICONLESS__;
+ const shortNames={
+  'Project':'Proj','Search':'Find','Version Control':'Git',
+  'Structure':'Struct','Run':'Run','Python Console':'Py',
+  'Packages':'Pkg','Debug':'Debug','Terminal':'Term',
+  'Problems':'Err','Notifications':'Alerts','AI Assistant':'AI',
+  'Commit':'Commit','Bookmarks':'Marks','Git':'Git'
+ };
  const clickExisting=entry=>{
   const command=entry.action||'';
   if(command.startsWith('rail:')){
@@ -168,10 +176,11 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.disabled=entry.state==='unavailable';
    button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');
    button.setAttribute('aria-label',button.title);
-   // PyCharm's Python Console uses the Python identity mark, not the
-   // generic Messages icon. Reuse the exact Python glyph from source tabs.
-   const visual=entry.label==='Python Console'?
-     (window.pynixPythonFileIcon?.()||entry.svg):entry.svg;
+   // No icons are built in native icon-free mode.
+   if(iconless)button.textContent=shortNames[entry.label]||entry.label;
+   // In ordinary icon mode the native Python identity remains supported.
+   const visual=iconless?null:(entry.label==='Python Console'?
+     (window.pynixPythonFileIcon?.()||entry.svg):entry.svg);
    if(visual){
     const xml=new DOMParser().parseFromString(visual,'image/svg+xml');
     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror')){
@@ -199,7 +208,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   const more=document.createElement('button');
   more.type='button';
   more.className='pynix-tool-profile-more';
-  more.textContent='⋯';
+  more.textContent=iconless?'More':'⋯';
   more.title='More tool windows';
   more.setAttribute('aria-label','More tool windows');
   more.setAttribute('aria-expanded','false');
@@ -251,14 +260,17 @@ EDGE_PROFILE_SCRIPT = r"""<script>
 </script>"""
 
 def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
-                       dark: bool = True) -> str:
+                       dark: bool = True, iconless: bool = False) -> str:
     if '</body>' not in document or 'id="pynix-edge-profile-style"' in document:
         return document
     try:
-        catalog = JetBrainsIconCatalog(directory)
+        catalog = None if iconless else JetBrainsIconCatalog(directory)
         entries = [{
             "label": label, "name": key, "edge": edge, "state": state,
-            "svg": native_tool_icon(label, dark=dark) or catalog.svg(key, dark=dark, tool_window=True),
+            "svg": None if iconless else (
+                native_tool_icon(label, dark=dark) or
+                catalog.svg(key, dark=dark, tool_window=True)
+            ),
             "pinned": label in PINNED_TOOLS,
             "action": EXISTING_ACTIONS.get(label, ""),
         } for label, key, edge, state in TOOL_WINDOW_PROFILE]
@@ -266,5 +278,6 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         return document
     payload = json.dumps(entries, ensure_ascii=True).replace("<", "\\u003c")
     return document.replace('</body>',
-        EDGE_PROFILE_STYLE + EDGE_PROFILE_SCRIPT.replace('__PROFILE_DATA__', payload)
+        EDGE_PROFILE_STYLE + EDGE_PROFILE_SCRIPT.replace('__PROFILE_DATA__', payload).replace(
+            '__ICONLESS__', 'true' if iconless else 'false')
         + '</body>', 1)
