@@ -267,7 +267,7 @@ def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button()
     assert EXISTING_ACTIONS["Git"] == "rail:2"
     assert "Services" not in EXISTING_ACTIONS
     assert "PYNIX Packages" not in EXISTING_ACTIONS
-    assert "if(edge==='left-bottom'){" in EDGE_PROFILE_SCRIPT
+    assert "if(edge==='left-bottom'||edge==='right-top'){" in EDGE_PROFILE_SCRIPT
     assert "host.appendChild(container);" in EDGE_PROFILE_SCRIPT
 
 
