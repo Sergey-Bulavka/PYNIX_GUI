@@ -140,6 +140,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 CHROME_SCRIPT = r"""<script>
 (() => {
  const icons=__CHROME_ICONS__;
+ const iconless=__ICONLESS__;
  const makeIcon=(key)=>{
   const source=icons[key];
   if(!source)return null;
@@ -154,9 +155,9 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-pycharm-icon-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=makeIcon(icon);
+  const svg=iconless?null:makeIcon(icon);
   if(svg)button.appendChild(svg);
-  else button.textContent=label.slice(0,1);
+  else button.textContent=label;
   button.addEventListener('click',action);
   return button;
  };
@@ -176,7 +177,8 @@ CHROME_SCRIPT = r"""<script>
   if(tools){
    const summary=tools.querySelector(':scope>summary');
    if(summary){
-    summary.replaceChildren(makeIcon('general/moreVertical')||document.createTextNode('⋮'));
+    summary.replaceChildren(iconless?document.createTextNode('More'):
+      (makeIcon('general/moreVertical')||document.createTextNode('⋮')));
     summary.title='More run and editor actions';
     summary.setAttribute('aria-label','More run and editor actions');
    }
@@ -200,8 +202,11 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-project-quick-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=makeIcon(icon);
-  if(svg)button.appendChild(svg);else button.textContent=label[0];
+  const svg=iconless?null:makeIcon(icon);
+  if(svg)button.appendChild(svg);
+  else button.textContent=({'New PYNIX file':'New','Select opened file':'Find',
+   'Expand visible folders (up to 30)':'Expand',
+   'Hide Project tool window':'Hide'})[label]||label;
   button.addEventListener('click',action);
   return button;
  };
@@ -237,7 +242,8 @@ CHROME_SCRIPT = r"""<script>
   more.className='pynix-project-more-menu';
   const summary=document.createElement('summary');
   summary.className='pynix-project-quick-button';
-  summary.replaceChildren(makeIcon('general/moreVertical')||document.createTextNode('⋮'));
+  summary.replaceChildren(iconless?document.createTextNode('More'):
+   (makeIcon('general/moreVertical')||document.createTextNode('⋮')));
   summary.title='Project view options';
   summary.setAttribute('aria-label','Project view options');
   const menu=document.createElement('div');
@@ -250,7 +256,8 @@ CHROME_SCRIPT = r"""<script>
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
   });
   if(collapse){
-   collapse.replaceChildren(makeIcon('general/collapseAll')||document.createTextNode('⌃'));
+   collapse.replaceChildren(iconless?document.createTextNode('Fold'):
+    (makeIcon('general/collapseAll')||document.createTextNode('⌃')));
    collapse.title='Collapse project folders';
   }
   actions.replaceChildren(create,locate,expand);
@@ -286,18 +293,23 @@ CHROME_SCRIPT = r"""<script>
 
 
 def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
-                         dark: bool = True) -> str:
+                         dark: bool = True, iconless: bool = False) -> str:
     """Attach screenshot-matched chrome without replacing native behaviors."""
     if "</body>" not in document or 'id="pynix-pycharm-chrome"' in document:
         return document
     try:
-        catalog = JetBrainsIconCatalog(directory)
-        keys = ("general/search","general/settings","general/add",
-                "general/locate","general/expandAll","general/collapseAll",
-                "general/moreVertical","general/hide")
-        data = {key: catalog.svg(key,dark=dark) for key in keys}
+        if iconless:
+            data = {}
+        else:
+            catalog = JetBrainsIconCatalog(directory)
+            keys = ("general/search","general/settings","general/add",
+                    "general/locate","general/expandAll","general/collapseAll",
+                    "general/moreVertical","general/hide")
+            data = {key: catalog.svg(key,dark=dark) for key in keys}
     except (OSError,ValueError,KeyError,json.JSONDecodeError):
         return document
     payload = json.dumps(data,ensure_ascii=True).replace("<","\\u003c")
-    script = CHROME_SCRIPT.replace("__CHROME_ICONS__",payload)
+    script = CHROME_SCRIPT.replace("__CHROME_ICONS__",payload).replace(
+        "__ICONLESS__", "true" if iconless else "false"
+    )
     return document.replace("</body>",CHROME_STYLE+script+"</body>",1)
