@@ -101,21 +101,27 @@ The original JetBrains **Python Packages** SVGs in
 [JetBrains/intellij-community/python/pluginResources/icons/com/jetbrains/pythonCore/python/expui](https://github.com/JetBrains/intellij-community/tree/master/python/pluginResources/icons/com/jetbrains/pythonCore/python/expui).
 
 **PYNIX brand artwork is an explicit exception** to the rule that
-non-PYNIX UI controls use unmodified JetBrains SVGs. These two native SVGs
-are authored from our already-bundled `pynix_gui/assets/icons/pnx-file.png`:
+non-PYNIX UI controls use original JetBrains SVGs. Unlike licensed JetBrains
+icons, our own PYNIX pictograms may be adapted for compact tool-window use.
 
-- `pynix_gui/assets/icons/pynix-terminal.svg` isolates the **PYNIX logo
-  mark only**, with no page/document silhouette. Its 20×20 artwork inherits
-  `currentColor` from the same CSS palette as JetBrains New UI.
-- `pynix_gui/assets/icons/pynix-packages.svg` combines the original
-  JetBrains `pythonPackages@20x20.svg` **box silhouette** with the same
-  native PYNIX mark, positioned where the Python symbol used to be.
-  None of the Python snake paths or bitmap page badges remain.
+The two PYNIX-only SVGs are redrawn to retain the native identity of our
+already-bundled `pynix_gui/assets/icons/pnx-file.png` **without embedding,
+tracing or rendering that raster**:
 
-The original JetBrains SVG is **unchanged** in our licensed icon catalog;
-the separate PYNIX version is clearly a derivative adapted for PYNIX.
-The box shape retains its JetBrains Apache-2.0 provenance, and the PYNIX
-mark is ours. Both SVGs are distributed as package data.
+- `pynix_gui/assets/icons/pynix-terminal.svg` uses a single 14×16px
+  six-sided enclosure and an open internal P-shaped mark, with precise
+  1.45/1.3px strokes. It has no white document/page, fill, or tiny overlay.
+- `pynix_gui/assets/icons/pynix-packages.svg` uses a complete, coherent
+  isometric parcel with 1.5/1.45px edges; the **same PYNIX mark** is engraved
+  in the right face at effective 1.1px stroke. This is not a tiny copy
+  of an icon layered over an existing Python logo: all Python shapes are
+  absent, as are opaque background stickers.
+
+Both are intentionally redrawn **PYNIX-owned** vectors, rather than falsely
+labeled copies of JetBrains artwork. The licensed original JetBrains package
+icons stay **untouched** and available in the catalog. The PYNIX copies use
+`currentColor`, are distributed as editable SVG assets, and are verified
+by geometry and no-bitmap regression tests.
 
 Inactive-window opacity, hover and active selection all use the existing
 New UI rail styles. No embedded PNGs, hardcoded dark/light palette in the
