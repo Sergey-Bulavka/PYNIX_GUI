@@ -350,6 +350,12 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode .pynix-extra-tools[data-edge] .pynix-tool-profile-more[aria-expanded="true"]{
  background:#3a3d45!important;
 }
+/* Unavailable controls still respond visually; opacity of their idle
+   artwork must not also dim the hover rectangle on the left edge. */
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-disabled="true"]:hover,
+.workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-disabled="true"]:focus-visible{
+ opacity:1!important;
+}
 /* Do not let a hovered icon impersonate the active tool window. */
 .workspace-mode .pynix-extra-tools[data-edge] .pynix-extra-tool[aria-pressed="true"]{
  background:#3574d6!important;color:#fff!important;
