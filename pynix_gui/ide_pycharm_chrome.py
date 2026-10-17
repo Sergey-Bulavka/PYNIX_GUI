@@ -841,7 +841,13 @@ CHROME_SCRIPT = r"""<script>
   beta.dataset.compact='β · __IDE_VERSION__';
   beta.setAttribute('aria-label','PYNIX IDE beta version __IDE_VERSION__');
   right.append(search,settings,beta);
-  toolbar.append(center,right);
+  // Two equally flexible empty regions center Run/Debug between the
+  // identity and status clusters without absolute coordinates. Both may
+  // shrink to zero during native continuous window resizing.
+  const trailingSpacer=document.createElement('div');
+  trailingSpacer.className='toolbar-spacer pynix-pycharm-trailing-spacer';
+  trailingSpacer.setAttribute('aria-hidden','true');
+  toolbar.append(center,trailingSpacer,right);
   updateRunActionTooltips();
  };
  const quick=(label,icon,action)=>{
