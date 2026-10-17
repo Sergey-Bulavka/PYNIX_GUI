@@ -2,10 +2,13 @@
 
 The V4 host's many legacy layout layers may modify physical tab height and
 top offset. Never assume that 'height:43px' means the rows align.
+The original .tree-title.pynix-project-header used a more-specific
+!important selector that once pinned the header to 31px. New height rules
+must match or exceed its selector specificity.
 """
 
 PROJECT_HEADER_SYNC_STYLE = """<style id="pynix-project-header-alignment">
-.workspace-mode .tree .pynix-project-header{
+.workspace-mode .tree .tree-title.pynix-project-header{
  box-sizing:border-box!important;
  height:var(--pynix-project-header-height,43px)!important;
  min-height:var(--pynix-project-header-height,43px)!important;
