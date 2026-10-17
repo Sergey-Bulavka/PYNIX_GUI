@@ -104,18 +104,28 @@ The original JetBrains **Python Packages** SVGs in
 non-PYNIX UI controls use original JetBrains SVGs. Unlike licensed JetBrains
 icons, our own PYNIX pictograms may be adapted for compact tool-window use.
 
-The two PYNIX-only SVGs are redrawn to retain the native identity of our
-already-bundled `pynix_gui/assets/icons/pnx-file.png` **without embedding,
-tracing or rendering that raster**:
+The two PYNIX-only SVGs are redrawn using the high-resolution PYNIX
+reference artwork supplied for the IDE. Neither icon embeds a PNG, traces
+the old low-resolution file-glyph sprite, or alters the original JetBrains
+catalog:
 
-- `pynix_gui/assets/icons/pynix-terminal.svg` uses a single 14×16px
-  six-sided enclosure and an open internal P-shaped mark, with precise
-  1.45/1.3px strokes. It has no white document/page, fill, or tiny overlay.
-- `pynix_gui/assets/icons/pynix-packages.svg` uses a complete, coherent
-  isometric parcel with 1.5/1.45px edges; the **same PYNIX mark** is engraved
-  in the right face at effective 1.1px stroke. This is not a tiny copy
-  of an icon layered over an existing Python logo: all Python shapes are
-  absent, as are opaque background stickers.
+- `pynix_gui/assets/icons/pynix-terminal.svg` is a **solid, three-part
+  geometric PYNIX monogram**, matching the filled brand silhouette and its
+  negative spaces. The old approximated outline hexagon with nested, jagged
+  strokes has been removed. Three full-size SVG fills preserve readability
+  at 20×20, instead of stacked scale transforms.
+- `pynix_gui/assets/icons/pynix-packages.svg` is a single coherent
+  **isometric parcel with an integral simplified PYNIX P** on its right
+  face. Its 1.5px/1.4px body and 1.2px inset are drawn directly in 20×20
+  coordinates. No Python snake, transformed miniature logo or icon sticker
+  remains.
+
+Vector quality is also managed consistently across the native IDE by the
+`geometricPrecision` SVG style and `image-rendering:auto`. The browser
+retains the original 20 CSS-pixel artwork dimensions, allowing its native
+WKWebView antialiasing instead of creating and rescaling bitmaps. **At very
+high screenshot magnification, discrete display pixels remain visible**;
+this does not by itself indicate a raster-source icon.
 
 Both are intentionally redrawn **PYNIX-owned** vectors, rather than falsely
 labeled copies of JetBrains artwork. The licensed original JetBrains package
