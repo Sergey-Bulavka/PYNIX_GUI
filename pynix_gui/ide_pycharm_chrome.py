@@ -121,10 +121,55 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  outline:2px solid #80b8f4;outline-offset:-2px
 }
 .workspace-mode .pynix-pycharm-icon-button svg{width:19px;height:19px}
+/* Keep the original PYNIX run-mode <select> in the DOM for its existing
+   backend listeners, but use a real compact JetBrains-style configuration
+   button as its visible control. */
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-mode{
- min-width:120px!important;height:28px!important;
- background:transparent!important;border:0!important;color:#d1d1d7!important;
- font-size:12px!important
+ display:none!important;
+}
+.workspace-mode .workspace-toolbar .pynix-current-config{
+ display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex:0 1 148px!important;box-sizing:border-box!important;
+ min-width:86px!important;max-width:164px!important;height:33px!important;
+ gap:7px!important;padding:4px 8px!important;
+ border:1px solid transparent!important;border-radius:9px!important;
+ background:transparent!important;color:#c9cbd2!important;
+ cursor:pointer!important;white-space:nowrap!important;
+ font:500 13px/1.2 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+}
+.workspace-mode .workspace-toolbar .pynix-current-config:hover,
+.workspace-mode .workspace-toolbar .pynix-current-config[aria-expanded="true"]{
+ background:#3b3945!important;
+}
+.workspace-mode .workspace-toolbar .pynix-current-config:focus-visible{
+ outline:2px solid #80b8f4!important;outline-offset:-2px!important;
+}
+.workspace-mode .workspace-toolbar .pynix-current-config-label{
+ min-width:0!important;flex:1 1 auto!important;overflow:hidden!important;
+ text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+.workspace-mode .workspace-toolbar .pynix-current-config-arrow{
+ flex:0 0 16px!important;width:16px!important;height:16px!important;
+ display:block!important;transform:none!important;
+}
+.workspace-mode .workspace-toolbar .pynix-config-options{
+ position:absolute!important;top:37px!important;left:0!important;
+ display:flex!important;flex-direction:column!important;gap:2px!important;
+ width:210px!important;padding:6px!important;border-radius:9px!important;
+ background:#28292d!important;border:1px solid #575a62!important;
+ box-shadow:0 14px 30px #0009!important;z-index:170!important;
+}
+.workspace-mode .workspace-toolbar .pynix-config-options[hidden]{display:none!important}
+.workspace-mode .workspace-toolbar .pynix-config-options button{
+ border:0!important;background:transparent!important;color:#d1d2d7!important;
+ border-radius:6px!important;width:100%!important;min-height:29px!important;
+ padding:6px 9px!important;text-align:left!important;
+ font:12px/1.3 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ cursor:pointer!important;
+}
+.workspace-mode .workspace-toolbar .pynix-config-options button:hover,
+.workspace-mode .workspace-toolbar .pynix-config-options button[aria-checked="true"]{
+ background:#34517d!important;color:#edf1fa!important
 }
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-action,
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary{
@@ -140,10 +185,44 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary svg{
  color:#57c27d!important
 }
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-action:hover,
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary:hover{
+ background:#3b3945!important;border-radius:9px!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-action svg,
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary svg{
+ display:block!important;width:19px!important;height:19px!important
+}
+
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu>summary{
- width:30px!important;height:30px!important;display:flex!important;
+ width:33px!important;height:33px!important;display:flex!important;
  align-items:center!important;justify-content:center!important;
- padding:0!important;background:transparent!important;font-size:18px!important
+ padding:0!important;background:transparent!important;font-size:18px!important;
+ border-radius:8px!important;cursor:pointer!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu[open]>summary,
+.workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu>summary:hover{
+ background:#3b3945!important
+}
+.workspace-mode .workspace-toolbar .pynix-pycharm-center .pynix-tools-menu-items{
+ width:298px!important;max-width:calc(100vw - 12px)!important;
+ border-radius:11px!important;background:#292a2f!important;
+ border:1px solid #62646c!important;
+ box-shadow:0 12px 32px #000a!important;padding:7px!important;
+}
+.workspace-mode .workspace-toolbar .pynix-run-with-params{
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;
+ gap:11px!important;width:100%!important;min-height:34px!important;
+ padding:5px 10px!important;text-align:left!important;border-radius:7px!important;
+ background:transparent!important;border:0!important;
+ color:#d1d3d8!important;font:13px/1.3 system-ui,-apple-system,sans-serif!important
+}
+.workspace-mode .workspace-toolbar .pynix-run-with-params svg{
+ display:block!important;flex:0 0 20px!important;
+ width:20px!important;height:20px!important
+}
+.workspace-mode .workspace-toolbar .pynix-run-with-params[aria-disabled="true"]{
+ opacity:.72!important;cursor:default!important
 }
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-stop-action:disabled{
  display:none!important
@@ -211,9 +290,12 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 @media(max-width:930px){
  .workspace-mode .workspace-toolbar .pynix-pycharm-right{gap:1px}
- .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-mode{
-  min-width:90px!important;max-width:105px!important
+ .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-current-config{
+  flex-basis:114px!important;max-width:114px!important;
  }
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .workspace-toolbar .pynix-current-config{transition:none!important}
 }
 </style>"""
 
@@ -311,6 +393,91 @@ CHROME_SCRIPT = r"""<script>
   title?.remove();
   legacyProject?.remove();
  };
+ const createRunConfig=(center,select)=>{
+  if(!select||center.querySelector('.pynix-current-config'))return;
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='pynix-current-config';
+  button.dataset.pynixTooltip='Run configuration: Current File';
+  button.setAttribute('aria-label','Run configuration: Current File');
+  button.setAttribute('aria-expanded','false');
+  button.setAttribute('aria-haspopup','menu');
+  const name=document.createElement('span');
+  name.className='pynix-current-config-label';
+  const arrow=makeIcon('general/chevronDown');
+  if(arrow){
+   arrow.classList.add('pynix-current-config-arrow');
+   button.append(name,arrow);
+  }else{
+   name.textContent='Current File';
+   const chevron=document.createElement('span');
+   chevron.textContent='⌄';chevron.setAttribute('aria-hidden','true');
+   button.append(name,chevron);
+  }
+  const popup=document.createElement('div');
+  popup.className='pynix-config-options';popup.hidden=true;
+  popup.setAttribute('role','menu');
+  const options=[
+   ['run','Current File'],
+   ['check','Check Project'],
+  ];
+  const close=()=>{
+   popup.hidden=true;
+   button.setAttribute('aria-expanded','false');
+  };
+  const sync=()=>{
+   const value=select.value;
+   name.textContent=value==='check'?'Check Project':'Current File';
+   button.dataset.pynixTooltip='Run configuration: '+name.textContent;
+   button.setAttribute('aria-label',button.dataset.pynixTooltip);
+   for(const item of popup.children)
+    item.setAttribute('aria-checked',String(item.dataset.mode===value));
+  };
+  for(const [value,label] of options){
+   const item=document.createElement('button');
+   item.type='button';item.textContent=label;
+   item.dataset.mode=value;item.setAttribute('role','menuitemradio');
+   item.addEventListener('click',()=>{
+    select.value=value;
+    select.dispatchEvent(new Event('change',{bubbles:true}));
+    sync();close();button.focus();
+   });
+   popup.appendChild(item);
+  }
+  button.addEventListener('click',()=>{
+   popup.hidden=!popup.hidden;
+   button.setAttribute('aria-expanded',String(!popup.hidden));
+   if(!popup.hidden)popup.querySelector('[aria-checked="true"]')?.focus();
+  });
+  document.addEventListener('pointerdown',event=>{
+   if(!button.contains(event.target)&&!popup.contains(event.target))close();
+  },true);
+  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&!popup.hidden){close();button.focus();}
+  },true);
+  select.addEventListener('change',sync);
+  center.insertBefore(button,select);
+  center.appendChild(popup);
+  sync();
+ };
+ const updateRunActionTooltips=()=>{
+  const active=document.querySelector('.workspace-mode .editor-tabs .pynix-editor-tab.active');
+  const label=active?.querySelector('.pynix-editor-tab-label');
+  const name=(label?.textContent||'').replace(/\\s*\\*\\s*$/,'').trim();
+  const run=document.querySelector('.pynix-pycharm-center>.pynix-run-action');
+  const debug=document.querySelector('.pynix-pycharm-center>.pynix-debug-primary');
+  const actions=[[run,'Run','⌃R'],[debug,'Debug','⌃D']];
+  for(const [control,verb,shortcut] of actions){
+   if(!control)continue;
+   // Labels follow PyCharm, but the real PYNIX run handler still launches
+   // the workspace project. Never replace it with a fake file runner.
+   const text=name?verb+" '"+name+"'":verb+' project';
+   control.dataset.pynixTooltip=text;
+   control.dataset.pynixShortcut=shortcut;
+   control.setAttribute('aria-label',text);
+   control.removeAttribute('title');
+  }
+ };
  const initToolbar=()=>{
   const toolbar=document.querySelector('.workspace-mode .workspace-toolbar');
   if(!toolbar||toolbar.querySelector('.pynix-pycharm-center'))return;
@@ -324,17 +491,42 @@ CHROME_SCRIPT = r"""<script>
   const stop=toolbar.querySelector('.pynix-stop-action');
   const tools=toolbar.querySelector('.pynix-tools-menu');
   for(const el of [select,run,debug,stop,tools])if(el)center.appendChild(el);
+  createRunConfig(center,select);
+  // Keep the existing button nodes and their original run/debug listeners.
+  for(const [button,key] of [[run,'run/run'],[debug,'run/debug']]){
+   if(!button)continue;
+   const icon=makeIcon(key);
+   if(icon){
+    icon.classList.add('pynix-jetbrains-icon');
+    button.replaceChildren(icon);
+   }
+  }
   if(tools){
    const summary=tools.querySelector(':scope>summary');
    if(summary){
-    summary.replaceChildren(iconless?document.createTextNode('More'):
-      (makeIcon('general/moreVertical')||document.createTextNode('⋮')));
-    summary.title='More run and editor actions';
-    summary.setAttribute('aria-label','More run and editor actions');
+    summary.replaceChildren(makeIcon('general/moreVertical')||
+      document.createTextNode('⋮'));
+    summary.title='More Actions';
+    summary.dataset.pynixTooltip='More Actions';
+    summary.setAttribute('aria-label','More Actions');
    }
    const items=tools.querySelector('.pynix-tools-menu-items');
    const save=toolbar.querySelector('.pynix-save-action');
    if(items&&save)items.prepend(save);
+   if(items&&!items.querySelector('.pynix-run-with-params')){
+    // Parameters are not supported by ProjectRunner yet. Preserve a truthful
+    // disabled menu item rather than pretending arguments are forwarded.
+    const params=document.createElement('button');
+    params.type='button';params.className='pynix-run-with-params';
+    params.textContent='Run with Parameters…';
+    const edit=makeIcon('general/edit');
+    if(edit)params.prepend(edit);
+    params.setAttribute('aria-disabled','true');
+    params.setAttribute('aria-label','Run with Parameters (not yet supported)');
+    params.title='Run parameters are not supported by PYNIX yet';
+    params.disabled=true;
+    items.prepend(params);
+   }
    const debugStatus=toolbar.querySelector('.pynix-debug-status');
    if(items&&debugStatus)items.appendChild(debugStatus);
   }
@@ -347,6 +539,7 @@ CHROME_SCRIPT = r"""<script>
    })
   );
   toolbar.append(center,right);
+  updateRunActionTooltips();
  };
  const quick=(label,icon,action)=>{
   const button=document.createElement('button');
@@ -432,7 +625,10 @@ CHROME_SCRIPT = r"""<script>
   const tree=document.querySelector('.workspace-mode .tree');
   if(tree)new MutationObserver(initProjectHeader).observe(tree,{childList:true});
   const tabs=document.querySelector('.workspace-mode .editor-tabs');
-  if(tabs)new MutationObserver(updateBreadcrumb).observe(tabs,{
+  if(tabs)new MutationObserver(()=>{
+   updateBreadcrumb();
+   updateRunActionTooltips();
+  }).observe(tabs,{
    childList:true,subtree:true,attributes:true,attributeFilter:['class']
   });
  };
@@ -456,7 +652,9 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
             catalog = JetBrainsIconCatalog(directory)
             # The project/branch controls are the two explicitly restored
             # original JetBrains SVGs in an otherwise iconless native chrome.
-            identity_keys = ("general/chevronDown", "toolwindows/vcs")
+            identity_keys = ("general/chevronDown", "toolwindows/vcs",
+                             "general/moreVertical", "general/edit",
+                             "run/run", "run/debug")
             keys = identity_keys if iconless else identity_keys + (
                 "general/search","general/settings","general/add",
                 "general/locate","general/expandAll","general/collapseAll",
