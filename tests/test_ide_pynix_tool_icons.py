@@ -23,49 +23,45 @@ def _paths(name: str):
     return list(root.iter(NS + "path"))
 
 
-def test_pynix_terminal_uses_crisp_strokes_at_jetbrains_20px_scale():
+def test_pynix_terminal_preserves_original_solid_geometric_mark_at_20px():
     root = ET.fromstring((ICON_DIR / "pynix-terminal.svg").read_text("utf-8"))
     paths = _paths("pynix-terminal.svg")
-    assert len(paths) == 2
+    assert len(paths) == 3
+    assert root.attrib["shape-rendering"] == "geometricPrecision"
     assert root.attrib["fill"] == "none"
-    outer, logo = paths
-    assert outer.attrib["d"] == "M10 2 17 6v8l-7 4-7-4V6Z"
-    assert outer.attrib["stroke-width"] == "1.45"
-    assert logo.attrib["d"] == (
-        "M6.8 12.8V7.1L10 5.3l3.4 2V9L10 11"
-        "l-1.1-.6v3.15L10 14.3l3.4-1.9"
+    outer, middle, lower = paths
+    assert outer.attrib["d"] == (
+        "M10 1.35 18 5.8V10.65L15.15 12.3V7.6L10 4.7 "
+        "5.15 7.6V17L2 15.2V5.8Z"
     )
-    assert logo.attrib["stroke-width"] == "1.3"
-    assert all(p.attrib["stroke"] == "currentColor" for p in paths)
+    assert middle.attrib["d"] == "M8 9.3 10 8.1 12.6 9.6 8 12.45Z"
+    assert lower.attrib["d"] == "M8 12.45 11 14.25 18 10.25V15L10 19 8 17.9Z"
+    # The original PYNIX logomark has a continuous solid silhouette, not
+    # a thin hexagon with illegible nested strokes or transformed fragments.
+    assert all(p.attrib["fill"] == "currentColor" for p in paths)
+    assert all("stroke-width" not in p.attrib for p in paths)
     assert all("transform" not in p.attrib for p in paths)
-    assert all("fill-rule" not in p.attrib for p in paths)
-    assert all("fill" not in p.attrib for p in paths)
+    assert not list(root.iter(NS + "g"))
 
 
-def test_packages_has_one_unbroken_box_and_shared_pynix_symbol_not_a_sticker():
+def test_pynix_packages_is_coherent_20px_box_with_integral_readable_monogram():
     root = ET.fromstring((ICON_DIR / "pynix-packages.svg").read_text("utf-8"))
     paths = _paths("pynix-packages.svg")
     assert len(paths) == 3
-    box, folded_edges, logo = paths
-    assert box.attrib["d"] == "M10 1.9 17.5 6.1v8L10 18.1 2.5 14.1v-8Z"
+    box, folded_edges, inset = paths
+    assert root.attrib["shape-rendering"] == "geometricPrecision"
+    assert box.attrib["d"] == "M10 1.85 17.5 6v8L10 18.1 2.5 14V6Z"
     assert folded_edges.attrib["d"] == (
-        "M2.7 6.25 10 10.1l7.3-3.85M10 10.1v7.8"
+        "M2.5 6 10 10.15 17.5 6M10 10.15V18"
     )
-    assert box.attrib["stroke-width"] == "1.5"
-    assert folded_edges.attrib["stroke-width"] == "1.45"
-    assert logo.attrib["d"] == _paths("pynix-terminal.svg")[1].attrib["d"]
-    assert logo.attrib["stroke-width"] == "2"
-    groups = list(root.iter(NS + "g"))
-    assert len(groups) == 1
-    # A *single* explicit scale/translate (unlike the previously stacked,
-    # miniature bitmap tracing). Effective inset stroke width = 2 * .55 = 1.1.
-    assert groups[0].attrib["transform"] == "matrix(.55 0 0 .55 8.2 7.1)"
+    assert inset.attrib["d"] == "M12 15.7V12.1L13.5 11.2 15.1 12.1 13 13.4"
+    assert [p.attrib["stroke-width"] for p in paths] == ["1.5", "1.4", "1.2"]
     assert all(p.attrib["stroke"] == "currentColor" for p in paths)
-    assert all("fill" not in p.attrib for p in paths)
+    assert all("transform" not in p.attrib for p in paths)
+    assert not list(root.iter(NS + "g"))
     assert not list(root.iter(NS + "clipPath"))
     assert not list(root.iter(NS + "mask"))
     assert "pythonPackages" not in (ICON_DIR / "pynix-packages.svg").read_text("utf-8")
-
 
 
 def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
@@ -98,3 +94,23 @@ def test_svg_only_contract_stays_20px_dimmed_and_packaged():
     pyproject = (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text(
         encoding="utf-8")
     assert '"assets/icons/*.svg"' in pyproject
+
+def test_all_native_tool_svg_paths_use_antialiasing_not_pixelated_mode():
+    from pynix_gui.ide_iconless_mode import ICONLESS_STYLE
+    for selector in (
+        ".workspace-mode svg",
+        ".workspace-mode svg path",
+        ".workspace-mode svg circle",
+        ".workspace-mode svg rect",
+        ".workspace-mode svg line",
+        ".workspace-mode svg polyline",
+        ".workspace-mode svg polygon",
+    ):
+        assert selector in ICONLESS_STYLE
+    assert "shape-rendering:geometricPrecision!important;" in ICONLESS_STYLE
+    assert "image-rendering:auto!important;" in ICONLESS_STYLE
+    assert "max-width:20px!important;max-height:20px!important;" in ICONLESS_STYLE
+    assert "transform:none!important;" in ICONLESS_STYLE
+    assert "image-rendering:pixelated" not in ICONLESS_STYLE
+    assert "shape-rendering:crispEdges" not in ICONLESS_STYLE
+
