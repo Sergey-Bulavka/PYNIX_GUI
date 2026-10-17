@@ -17,7 +17,10 @@ def test_profile_has_four_edges_unique_labels_and_real_licensed_assets():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for label, icon, edge, state in TOOL_WINDOW_PROFILE:
         assert state in {"existing", "unavailable"}
-        assert catalog.resolve(icon, dark=True, tool_window=True) is not None, label
+        if label not in {"PYNIX Terminal", "PYNIX Packages"}:
+            assert catalog.resolve(icon, dark=True, tool_window=True) is not None, label
+        else:
+            assert icon.startswith("pynix/")
     assert len(TOOL_WINDOW_PROFILE) >= 15
 
 
@@ -98,7 +101,7 @@ def test_tool_window_icons_do_not_use_handmade_python_or_other_fallbacks():
     from pynix_gui.ide_edge_profile import EDGE_PROFILE_SCRIPT
     assert "window.pynixPythonFileIcon?.()" not in EDGE_PROFILE_SCRIPT
     assert "entry.label==='Python Console'" not in EDGE_PROFILE_SCRIPT
-    assert "const visual=(iconless&&!pictogram||brandTerminal)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
+    assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
     assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
     assert "const moreIcon=__MORE_ICON_DATA__;" in EDGE_PROFILE_SCRIPT
 
@@ -278,14 +281,16 @@ def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_bran
              if edge == "left-bottom" and label in BOTTOM_LEFT_ICONS}
     assert names == {
         "Run": "toolwindows/run",
-        "PYNIX Terminal": "terminal/terminal",
-        "PYNIX Packages": "python/pythonPackages",
+        "PYNIX Terminal": "pynix/pynix-terminal",
+        "PYNIX Packages": "pynix/pynix-packages",
         "Services": "toolwindows/services",
         "Terminal": "terminal/terminal",
         "Problems": "toolwindows/problems",
         "Git": "toolwindows/vcs",
     }
     for name, icon in names.items():
+        if name in PYNIX_BRANDED_TOOLS:
+            continue  # Our own PYNIX marks are not in the JetBrains catalog.
         for dark in (True, False):
             resolved = catalog.resolve(icon, dark=dark, tool_window=True)
             assert resolved is not None, (name, dark)
@@ -296,12 +301,12 @@ def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_bran
 
     html = apply_edge_profile("<html><body class='workspace-mode'></body></html>",
                               iconless=True)
-    assert "data:image/png;base64,iVBOR" in html
+    assert "data:image/png;base64" not in html
     assert '"label": "PYNIX Terminal"' in html
     assert '"label": "PYNIX Packages"' in html
-    assert 'pynix-brand-terminal' in EDGE_PROFILE_SCRIPT
-    assert 'pynix-brand-package' in EDGE_PROFILE_SCRIPT
-    assert 'brandTerminal' in EDGE_PROFILE_SCRIPT
+    assert '"isPynixBrand": true' in html
+    assert "entry.brand" not in EDGE_PROFILE_SCRIPT
+    assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
 
 
 def test_lower_left_icons_visible_in_iconless_mode_and_dim_on_blur():
@@ -309,8 +314,8 @@ def test_lower_left_icons_visible_in_iconless_mode_and_dim_on_blur():
     assert '.pynix-extra-tools[data-edge="left-bottom"]' in EDGE_PROFILE_STYLE
     assert "gap:7px!important;padding-bottom:7px!important" in EDGE_PROFILE_STYLE
     assert "width:36px!important;height:36px!important" in EDGE_PROFILE_STYLE
-    assert ".pynix-brand-package" in EDGE_PROFILE_STYLE
-    assert ".pynix-brand-terminal" in EDGE_PROFILE_STYLE
+    assert ".pynix-brand-package" not in EDGE_PROFILE_STYLE
+    assert ".pynix-brand-terminal" not in EDGE_PROFILE_STYLE
     assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg' in ICONLESS_STYLE
-    assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img' in ICONLESS_STYLE
+    assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img' not in ICONLESS_STYLE
     assert ".workspace-mode.pynix-window-inactive" in EDGE_PROFILE_STYLE
