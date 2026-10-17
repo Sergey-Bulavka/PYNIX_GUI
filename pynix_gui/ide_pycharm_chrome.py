@@ -237,8 +237,9 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .workspace-toolbar>.pynix-save-action{display:none!important}
 .workspace-mode .tree .tree-title.pynix-project-header{
- display:flex!important;align-items:center!important;height:31px!important;
- min-height:31px!important;padding:0 7px 0 12px!important;
+ display:flex!important;align-items:center!important;
+ /* Do not re-introduce a legacy fixed 31px height here. */
+ padding:0 7px 0 12px!important;
  box-sizing:border-box!important;gap:3px!important
 }
 .workspace-mode .pynix-project-header>span:first-child{
@@ -569,9 +570,9 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 
 /* The Explorer header and editor tab strip belong to the same 43px row.
-   Scrolling Project only moves entries; the toolbar stays above them.
-   No extra wrapper or separate scroller is needed. */
-.workspace-mode .tree .pynix-project-header{
+   Match the original .tree-title.pynix-project-header specificity: a weaker
+   selector with !important could not override its old 31px height. */
+.workspace-mode .tree .tree-title.pynix-project-header{
  box-sizing:border-box!important;position:sticky!important;top:0!important;
  z-index:35!important;height:43px!important;min-height:43px!important;
  max-height:43px!important;margin:0!important;
