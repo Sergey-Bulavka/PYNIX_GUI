@@ -6,7 +6,7 @@ Run: python -m examples.ide_shell_showcase
 """
 
 from pynix_gui import (
-    GUIRuntime, button, column, fill, max_size, min_size, padding,
+    GUIRuntime, GUIEvent, button, column, fill, max_size, min_size, padding,
     rich_editor, row, text, text_span, tree, tree_node, toolbar, status_bar,
     separator, menu, menu_bar, menu_item, search_field, tooltip, badge,
 )
@@ -298,6 +298,7 @@ def dispatch(state, event):
         elif target == "shell-settings-close":
             state["settings_open"] = False
         elif target.startswith("shell-settings-"):
+            state["settings_open"] = True
             page = target[len("shell-settings-"):].replace("-", " ").title()
             if page == "Check Updates":
                 state["message"] = "Update checking is not connected in the preview"
@@ -311,7 +312,7 @@ def dispatch(state, event):
                        search_everywhere_items(state["everywhere_query"])}
             if hit in allowed:
                 state["everywhere_open"] = False
-                dispatch(state, type("SearchAction", (), {"kind": "ACTIVATE", "target": hit})())
+                dispatch(state, GUIEvent("ACTIVATE", target=hit))
         elif target in ("shell-toggle-sidebar", "shell-activity-explorer"):
             state["sidebar"] = not state["sidebar"] if target == "shell-toggle-sidebar" else True
             state["activity"] = "Explorer"
