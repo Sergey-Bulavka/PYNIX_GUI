@@ -24,7 +24,8 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  image-rendering:auto!important;
 }
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool>svg,
-.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool>svg{
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool>svg,
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool>svg{
  width:20px!important;height:20px!important;
  max-width:20px!important;max-height:20px!important;
  transform:none!important;
@@ -43,7 +44,7 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
-/* Scope SVGs to the two screenshot-matched left tool-window groups.
+/* Scope SVGs to the two left and the top-right screenshot-matched tool groups.
    Other visual rails, tree badges and editor icons stay hidden. */
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
@@ -52,7 +53,9 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode.pynix-iconless
 .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item .pynix-menu-icon svg,
 .workspace-mode.pynix-iconless
-.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
+.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
+.workspace-mode.pynix-iconless
+.pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg{
  display:block!important;
 }
 /* The old shell also painted the PY badge, Run triangle and Debug bug
