@@ -4,7 +4,7 @@ from pathlib import Path
 from pynix_gui.ide_icon_parity import (
     BUNDLED_ICONS, ICON_BINDINGS, apply_new_ui_icons,
 )
-from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog, check_svg
+from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog, check_svg, OFFICIAL_UNHEADERED_ICONS
 
 
 def test_bundled_icons_are_original_licensed_vectors():
@@ -14,8 +14,17 @@ def test_bundled_icons_are_original_licensed_vectors():
     for icon in icons:
         ok, reason = check_svg(icon, relative_path=icon.relative_to(svg_root))
         assert ok, f"{icon}: {reason}"
-        assert "Copyright" in icon.read_text(encoding="utf-8")
-        assert "Apache 2.0 license" in icon.read_text(encoding="utf-8")
+        relative_name = icon.relative_to(svg_root).as_posix()
+        if relative_name in OFFICIAL_UNHEADERED_ICONS:
+            # Exact upstream vector bytes are licensed by the parent JetBrains
+            # Apache-2.0 repository and bound to this path + pinned SHA-256.
+            import hashlib
+            assert hashlib.sha256(
+                icon.read_bytes().replace(b"\r\n", b"\n")
+            ).hexdigest() == OFFICIAL_UNHEADERED_ICONS[relative_name]
+        else:
+            assert "Copyright" in icon.read_text(encoding="utf-8")
+            assert "Apache 2.0 license" in icon.read_text(encoding="utf-8")
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for name in ("toolwindows/project", "toolwindows/find", "toolwindows/vcs",
                  "toolwindows/run", "toolwindows/debug", "general/search",
