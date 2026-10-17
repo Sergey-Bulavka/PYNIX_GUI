@@ -117,6 +117,8 @@ def test_native_creates_file_and_directory_through_safe_workspace_api(tmp_path):
     assert "window.pynixProjectExpandSelected=(all=false)=>{" in js
     assert "window.pynixProjectCollapseAll=()=>{" in js
     assert "if(entry.folder&&selectedPath===entry.path)" in js
+    assert "const selected=selectedPath===null?(current||''):selectedPath;" in js
+    assert "const target=selectedPath===null?(current||''):selectedPath;" in js
 
 
 def test_tooltips_are_delegated_and_shortcuts_preserved():
