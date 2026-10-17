@@ -552,14 +552,38 @@ def main() -> None:
             response = {"ok": False}
             try:
                 request = dict(message.body())
+                from pynix_gui.ide_file_icons import (
+                    ICON_BY_EXTENSION, SPECIAL_NAMES, file_icon_type,
+                )
                 relative = request.get("source")
-                if not isinstance(relative, str) or not relative.endswith(".pnx"):
-                    raise WorkspaceError("Only PYNIX source creation is supported")
-                if len(available_sources) >= 5000:
-                    raise WorkspaceError("Project file index is full")
-                doc = session.create_file(relative)
-                available_sources.add(relative)
-                response = {"ok": True, "source": relative, "text": doc.text}
+                kind = request.get("kind", "file")
+                if kind not in ("file", "directory"):
+                    raise WorkspaceError("Unknown project resource type")
+                if not isinstance(relative, str) or len(relative) > 250:
+                    raise WorkspaceError("Expected a project-relative path")
+                if relative.startswith(".") or any(
+                    part.startswith(".") for part in relative.split("/")
+                    if part not in {".gitignore", ".gitattributes", ".editorconfig"}
+                ):
+                    raise WorkspaceError("Hidden project paths cannot be created here")
+                if kind == "directory":
+                    session.create_directory(relative)
+                    response = {"ok": True, "kind": "directory", "source": relative}
+                else:
+                    basename = relative.rsplit("/", 1)[-1].lower()
+                    suffix = Path(basename).suffix.lower()
+                    binary = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp",
+                              ".zip", ".jar", ".tar", ".gz", ".woff", ".woff2",
+                              ".ttf", ".otf"}
+                    if (suffix not in ICON_BY_EXTENSION and
+                            basename not in SPECIAL_NAMES) or suffix in binary:
+                        raise WorkspaceError("Choose a supported text-file extension")
+                    if len(available_sources) >= 5000:
+                        raise WorkspaceError("Project file index is full")
+                    doc = session.create_file(relative)
+                    available_sources.add(relative)
+                    response = {"ok": True, "kind": "file", "source": relative,
+                                "text": doc.text, "icon": file_icon_type(relative)}
             except (ValueError, TypeError, OSError, WorkspaceError) as exc:
                 response["error"] = str(exc)
             serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")

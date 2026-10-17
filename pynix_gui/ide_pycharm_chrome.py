@@ -373,6 +373,121 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
   padding:0 8px;font-size:11px
  }
 }
+
+/* Project V4: one quiet toolbar on hover anywhere within the tree, not only
+   within its 32px header. No action moves or changes the tree row geometry. */
+/* Standard Project width fits all six icon buttons and the view selector;
+   existing user-resized --explorer-width continues to win. */
+.workspace-mode .tree{
+ container-type:inline-size;width:var(--explorer-width,310px)!important;
+ max-width:calc(100vw - 450px)!important;
+}
+.workspace-mode .tree .pynix-project-header{
+ position:relative!important;isolation:isolate!important;overflow:visible!important;
+}
+.workspace-mode .tree .pynix-project-header-actions{
+ display:flex!important;align-items:center!important;justify-content:flex-end!important;
+ flex:0 0 auto!important;gap:1px!important;
+ opacity:0!important;pointer-events:none!important;
+}
+.workspace-mode .tree:hover .pynix-project-header-actions,
+.workspace-mode .tree:focus-within .pynix-project-header-actions,
+.workspace-mode .tree .pynix-project-header-actions:has(details[open]){
+ opacity:1!important;pointer-events:auto!important;
+}
+.workspace-mode .tree .pynix-project-view-switcher{flex:0 0 auto;min-width:0}
+.workspace-mode .tree .pynix-project-view-switcher>summary{
+ width:auto!important;min-width:68px!important;padding:0 4px!important;
+ display:inline-flex!important;align-items:center!important;gap:6px!important;
+ color:#d0d2d7!important;font-size:12px!important;font-weight:600!important
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary svg{
+ width:14px!important;height:14px!important;
+}
+.workspace-mode .tree .pynix-project-view-label{
+ display:inline-block;min-width:0;white-space:nowrap;
+}
+.workspace-mode .tree .pynix-project-quick-button,
+.workspace-mode .tree .pynix-project-header-button{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:22px!important;height:26px!important;min-width:22px!important;
+ flex:0 0 22px!important;padding:3px!important;
+ box-sizing:border-box!important;border:0!important;border-radius:6px!important;
+ background:transparent!important;color:#b5b7be!important;
+}
+.workspace-mode .tree .pynix-project-quick-button>svg,
+.workspace-mode .tree .pynix-project-header-button>svg{
+ display:block!important;width:18px!important;height:18px!important;
+ max-width:18px!important;max-height:18px!important;
+}
+.workspace-mode .tree .pynix-project-quick-button:hover,
+.workspace-mode .tree .pynix-project-header-button:hover,
+.workspace-mode .tree .pynix-project-quick-button:focus-visible,
+.workspace-mode .tree .pynix-project-header-button:focus-visible,
+.workspace-mode .tree details[open]>summary.pynix-project-quick-button{
+ background:#3a3d45!important;outline:none!important;color:#e1e3e8!important;
+}
+.workspace-mode .tree .pynix-project-header-separator{
+ display:block!important;align-self:center;flex:0 0 1px!important;
+ width:1px!important;height:21px!important;min-width:1px!important;
+ margin:0 3px!important;background:#505158!important
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary,
+.workspace-mode .tree .pynix-project-create-menu>summary,
+.workspace-mode .tree .pynix-project-more-menu>summary{
+ list-style:none!important;cursor:pointer!important;
+}
+.workspace-mode .tree .pynix-project-view-switcher>summary::-webkit-details-marker,
+.workspace-mode .tree .pynix-project-create-menu>summary::-webkit-details-marker,
+.workspace-mode .tree .pynix-project-more-menu>summary::-webkit-details-marker{
+ display:none!important;
+}
+.workspace-mode .tree .pynix-project-create-menu>summary:after{
+ content:"";position:absolute;bottom:3px;right:2px;width:5px;height:5px;
+ border-right:1px solid #aeb0b8;transform:rotate(45deg);
+}
+.workspace-mode .tree .pynix-project-create-menu,
+.workspace-mode .tree .pynix-project-more-menu,
+.workspace-mode .tree .pynix-project-view-switcher{position:relative!important}
+.workspace-mode .tree .pynix-project-popup{
+ position:absolute!important;top:30px!important;right:0!important;
+ z-index:400!important;min-width:158px!important;width:max-content!important;
+ max-width:min(265px,90vw)!important;background:#303137!important;
+ border:1px solid #53565f!important;border-radius:8px!important;padding:5px!important;
+ box-shadow:0 12px 28px #0008!important
+}
+.workspace-mode .tree .pynix-project-popup>button{
+ display:block!important;width:100%!important;min-height:28px!important;
+ border:0!important;border-radius:5px!important;padding:4px 9px!important;
+ text-align:left!important;color:#dadbe0!important;background:transparent!important;
+ white-space:nowrap!important;font:12px/1.4 -apple-system,system-ui,sans-serif!important
+}
+.workspace-mode .tree .pynix-project-popup>button:hover,
+.workspace-mode .tree .pynix-project-popup>button:focus-visible{
+ background:#3a4c69!important;color:#fff!important
+}
+.workspace-mode .tree .project-root .pynix-project-root-name{
+ flex:0 0 auto!important;font-weight:600!important;
+ color:#c7c9ce!important;overflow:visible!important;
+}
+.workspace-mode .tree .project-root .pynix-project-root-path{
+ flex:1 1 auto!important;min-width:0!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+ color:#767980!important;font-weight:400!important;font-size:12px!important;
+}
+.workspace-mode .tree .project-root{overflow:hidden!important}
+@container (max-width:250px){
+ .pynix-project-header-actions>.pynix-project-quick-button:nth-of-type(1),
+ .pynix-project-header-actions>.pynix-project-quick-button:nth-of-type(2),
+ .pynix-project-header-actions>.pynix-project-header-button{
+  display:none!important;
+ }
+ /* Narrow panes keep New, Options and Hide accessible; the three hidden
+    actions remain available in Options until the user widens the pane. */
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .tree .pynix-project-header-actions{transition:none!important}
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
@@ -653,68 +768,115 @@ CHROME_SCRIPT = r"""<script>
   const button=document.createElement('button');
   button.type='button';button.className='pynix-project-quick-button';
   button.title=label;button.setAttribute('aria-label',label);
-  const svg=iconless?null:makeIcon(icon);
-  if(svg)button.appendChild(svg);
-  else button.textContent=({'New PYNIX file':'New','Select opened file':'Find',
-   'Expand visible folders (up to 30)':'Expand',
-   'Hide Project tool window':'Hide'})[label]||label;
+  const svg=makeIcon(icon);
+  if(svg)button.appendChild(svg);else button.textContent=label;
   button.addEventListener('click',action);
   return button;
  };
+ const menu=(className,label,icon,items)=>{
+  const details=document.createElement('details');
+  details.className=className;
+  const summary=document.createElement('summary');
+  summary.className='pynix-project-quick-button';
+  summary.title=label;summary.setAttribute('aria-label',label);
+  summary.setAttribute('aria-haspopup','menu');
+  const glyph=makeIcon(icon);
+  if(glyph)summary.appendChild(glyph);else summary.textContent=label;
+  const popup=document.createElement('div');
+  popup.className='pynix-project-popup';popup.setAttribute('role','menu');
+  for(const [caption,handler] of items){
+   const button=document.createElement('button');
+   button.type='button';button.textContent=caption;button.setAttribute('role','menuitem');
+   button.addEventListener('click',()=>{details.open=false;handler();});
+   popup.appendChild(button);
+  }
+  details.append(summary,popup);
+  details.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&details.open){event.preventDefault();details.open=false;summary.focus();}
+  });
+  // Only the active menu is outside-click dismissible. Bind once globally
+  // to avoid retaining dead DOM on every renderTree() rebuild.
+  return details;
+ };
+ document.addEventListener('pointerdown',event=>{
+  document.querySelectorAll('.tree .pynix-project-header details[open]').forEach(details=>{
+   if(!details.contains(event.target))details.open=false;
+  });
+ });
  const initProjectHeader=()=>{
   const head=document.querySelector('.workspace-mode .tree .pynix-project-header');
   if(!head||head.dataset.pynixPyCharmHeader)return;
   head.dataset.pynixPyCharmHeader='1';
   const title=head.querySelector(':scope>span:first-child');
-  if(title){title.textContent='Project';title.title='Project';}
   const actions=head.querySelector('.pynix-project-header-actions');
   if(!actions)return;
   const collapse=actions.querySelector('.pynix-project-header-button');
-  const count=actions.querySelector(':scope>span:first-child');
-  if(count)head.title=count.textContent;
-  const create=quick('New PYNIX file','general/add',()=>{
-   document.querySelector('.pynix-new-source')?.click();
+  const view=menu('pynix-project-view-switcher','Project view','general/chevronDown',[
+   ['✓ Project',()=>{}]
+  ]);
+  const viewLabel=document.createElement('span');
+  viewLabel.className='pynix-project-view-label';viewLabel.textContent='Project';
+  view.querySelector('summary').prepend(viewLabel);
+  if(title)title.replaceWith(view);
+  const create=menu('pynix-project-create-menu','New File or Directory…','general/add',[
+   ['New File…',()=>window.pynixCreateProjectEntry?.('file')],
+   ['New Directory…',()=>window.pynixCreateProjectEntry?.('directory')],
+  ]);
+  const divider=document.createElement('span');
+  divider.className='pynix-project-header-separator';
+  divider.setAttribute('role','separator');divider.setAttribute('aria-orientation','vertical');
+  const locate=quick('Select Opened File','general/locate',()=>{
+   window.pynixProjectSelectOpenedFile?.();
   });
-  const locate=quick('Select opened file','general/locate',()=>{
-   document.querySelector('.workspace-mode .project-entry.workspace-selected')
-    ?.scrollIntoView({block:'nearest'});
+  locate.dataset.pynixShortcut='⌥F1, 1';
+  const expand=quick('Expand Selected','general/expandAll',()=>{
+   window.pynixProjectExpandSelected?.();
   });
-  const expand=quick('Expand visible folders (up to 30)','general/expandAll',()=>{
-   // Tree rows are rebuilt on every expansion. Re-query between clicks and
-   // cap the work so a large project remains responsive.
-   for(let i=0;i<30;i++){
-    const row=document.querySelector(
-     '.workspace-mode .tree .project-entry:has(.project-chevron.collapsed)');
-    if(!row)break;
-    row.click();
-   }
+  expand.dataset.pynixTooltip='Expand Selected\nPress ⇧⌘+ to expand all nodes';
+  const collapseAction=collapse||quick('Collapse All','general/collapseAll',()=>{
+   window.pynixProjectCollapseAll?.();
   });
-  const more=document.createElement('details');
-  more.className='pynix-project-more-menu';
-  const summary=document.createElement('summary');
-  summary.className='pynix-project-quick-button';
-  summary.replaceChildren(iconless?document.createTextNode('More'):
-   (makeIcon('general/moreVertical')||document.createTextNode('⋮')));
-  summary.title='Project view options';
-  summary.setAttribute('aria-label','Project view options');
-  const menu=document.createElement('div');
-  const collapseItem=document.createElement('button');
-  collapseItem.type='button';collapseItem.textContent='Collapse all folders';
-  collapseItem.addEventListener('click',()=>{collapse?.click();more.open=false;});
-  menu.appendChild(collapseItem);
-  more.append(summary,menu);
-  const minimize=quick('Hide Project tool window','general/hide',()=>{
+  collapseAction.replaceChildren(makeIcon('general/collapseAll')||
+   document.createTextNode('Collapse'));
+  collapseAction.title='Collapse All';
+  collapseAction.setAttribute('aria-label','Collapse All');
+  const more=menu('pynix-project-more-menu','Options','general/moreVertical',[
+   ['Select Opened File',()=>window.pynixProjectSelectOpenedFile?.()],
+   ['Expand All',()=>window.pynixProjectExpandSelected?.(true)],
+   ['Collapse All',()=>window.pynixProjectCollapseAll?.()],
+  ]);
+  const hide=quick('Hide','general/hide',()=>{
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
   });
-  if(collapse){
-   collapse.replaceChildren(iconless?document.createTextNode('Fold'):
-    (makeIcon('general/collapseAll')||document.createTextNode('⌃')));
-   collapse.title='Collapse project folders';
-  }
-  actions.replaceChildren(create,locate,expand);
-  if(collapse)actions.appendChild(collapse);
-  actions.append(more,minimize);
+  hide.dataset.pynixShortcut='⇧⎋';
+  actions.replaceChildren(create,divider,locate,expand,collapseAction,more,hide);
  };
+ let selectFileChordUntil=0;
+ document.addEventListener('keydown',event=>{
+  if(event.altKey&&!event.metaKey&&!event.ctrlKey&&event.key==='F1'){
+   selectFileChordUntil=performance.now()+1300;event.preventDefault();return;
+  }
+  if(event.key==='1'&&!event.metaKey&&!event.altKey&&!event.ctrlKey&&
+     performance.now()<selectFileChordUntil){
+   selectFileChordUntil=0;event.preventDefault();
+   window.pynixProjectSelectOpenedFile?.();return;
+  }
+  if(event.metaKey&&!event.altKey&&!event.ctrlKey){
+   if(event.shiftKey&&(event.key==='+'||event.key==='=')){
+    event.preventDefault();window.pynixProjectExpandSelected?.(true);return;
+   }
+   if(!event.shiftKey&&event.key==='-'){
+    event.preventDefault();window.pynixProjectCollapseAll?.();return;
+   }
+  }
+  if(event.shiftKey&&event.key==='Escape'){
+   const pane=document.querySelector('.workspace-mode .tree');
+   if(pane&&!pane.hidden&&pane.contains(document.activeElement)){
+    event.preventDefault();
+    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
+   }
+  }
+ });
  const updateBreadcrumb=()=>{
   const host=document.querySelector('.workspace-mode .bottom>span:nth-of-type(1)');
   if(!host)return;
@@ -760,14 +922,13 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
             catalog = JetBrainsIconCatalog(directory)
             # The project/branch controls are the two explicitly restored
             # original JetBrains SVGs in an otherwise iconless native chrome.
-            identity_keys = ("general/chevronDown", "toolwindows/vcs",
-                             "general/moreVertical", "general/edit",
-                             "run/run", "run/debug", "general/search", "general/settings")
-            keys = identity_keys if iconless else identity_keys + (
-                "general/search","general/settings","general/add",
-                "general/locate","general/expandAll","general/collapseAll",
-                "general/moreVertical","general/hide"
-            )
+            # Project toolbar glyphs are visible in both default and opt-in
+            # icon modes, alongside the existing Run/Debug/search controls.
+            keys = ("general/chevronDown", "toolwindows/vcs",
+                    "general/moreVertical", "general/edit", "run/run",
+                    "run/debug", "general/search", "general/settings",
+                    "general/add", "general/locate", "general/expandAll",
+                    "general/collapseAll", "general/hide")
             data = {key: catalog.svg(key,dark=dark,
                                      tool_window=key=="toolwindows/vcs")
                     for key in keys}

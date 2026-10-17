@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import html
 import json
+from pathlib import Path
 
 from .ide_workspace_session import WorkspaceSession
 from .ide_syntax_highlight import highlight_document
@@ -62,6 +63,7 @@ __PYNIX_DISPLAY_LEXER__
 (() => {
  const files = PAYLOAD;
  const PROJECT_NAME = PROJECT_NAME_PAYLOAD;
+ const PROJECT_PATH = PROJECT_PATH_PAYLOAD;
  const folders = FOLDER_PAYLOAD;
  const workspace = document.body.classList.contains('workspace-mode');
  if (!workspace || !files.length) return;
@@ -2003,7 +2005,7 @@ editorInput.addEventListener('keydown',event=>{
    }
    return root;
  }
- const root=buildTree();
+ let root=buildTree();
  function renderTree() {
    // Preserve the source-control panel while it is selected.
    const rails=[...document.querySelectorAll('.rail-item')];
@@ -2039,6 +2041,7 @@ editorInput.addEventListener('keydown',event=>{
      line.style.paddingLeft=(7+Math.min(depth,12)*13)+'px';
      // Explorer has one highlighted row: explicit selection wins over active tab.
      if(!entry.folder&&entry.path===(selectedPath??current))line.classList.add('workspace-selected');
+     if(entry.folder&&selectedPath===entry.path)line.classList.add('workspace-selected');
      line.setAttribute('role','button');
      line.tabIndex=0;
      line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
@@ -2068,9 +2071,18 @@ editorInput.addEventListener('keydown',event=>{
      const label=document.createElement('span');
      label.className='project-label';
      label.textContent=entry.name;
-     line.appendChild(label);
+     if(isRoot){
+       label.classList.add('pynix-project-root-name');
+       const path=document.createElement('span');
+       path.className='pynix-project-root-path';
+       path.textContent=PROJECT_PATH;
+       path.title=PROJECT_PATH;
+       line.title=PROJECT_PATH;
+       line.append(label,path);
+     }else line.appendChild(label);
      const activate=()=>{
        if(entry.folder){
+         selectedPath=entry.path;
          if(expanded.has(entry.path))expanded.delete(entry.path);
          else expanded.add(entry.path);
          renderTree();
@@ -2490,8 +2502,18 @@ editorInput.addEventListener('keydown',event=>{
  window.pynixProjectCreateResult=result=>{
    if(!result?.ok){window.alert('Create file failed: '+String(result?.error||'unknown error'));return;}
    const name=result.source;
+   if(result.kind==='directory'){
+     if(!folders.includes(name))folders.push(name);
+     const parts=name.split('/');
+     for(let i=1;i<parts.length;i++)expanded.add(parts.slice(0,i).join('/'));
+     expanded.add('');
+     root=buildTree();
+     renderTree();
+     return;
+   }
    if(byName.has(name))return;
-   const file={name,text:result.text||'',savedText:result.text||'',tokens:null,icon:'pnx',dirty:false};
+   const file={name,text:result.text||'',savedText:result.text||'',tokens:null,
+     icon:result.icon||'file',dirty:false};
    files.push(file);
    files.sort((a,b)=>a.name.localeCompare(b.name));
    byName.set(name,file);
@@ -2502,8 +2524,56 @@ editorInput.addEventListener('keydown',event=>{
      if(!folders.includes(folder))folders.push(folder);
      expanded.add(folder);
    }
+   root=buildTree();
    show(name);
  };
+ // Project toolbar sends validated requests to the existing native creation bridge.
+ window.pynixCreateProjectEntry=kind=>{
+   if(kind!=='file'&&kind!=='directory')return;
+   const selected=selectedPath===null?(current||''):selectedPath;
+   const base=selected&&folders.includes(selected)?selected+'/':
+     selected.includes('/')?selected.slice(0,selected.lastIndexOf('/')+1):'';
+   const proposed=window.prompt(
+     kind==='directory'?'New directory (project-relative):':'New file (project-relative):',
+     base+(kind==='directory'?'new_directory':'new_file.pnx'));
+   if(proposed===null)return;
+   if(!proposed||proposed.startsWith('/')||proposed.split('/').some(
+     part=>!part||part==='.'||part==='..')){
+     window.alert('Use a safe project-relative path');return;
+   }
+   const bridge=window.webkit?.messageHandlers?.pynixProjectCreate;
+   if(!bridge){window.alert('Creation requires the native macOS workspace');return;}
+   bridge.postMessage({kind,source:proposed});
+ };
+ window.pynixProjectSelectOpenedFile=()=>{
+   if(!current)return;
+   selectedPath=current;
+   const parts=current.split('/');
+   expanded.add('');
+   for(let i=1;i<parts.length;i++)expanded.add(parts.slice(0,i).join('/'));
+   renderTree();
+   requestAnimationFrame(()=>{
+     const row=[...tree.querySelectorAll('.project-entry')].find(
+       item=>item.getAttribute('aria-label')==='Open '+current);
+     row?.scrollIntoView({block:'nearest'});
+   });
+ };
+ window.pynixProjectExpandSelected=(all=false)=>{
+   const target=selectedPath===null?(current||''):selectedPath;
+   const folder=folders.includes(target)?target:
+     (target.includes('/')?target.slice(0,target.lastIndexOf('/')):'');
+   expanded.add('');
+   if(all){
+     for(const path of folders)expanded.add(path);
+   }else{
+     let path='';
+     for(const part of folder.split('/').filter(Boolean)){
+       path=path?path+'/'+part:part;expanded.add(path);
+     }
+   }
+   renderTree();
+ };
+ window.pynixProjectCollapseAll=()=>{expanded.clear();expanded.add('');renderTree();};
  const renameFileButton=document.createElement('button');
  renameFileButton.type='button';renameFileButton.className='nav-action';
  renameFileButton.textContent='Rename File';
@@ -2644,7 +2714,7 @@ editorInput.addEventListener('keydown',event=>{
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
-</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
+</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PROJECT_PATH_PAYLOAD", json.dumps("~/" + session.root.relative_to(Path.home()).as_posix() if session.root.is_relative_to(Path.home()) else str(session.root), ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
