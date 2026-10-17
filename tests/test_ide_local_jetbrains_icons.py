@@ -59,3 +59,13 @@ def test_explicit_user_supplied_jar_uses_original_resource_bytes(tmp_path):
     app, light, dark = _bundle(tmp_path)
     jar = next((app / "Contents/plugins").rglob("*.jar"))
     assert original_endpoints_svg(roots=[jar], dark=True) == dark
+
+
+def test_original_twenty_pixel_toolwindow_vector_is_supported(tmp_path):
+    app = tmp_path / "PyCharm.app"
+    jar = app / "Contents/plugins/endpoint/lib/endpoint.jar"
+    jar.parent.mkdir(parents=True)
+    svg = (BUNDLED_ICONS / "svg/toolwindows/project@20x20_dark.svg").read_text("utf-8")
+    with ZipFile(jar, "w") as archive:
+        archive.writestr("icons/expui/toolwindows/endpoints@20x20_dark.svg", svg)
+    assert original_endpoints_svg(roots=[app], dark=True) == svg
