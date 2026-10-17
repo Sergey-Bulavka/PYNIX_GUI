@@ -21,6 +21,86 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  display:none!important
 }
 .workspace-mode .workspace-toolbar>button[title="Visual preview"]{display:none!important}
+/* A single compact PyCharm project switcher, followed by a separate
+   real Git-branch button. Their vector chevrons belong INSIDE each hit target. */
+.workspace-mode .workspace-toolbar .pynix-toolbar-identity{
+ display:flex!important;align-items:center!important;gap:12px!important;
+ flex:0 0 auto!important;min-width:0!important;
+ height:40px!important;white-space:nowrap!important;
+ position:relative!important;z-index:6!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch{
+ box-sizing:border-box!important;display:inline-flex!important;
+ align-items:center!important;justify-content:flex-start!important;
+ flex:0 1 auto!important;min-width:0!important;
+ height:33px!important;border:1px solid transparent!important;
+ background:transparent!important;border-radius:9px!important;
+ color:#c6c7cf!important;padding:3px 7px!important;
+ white-space:nowrap!important;cursor:pointer!important;
+ font:500 13px/1.1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ transition:background-color 110ms ease!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project{
+ gap:7px!important;padding-left:5px!important;padding-right:8px!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch{
+ gap:7px!important;padding-left:7px!important;padding-right:8px!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project:hover,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch:hover{
+ background:#3b3945!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project:focus-visible,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch:focus-visible{
+ outline:2px solid #80b8f4!important;outline-offset:-2px!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project-badge{
+ flex:0 0 23px!important;display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;width:23px!important;height:23px!important;
+ background:#9657c9!important;border-radius:5px!important;
+ color:#f8f4fc!important;font:600 12px/1 system-ui,sans-serif!important;
+ letter-spacing:-.6px!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project-name,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-name{
+ display:block!important;max-width:160px!important;
+ min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;
+ white-space:nowrap!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project-chevron,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-chevron{
+ flex:0 0 16px!important;width:16px!important;height:16px!important;
+ display:block!important;color:#b8b8c3!important;
+ margin-left:0!important;margin-right:0!important;transform:none!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-icon{
+ display:block!important;flex:0 0 20px!important;
+ width:20px!important;height:20px!important;transform:none!important
+}
+.workspace-mode .workspace-toolbar .pynix-toolbar-project-chevron *,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-chevron *,
+.workspace-mode .workspace-toolbar .pynix-toolbar-branch-icon *{
+ shape-rendering:geometricPrecision!important
+}
+.workspace-mode.pynix-window-inactive .workspace-toolbar .pynix-toolbar-identity{
+ opacity:.55!important
+}
+@media(max-width:1060px){
+ .workspace-mode .workspace-toolbar .pynix-toolbar-identity{
+  gap:4px!important
+ }
+ .workspace-mode .workspace-toolbar .pynix-toolbar-project-name,
+ .workspace-mode .workspace-toolbar .pynix-toolbar-branch-name{
+  max-width:85px!important
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .workspace-toolbar .pynix-toolbar-project,
+ .workspace-mode .workspace-toolbar .pynix-toolbar-branch{
+  transition:none!important
+ }
+}
 .workspace-mode .workspace-toolbar .pynix-pycharm-center{
  position:absolute;left:70%;top:3px;transform:translateX(-50%);
  height:37px;display:flex;align-items:center;gap:8px;
@@ -161,6 +241,76 @@ CHROME_SCRIPT = r"""<script>
   button.addEventListener('click',action);
   return button;
  };
+ const initIdentity=()=>{
+  const toolbar=document.querySelector('.workspace-mode .workspace-toolbar');
+  if(!toolbar||toolbar.querySelector('.pynix-toolbar-identity'))return;
+  const title=toolbar.querySelector(':scope>strong');
+  const legacyProject=toolbar.querySelector(':scope>.current-branch');
+  // attach_workspace provides the real project directory name. The arrow
+  // was previously a separate DOM child inside .current-branch.
+  const projectName=(legacyProject?.textContent||'').trim()||
+                    (title?.textContent||'PYNIX').trim();
+  const projectLabel=projectName.startsWith('⑂')?
+                     (title?.textContent||'PYNIX').trim():projectName;
+  const left=document.createElement('div');
+  left.className='pynix-toolbar-identity';
+  const build=(className,label,aria,action)=>{
+   const button=document.createElement('button');
+   button.type='button';button.className=className;
+   button.title=label;button.setAttribute('aria-label',aria);
+   button.dataset.pynixTooltip=label;
+   button.addEventListener('click',action);
+   return button;
+  };
+  const project=build('pynix-toolbar-project',projectLabel,
+   'Project: '+projectLabel+' — Show Project tool window',()=>{
+    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
+   });
+  const brand=document.createElement('span');
+  brand.className='pynix-toolbar-project-badge';
+  brand.textContent='PY';
+  brand.setAttribute('aria-hidden','true');
+  const projectText=document.createElement('span');
+  projectText.className='pynix-toolbar-project-name';
+  projectText.textContent=projectLabel;
+  project.append(brand,projectText);
+  const projectArrow=makeIcon('general/chevronDown');
+  if(projectArrow){
+   projectArrow.classList.add('pynix-toolbar-project-chevron');
+   project.appendChild(projectArrow);
+  }
+  // Actual branch name is read from the existing read-only Git snapshot.
+  const snapshot=window.pynixGitSnapshot;
+  const branchName=snapshot?.available&&snapshot.branch?
+                   snapshot.branch:'';
+  const branchLabel=branchName||'Git';
+  const branchTitle=branchName?'Git Branch: '+branchName:
+                    'Git: No current branch';
+  const branch=build('pynix-toolbar-branch',branchTitle,
+   branchTitle+' — Show Git tool window',()=>{
+    document.querySelectorAll('.workspace-mode .rail>.rail-item')[2]?.click();
+   });
+  const branchIcon=makeIcon('toolwindows/vcs');
+  if(branchIcon){
+   branchIcon.classList.add('pynix-toolbar-branch-icon');
+   branch.appendChild(branchIcon);
+  }
+  const branchText=document.createElement('span');
+  branchText.className='pynix-toolbar-branch-name';
+  branchText.textContent=branchLabel;
+  branch.appendChild(branchText);
+  const branchArrow=makeIcon('general/chevronDown');
+  if(branchArrow){
+   branchArrow.classList.add('pynix-toolbar-branch-chevron');
+   branch.appendChild(branchArrow);
+  }
+  left.append(project,branch);
+  toolbar.insertBefore(left,title||legacyProject||toolbar.firstChild);
+  // Delete the obsolete disconnected text and arrow: one button replaces
+  // the old PYNIX label, and a different button represents the Git branch.
+  title?.remove();
+  legacyProject?.remove();
+ };
  const initToolbar=()=>{
   const toolbar=document.querySelector('.workspace-mode .workspace-toolbar');
   if(!toolbar||toolbar.querySelector('.pynix-pycharm-center'))return;
@@ -278,7 +428,7 @@ CHROME_SCRIPT = r"""<script>
   if(name)label.textContent=name;
  };
  const startup=()=>{
-  initToolbar();initProjectHeader();updateBreadcrumb();
+  initToolbar();initIdentity();initProjectHeader();updateBreadcrumb();
   const tree=document.querySelector('.workspace-mode .tree');
   if(tree)new MutationObserver(initProjectHeader).observe(tree,{childList:true});
   const tabs=document.querySelector('.workspace-mode .editor-tabs');
@@ -298,14 +448,17 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
     if "</body>" not in document or 'id="pynix-pycharm-chrome"' in document:
         return document
     try:
-        if iconless:
-            data = {}
-        else:
-            catalog = JetBrainsIconCatalog(directory)
-            keys = ("general/search","general/settings","general/add",
-                    "general/locate","general/expandAll","general/collapseAll",
-                    "general/moreVertical","general/hide")
-            data = {key: catalog.svg(key,dark=dark) for key in keys}
+        catalog = JetBrainsIconCatalog(directory)
+        # Native title/branch controls still use the *real* JetBrains SVGs,
+        # even while the main IDE is intentionally iconless.
+        identity_keys = ("general/chevronDown", "toolwindows/vcs")
+        keys = identity_keys if iconless else identity_keys + (
+            "general/search","general/settings","general/add",
+            "general/locate","general/expandAll","general/collapseAll",
+            "general/moreVertical","general/hide"
+        )
+        data = {key: catalog.svg(key,dark=dark,tool_window=key=="toolwindows/vcs")
+                for key in keys}
     except (OSError,ValueError,KeyError,json.JSONDecodeError):
         return document
     payload = json.dumps(data,ensure_ascii=True).replace("<","\\u003c")
