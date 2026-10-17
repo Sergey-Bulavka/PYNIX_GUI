@@ -74,6 +74,8 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
   '.pynix-pycharm-center>.pynix-debug-primary',
   '.pynix-pycharm-center>.pynix-stop-action',
   '.pynix-pycharm-center>.pynix-run-mode',
+  '.pynix-current-config',
+  '.pynix-config-options button',
   '.pynix-pycharm-center>.pynix-tools-menu>summary',
   '.workspace-toolbar button[title]',
   '.pynix-tool-window-toggle',
@@ -112,7 +114,7 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
  };
  const getLabel=button=>{
   if(!button)return '';
-  let text=button.dataset.toolWindow||button.dataset.pynixTooltip||
+  let text=button.dataset.pynixTooltip||button.dataset.toolWindow||
    button.getAttribute('title')||button.getAttribute('aria-label')||'';
   text=text.replace(/\s*— not implemented in PYNIX IDE\s*$/,'').trim();
   if(!text)text=(button.textContent||'').trim();
@@ -154,7 +156,7 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
   const label=getLabel(button);
   if(!label)return;
   nameNode.textContent=label;
-  const shortcut=shortcuts[label]||'';
+  const shortcut=button.dataset.pynixShortcut||shortcuts[label]||'';
   shortcutNode.textContent=shortcut;
   shortcutNode.hidden=!shortcut;
   tip.style.visibility='hidden';
