@@ -128,3 +128,99 @@ def test_iconless_native_identity_keeps_only_real_git_and_chevron_icons():
     assert 'const iconless=true;' in rendered
     assert 'classList.add(\'pynix-toolbar-branch-chevron\');' in rendered
     assert 'classList.add(\'pynix-toolbar-branch-icon\');' in rendered
+
+
+def test_current_file_selector_is_one_button_with_real_mode_options():
+    # The original select still drives PYNIX project's runner, while its
+    # compact presentation is one accessible PyCharm-style button.
+    for value in (
+        "const createRunConfig=(center,select)=>{",
+        "button.className='pynix-current-config';",
+        "name.className='pynix-current-config-label';",
+        "const arrow=makeIcon('general/chevronDown');",
+        "popup.className='pynix-config-options';popup.hidden=true;",
+        "['run','Current File']",
+        "['check','Check Project']",
+        "select.value=value;",
+        "select.dispatchEvent(new Event('change',{bubbles:true}));",
+        "button.setAttribute('aria-expanded',String(!popup.hidden));",
+        "button.setAttribute('aria-haspopup','menu');",
+        "const options=[...popup.querySelectorAll('button')];",
+        "if(event.key==='Escape'&&!popup.hidden){close();button.focus();}",
+        "center.insertBefore(button,select);",
+        "createRunConfig(center,select);",
+    ):
+        assert value in CHROME_SCRIPT, value
+    for rule in (
+        ".pynix-pycharm-center>.pynix-run-mode{",
+        "display:none!important",
+        ".pynix-current-config:hover",
+        ".pynix-current-config[aria-expanded=\"true\"]",
+        ".pynix-config-options[hidden]{display:none!important}",
+        "text-overflow:ellipsis!important",
+    ):
+        assert rule in CHROME_STYLE, rule
+
+
+def test_run_and_debug_keep_original_clicks_and_follow_active_tab_tooltips():
+    for value in (
+        "for(const el of [select,run,debug,stop,tools])if(el)center.appendChild(el);",
+        "for(const [button,key] of [[run,'run/run'],[debug,'run/debug']]){",
+        "button.replaceChildren(icon);",
+        "const updateRunActionTooltips=()=>{",
+        ".editor-tabs .pynix-editor-tab.active",
+        "querySelector('.pynix-editor-tab-label')",
+        "const text=name?verb+\" '\"+name+\"'\"",
+        "const actions=[[run,'Run','⌃R'],[debug,'Debug','⌃D']];",
+        "control.dataset.pynixTooltip=text;",
+        "control.dataset.pynixShortcut=shortcut;",
+        "updateRunActionTooltips();",
+        "new MutationObserver(()=>{",
+        "updateBreadcrumb();",
+    ):
+        assert value in CHROME_SCRIPT, value
+    catalog=JetBrainsIconCatalog(BUNDLED_ICONS)
+    for key in ("run/run","run/debug"):
+        assert catalog.svg(key,dark=True,tool_window=False) is not None
+    for rule in (
+        ".pynix-pycharm-center>.pynix-run-action svg",
+        ".pynix-pycharm-center>.pynix-debug-primary svg",
+    ):
+        assert rule in CHROME_STYLE
+
+
+def test_more_actions_is_native_icon_menu_and_preserves_existing_buttons():
+    for value in (
+        "const tools=toolbar.querySelector('.pynix-tools-menu');",
+        "summary.replaceChildren(makeIcon('general/moreVertical')",
+        "summary.title='More Actions';",
+        "summary.dataset.pynixTooltip='More Actions';",
+        "summary.setAttribute('aria-label','More Actions');",
+        "const items=tools.querySelector('.pynix-tools-menu-items');",
+        "if(items&&save)items.prepend(save);",
+        "params.className='pynix-run-with-params';",
+        "params.textContent='Run with Parameters...';",
+        "const edit=makeIcon('general/edit');",
+        "params.setAttribute('aria-disabled','true');",
+        "params.dataset.pynixTooltip='Run with Parameters (not yet supported by PYNIX)';",
+        "items.prepend(params);",
+        "if(items&&debugStatus)items.appendChild(debugStatus);",
+    ):
+        assert value in CHROME_SCRIPT, value
+    # Backend cannot currently pass arbitrary command-line arguments.
+    assert "params.addEventListener('click'" not in CHROME_SCRIPT
+    assert "params.disabled=true" not in CHROME_SCRIPT
+    assert "Run with Parameters..." in CHROME_SCRIPT
+    assert ".pynix-run-with-params:hover" in CHROME_STYLE
+    assert ".pynix-tools-menu[open]>summary" in CHROME_STYLE
+
+
+def test_iconless_chrome_still_loads_original_toolbar_icon_assets():
+    document=apply_pycharm_chrome(
+        '<html><body class="workspace-mode"></body></html>',iconless=True
+    )
+    for key in ("general/chevronDown","toolwindows/vcs",
+                "general/moreVertical","general/edit","run/run","run/debug"):
+        assert '"'+key+'"' in document
+    assert "<svg" not in document
+    assert "__CHROME_ICONS__" not in document
