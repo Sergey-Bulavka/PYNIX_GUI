@@ -496,7 +496,7 @@ def test_v522_no_fixed_drag_handle_can_intercept_project_controls():
     assert "title_drag_area = ToolbarDragView.alloc()" not in source
     assert 'drag_geometry = {"areas": []}' in source
     assert "for _ in range(20):" in source
-    assert 'drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []' in source
+    assert 'drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)' in source
 
 def test_v522_native_resize_delegate_repositions_dynamic_drag_strips():
     source=Path(app.__file__).read_text(encoding="utf-8")
@@ -510,7 +510,7 @@ def test_v522_native_resize_delegate_repositions_dynamic_drag_strips():
     assert "content_view.addSubview_(drag_view)" in source
     assert 'areas = drag_geometry["areas"]' in source
     assert "toolbar_drag_frame(bounds.width, bounds.height, area)" in source
-    assert 'drag_geometry["areas"] = payload[:20] if isinstance(payload, list) else []' in source
+    assert 'drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)' in source
     assert "window.setMovableByWindowBackground_(False)" in source
     assert "self.window().performWindowDragWithEvent_(event)" in source
     assert "AppKit.NSWindowStyleMaskResizable" in source
