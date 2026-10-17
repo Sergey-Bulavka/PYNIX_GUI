@@ -201,8 +201,8 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item{
  display:flex!important;align-items:center!important;gap:10px!important;
  box-sizing:border-box!important;
- min-height:36px!important;width:100%!important;
- padding:4px 10px!important;border:0!important;border-radius:8px!important;
+ min-height:24px!important;height:24px!important;width:100%!important;
+ padding:2px 10px!important;border:0!important;border-radius:7px!important;
  font:13px/1.25 system-ui,-apple-system,sans-serif!important;
  white-space:nowrap!important;color:#d2d3d7!important;
  opacity:1!important;
@@ -416,7 +416,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     const bounds=more.getBoundingClientRect();
     const width=edge==='left-top'?296:220;
     const height=Math.min(window.innerHeight*.55,
-      popover.childElementCount*(edge==='left-top'?36:30)+18);
+      popover.childElementCount*(edge==='left-top'?24:30)+18);
     const left=edge.startsWith('left')?bounds.right+7:bounds.left-width-7;
     popover.style.left=Math.max(4,Math.min(window.innerWidth-width-4,left))+'px';
     popover.style.top=Math.max(4,Math.min(window.innerHeight-height-4,bounds.top))+'px';
