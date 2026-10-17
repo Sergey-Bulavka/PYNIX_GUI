@@ -242,4 +242,4 @@ def test_more_menu_resolves_original_endpoints_from_local_pycharm(monkeypatch):
     )
     assert calls == [True]
     assert '"name": "localJetBrains/endpoints"' in html
-    assert official_vector[:10].replace("<", r"\\u003c") in html
+    assert official_vector[:10].replace("<", r"\u003c") in html
