@@ -33,7 +33,7 @@ def test_one_tooltip_overlay_is_injected_with_no_original_workspace_changes():
     assert final.count('id="pynix-native-tooltips-style"') == 1
     assert final.count('id="pynix-native-tooltips-script"') == 1
     assert 'const shortcuts={"Project":' in final
-    assert "⌘1" in final and "⌥F12" in final
+    assert r"\u23181" in final and r"\u2325F12" in final
     assert "<button>Run</button>" in final
     assert apply_native_tooltips(final) == final
     assert apply_native_tooltips("not an HTML document") == "not an HTML document"
