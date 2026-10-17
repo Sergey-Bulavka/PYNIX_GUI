@@ -30,9 +30,10 @@ def test_toolbar_uses_one_continuous_flex_layout_at_all_window_widths():
         "position:relative!important;flex:0 1 auto!important;min-width:0!important;",
     ):
         assert declaration in layout
-    assert layout.index("position:relative!important;left:auto!") > css[:begin].find(
-        "position:absolute;left:70%"
-    ) - begin
+    assert css.index("position:absolute;left:70%") < css.rindex(
+        "position:relative!important;left:auto!important;top:auto!important;"
+    )
+    assert "toolbar.append(center,trailingSpacer,right);" in CHROME_SCRIPT
     # Only label lengths and gaps vary at CSS breakpoints; never positioning.
     for breakpoint in (1060,930):
         assert f"@media(max-width:{breakpoint}px)" in layout
@@ -55,7 +56,9 @@ def test_group_shrink_does_not_destroy_button_hitboxes_or_beta_information():
     assert "beta.dataset.compact='β · __IDE_VERSION__';" in CHROME_SCRIPT
     assert "beta.textContent='Beta Version · __IDE_VERSION__';" in CHROME_SCRIPT
     assert "right.append(search,settings,beta);" in CHROME_SCRIPT
-    assert "toolbar.append(center,right);" in CHROME_SCRIPT
+    assert "trailingSpacer.className='toolbar-spacer pynix-pycharm-trailing-spacer';" in CHROME_SCRIPT
+    assert "toolbar.append(center,trailingSpacer,right);" in CHROME_SCRIPT
+    assert "trailingSpacer.setAttribute('aria-hidden','true');" in CHROME_SCRIPT
     assert "const left=document.createElement('div');" in CHROME_SCRIPT
     assert "left.append(project,branch);" in CHROME_SCRIPT
 
