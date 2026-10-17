@@ -44,7 +44,7 @@ def test_native_v4_installs_editor_palette_after_existing_styles():
     )
     bootstrap=(Path(__file__).resolve().parents[1] /
                "pynix_gui/ide_workspace_preview.py").read_text("utf-8")
-    assert "return EDITOR_LEXER_JS + \"\"\"<script>" in bootstrap
+    assert '"__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS' in bootstrap
     assert "window.pynixHighlightTokens(value,current||'')" in bootstrap
     assert "const previewTokens=file.tokens?[]:window.pynixHighlightTokens(file.text,file.name);" in bootstrap
     assert "decorateSegment(value.slice(part.start,part.end),part.start)" in bootstrap
@@ -53,7 +53,7 @@ def test_native_v4_installs_editor_palette_after_existing_styles():
 def _node_tokens(source, filename):
     if shutil.which("node") is None:
         pytest.skip("Node.js is required for the JavaScript lexer smoke test")
-    js=EDITOR_LEXER_JS.split(">",1)[1].rsplit("</script>",1)[0]
+    js=EDITOR_LEXER_JS
     execution=(
         "global.window=global;\n"+js+
         "\nconst text="+json.dumps(source)+
