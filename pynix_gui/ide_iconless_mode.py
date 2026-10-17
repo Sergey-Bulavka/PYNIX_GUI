@@ -9,6 +9,26 @@ preserved but is not activated in icon-free native sessions.
 from __future__ import annotations
 
 ICONLESS_STYLE = """<style id="pynix-iconless-style">
+/* SVG rendering-quality contract for the entire native IDE.
+   Keep vectors at their authored CSS sizes on the WKWebView backing surface;
+   request antialiased curves/diagonals, not the aliased 'crispEdges' mode.
+   Never rasterize SVGs into an upscaled PNG or enlarge the 20px tool glyph. */
+.workspace-mode svg,
+.workspace-mode svg path,
+.workspace-mode svg circle,
+.workspace-mode svg rect,
+.workspace-mode svg line,
+.workspace-mode svg polyline,
+.workspace-mode svg polygon {
+ shape-rendering:geometricPrecision!important;
+ image-rendering:auto!important;
+}
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool>svg,
+.workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool>svg{
+ width:20px!important;height:20px!important;
+ max-width:20px!important;max-height:20px!important;
+ transform:none!important;
+}
 /* Hide legacy pictograms; restore only user-selected top/bottom left rails. */
 .workspace-mode svg,
 .workspace-mode img,
