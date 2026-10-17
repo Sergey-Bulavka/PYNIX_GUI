@@ -236,7 +236,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool[data-preview-badge="true"]::after{
  content:"";position:absolute;width:7px;height:7px;
  top:6px;right:5px;border-radius:50%;background:#467de4;
- border:1.5px solid #292b31;pointer-events:none;
+ border:1.5px solid #292b31;
 }
 .workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg,
 .workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool::after{
