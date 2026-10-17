@@ -851,12 +851,30 @@ CHROME_SCRIPT = r"""<script>
   hide.dataset.pynixShortcut='⇧⎋';
   actions.replaceChildren(create,divider,locate,expand,collapseAction,more,hide);
  };
+ let selectFileChordUntil=0;
  document.addEventListener('keydown',event=>{
-  if(!event.shiftKey||!event.metaKey||event.altKey||event.ctrlKey)return;
-  if(event.key==='+'||event.key==='='){
-   event.preventDefault();window.pynixProjectExpandSelected?.(true);
-  }else if(event.key==='-'){
-   event.preventDefault();window.pynixProjectCollapseAll?.();
+  if(event.altKey&&!event.metaKey&&!event.ctrlKey&&event.key==='F1'){
+   selectFileChordUntil=performance.now()+1300;event.preventDefault();return;
+  }
+  if(event.key==='1'&&!event.metaKey&&!event.altKey&&!event.ctrlKey&&
+     performance.now()<selectFileChordUntil){
+   selectFileChordUntil=0;event.preventDefault();
+   window.pynixProjectSelectOpenedFile?.();return;
+  }
+  if(event.metaKey&&!event.altKey&&!event.ctrlKey){
+   if(event.shiftKey&&(event.key==='+'||event.key==='=')){
+    event.preventDefault();window.pynixProjectExpandSelected?.(true);return;
+   }
+   if(!event.shiftKey&&event.key==='-'){
+    event.preventDefault();window.pynixProjectCollapseAll?.();return;
+   }
+  }
+  if(event.shiftKey&&event.key==='Escape'){
+   const pane=document.querySelector('.workspace-mode .tree');
+   if(pane&&!pane.hidden&&pane.contains(document.activeElement)){
+    event.preventDefault();
+    document.querySelectorAll('.workspace-mode .rail>.rail-item')[0]?.click();
+   }
   }
  });
  const updateBreadcrumb=()=>{
