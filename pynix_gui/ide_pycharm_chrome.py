@@ -789,11 +789,15 @@ CHROME_SCRIPT = r"""<script>
   details.addEventListener('keydown',event=>{
    if(event.key==='Escape'&&details.open){event.preventDefault();details.open=false;summary.focus();}
   });
-  document.addEventListener('pointerdown',event=>{
-   if(details.open&&!details.contains(event.target))details.open=false;
-  });
+  // Only the active menu is outside-click dismissible. Bind once globally
+  // to avoid retaining dead DOM on every renderTree() rebuild.
   return details;
  };
+ document.addEventListener('pointerdown',event=>{
+  document.querySelectorAll('.tree .pynix-project-header details[open]').forEach(details=>{
+   if(!details.contains(event.target))details.open=false;
+  });
+ });
  const initProjectHeader=()=>{
   const head=document.querySelector('.workspace-mode .tree .pynix-project-header');
   if(!head||head.dataset.pynixPyCharmHeader)return;
@@ -895,14 +899,13 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
             catalog = JetBrainsIconCatalog(directory)
             # The project/branch controls are the two explicitly restored
             # original JetBrains SVGs in an otherwise iconless native chrome.
-            identity_keys = ("general/chevronDown", "toolwindows/vcs",
-                             "general/moreVertical", "general/edit",
-                             "run/run", "run/debug", "general/search", "general/settings")
-            keys = identity_keys if iconless else identity_keys + (
-                "general/search","general/settings","general/add",
-                "general/locate","general/expandAll","general/collapseAll",
-                "general/moreVertical","general/hide"
-            )
+            # Project toolbar glyphs are visible in both default and opt-in
+            # icon modes, alongside the existing Run/Debug/search controls.
+            keys = ("general/chevronDown", "toolwindows/vcs",
+                    "general/moreVertical", "general/edit", "run/run",
+                    "run/debug", "general/search", "general/settings",
+                    "general/add", "general/locate", "general/expandAll",
+                    "general/collapseAll", "general/hide")
             data = {key: catalog.svg(key,dark=dark,
                                      tool_window=key=="toolwindows/vcs")
                     for key in keys}
