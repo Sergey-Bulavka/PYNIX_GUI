@@ -57,8 +57,21 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode.pynix-iconless
 .pynix-extra-tools[data-edge="right-top"] .pynix-extra-tool svg,
 .workspace-mode.pynix-iconless .workspace-toolbar .pynix-toolbar-project>svg,
-.workspace-mode.pynix-iconless .workspace-toolbar .pynix-toolbar-branch>svg{
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-toolbar-branch>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-current-config>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-run-action>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-tools-menu>summary>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center .pynix-run-with-params>svg{
  display:block!important;
+}
+/* The restored PyCharm Run/Debug SVGs use the verified JetBrains source
+   palette. This selector only allows them to render; it does not change
+   or recolor the source files. */
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-run-action>svg,
+.workspace-mode.pynix-iconless .workspace-toolbar .pynix-pycharm-center>.pynix-debug-primary>svg{
+ width:19px!important;height:19px!important;max-width:19px!important;
+ max-height:19px!important;transform:none!important;
 }
 /* The old shell also painted the PY badge, Run triangle and Debug bug
    through CSS pseudo-elements and data-URI backgrounds. They are icons too. */
