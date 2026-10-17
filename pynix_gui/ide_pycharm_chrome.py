@@ -617,14 +617,33 @@ CHROME_SCRIPT = r"""<script>
    const debugStatus=toolbar.querySelector('.pynix-debug-status');
    if(items&&debugStatus)items.appendChild(debugStatus);
   }
-  right.append(
-   toolButton('Search in project','general/search',()=>{
-    document.querySelectorAll('.workspace-mode .rail>.rail-item')[1]?.click();
-   }),
-   toolButton('Settings','general/settings',()=>{
-    document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();
-   })
-  );
+  const search=toolButton('Search Everywhere','general/search',()=>{
+   window.pynixOpenSearchEverywhere?.();
+  });
+  search.classList.add('pynix-ide-search');
+  search.dataset.pynixTooltip=[
+   'Search Everywhere ⇧ ⇧','Searches for:',
+   '- Classes','- Files','- Tool Windows','- Actions','- Settings'
+  ].join('\n');
+  const settings=toolButton('IDE and Project Settings','general/settings',()=>{
+   document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();
+  });
+  settings.classList.add('pynix-ide-settings');
+  const updateSettingsIndicator=()=>{
+   // The signal is false until a real update service explicitly sets it.
+   const available=window.pynixIDEUpdatesAvailable===true;
+   settings.dataset.updatesAvailable=String(available);
+   settings.dataset.pynixTooltip=available?
+    'Updates available. IDE and Project Settings':'IDE and Project Settings';
+   settings.setAttribute('aria-label',settings.dataset.pynixTooltip);
+  };
+  updateSettingsIndicator();
+  document.addEventListener('pynix:updates-available',updateSettingsIndicator);
+  const beta=document.createElement('span');
+  beta.className='pynix-ide-beta';
+  beta.textContent='Beta Version · __IDE_VERSION__';
+  beta.setAttribute('aria-label','PYNIX IDE beta version __IDE_VERSION__');
+  right.append(search,settings,beta);
   toolbar.append(center,right);
   updateRunActionTooltips();
  };
@@ -756,4 +775,5 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
     script = CHROME_SCRIPT.replace("__CHROME_ICONS__",payload).replace(
         "__ICONLESS__", "true" if iconless else "false"
     )
+    script = script.replace("__IDE_VERSION__", IDE_BETA_VERSION)
     return document.replace("</body>",CHROME_STYLE+script+"</body>",1)
