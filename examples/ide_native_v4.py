@@ -149,10 +149,21 @@ def main() -> None:
     )
 
     drag_resize_callback = {"update": None}
+    window_focus_callback = {"update": None}
 
     class PreviewDelegate(NSObject):
         def applicationShouldTerminateAfterLastWindowClosed_(self, sender):
             return True
+
+        def windowDidBecomeKey_(self, notification):
+            update = window_focus_callback["update"]
+            if update is not None:
+                update(True)
+
+        def windowDidResignKey_(self, notification):
+            update = window_focus_callback["update"]
+            if update is not None:
+                update(False)
 
         def windowDidResize_(self, notification):
             # Reposition both drag handles in CURRENT AppKit coordinates on
@@ -290,6 +301,16 @@ def main() -> None:
 
     drag_resize_callback["update"] = refresh_native_drag_areas
     refresh_native_drag_areas()
+
+    def publish_window_focus(active: bool) -> None:
+        # AppKit NSWindow key events determine actual IDE window activation.
+        # The JS bridge only adjusts icon appearance; it does not change SVGs.
+        literal = "true" if active else "false"
+        view.evaluateJavaScript_completionHandler_(
+            f"window.pynixSetWindowActive?.({literal});", None
+        )
+
+    window_focus_callback["update"] = publish_window_focus
     window.setDelegate_(delegate)
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
