@@ -1,7 +1,8 @@
 """A single visible icon source and licensed New UI fallback boundaries."""
 import xml.etree.ElementTree as ET
 
-from pynix_gui.ide_native_tool_icons import native_tool_icon
+from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog, check_svg
 from pynix_gui.ide_icon_parity import (
     TREE_ICON_BINDINGS, ICON_BINDINGS, DYNAMIC_ICON_BINDINGS,
 )
@@ -11,18 +12,21 @@ from pynix_gui.ide_edge_profile import (
 )
 
 
-def test_fallback_vectors_are_original_monochrome_accessible_and_bounded():
-    for dark in (False, True):
-        for name in ("Terminal", "AI Assistant", "Pull Requests"):
-            svg = native_tool_icon(name, dark=dark)
-            assert svg is not None
-            root = ET.fromstring(svg)
-            assert root.tag == "{http://www.w3.org/2000/svg}svg"
-            assert root.attrib["width"] == "20"
-            assert root.attrib["height"] == "20"
-            assert "currentColor" in svg
-            assert "<script" not in svg
-    assert native_tool_icon("Python Console") is None
+def test_all_visible_top_left_vectors_are_licensed_jetbrains_originals():
+    from pynix_gui.ide_edge_profile import TOP_LEFT_ICONS
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    for label, key, edge, _ in TOOL_WINDOW_PROFILE:
+        if edge != "left-top" or label not in TOP_LEFT_ICONS:
+            continue
+        for dark in (False, True):
+            resolved = catalog.resolve(key, dark=dark, tool_window=True)
+            assert resolved is not None, (label, dark)
+            assert check_svg(resolved.svg_path)[0], (label, dark)
+            svg = catalog.svg(key, dark=dark, tool_window=True)
+            assert "JetBrains s.r.o." in svg
+            assert "Apache 2.0 license" in svg
+            assert ET.fromstring(svg).tag.endswith("svg")
+    assert catalog.resolve("general/moreHorizontal", dark=True, tool_window=True)
 
 
 def test_one_authority_for_each_visible_rail_and_project_glyph():
@@ -30,9 +34,12 @@ def test_one_authority_for_each_visible_rail_and_project_glyph():
             "Run", "Terminal"} <= PINNED_TOOLS
     assert '.workspace-mode .ide>.rail>.rail-item{display:none!important}' in EDGE_PROFILE_STYLE
     assert "button.querySelectorAll('svg').forEach(svg=>svg.remove());" in EDGE_PROFILE_SCRIPT
-    assert "native_tool_icon(label, dark=dark)" in __import__(
-        "inspect").getsource(__import__(
-        "pynix_gui.ide_edge_profile", fromlist=["apply_edge_profile"]).apply_edge_profile)
+    from pynix_gui.ide_edge_profile import apply_edge_profile
+    import inspect
+    source = inspect.getsource(apply_edge_profile)
+    assert "native_tool_icon" not in source
+    assert 'catalog.svg(key, dark=dark, tool_window=True)' in source
+    assert 'catalog.svg("general/moreHorizontal"' in source
     assert not any(".rail > .rail-item" in selector or ".right-tools" in selector
                    for selector, _, _, _ in ICON_BINDINGS)
     assert len(TREE_ICON_BINDINGS) == 3
