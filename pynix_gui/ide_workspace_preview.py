@@ -2596,9 +2596,14 @@ editorInput.addEventListener('keydown',event=>{
    }
    return matches;
  };
- window.pynixOpenSourceFromSearch=source=>{
+ window.pynixOpenSourceFromSearch=(source,line=1)=>{
    if(!byName.has(source))return false;
    show(source);
+   if(Number.isInteger(line)&&line>0){
+     // Let controlled tab/editor restoration settle before positioning caret.
+     requestAnimationFrame(()=>requestAnimationFrame(()=>
+       selectNavigationLocation({source,line,column:1})));
+   }
    return true;
  };
  show(files[0].name);
