@@ -2150,7 +2150,12 @@ editorInput.addEventListener('keydown',event=>{
    const foldable=foldableLines(file.text);
    const folded=file.foldedLines||(file.foldedLines=new Set());
    let hiddenThrough=-1;
+   // Read-only Python preview uses the same lexical categories as edit mode.
+   const previewTokens=file.tokens?[]:window.pynixHighlightTokens(file.text,file.name);
+   let documentOffset=0,previewCursor=0;
    file.text.split('\\n').forEach((line,i)=>{
+     const lineStart=documentOffset,lineEnd=lineStart+line.length;
+     documentOffset=lineEnd+1;
      if(i<=hiddenThrough)return;
      if(folded.has(i)&&foldable.has(i))hiddenThrough=foldable.get(i);
      const gutter=document.createElement('div');
@@ -2185,6 +2190,25 @@ editorInput.addEventListener('keydown',event=>{
          span.textContent=token.text;
          content.appendChild(span);
        }
+     } else if(previewTokens.length){
+       while(previewCursor<previewTokens.length&&previewTokens[previewCursor].end<=lineStart)
+         previewCursor++;
+       let at=lineStart,index=previewCursor;
+       while(index<previewTokens.length&&previewTokens[index].start<lineEnd){
+         const token=previewTokens[index];
+         const from=Math.max(at,token.start),to=Math.min(lineEnd,token.end);
+         if(from>at)content.appendChild(document.createTextNode(file.text.slice(at,from)));
+         if(to>from){
+           const span=document.createElement('span');
+           span.className='pynix-edit-'+(token.kind==='bracket'?'plain':token.kind);
+           span.textContent=file.text.slice(from,to);
+           content.appendChild(span);at=to;
+         }
+         if(token.end<=lineEnd)index++;
+         else break;
+       }
+       if(at<lineEnd)content.appendChild(document.createTextNode(file.text.slice(at,lineEnd)));
+       previewCursor=index;
      } else content.textContent=line;
      row.appendChild(content);
      gutterInner.appendChild(gutter);
