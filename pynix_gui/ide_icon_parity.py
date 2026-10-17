@@ -72,6 +72,8 @@ EXTENSION_ICON_NAMES = (
     ("jpg", "fileTypes/image"),
     ("jpeg", "fileTypes/image"),
     ("webp", "fileTypes/image"),
+    ("gif", "fileTypes/image"),
+    ("bmp", "fileTypes/image"),
     ("zip", "fileTypes/archive"),
     ("jar", "fileTypes/archive"),
     ("gz", "fileTypes/archive"),
