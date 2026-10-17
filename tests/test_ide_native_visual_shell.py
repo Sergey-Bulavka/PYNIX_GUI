@@ -52,3 +52,15 @@ def test_native_preview_terminates_after_last_window_closes():
     source = Path(scene.__file__).read_text(encoding="utf-8")
     assert "applicationShouldTerminateAfterLastWindowClosed_" in source
     assert "app.setDelegate_(delegate)" in source
+
+
+
+def test_native_topbar_uses_search_settings_and_compact_beta_pill():
+    source = Path(scene.__file__).read_text(encoding="utf-8")
+    assert scene.PREVIEW_IDE_VERSION == "1.1.26-dev"
+    assert 'self._icon(search_x, 24, "search"' in source
+    assert 'self._icon(settings_x, 24, "settings"' in source
+    assert "if PREVIEW_UPDATES_AVAILABLE:" in source
+    assert "self._beta_outline(beta_x, 14, beta_width)" in source
+    assert '"Beta Version  ·  " + PREVIEW_IDE_VERSION' in source
+    assert "title_h, toolbar_h, status_h = 62, 0, 27" in source
