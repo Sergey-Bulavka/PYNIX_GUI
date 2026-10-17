@@ -190,17 +190,14 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .pynix-extra-tool[data-pynix-brand][aria-pressed="true"]{
  color:#FFFFFF!important;
 }
-.workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
-.workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+.workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
  transition:opacity 120ms ease
 }
-.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
-.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
  opacity:.48!important
 }
 @media(prefers-reduced-motion:reduce){
- .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg,
- .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img{
+ .workspace-mode .pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg{
   transition:none!important
  }
 }
