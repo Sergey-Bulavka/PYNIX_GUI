@@ -155,3 +155,19 @@ def test_windows_git_crlf_normalization_preserves_verified_svg(tmp_path):
     with pytest.raises(ValueError, match="differs from licensed manifest"):
         icons.svg("actions/run")
 
+
+
+def test_official_python_process_output_uses_sha_pinned_license_exception(tmp_path):
+    from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+    from pynix_gui.ide_jetbrains_icons import OFFICIAL_UNHEADERED_ICONS
+    for name, expected_sha in OFFICIAL_UNHEADERED_ICONS.items():
+        path = BUNDLED_ICONS / "svg" / name
+        assert path.is_file()
+        ok, reason = check_svg(path, relative_path=Path(name))
+        assert (ok, reason) == (True, "ok")
+        assert len(expected_sha) == 64
+        # Identical shape without the pinned upstream bytes is rejected.
+        copy = tmp_path / Path(name).name
+        copy.write_text('<svg width="16" height="16"/>', encoding="utf-8")
+        assert check_svg(copy, relative_path=Path(name))[0] is False
+        assert check_svg(copy)[0] is False
