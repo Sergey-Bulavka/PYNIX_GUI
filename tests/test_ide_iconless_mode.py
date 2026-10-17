@@ -41,7 +41,7 @@ def test_sidebar_iconless_uses_labels_and_no_svg_payload():
     assert '"svg": null' in output
     assert "<svg" not in output
     assert "button.textContent=shortNames[entry.label]||entry.label" in EDGE_PROFILE_SCRIPT
-    assert "if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
+    assert "if(!unavailable)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
 
 
 def test_top_controls_use_text_instead_of_logo_svg():
