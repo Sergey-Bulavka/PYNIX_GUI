@@ -65,8 +65,10 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
 def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     from pynix_gui.ide_edge_profile import PINNED_TOOLS, EXISTING_ACTIONS
     assert {"Project", "Commit", "Pull Requests", "Structure",
-            "Run", "Debug", "Terminal", "Problems",
+            "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+            "Terminal", "Problems", "Git",
             "Notifications", "AI Assistant"} <= PINNED_TOOLS
+    assert "Debug" not in PINNED_TOOLS
     assert "Search" not in PINNED_TOOLS
     assert "Version Control" not in PINNED_TOOLS
     assert EXISTING_ACTIONS["Run"] == "rail:3"
@@ -96,7 +98,7 @@ def test_tool_window_icons_do_not_use_handmade_python_or_other_fallbacks():
     from pynix_gui.ide_edge_profile import EDGE_PROFILE_SCRIPT
     assert "window.pynixPythonFileIcon?.()" not in EDGE_PROFILE_SCRIPT
     assert "entry.label==='Python Console'" not in EDGE_PROFILE_SCRIPT
-    assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
+    assert "const visual=(iconless&&!pictogram||brandTerminal)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
     assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
     assert "const moreIcon=__MORE_ICON_DATA__;" in EDGE_PROFILE_SCRIPT
 
@@ -129,7 +131,7 @@ def test_top_left_icons_load_in_iconless_mode_without_loading_other_rails():
     assert "toolwindows/structure" in result
     assert r'\u003csvg' in result
     assert '"svg": null' in result
-    assert "const pictogram=iconless&&edge==='left-top';" in EDGE_PROFILE_SCRIPT
+    assert "const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom');" in EDGE_PROFILE_SCRIPT
     assert "general/moreHorizontal" in result
     assert '"name": "github/pullRequests"' in result
 
@@ -243,3 +245,72 @@ def test_more_menu_resolves_original_endpoints_from_local_pycharm(monkeypatch):
     assert calls == [True]
     assert '"name": "localJetBrains/endpoints"' in html
     assert official_vector[:10].replace("<", r"\u003c") in html
+
+
+def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button():
+    from pynix_gui.ide_edge_profile import (
+        BOTTOM_LEFT_ICONS, PINNED_TOOLS, EXISTING_ACTIONS,
+    )
+    visible = tuple(label for label, _, edge, _ in TOOL_WINDOW_PROFILE
+                    if edge == "left-bottom" and label in PINNED_TOOLS)
+    assert visible == BOTTOM_LEFT_ICONS == (
+        "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+        "Terminal", "Problems", "Git",
+    )
+    assert EXISTING_ACTIONS["Run"] == "rail:3"
+    assert EXISTING_ACTIONS["PYNIX Terminal"] == "rail:4"
+    assert EXISTING_ACTIONS["Terminal"] == "rail:4"
+    assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
+    assert EXISTING_ACTIONS["Git"] == "rail:2"
+    assert "Services" not in EXISTING_ACTIONS
+    assert "PYNIX Packages" not in EXISTING_ACTIONS
+    assert "if(edge==='left-bottom'){" in EDGE_PROFILE_SCRIPT
+    assert "host.appendChild(container);" in EDGE_PROFILE_SCRIPT
+
+
+def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_brand():
+    from pynix_gui.ide_edge_profile import (
+        BOTTOM_LEFT_ICONS, PYNIX_BRANDED_TOOLS,
+    )
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    assert PYNIX_BRANDED_TOOLS == {"PYNIX Terminal", "PYNIX Packages"}
+    names = {label: icon for label, icon, edge, _ in TOOL_WINDOW_PROFILE
+             if edge == "left-bottom" and label in BOTTOM_LEFT_ICONS}
+    assert names == {
+        "Run": "toolwindows/run",
+        "PYNIX Terminal": "terminal/terminal",
+        "PYNIX Packages": "python/pythonPackages",
+        "Services": "toolwindows/services",
+        "Terminal": "terminal/terminal",
+        "Problems": "toolwindows/problems",
+        "Git": "toolwindows/vcs",
+    }
+    for name, icon in names.items():
+        for dark in (True, False):
+            resolved = catalog.resolve(icon, dark=dark, tool_window=True)
+            assert resolved is not None, (name, dark)
+            assert resolved.variant == ("dark_20" if dark else "light_20")
+            svg = catalog.svg(icon, dark=dark, tool_window=True)
+            assert svg.startswith("<!-- Copyright")
+            assert "JetBrains s.r.o." in svg
+
+    html = apply_edge_profile("<html><body class='workspace-mode'></body></html>",
+                              iconless=True)
+    assert "data:image/png;base64,iVBOR" in html
+    assert '"label": "PYNIX Terminal"' in html
+    assert '"label": "PYNIX Packages"' in html
+    assert 'pynix-brand-terminal' in EDGE_PROFILE_SCRIPT
+    assert 'pynix-brand-package' in EDGE_PROFILE_SCRIPT
+    assert 'brandTerminal' in EDGE_PROFILE_SCRIPT
+
+
+def test_lower_left_icons_visible_in_iconless_mode_and_dim_on_blur():
+    from pynix_gui.ide_iconless_mode import ICONLESS_STYLE
+    assert '.pynix-extra-tools[data-edge="left-bottom"]' in EDGE_PROFILE_STYLE
+    assert "gap:7px!important;padding-bottom:7px!important" in EDGE_PROFILE_STYLE
+    assert "width:36px!important;height:36px!important" in EDGE_PROFILE_STYLE
+    assert ".pynix-brand-package" in EDGE_PROFILE_STYLE
+    assert ".pynix-brand-terminal" in EDGE_PROFILE_STYLE
+    assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool svg' in ICONLESS_STYLE
+    assert '.pynix-extra-tools[data-edge="left-bottom"] .pynix-extra-tool img' in ICONLESS_STYLE
+    assert ".workspace-mode.pynix-window-inactive" in EDGE_PROFILE_STYLE
