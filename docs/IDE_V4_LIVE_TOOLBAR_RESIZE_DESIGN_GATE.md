@@ -29,8 +29,10 @@ from occupying the same area at intermediate widths.
 
 ## Native PYNIX correction
 
-- Use the existing DOM order: `identity`, flexible empty `toolbar-spacer`,
-  `center`, `right` in **one flex row** for all widths.
+- Use one flex row with `identity`, the existing empty drag-safe
+  `toolbar-spacer`, `center`, a second equally flexible empty region, and
+  `right`. The equal spacers keep Run/Debug centered within the free space
+  without absolute positioning, and both shrink to zero under pressure.
 - A single final CSS layer resets absolute positioning, left/top and transforms
   and makes the identity/right groups shrink with `min-width:0`.
 - The spacer takes only remaining free width and still supplies safe native
