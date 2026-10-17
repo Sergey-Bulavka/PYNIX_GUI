@@ -71,7 +71,7 @@ for(const a of areas){
      throw Error('Drag rectangle overlaps a button: '+JSON.stringify(a));
  }
 }
-rectangles[0][1]+=15;
+rectangles[2][0]-=20; // move the Run config into an actually free gap
 events.resize();
 if(delivered.length<2)throw Error('Resize did not refresh drag geometry');
 console.log(JSON.stringify({count:areas.length,refreshed:delivered.length}));
