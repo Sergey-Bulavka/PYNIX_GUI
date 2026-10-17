@@ -92,15 +92,13 @@ def test_overflow_menu_escapes_scroll_clipping_and_stays_on_screen():
     assert "Math.min(window.innerWidth-width-4,left)" in EDGE_PROFILE_SCRIPT
     assert "Math.min(window.innerHeight-height-4,bounds.top)" in EDGE_PROFILE_SCRIPT
 
-def test_python_console_and_project_reuse_one_python_file_identity():
+def test_tool_window_icons_do_not_use_handmade_python_or_other_fallbacks():
     from pynix_gui.ide_edge_profile import EDGE_PROFILE_SCRIPT
-    source = (Path(__file__).resolve().parents[1] /
-              "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
-    assert "window.pynixPythonFileIcon=()=>fileIconMarkup('python');" in source
-    assert "entry.label==='Python Console'" in EDGE_PROFILE_SCRIPT
     assert "window.pynixPythonFileIcon?.()" not in EDGE_PROFILE_SCRIPT
+    assert "entry.label==='Python Console'" not in EDGE_PROFILE_SCRIPT
     assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
     assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
+    assert "const moreIcon=__MORE_ICON_DATA__;" in EDGE_PROFILE_SCRIPT
 
 
 def test_exact_requested_six_items_in_the_top_left():
