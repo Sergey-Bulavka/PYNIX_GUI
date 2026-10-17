@@ -6351,6 +6351,16 @@
         "sha256": "afd5357a9a4c6fed6a8123d8611f137f425351f55b437bd65a6856ce777afeee"
       }
     },
+    "pythonProcessOutput/process": {
+      "light_normal": {
+        "path": "svg/pythonProcessOutput/process.svg",
+        "sha256": "5763214940abb30fd874af2b9c9ab163622440b78d97b64373382d7657a0a879"
+      },
+      "dark_normal": {
+        "path": "svg/pythonProcessOutput/process_dark.svg",
+        "sha256": "0573a2668f0c15b6a43a8d73680753f2cc47fb59d86b78adb4200451b598b94e"
+      }
+    },
     "run/attachToProcess": {
       "light_normal": {
         "path": "svg/run/attachToProcess.svg",
