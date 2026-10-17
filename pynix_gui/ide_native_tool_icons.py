@@ -11,6 +11,16 @@ from __future__ import annotations
 def native_tool_icon(label: str, *, dark: bool = True) -> str | None:
     ink = "#CED0D6" if dark else "#6C707E"
     paths = {
+        "Pull Requests": (
+            '<circle cx="5" cy="4.5" r="2" stroke="currentColor" stroke-width="1.5"/>'
+            '<circle cx="5" cy="15.5" r="2" stroke="currentColor" stroke-width="1.5"/>'
+            '<circle cx="15" cy="15.5" r="2" stroke="currentColor" stroke-width="1.5"/>'
+            '<path d="M5 6.5v7M9 4.5h2a4 4 0 0 1 4 4v5" '
+            'stroke="currentColor" stroke-width="1.5" '
+            'stroke-linecap="round" stroke-linejoin="round"/>'
+            '<path d="m9.75 2.7-2 1.8 2 1.8" stroke="currentColor" '
+            'stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>'
+        ),
         "Terminal": (
             '<rect x="2.25" y="2.75" width="15.5" height="14.5" rx="2" '
             'stroke="currentColor" stroke-width="1.5"/>'
