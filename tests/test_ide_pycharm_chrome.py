@@ -42,7 +42,7 @@ def test_top_toolbar_moves_existing_run_debug_and_tools_controls():
         assert name in CHROME_SCRIPT
     assert "center.appendChild(el)" in CHROME_SCRIPT
     assert "items.prepend(save);" in CHROME_SCRIPT
-    assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[1]?.click();" in CHROME_SCRIPT
+    assert "window.pynixOpenSearchEverywhere?.();" in CHROME_SCRIPT
     assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();" in CHROME_SCRIPT
     assert ".workspace-mode .workspace-toolbar .pynix-pycharm-center" in CHROME_STYLE
     assert ".workspace-mode .workspace-toolbar .pynix-pycharm-right" in CHROME_STYLE
@@ -127,7 +127,7 @@ def test_iconless_native_identity_keeps_only_real_git_and_chevron_icons():
     rendered = apply_pycharm_chrome(source, iconless=True)
     assert '"general/chevronDown"' in rendered
     assert '"toolwindows/vcs"' in rendered
-    assert '"general/search"' not in rendered
+    assert '"general/search"' in rendered
     assert 'const iconless=true;' in rendered
     assert 'classList.add(\'pynix-toolbar-branch-chevron\');' in rendered
     assert 'classList.add(\'pynix-toolbar-branch-icon\');' in rendered
@@ -223,7 +223,49 @@ def test_iconless_chrome_still_loads_original_toolbar_icon_assets():
         '<html><body class="workspace-mode"></body></html>',iconless=True
     )
     for key in ("general/chevronDown","toolwindows/vcs",
-                "general/moreVertical","general/edit","run/run","run/debug"):
+                "general/moreVertical","general/edit","run/run","run/debug",
+                "general/search","general/settings"):
         assert '"'+key+'"' in document
     assert "<svg" not in document
     assert "__CHROME_ICONS__" not in document
+
+
+
+def test_actual_v4_toolbar_has_search_settings_update_contract_and_beta_version():
+    from pynix_gui.ide_pycharm_chrome import IDE_BETA_VERSION
+    assert IDE_BETA_VERSION == "1.1.26-dev"
+    for expected in (
+        "const search=toolButton('Search Everywhere','general/search'",
+        "window.pynixOpenSearchEverywhere?.();",
+        "search.dataset.pynixTooltip=[",
+        "'Search Everywhere ⇧ ⇧'",
+        "'- Classes','- Files','- Tool Windows','- Actions','- Settings'",
+        "const settings=toolButton('IDE and Project Settings','general/settings'",
+        "const available=window.pynixIDEUpdatesAvailable===true;",
+        "settings.dataset.updatesAvailable=String(available);",
+        "'Updates available. IDE and Project Settings'",
+        "document.addEventListener('pynix:updates-available',updateSettingsIndicator)",
+        "beta.textContent='Beta Version · __IDE_VERSION__';",
+        "right.append(search,settings,beta);",
+        "script = script.replace(\"__IDE_VERSION__\", IDE_BETA_VERSION)",
+    ):
+        assert expected in CHROME_SCRIPT or expected in (
+            Path(__file__).resolve().parents[1] /
+            "pynix_gui/ide_pycharm_chrome.py"
+        ).read_text("utf-8"), expected
+    for selector in (
+        ".pynix-ide-beta",
+        '.pynix-ide-settings[data-updates-available="true"]::after',
+        ".pynix-search-everywhere-dialog",
+        '.pynix-search-everywhere-backdrop[hidden]',
+    ):
+        assert selector in CHROME_STYLE
+    assert "Start Free Trial" not in CHROME_SCRIPT
+
+
+def test_iconless_v4_topbar_retains_search_and_settings_svg():
+    from pynix_gui.ide_iconless_mode import ICONLESS_STYLE
+    assert ".pynix-ide-search>svg" in ICONLESS_STYLE
+    assert ".pynix-ide-settings>svg" in ICONLESS_STYLE
+    for key in ("general/search", "general/settings"):
+        assert key in CHROME_SCRIPT
