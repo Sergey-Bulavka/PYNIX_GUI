@@ -448,17 +448,23 @@ def apply_pycharm_chrome(document: str, directory: Path = BUNDLED_ICONS, *,
     if "</body>" not in document or 'id="pynix-pycharm-chrome"' in document:
         return document
     try:
-        catalog = JetBrainsIconCatalog(directory)
-        # Native title/branch controls still use the *real* JetBrains SVGs,
-        # even while the main IDE is intentionally iconless.
-        identity_keys = ("general/chevronDown", "toolwindows/vcs")
-        keys = identity_keys if iconless else identity_keys + (
-            "general/search","general/settings","general/add",
-            "general/locate","general/expandAll","general/collapseAll",
-            "general/moreVertical","general/hide"
-        )
-        data = {key: catalog.svg(key,dark=dark,tool_window=key=="toolwindows/vcs")
-                for key in keys}
+        if iconless and not directory.is_dir():
+            # Keep the text controls functional in portable environments
+            # without the verified JetBrains SVG pack.
+            data = {}
+        else:
+            catalog = JetBrainsIconCatalog(directory)
+            # The project/branch controls are the two explicitly restored
+            # original JetBrains SVGs in an otherwise iconless native chrome.
+            identity_keys = ("general/chevronDown", "toolwindows/vcs")
+            keys = identity_keys if iconless else identity_keys + (
+                "general/search","general/settings","general/add",
+                "general/locate","general/expandAll","general/collapseAll",
+                "general/moreVertical","general/hide"
+            )
+            data = {key: catalog.svg(key,dark=dark,
+                                     tool_window=key=="toolwindows/vcs")
+                    for key in keys}
     except (OSError,ValueError,KeyError,json.JSONDecodeError):
         return document
     payload = json.dumps(data,ensure_ascii=True).replace("<","\\u003c")
