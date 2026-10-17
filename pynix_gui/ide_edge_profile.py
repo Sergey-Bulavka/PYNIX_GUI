@@ -50,6 +50,21 @@ PINNED_TOOLS = frozenset({
     "Terminal", "Problems", "Git", "Notifications", "AI Assistant",
 })
 
+# The left-top More Tool Windows menu follows the supplied PyCharm screenshot.
+# (label, exact original JetBrains icon key or None, displayed macOS shortcut,
+#  implemented command). None means NO substituted or invented icon.
+MORE_TOOL_WINDOWS = (
+    ("Bookmarks", "toolwindows/bookmarks", "⌘2", ""),
+    ("Find", "toolwindows/find", "⌘3", "rail:1"),
+    ("Debug", "toolwindows/debug", "⌘5", "dock:DEBUG CONSOLE"),
+    ("Coverage", "toolwindows/coverage", "", ""),
+    ("Endpoints", None, "", ""),
+    ("Hierarchy", "toolwindows/hierarchy", "", ""),
+    ("Learn", "toolwindows/learn", "", ""),
+    ("Python Process Output", "pythonProcessOutput/process", "", ""),
+    ("TODO", "toolwindows/todo", "", ""),
+)
+
 # Only this group is iconographic in the native iconless preview.
 TOP_LEFT_ICONS = frozenset({"Project", "Commit", "Pull Requests", "Structure"})
 
@@ -175,6 +190,47 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  padding:6px;border:1px solid #484a50;border-radius:8px;
  background:#292b30;box-shadow:0 9px 24px #0008;color:#dedfe2
 }
+/* PyCharm-style left-top More popup: icon / label / optional shortcut. */
+.workspace-mode .pynix-tool-profile-popover[data-edge="left-top"]{
+ width:296px!important;max-width:calc(100vw - 20px)!important;
+ max-height:min(55vh,410px)!important;
+ padding:8px!important;background:#28292c!important;
+ border:1px solid #575a62!important;border-radius:12px!important;
+ box-shadow:0 14px 30px #0007!important;
+}
+.workspace-mode .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item{
+ display:flex!important;align-items:center!important;gap:10px!important;
+ box-sizing:border-box!important;
+ min-height:36px!important;width:100%!important;
+ padding:4px 10px!important;border:0!important;border-radius:8px!important;
+ font:13px/1.25 system-ui,-apple-system,sans-serif!important;
+ white-space:nowrap!important;color:#d2d3d7!important;
+ opacity:1!important;
+}
+.workspace-mode .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item.is-highlighted{
+ background:#2d4978!important;color:#f2f5fa!important;
+}
+.workspace-mode .pynix-tool-profile-popover[data-edge="left-top"] .pynix-more-item:hover:not(:disabled){
+ background:#3b4b64!important;color:#f2f5fa!important;
+}
+.workspace-mode .pynix-more-item .pynix-menu-icon{
+ display:flex;align-items:center;justify-content:center;
+ flex:0 0 20px;width:20px;height:20px;
+}
+.workspace-mode .pynix-more-item .pynix-menu-icon svg{
+ display:block;width:20px;height:20px;
+}
+.workspace-mode .pynix-more-item .pynix-more-label{
+ min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis;
+ text-align:left;
+}
+.workspace-mode .pynix-more-item .pynix-more-shortcut{
+ flex:0 0 auto;margin-left:auto;color:#a9acb4;
+ font:12px/1.2 system-ui,-apple-system,sans-serif;
+}
+.workspace-mode .pynix-more-item.is-highlighted .pynix-more-shortcut{
+ color:#bdc9e0;
+}
 .workspace-mode .pynix-tool-profile-popover[hidden]{display:none}
 .workspace-mode .pynix-tool-profile-popover button{
  display:block;width:100%;padding:6px 9px;text-align:left;
@@ -193,6 +249,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
  const entries=__PROFILE_DATA__;
  const iconless=__ICONLESS__;
  const moreIcon=__MORE_ICON_DATA__;
+ const leftTopMore=__MORE_WINDOW_DATA__;
  // NSWindow key state is authoritative in the macOS host. The focus/blur
  // handlers also cover HTML previews and non-native test harnesses.
  const setWindowActive=active=>{
@@ -309,21 +366,57 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   popover.className='pynix-tool-profile-popover';
   popover.hidden=true;
   popover.id='pynix-more-'+edge;
+  popover.dataset.edge=edge;
   popover.setAttribute('role','group');
   popover.setAttribute('aria-label','Available and planned tool windows');
-  for(const entry of entries.filter(x=>x.edge===edge)){
-   const row=document.createElement('button');
-   row.type='button';
-   row.disabled=entry.state==='unavailable';
-   row.textContent=entry.label+(row.disabled?' (not available)':'');
-   row.addEventListener('click',()=>{clickExisting(entry);setOpen(false);});
-   popover.appendChild(row);
+  if(edge==='left-top'){
+   // Each icon is an original, checksummed JetBrains SVG from the catalog.
+   // Missing upstream Endpoints art intentionally remains an empty icon slot.
+   for(const entry of leftTopMore){
+    const row=document.createElement('button');
+    row.type='button';
+    row.className='pynix-more-item';
+    row.disabled=!entry.action;
+    if(row.disabled)row.title=entry.label+' — not implemented in PYNIX IDE';
+    row.setAttribute('aria-label',entry.label+(entry.shortcut?' '+entry.shortcut:''));
+    if(entry.label==='Bookmarks')row.classList.add('is-highlighted');
+    const icon=document.createElement('span');
+    icon.className='pynix-menu-icon';
+    icon.setAttribute('aria-hidden','true');
+    if(entry.svg){
+     const xml=new DOMParser().parseFromString(entry.svg,'image/svg+xml');
+     if(xml.documentElement.localName==='svg'&&!xml.querySelector('parsererror'))
+      icon.appendChild(document.importNode(xml.documentElement,true));
+    }
+    const label=document.createElement('span');
+    label.className='pynix-more-label';
+    label.textContent=entry.label;
+    row.append(icon,label);
+    if(entry.shortcut){
+     const shortcut=document.createElement('span');
+     shortcut.className='pynix-more-shortcut';
+     shortcut.textContent=entry.shortcut;
+     row.appendChild(shortcut);
+    }
+    if(!row.disabled)row.addEventListener('click',()=>{clickExisting(entry);setOpen(false);});
+    popover.appendChild(row);
+   }
+  }else{
+   for(const entry of entries.filter(x=>x.edge===edge)){
+    const row=document.createElement('button');
+    row.type='button';
+    row.disabled=entry.state==='unavailable';
+    row.textContent=entry.label+(row.disabled?' (not available)':'');
+    row.addEventListener('click',()=>{clickExisting(entry);setOpen(false);});
+    popover.appendChild(row);
+   }
   }
   const setOpen=open=>{
    if(open){
     const bounds=more.getBoundingClientRect();
-    const width=220;
-    const height=Math.min(window.innerHeight*.55,popover.childElementCount*30+14);
+    const width=edge==='left-top'?296:220;
+    const height=Math.min(window.innerHeight*.55,
+      popover.childElementCount*(edge==='left-top'?36:30)+18);
     const left=edge.startsWith('left')?bounds.right+7:bounds.left-width-7;
     popover.style.left=Math.max(4,Math.min(window.innerWidth-width-4,left))+'px';
     popover.style.top=Math.max(4,Math.min(window.innerHeight-height-4,bounds.top))+'px';
@@ -378,10 +471,18 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
         return document
     more_svg = catalog.svg("general/moreHorizontal", dark=dark,
                            tool_window=True) if catalog is not None else None
+    # No missing-icon fallbacks: use only verified original SVGs.
+    menu_entries = [{
+        "label": label, "name": name, "shortcut": shortcut, "action": action,
+        "svg": catalog.svg(name, dark=dark, tool_window=True)
+               if name and catalog is not None else None,
+    } for label, name, shortcut, action in MORE_TOOL_WINDOWS]
     payload = json.dumps(entries, ensure_ascii=True).replace("<", "\\u003c")
     more_payload = json.dumps(more_svg, ensure_ascii=True).replace("<", "\\u003c")
+    menu_payload = json.dumps(menu_entries, ensure_ascii=True).replace("<", "\\u003c")
     return document.replace('</body>',
         EDGE_PROFILE_STYLE + EDGE_PROFILE_SCRIPT.replace('__PROFILE_DATA__', payload).replace(
             '__ICONLESS__', 'true' if iconless else 'false').replace(
-            '__MORE_ICON_DATA__', more_payload)
+            '__MORE_ICON_DATA__', more_payload).replace(
+            '__MORE_WINDOW_DATA__', menu_payload)
         + '</body>', 1)
