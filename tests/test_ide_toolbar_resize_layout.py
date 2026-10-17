@@ -76,4 +76,4 @@ def test_default_and_icon_enabled_modes_use_the_same_geometry_rules():
     assert "document = apply_pycharm_chrome(document, iconless=True)" in native
     assert "document = apply_pycharm_chrome(document)" in native
     assert "observer.observe(toolbar);" in native
-    assert "window.addEventListener('resize', update);" in native
+    assert "window.addEventListener('resize',update);" in native
