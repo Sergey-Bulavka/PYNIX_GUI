@@ -79,7 +79,7 @@ def test_disabled_feature_icons_still_receive_pointer_and_keyboard_focus():
     assert "button.disabled=entry.state==='unavailable'" not in EDGE_PROFILE_SCRIPT
     assert '.pynix-extra-tool[aria-disabled="true"]' in EDGE_PROFILE_STYLE
     assert "button.dataset.toolWindow=entry.label;" in EDGE_PROFILE_SCRIPT
-    assert "button.dataset.toolWindow||button.dataset.pynixTooltip" in TOOLTIP_SCRIPT
+    assert "button.dataset.pynixTooltip||button.dataset.toolWindow" in TOOLTIP_SCRIPT
 
 
 def test_tooltip_owns_style_instead_of_late_native_title_popup():
