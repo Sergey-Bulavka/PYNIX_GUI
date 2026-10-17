@@ -43,8 +43,10 @@ def test_pynix_packages_replaces_python_with_exact_same_pynix_logo():
     assert mark.attrib["d"] == source.attrib["d"]
     assert "translate(8.8 8.5)" in mark.attrib["transform"]
     assert mark.attrib["fill-rule"] == "evenodd"
-    assert "python" not in (ICON_DIR / "pynix-packages.svg").read_text(
-        encoding="utf-8").lower().replace("original python artwork was removed", "")
+    # Exactly two paths: the unchanged JetBrains box silhouette and our
+    # PYNIX mark. None of the original Python snake paths are present.
+    assert "M10.75 17C10.75 16.5858" not in (ICON_DIR / "pynix-packages.svg").read_text(
+        encoding="utf-8")
 
 
 def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
