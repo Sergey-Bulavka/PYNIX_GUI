@@ -173,3 +173,15 @@ def test_settings_and_debug_controls_advertise_preview_limitations():
     assert state["tool_tab"] == "Debug Console"
     assert "not connected" in state["tool_message"]
     assert_shell_valid(build(state))
+
+
+
+def test_search_everywhere_settings_result_opens_correct_settings_page():
+    state = initial_state()
+    dispatch(state, event("ACTIVATE", "shell-search-everywhere"))
+    dispatch(state, event("CHANGE", "shell-everywhere-query", text="project settings"))
+    dispatch(state, event("ACTIVATE", "shell-search-hit:shell-settings-project-settings"))
+    assert not state["everywhere_open"]
+    assert state["settings_open"]
+    assert state["settings_page"] == "Project Settings"
+    assert_shell_valid(build(state))
