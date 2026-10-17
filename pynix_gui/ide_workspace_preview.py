@@ -2530,7 +2530,7 @@ editorInput.addEventListener('keydown',event=>{
  // Project toolbar sends validated requests to the existing native creation bridge.
  window.pynixCreateProjectEntry=kind=>{
    if(kind!=='file'&&kind!=='directory')return;
-   const selected=selectedPath||current||'';
+   const selected=selectedPath===null?(current||''):selectedPath;
    const base=selected&&folders.includes(selected)?selected+'/':
      selected.includes('/')?selected.slice(0,selected.lastIndexOf('/')+1):'';
    const proposed=window.prompt(
@@ -2559,7 +2559,7 @@ editorInput.addEventListener('keydown',event=>{
    });
  };
  window.pynixProjectExpandSelected=(all=false)=>{
-   const target=selectedPath||current||'';
+   const target=selectedPath===null?(current||''):selectedPath;
    const folder=folders.includes(target)?target:
      (target.includes('/')?target.slice(0,target.lastIndexOf('/')):'');
    expanded.add('');
