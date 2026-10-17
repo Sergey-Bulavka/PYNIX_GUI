@@ -68,7 +68,10 @@ def test_status_breadcrumb_follows_current_editor_tab():
     assert "const updateBreadcrumb=()=>{" in CHROME_SCRIPT
     assert ".editor-tabs .pynix-editor-tab.active" in CHROME_SCRIPT
     assert "label.textContent=name" in CHROME_SCRIPT
-    assert "new MutationObserver(updateBreadcrumb).observe(tabs" in CHROME_SCRIPT
+    assert "new MutationObserver(()=>{" in CHROME_SCRIPT
+    assert "updateBreadcrumb();" in CHROME_SCRIPT
+    assert "updateRunActionTooltips();" in CHROME_SCRIPT
+    assert "}).observe(tabs,{" in CHROME_SCRIPT
     assert ".workspace-mode .bottom .pynix-status-breadcrumb" in CHROME_STYLE
 
 
