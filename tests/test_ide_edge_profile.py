@@ -29,12 +29,12 @@ def test_profile_is_idempotent_and_never_pretends_disabled_tools_work():
     result = apply_edge_profile(source)
     assert result != source
     assert apply_edge_profile(result) == result
-    assert "button.disabled=entry.state==='unavailable'" in EDGE_PROFILE_SCRIPT
+    assert "button.setAttribute('aria-disabled',String(unavailable));" in EDGE_PROFILE_SCRIPT
     assert "not implemented in PYNIX IDE" in EDGE_PROFILE_SCRIPT
     assert "More tool windows" in EDGE_PROFILE_SCRIPT
     assert "place('left-top'" in EDGE_PROFILE_SCRIPT
     assert "place('right-bottom'" in EDGE_PROFILE_SCRIPT
-    assert "pynix-extra-tool:disabled" in EDGE_PROFILE_STYLE
+    assert 'pynix-extra-tool[aria-disabled="true"]' in EDGE_PROFILE_STYLE
     assert "<svg" not in result
 
 
@@ -60,7 +60,7 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
     ):
         assert expected in style
     assert 'pointer-events:none' not in style
-    assert "if(!button.disabled)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
+    assert "if(!unavailable)button.addEventListener('click',()=>clickExisting(entry));" in EDGE_PROFILE_SCRIPT
     assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[index]?.click();" in EDGE_PROFILE_SCRIPT
     assert "button.querySelectorAll('svg').forEach(svg=>svg.remove());" in EDGE_PROFILE_SCRIPT
 
@@ -102,7 +102,7 @@ def test_tool_window_icons_do_not_use_handmade_python_or_other_fallbacks():
     assert "window.pynixPythonFileIcon?.()" not in EDGE_PROFILE_SCRIPT
     assert "entry.label==='Python Console'" not in EDGE_PROFILE_SCRIPT
     assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
-    assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
+    assert "const unavailable=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
     assert "const moreIcon=__MORE_ICON_DATA__;" in EDGE_PROFILE_SCRIPT
 
 
@@ -380,4 +380,4 @@ def test_right_top_no_more_menu_and_no_fake_ready_status():
     assert "Notifications" not in EXISTING_ACTIONS
     assert "AI Chat" not in EXISTING_ACTIONS
     assert "entry.state==='unavailable'" in EDGE_PROFILE_SCRIPT
-    assert "button.title=entry.label+(button.disabled?' — not implemented in PYNIX IDE':'');" in EDGE_PROFILE_SCRIPT
+    assert "button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');" in EDGE_PROFILE_SCRIPT
