@@ -64,10 +64,11 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
 
 def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     from pynix_gui.ide_edge_profile import PINNED_TOOLS, EXISTING_ACTIONS
-    assert {"Project","Search","Version Control",
+    assert {"Project", "Commit", "Pull Requests", "Structure",
             "Run", "Debug", "Terminal", "Problems",
             "Notifications", "AI Assistant"} <= PINNED_TOOLS
-    assert "Commit" not in PINNED_TOOLS
+    assert "Search" not in PINNED_TOOLS
+    assert "Version Control" not in PINNED_TOOLS
     assert EXISTING_ACTIONS["Run"] == "rail:3"
     assert EXISTING_ACTIONS["Terminal"] == "rail:4"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
@@ -99,3 +100,32 @@ def test_python_console_and_project_reuse_one_python_file_identity():
     assert "entry.label==='Python Console'" in EDGE_PROFILE_SCRIPT
     assert "window.pynixPythonFileIcon?.()" in EDGE_PROFILE_SCRIPT
     assert "button.disabled=entry.state==='unavailable';" in EDGE_PROFILE_SCRIPT
+
+
+def test_exact_requested_six_items_in_the_top_left():
+    from pynix_gui.ide_edge_profile import TOP_LEFT_ICONS, PINNED_TOOLS
+    visible = [label for label, _, edge, _ in TOOL_WINDOW_PROFILE
+               if edge == "left-top" and label in PINNED_TOOLS]
+    assert visible == ["Project", "Commit", "Pull Requests", "Structure"]
+    assert TOP_LEFT_ICONS == frozenset(visible)
+    assert "entry.label==='Pull Requests'" in EDGE_PROFILE_SCRIPT
+    assert "separator.className='pynix-extra-separator';" in EDGE_PROFILE_SCRIPT
+    assert "separator.setAttribute('role','separator');" in EDGE_PROFILE_SCRIPT
+    assert "more.textContent=edge==='left-top'?'•••'" in EDGE_PROFILE_SCRIPT
+    assert '[data-edge="left-top"] .pynix-extra-tool' in EDGE_PROFILE_STYLE
+    assert "width:36px!important;height:36px!important" in EDGE_PROFILE_STYLE
+
+
+def test_top_left_icons_load_in_iconless_mode_without_loading_other_rails():
+    from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+    result = apply_edge_profile(
+        "<html><body class='workspace-mode'></body></html>",
+        directory=BUNDLED_ICONS, iconless=True,
+    )
+    assert "const iconless=true;" in result
+    assert '"label": "Pull Requests"' in result
+    assert "toolwindows/commit" in result
+    assert "toolwindows/structure" in result
+    assert r'\u003csvg' in result
+    assert '"svg": null' in result
+    assert "const pictogram=iconless&&edge==='left-top';" in EDGE_PROFILE_SCRIPT
