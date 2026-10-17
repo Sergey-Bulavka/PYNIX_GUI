@@ -23,6 +23,12 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
+/* The user explicitly restored icons for this one PyCharm-matched
+   group only. No other SVG can escape the global iconless contract. */
+.workspace-mode.pynix-iconless
+.pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg{
+ display:block!important;
+}
 /* The old shell also painted the PY badge, Run triangle and Debug bug
    through CSS pseudo-elements and data-URI backgrounds. They are icons too. */
 .workspace-mode .workspace-toolbar>strong::before,
