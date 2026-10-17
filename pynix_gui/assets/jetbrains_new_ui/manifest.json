@@ -8164,6 +8164,42 @@
         "path": "svg/xml/cssClass_dark.svg",
         "sha256": "5b4a1369e3b0909e5f0c0b91b14361b1b42b70e3f088cf66b212d6fdb107ef97"
       }
+    },
+    "terminal/terminal": {
+      "light_normal": {
+        "path": "svg/terminal/terminal.svg",
+        "sha256": "dda2310753148637953a482a4a27369e86edd0715794c063820f2143b458f185"
+      },
+      "dark_normal": {
+        "path": "svg/terminal/terminal_dark.svg",
+        "sha256": "8ce85722cba6fde11027e63f1a3bbf196a1bde477e00fe2c3ab26c0031f442e7"
+      },
+      "light_20": {
+        "path": "svg/terminal/terminal@20x20.svg",
+        "sha256": "a3d6e76b5d3fbe10864da049e78ed4f3f67a78cb8710ee83175968e775a6169f"
+      },
+      "dark_20": {
+        "path": "svg/terminal/terminal@20x20_dark.svg",
+        "sha256": "e6b37e2946637f9c02797a5f84ea896066862355febcac6a85ec6adc0092db27"
+      }
+    },
+    "python/pythonPackages": {
+      "light_normal": {
+        "path": "svg/python/pythonPackages.svg",
+        "sha256": "98f21d6455861676e814f90fd82da4ca08ecb84551cbf4f347f7e8a9e0580394"
+      },
+      "dark_normal": {
+        "path": "svg/python/pythonPackages_dark.svg",
+        "sha256": "e1db24647529776b39ff452fbad1f20f7fa916de5b0e0cd297252ca4eaf419b6"
+      },
+      "light_20": {
+        "path": "svg/python/pythonPackages@20x20.svg",
+        "sha256": "3ef7fda8372f4445003567a8711ffc4798bf262f4414755691bb3eaa7c49a279"
+      },
+      "dark_20": {
+        "path": "svg/python/pythonPackages@20x20_dark.svg",
+        "sha256": "4999dc04f956a7e7cc94558164ce648c781ad8d28e39a464171859f6c4025e64"
+      }
     }
   },
   "skipped": {
