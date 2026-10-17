@@ -13,7 +13,7 @@ from pynix_gui.ide_edge_profile import (
 
 def test_fallback_vectors_are_original_monochrome_accessible_and_bounded():
     for dark in (False, True):
-        for name in ("Terminal", "AI Assistant"):
+        for name in ("Terminal", "AI Assistant", "Pull Requests"):
             svg = native_tool_icon(name, dark=dark)
             assert svg is not None
             root = ET.fromstring(svg)
@@ -26,7 +26,8 @@ def test_fallback_vectors_are_original_monochrome_accessible_and_bounded():
 
 
 def test_one_authority_for_each_visible_rail_and_project_glyph():
-    assert {"Project", "Search", "Version Control", "Run", "Terminal"} <= PINNED_TOOLS
+    assert {"Project", "Commit", "Pull Requests", "Structure",
+            "Run", "Terminal"} <= PINNED_TOOLS
     assert '.workspace-mode .ide>.rail>.rail-item{display:none!important}' in EDGE_PROFILE_STYLE
     assert "button.querySelectorAll('svg').forEach(svg=>svg.remove());" in EDGE_PROFILE_SCRIPT
     assert "native_tool_icon(label, dark=dark)" in __import__(
