@@ -452,6 +452,15 @@ CHROME_SCRIPT = r"""<script>
   document.addEventListener('pointerdown',event=>{
    if(!button.contains(event.target)&&!popup.contains(event.target))close();
   },true);
+  popup.addEventListener('keydown',event=>{
+   if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+   event.preventDefault();
+   const options=[...popup.querySelectorAll('button')];
+   const index=options.indexOf(document.activeElement);
+   const target=event.key==='Home'?0:event.key==='End'?options.length-1:
+    (index+(event.key==='ArrowDown'?1:-1)+options.length)%options.length;
+   options[target]?.focus();
+  });
   document.addEventListener('keydown',event=>{
    if(event.key==='Escape'&&!popup.hidden){close();button.focus();}
   },true);
@@ -463,7 +472,7 @@ CHROME_SCRIPT = r"""<script>
  const updateRunActionTooltips=()=>{
   const active=document.querySelector('.workspace-mode .editor-tabs .pynix-editor-tab.active');
   const label=active?.querySelector('.pynix-editor-tab-label');
-  const name=(label?.textContent||'').replace(/\\s*\\*\\s*$/,'').trim();
+  const name=(label?.textContent||'').replace(/\s*\*\s*$/,'').trim();
   const run=document.querySelector('.pynix-pycharm-center>.pynix-run-action');
   const debug=document.querySelector('.pynix-pycharm-center>.pynix-debug-primary');
   const actions=[[run,'Run','⌃R'],[debug,'Debug','⌃D']];
