@@ -76,3 +76,15 @@ def test_iconless_workspace_keeps_original_svg_for_left_top_more_only():
     assert ".pynix-more-item .pynix-menu-icon svg" in ICONLESS_STYLE
     assert "display:block!important" in ICONLESS_STYLE
     assert ".workspace-mode svg" in ICONLESS_STYLE
+
+
+def test_iconless_toolbar_restores_jetbrains_current_file_run_debug_and_more():
+    for selector in (
+        '.pynix-current-config>svg',
+        '.pynix-pycharm-center>.pynix-run-action>svg',
+        '.pynix-pycharm-center>.pynix-debug-primary>svg',
+        '.pynix-pycharm-center>.pynix-tools-menu>summary>svg',
+        '.pynix-pycharm-center .pynix-run-with-params>svg',
+    ):
+        assert selector in ICONLESS_STYLE, selector
+    assert 'width:19px!important;height:19px!important' in ICONLESS_STYLE
