@@ -137,6 +137,30 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
 .workspace-mode .pynix-tool-profile-more svg{
  display:block;width:20px;height:20px;flex:0 0 20px
 }
+/* Theme is determined by JetBrains' original _dark/_light SVG variant.
+   Window key status is a separate state: soften the EXISTING vectors, never
+   switch themes or edit the licensed artwork on focus changes. */
+.workspace-mode .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
+.workspace-mode .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more svg{
+ transition:opacity 120ms ease;
+}
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more svg{
+ opacity:.48!important;
+}
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool[aria-pressed="true"]{
+ background:#3a3b41!important;
+}
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool:hover,
+.workspace-mode.pynix-window-inactive .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more:hover{
+ background:transparent!important;
+}
+@media(prefers-reduced-motion:reduce){
+ .workspace-mode .pynix-extra-tools[data-edge="left-top"] .pynix-extra-tool svg,
+ .workspace-mode .pynix-extra-tools[data-edge="left-top"] .pynix-tool-profile-more svg{
+  transition:none!important;
+ }
+}
 .workspace-mode .pynix-extra-separator{
  width:24px;height:1px;min-height:1px;flex:0 0 1px;
  background:#4a4c52;border-radius:1px;margin:2px 0 3px
@@ -169,6 +193,21 @@ EDGE_PROFILE_SCRIPT = r"""<script>
  const entries=__PROFILE_DATA__;
  const iconless=__ICONLESS__;
  const moreIcon=__MORE_ICON_DATA__;
+ // NSWindow key state is authoritative in the macOS host. The focus/blur
+ // handlers also cover HTML previews and non-native test harnesses.
+ const setWindowActive=active=>{
+  const workspace=document.querySelector('.workspace-mode');
+  if(workspace)workspace.classList.toggle('pynix-window-inactive',!active);
+ };
+ window.pynixSetWindowActive=setWindowActive;
+ window.addEventListener('focus',()=>setWindowActive(true));
+ window.addEventListener('blur',()=>setWindowActive(false));
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)setWindowActive(false);
+  else setWindowActive(document.hasFocus());
+ });
+ setWindowActive(document.hasFocus());
+
  const shortNames={
   'Project':'Proj','Search':'Find','Version Control':'Git',
   'Structure':'Struct','Run':'Run','Python Console':'Py',
