@@ -1,9 +1,8 @@
-<!-- PYNIX-owned Packages icon. A single isometric package embeds the same
-     PYNIX P mark directly in the right face; no Python symbol or bitmap. -->
-<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none">
-  <path d="M10 1.9 17.5 6.1v8L10 18.1 2.5 14.1v-8Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-  <path d="M2.7 6.25 10 10.1l7.3-3.85M10 10.1v7.8" stroke="currentColor" stroke-width="1.45" stroke-linejoin="round" stroke-linecap="round"/>
-  <g transform="matrix(.55 0 0 .55 8.2 7.1)">
-    <path d="M6.8 12.8V7.1L10 5.3l3.4 2V9L10 11l-1.1-.6v3.15L10 14.3l3.4-1.9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </g>
+<!-- PYNIX-specific package glyph: a single 20px parcel with an integral
+     simplified PYNIX monogram on its right face. No Python mark, bitmap,
+     nested scale transform, badge, or overlaid file pictogram. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" shape-rendering="geometricPrecision">
+  <path d="M10 1.85 17.5 6v8L10 18.1 2.5 14V6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M2.5 6 10 10.15 17.5 6M10 10.15V18" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M12 15.7V12.1L13.5 11.2 15.1 12.1 13 13.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
