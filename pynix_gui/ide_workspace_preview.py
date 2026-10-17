@@ -2041,6 +2041,7 @@ editorInput.addEventListener('keydown',event=>{
      line.style.paddingLeft=(7+Math.min(depth,12)*13)+'px';
      // Explorer has one highlighted row: explicit selection wins over active tab.
      if(!entry.folder&&entry.path===(selectedPath??current))line.classList.add('workspace-selected');
+     if(entry.folder&&selectedPath===entry.path)line.classList.add('workspace-selected');
      line.setAttribute('role','button');
      line.tabIndex=0;
      line.setAttribute('aria-label',(entry.folder?'Toggle ':'Open ')+entry.path);
@@ -2081,6 +2082,7 @@ editorInput.addEventListener('keydown',event=>{
      }else line.appendChild(label);
      const activate=()=>{
        if(entry.folder){
+         selectedPath=entry.path;
          if(expanded.has(entry.path))expanded.delete(entry.path);
          else expanded.add(entry.path);
          renderTree();
