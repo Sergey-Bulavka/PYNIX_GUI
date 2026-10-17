@@ -298,6 +298,8 @@ def main() -> None:
     parser.add_argument("--project", type=Path, help="Source project to explore")
     parser.add_argument("--ide-core", type=Path, help="Official PYNIX_IDE checkout for read-only Core snapshot")
     parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
+    parser.add_argument("--with-icons", action="store_true",
+                        help="Opt in to icon rendering (native IDE defaults to no icons)")
     parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
     parser.add_argument("--nav-command", choices=("definition", "references", "type-at"))
     parser.add_argument("--nav-source", help="Relative .pnx path for navigation")
@@ -847,11 +849,19 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(project_search_handler, "pynixProjectSearch")
     document = attach_navigation_controls(document)
     from pynix_gui.ide_icon_parity import apply_new_ui_icons
-    document = apply_new_ui_icons(document)
     from pynix_gui.ide_edge_profile import apply_edge_profile
-    document = apply_edge_profile(document)
     from pynix_gui.ide_pycharm_chrome import apply_pycharm_chrome
-    document = apply_pycharm_chrome(document)
+    if args.with_icons:
+        # Explicit opt-in: preserve the licensed icon library and old preview
+        # behavior, but never activate its DOM mutation observers by default.
+        document = apply_new_ui_icons(document)
+        document = apply_edge_profile(document)
+        document = apply_pycharm_chrome(document)
+    else:
+        from pynix_gui.ide_iconless_mode import apply_iconless_mode
+        document = apply_edge_profile(document, iconless=True)
+        document = apply_pycharm_chrome(document, iconless=True)
+        document = apply_iconless_mode(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
