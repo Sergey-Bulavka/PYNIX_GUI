@@ -1413,6 +1413,16 @@
         "sha256": "7eee756b4e99b7a0a51b94ee9e7bb1949ab6df1a70cd0975a24939e95f53983f"
       }
     },
+    "chat/toolWindowChat": {
+      "light_20": {
+        "path": "svg/chat/toolWindowChat@20x20.svg",
+        "sha256": "6ab00849a4aaa1cf682411b80b1e45be9624b1198b842addfa9adc1d2477d5dd"
+      },
+      "dark_20": {
+        "path": "svg/chat/toolWindowChat@20x20.svg",
+        "sha256": "6ab00849a4aaa1cf682411b80b1e45be9624b1198b842addfa9adc1d2477d5dd"
+      }
+    },
     "codeInsight/inlayRenameInComments": {
       "light_normal": {
         "path": "svg/codeInsight/inlayRenameInComments.svg",
