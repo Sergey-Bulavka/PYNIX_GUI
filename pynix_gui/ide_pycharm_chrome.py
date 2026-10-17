@@ -376,7 +376,12 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 
 /* Project V4: one quiet toolbar on hover anywhere within the tree, not only
    within its 32px header. No action moves or changes the tree row geometry. */
-.workspace-mode .tree{container-type:inline-size}
+/* Standard Project width fits all six icon buttons and the view selector;
+   existing user-resized --explorer-width continues to win. */
+.workspace-mode .tree{
+ container-type:inline-size;width:var(--explorer-width,310px)!important;
+ max-width:calc(100vw - 450px)!important;
+}
 .workspace-mode .tree .pynix-project-header{
  position:relative!important;isolation:isolate!important;overflow:visible!important;
 }
