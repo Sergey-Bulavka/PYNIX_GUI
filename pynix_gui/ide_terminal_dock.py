@@ -152,20 +152,28 @@ TERMINAL_DOCK_JS = r"""
     chevron.open=false;tools.open=false;callback();
    });host.appendChild(button);return button;
   };
-  for(const shell of ['bash','zsh'])menuButton(popup,shell,()=>createShell(shell));
-  const divider=document.createElement('div');
-  divider.className='pynix-terminal-dock-menu-separator';divider.setAttribute('role','separator');
-  popup.appendChild(divider);
-  menuButton(popup,'Settings',()=>{
-   popup.replaceChildren();
-   menuButton(popup,'Default shell: bash',()=>setDefaultShell('bash'));
-   menuButton(popup,'Default shell: zsh',()=>setDefaultShell('zsh'));
-   chevron.open=true;
-  });
   const setDefaultShell=shell=>{
    defaultShell=shell;
    try{localStorage.setItem('pynix.ide.defaultShell',shell);}catch(_){}
+   renderShellMenu();
   };
+  const renderShellMenu=(settings=false)=>{
+   popup.replaceChildren();
+   if(settings){
+    menuButton(popup,'← Back',()=>{renderShellMenu();chevron.open=true;});
+    for(const shell of ['bash','zsh'])
+     menuButton(popup,(shell===defaultShell?'✓ ':'')+'Default: '+shell,
+       ()=>setDefaultShell(shell));
+    return;
+   }
+   for(const shell of ['bash','zsh'])menuButton(popup,shell,()=>createShell(shell));
+   const divider=document.createElement('div');
+   divider.className='pynix-terminal-dock-menu-separator';
+   divider.setAttribute('role','separator');popup.appendChild(divider);
+   menuButton(popup,'Settings',()=>{renderShellMenu(true);chevron.open=true;});
+  };
+  renderShellMenu();
+  chevron.addEventListener('toggle',()=>{if(!chevron.open)renderShellMenu();});
   for(const [name,id] of [['Terminal','system'],['PYNIX Terminal','pynix']])
    menuButton(toolsPopup,name,()=>select(id));
   menuButton(toolsPopup,'Hide Tool Window',()=>setToolWindowVisible(false));
@@ -220,7 +228,9 @@ TERMINAL_DOCK_JS = r"""
     const tab=shellTabs.get(event.id);if(!tab)return;
     tab.buffer=(tab.buffer+(event.data||'')).slice(-200000);
     if(event.id===activeId)paintShell();
-    if(event.exited)tab.label+=' (exited)';
+    if(event.exited&&!tab.exited){
+     tab.exited=true;tab.label+=' (exited)';paintSessions();
+    }
    }
   };
   // Poll all sessions; inactive tabs still drain their own PTY buffers.
