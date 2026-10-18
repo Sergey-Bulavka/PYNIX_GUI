@@ -92,6 +92,7 @@ TAB_ADVANCED_JS = r"""
   miniCanvas.setAttribute('role','button');
   miniCanvas.tabIndex=0;
   mini.appendChild(miniCanvas);
+  mini.hidden=!pref.minimap;
   editorHost.appendChild(mini);
   let minimapFrame=0;
   const scrollHost=()=>editing&&!editorInput.hidden?editorInput:
