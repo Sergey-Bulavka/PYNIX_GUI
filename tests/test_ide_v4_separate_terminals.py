@@ -123,3 +123,38 @@ def test_native_backend_bridge_is_registered_without_pretending_to_support_windo
         "run_threading.Thread(target=worker, daemon=True).start()",
     ):
         assert name in source, name
+
+
+def test_terminal_scope_switches_without_activating_both_tools():
+    """Exercise selection logic in Node, not only its string signature."""
+    node=shutil.which("node")
+    if not node:
+        pytest.skip("Node not available")
+    start=TERMINAL_DOCK_JS.index("  const select=id=>{")
+    end=TERMINAL_DOCK_JS.index("  window.pynixTerminalDock={",start)
+    select_source=TERMINAL_DOCK_JS[start:end]
+    setup=r"""
+let scope='other',open=false,spawnCount=0,events=[];
+const system={input:{focus(){}}},pynix={input:{focus(){}}};
+const shellTabs=new Map();
+let defaultShell='zsh';
+const isVisible=()=>open;
+const createShell=()=>{spawnCount++;};
+const setToolWindowVisible=value=>{
+ open=value;events.push({scope,open});
+};
+"""
+    assertion=r"""
+select('system');
+if(!open||scope!=='system'||spawnCount!==1)throw Error('system not opened');
+select('pynix');
+if(!open||scope!=='pynix'||spawnCount!==1)throw Error('PYNIX must not inherit shell');
+select('pynix');
+if(open||scope!=='pynix')throw Error('second PYNIX click must hide');
+select('system');
+if(!open||scope!=='system')throw Error('system must re-open');
+console.log(JSON.stringify(events));
+"""
+    result=subprocess.run([node,"-e",setup+select_source+assertion],
+                          text=True,encoding="utf-8",capture_output=True,timeout=20)
+    assert result.returncode==0,result.stderr
