@@ -14,8 +14,8 @@ from pynix_gui.ide_workspace_session import WorkspaceSession
 
 def test_menu_geometry_does_not_regress_to_oversized_blank_rows():
     css=CHROME_STYLE.split("/* V4 PyCharm tab-action menu:",1)[1]
-    assert "width:min(262px,calc(100vw - 12px))!important" in css
-    assert "min-height:29px!important;height:29px!important" in css
+    assert "width:min(228px,calc(100vw - 12px))!important" in css
+    assert "min-height:27px!important;height:27px!important" in css
     assert "font:400 13px/20px" in css
     assert "font:500 13.5px/20px" in css
     assert "width:18px!important;height:18px!important" in css
