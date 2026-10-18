@@ -878,7 +878,8 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  background:#314b78!important;color:#fff!important
 }
 .workspace-mode .pynix-terminal-dock-gap{
- display:block;flex:1 1 0;min-width:0
+ display:block;flex:1 1 auto!important;min-width:0!important;
+ margin-left:auto!important
 }
 .workspace-mode .pynix-terminal-dock-agents{
  flex:0 1 auto;min-width:0;border:0;border-radius:5px;
@@ -930,9 +931,11 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  font:13px/19px ui-monospace,SFMono-Regular,Menlo,monospace!important
 }
 .workspace-mode .pynix-terminal-session-tabs{
- display:flex!important;align-items:center!important;gap:3px!important;
- flex:0 1 auto!important;min-width:0!important;max-width:min(50%,560px)!important;
- overflow-x:auto!important;scrollbar-width:none!important;height:32px!important
+ box-sizing:border-box!important;
+ display:flex!important;align-items:center!important;gap:4px!important;
+ flex:0 1 auto!important;width:max-content!important;
+ min-width:0!important;max-width:none!important;
+ overflow:hidden!important;scrollbar-width:none!important;height:32px!important
 }
 .workspace-mode .pynix-terminal-session-tabs::-webkit-scrollbar{display:none}
 .workspace-mode .pynix-terminal-session-tab{
