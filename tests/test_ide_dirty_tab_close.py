@@ -7,7 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def test_dirty_tab_close_has_save_discard_cancel_choices():
     source = (ROOT / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
     assert "requestCloseTab(fileName)" in source
-    assert "button('Cancel',dismiss)" in source
+    assert "button('Cancel',()=>{tabControls.stopBulk();dismiss();})" in source
     assert "button('Don’t Save'" in source
     assert "button('Save'" in source
     assert "pendingCloseAfterSave===payload.source" in source
