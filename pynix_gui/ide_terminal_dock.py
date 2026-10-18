@@ -139,7 +139,7 @@ TERMINAL_DOCK_JS = r"""
     button.title=isPynix?'PYNIX Console':tab.shell;
     button.setAttribute('aria-selected',String(id===active));
     button.addEventListener('click',()=>{
-     if(isPynix){pynixId=id;paintSessions();paintPynix();}
+     if(isPynix){if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;pynixId=id;paintSessions();paintPynix();}
      else{activeId=id;paintSessions();paintShell();}
     });
     const close=document.createElement('button');close.type='button';
@@ -147,6 +147,7 @@ TERMINAL_DOCK_JS = r"""
     close.setAttribute('aria-label','Close '+tab.label);
     close.addEventListener('click',()=>{
      if(isPynix){
+      if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
       pynixTabs.delete(id);
       if(pynixId===id)pynixId=[...pynixTabs.keys()].at(-1)||null;
       if(!pynixTabs.size)createPynixTab();
