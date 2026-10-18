@@ -929,6 +929,7 @@ def main() -> None:
 
     class TerminalSessionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
+            request = {}
             try:
                 request = normalize_webkit_request(message.body())
                 scope = str(request.get("scope", ""))
