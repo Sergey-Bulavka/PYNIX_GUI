@@ -2428,6 +2428,7 @@ editorInput.addEventListener('keydown',event=>{
      }
    } else renderCode(file);
    updateEditingView();
+   tabControls.recordLocation();
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
