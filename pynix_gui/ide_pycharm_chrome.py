@@ -668,6 +668,106 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode>.pynix-tabs-popup .pynix-tabs-divider{
  height:1px;background:#484b53;margin:6px 4px
 }
+
+/* V4 PyCharm tab-action menu: compact density, full-row mouse/keyboard
+   selection, source glyphs and shortcuts matching the same 13px text scale.
+   This is intentionally the last layer; legacy popup styles remain above. */
+.workspace-mode>.pynix-tabs-popup{
+ box-sizing:border-box!important;
+ width:min(228px,calc(100vw - 12px))!important;
+ min-width:0!important;max-width:calc(100vw - 12px)!important;
+ max-height:min(485px,calc(100vh - 16px))!important;
+ padding:4px!important;border-radius:7px!important;
+ background:#2e3036!important;border:1px solid #55575f!important;
+ box-shadow:0 8px 20px rgba(0,0,0,.58)!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row{
+ box-sizing:border-box!important;display:flex!important;align-items:center!important;
+ min-height:27px!important;border-radius:5px!important;
+ padding:0!important;margin:0!important;
+ background:transparent!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item{
+ box-sizing:border-box!important;
+ display:flex!important;align-items:center!important;min-width:0!important;
+ flex:1 1 0%!important;min-height:27px!important;height:27px!important;
+ padding:4px 8px!important;margin:0!important;gap:7px!important;
+ background:transparent!important;border:0!important;border-radius:5px!important;
+ color:#d2d4da!important;cursor:pointer!important;
+ font:400 13px/20px -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ text-align:left!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-shortcut{
+ flex:0 0 auto!important;margin-left:auto!important;padding-left:7px!important;
+ font:500 13.5px/20px -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ letter-spacing:0!important;color:#aeb1bc!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-label{
+ min-width:0!important;flex:1 1 auto!important;white-space:nowrap!important;
+ text-overflow:ellipsis!important;overflow:hidden!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row:is(
+ :hover,:focus-within,.pynix-keyboard-selected){
+ background:#304d7b!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row:is(
+ :hover,:focus-within,.pynix-keyboard-selected) .pynix-tabs-menu-item:not(:disabled){
+ background:transparent!important;color:#f0f2f7!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row:is(
+ :hover,:focus-within,.pynix-keyboard-selected) .pynix-tabs-menu-shortcut{
+ color:#d0d9e8!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item:disabled{
+ color:#868991!important;opacity:.78!important;cursor:default!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row:has(.pynix-tabs-menu-item:disabled){
+ background:transparent!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-close{
+ flex:0 0 24px!important;width:24px!important;height:24px!important;
+ margin-right:2px!important;padding:0!important;font-size:17px!important;
+ border-radius:5px!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-divider{
+ box-sizing:border-box!important;height:1px!important;
+ margin:4px 5px!important;background:#41444c!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tab-file-glyph{
+ flex:0 0 18px!important;width:18px!important;height:18px!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tab-file-glyph svg{
+ width:17px!important;height:17px!important;max-width:17px!important;
+ max-height:17px!important;display:block!important
+}
+/* Real project-scoped editor tab preferences */
+.workspace-mode .editor-tabs[data-pynix-icons="false"] .pynix-tab-file-glyph{
+ display:none!important
+}
+.workspace-mode .editor-tabs[data-pynix-close="true"] .pynix-editor-tab .pynix-editor-tab-close{
+ visibility:visible!important;pointer-events:auto!important
+}
+.workspace-mode .editor-tabs[data-pynix-compact="true"] .pynix-editor-tab{
+ height:26px!important;min-height:26px!important;max-height:26px!important;
+ padding:0 4px!important;gap:3px!important
+}
+.workspace-mode .editor{position:relative!important}
+.workspace-mode .pynix-editor-minimap{
+ position:absolute!important;z-index:21!important;
+ box-sizing:border-box!important;
+ right:0!important;top:43px!important;bottom:0!important;
+ width:82px!important;min-width:82px!important;
+ border-left:1px solid #363a41!important;background:#232529!important;
+ overflow:hidden!important
+}
+.workspace-mode .pynix-editor-minimap[hidden]{display:none!important}
+.workspace-mode .pynix-editor-minimap canvas{
+ display:block;width:100%;height:100%;cursor:pointer;outline:none
+}
+.workspace-mode .pynix-editor-minimap canvas:focus-visible{
+ outline:1px solid #7fa4d6!important;outline-offset:-2px!important
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>

@@ -84,9 +84,9 @@ def test_menu_matches_reference_but_unimplemented_actions_are_disabled():
     assert "row('Recent Locations',()=>openMenu('locations')" in TAB_CONTROL_JS
     assert "recordLocation=()=>{" in TAB_CONTROL_JS
     assert "selectNavigationLocation({" in TAB_CONTROL_JS
-    assert "row('Bookmark Open Tabs...',null,{disabled:true})" in TAB_CONTROL_JS
-    assert "row('Configure Editor Tabs...',null,{disabled:true})" in TAB_CONTROL_JS
-    assert "row('Show Minimap',null,{disabled:true})" in TAB_CONTROL_JS
+    assert "row('Bookmark Open Tabs...',bookmarkOpenTabs,{disabled:!openTabs.length})" in TAB_CONTROL_JS
+    assert "row('Configure Editor Tabs...',()=>openMenu('preferences'))" in TAB_CONTROL_JS
+    assert "row(pref.minimap?'Hide Minimap':'Show Minimap',toggleMinimap)" in TAB_CONTROL_JS
     assert "window.pynixOpenSearchEverywhere?.()" in TAB_CONTROL_JS
     assert "popup.setAttribute('role','menu')" in TAB_CONTROL_JS
     assert "button.setAttribute('aria-label'" not in TAB_CONTROL_JS

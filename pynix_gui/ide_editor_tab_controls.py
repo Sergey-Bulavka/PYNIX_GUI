@@ -1,5 +1,7 @@
 """Real V4 tab strip controls, embedded in workspace bootstrap IIFE."""
 
+from .ide_editor_tab_advanced import TAB_ADVANCED_JS
+
 TAB_CONTROL_JS = r"""
  const planTabOverflow=(widths,available,active)=>{
   if(widths.reduce((a,b)=>a+b,0)<=available)return [];
@@ -77,6 +79,11 @@ TAB_CONTROL_JS = r"""
     hint.textContent=shortcut;el.appendChild(hint);
    }
    el.addEventListener('click',()=>{if(disabled)return;dismiss();run?.();});
+   for(const type of ['pointerenter','focus'])el.addEventListener(type,()=>{
+    popup.querySelectorAll('.pynix-tabs-menu-row.pynix-keyboard-selected')
+      .forEach(other=>other.classList.remove('pynix-keyboard-selected'));
+    host.classList.add('pynix-keyboard-selected');
+   });
    host.appendChild(el);popup.appendChild(host);return host;
   };
   const nextBulk=()=>{
@@ -84,6 +91,7 @@ TAB_CONTROL_JS = r"""
    if(bulk.length)requestCloseTab(bulk.shift());
   };
   const startBulk=names=>{bulk=names.filter(x=>openTabs.includes(x));nextBulk();};
+  __PYNIX_ADVANCED_TABS__
   const paint=()=>{
    popup.replaceChildren();
    if(menu==='hidden'){
@@ -111,6 +119,8 @@ TAB_CONTROL_JS = r"""
      },{icon:byName.get(entry.name)?.icon||'file'});
     return;
    }
+   if(menu==='bookmarks'){paintBookmarks();return;}
+   if(menu==='preferences'){paintPreferences();return;}
    if(menu==='recent'){
     const entries=recent.filter(x=>byName.has(x)).slice(0,30);
     if(!entries.length)row('No recent files',null,{disabled:true});
@@ -128,16 +138,19 @@ TAB_CONTROL_JS = r"""
    row('Reopen Closed Tab',()=>{
     const name=closed.find(x=>byName.has(x)&&!openTabs.includes(x));if(name)show(name);
    },{disabled:!closed.some(x=>byName.has(x)&&!openTabs.includes(x))});
-   divider();row('Bookmark Open Tabs...',null,{disabled:true});
-   divider();row('Configure Editor Tabs...',null,{disabled:true});
-   row('Show Minimap',null,{disabled:true});
+   divider();
+   row('Bookmark Open Tabs...',bookmarkOpenTabs,{disabled:!openTabs.length});
+   if(bookmarked.length)row('Open Bookmarked Tabs...',()=>openMenu('bookmarks'));
+   divider();
+   row('Configure Editor Tabs...',()=>openMenu('preferences'));
+   row(pref.minimap?'Hide Minimap':'Show Minimap',toggleMinimap);
   };
   const openMenu=kind=>{
    if(kind==='hidden'&&!hidden.length)return;
    menu=kind;paint();popup.hidden=false;
    hiddenButton.setAttribute('aria-expanded',String(kind==='hidden'));
    moreButton.setAttribute('aria-expanded',String(kind!=='hidden'));
-   position();popup.querySelector('button:not(:disabled)')?.focus();
+   position();popup.querySelector('.pynix-tabs-menu-item:not(:disabled)')?.focus();
   };
   hiddenButton.addEventListener('click',()=>menu==='hidden'?dismiss():openMenu('hidden'));
   moreButton.addEventListener('click',()=>menu==='actions'?dismiss():openMenu('actions'));
@@ -148,7 +161,25 @@ TAB_CONTROL_JS = r"""
   document.addEventListener('keydown',event=>{
    if(event.key==='Escape'&&menu){
     event.preventDefault();event.stopPropagation();
-    const target=menu==='hidden'?hiddenButton:moreButton;dismiss();target.focus();
+    const target=menu==='hidden'?hiddenButton:moreButton;dismiss();target.focus();return;
+   }
+   if(event.metaKey&&!event.ctrlKey&&!event.altKey){
+    const key=event.key.toLowerCase();
+    if(key==='e'){
+     event.preventDefault();openMenu(event.shiftKey?'locations':'recent');return;
+    }
+    if(key==='o'&&event.shiftKey){
+     event.preventDefault();dismiss();window.pynixOpenSearchEverywhere?.();return;
+    }
+   }
+   if(!menu||!popup.contains(document.activeElement))return;
+   const items=[...popup.querySelectorAll('.pynix-tabs-menu-item:not(:disabled)')];
+   if(!items.length)return;
+   if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
+    event.preventDefault();const index=items.indexOf(document.activeElement);
+    const next=event.key==='Home'?0:event.key==='End'?items.length-1:
+     (index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;
+    items[next]?.focus();
    }
   },true);
   const sync=()=>{
@@ -174,6 +205,7 @@ TAB_CONTROL_JS = r"""
    closed.unshift(name);if(closed.length>30)closed.pop();
    if(bulk.length)queueMicrotask(nextBulk);schedule();
   };
-  return {strip,schedule,visited,recordLocation,tabDidClose,stopBulk:()=>{bulk=[];}};
+  return {strip,schedule,visited,recordLocation,tabDidClose,
+   updateMinimap:scheduleMinimap,stopBulk:()=>{bulk=[];}};
  })();
-"""
+""".replace("__PYNIX_ADVANCED_TABS__", TAB_ADVANCED_JS)
