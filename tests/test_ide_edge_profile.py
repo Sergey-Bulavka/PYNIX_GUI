@@ -75,7 +75,7 @@ def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     assert "Search" not in PINNED_TOOLS
     assert "Version Control" not in PINNED_TOOLS
     assert EXISTING_ACTIONS["Run"] == "rail:3"
-    assert EXISTING_ACTIONS["Terminal"] == "rail:4"
+    assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
     assert "x.pinned" in EDGE_PROFILE_SCRIPT
     assert "clickExisting(entry)" in EDGE_PROFILE_SCRIPT
@@ -261,8 +261,8 @@ def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button()
         "Terminal", "Problems", "Git",
     )
     assert EXISTING_ACTIONS["Run"] == "rail:3"
-    assert EXISTING_ACTIONS["PYNIX Terminal"] == "rail:4"
-    assert EXISTING_ACTIONS["Terminal"] == "rail:4"
+    assert EXISTING_ACTIONS["PYNIX Terminal"] == "terminal:pynix"
+    assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
     assert EXISTING_ACTIONS["Git"] == "rail:2"
     assert "Services" not in EXISTING_ACTIONS
