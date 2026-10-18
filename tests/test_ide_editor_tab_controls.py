@@ -17,7 +17,7 @@ def test_overflow_planner_keeps_current_and_hides_only_unfitted_tabs():
     if not node:
         pytest.skip("Node.js needed for live JS overflow tests")
     planner=TAB_CONTROL_JS[:TAB_CONTROL_JS.index(" const tabControls=(()=>{")]
-    query=planner+"""
+    query="global.window={};\n"+planner+"""
 const test=(widths,space,active)=>planTabOverflow(widths,space,active);
 console.log(JSON.stringify([
  test([110,120,140],500,2),
@@ -60,7 +60,7 @@ def test_runtime_uses_real_tab_identity_and_native_close_safety(tmp_path):
     ):
         assert text in script,text
     assert "__PYNIX_TAB_CONTROLS__" not in script
-    assert "tabs.replaceChildren();" in TAB_CONTROL_JS
+    assert "tabs.replaceChildren(strip,actions);" in TAB_CONTROL_JS
     assert "tabs.replaceChildren();" not in script[script.index(" function renderTabs(){"):
                                                       script.index(" function show(name)")]
     assert script.count("const tabControls=(()=>{")==1
@@ -87,7 +87,7 @@ def test_menu_matches_reference_but_unimplemented_actions_are_disabled():
     assert "row('Show Minimap',null,{disabled:true})" in TAB_CONTROL_JS
     assert "window.pynixOpenSearchEverywhere?.()" in TAB_CONTROL_JS
     assert "popup.setAttribute('role','menu')" in TAB_CONTROL_JS
-    assert "button.setAttribute('aria-label'" not in TAB_CONTROL_JS or True
+    assert "button.setAttribute('aria-label'" not in TAB_CONTROL_JS
 
 
 def test_chrome_does_not_allow_popups_to_be_clipped_or_overflow_button_to_show_when_hidden():
