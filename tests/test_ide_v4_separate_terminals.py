@@ -33,7 +33,7 @@ def test_shell_tabs_and_menu_are_real_not_disabled_or_shared_output():
     for value in (
         "pynix-terminal-shell-chevron",
         '<svg viewBox="0 0 16 16"',
-        "const createShell=",  # prefer function if implementation changes
+        "function createShell(shell){",  # prefer function if implementation changes
         "scope:'shell',action:'create'",
         "scope:'shell',action:'write'",
         "scope:'shell',action:'poll'",
