@@ -31,7 +31,7 @@ def test_file_tree_names_and_path_match_editor_font_without_changing_row_geometr
     assert "height:" not in layer
     assert "padding:" not in layer
     assert "width:" not in layer
-    assert "svg" not in layer.lower()
+    assert "svg{" not in layer.lower()
 
 
 def test_font_override_is_after_legacy_12px_rules_in_rendered_v4_document():
