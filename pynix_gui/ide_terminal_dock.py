@@ -34,7 +34,7 @@ TERMINAL_DOCK_JS = r"""
   overflow.hidden=true;
   const overflowToggle=document.createElement('summary');
   overflowToggle.className='pynix-terminal-dock-action';
-  overflowToggle.innerHTML='⌄';
+  overflowToggle.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   overflowToggle.setAttribute('aria-label','More Tabs');
   overflowToggle.dataset.hint='More Tabs';
   const overflowPopup=document.createElement('div');
@@ -62,7 +62,12 @@ TERMINAL_DOCK_JS = r"""
   .pynix-terminal-dock-bar{display:flex;align-items:center;min-width:0}
   .pynix-terminal-dock-title,.pynix-terminal-new,.pynix-terminal-tab-overflow,
   .pynix-terminal-options-menu,.pynix-terminal-dock-hide{flex-shrink:0}
-  .pynix-terminal-session-tabs{display:flex;align-items:center;min-width:0;overflow:hidden;flex:1 1 auto}
+  .pynix-terminal-session-tabs{display:flex!important;align-items:center;min-width:0!important;width:0!important;max-width:none!important;overflow:hidden;flex:1 1 0%!important}
+  .pynix-terminal-dock-gap{flex:0 0 0!important;width:0!important;margin:0!important}
+  .pynix-terminal-tab-overflow>summary{width:27px;height:28px;display:flex!important;align-items:center;justify-content:center;padding:0!important;line-height:1!important;list-style:none}
+  .pynix-terminal-tab-overflow>summary::-webkit-details-marker{display:none}
+  .pynix-terminal-tab-overflow>summary svg{display:block;flex:none}
+  .pynix-terminal-new{order:0}
   .pynix-terminal-session-tab{flex-shrink:0}\n  .pynix-terminal-session-tab[hidden]{display:none!important}
   .pynix-terminal-tab-overflow{position:relative;flex-shrink:0}
   .pynix-terminal-tab-overflow[hidden]{display:none!important}
@@ -168,7 +173,7 @@ TERMINAL_DOCK_JS = r"""
    const hidden=[];
    for(let index=0;index<items.length;index++){
     const item=items[index],width=item.getBoundingClientRect().width;
-    if(used+width>room){item.hidden=true;hidden.push(index);}
+    if(used+width>room+0.5){item.hidden=true;hidden.push(index);}
     else used+=width;
    }
    overflowPopup.replaceChildren();
