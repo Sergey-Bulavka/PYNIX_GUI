@@ -17,14 +17,14 @@ TERMINAL_DOCK_JS = r"""
   sessions.className='pynix-terminal-session-tabs';
   const newSession=document.createElement('button');
   newSession.type='button';newSession.className='pynix-terminal-dock-action pynix-terminal-new';
-  newSession.textContent='+';newSession.title='New Tab (⌘T)';
+  newSession.textContent='+';newSession.title='';newSession.dataset.hint='New Tab (⌘T)';
   newSession.setAttribute('aria-label','New Terminal Tab');
   const chevron=document.createElement('details');
   chevron.className='pynix-terminal-shell-dropdown';
   const summary=document.createElement('summary');
   summary.className='pynix-terminal-dock-action pynix-terminal-shell-chevron';
   summary.setAttribute('aria-label','Choose Terminal Shell');
-  summary.title='Choose Terminal Shell';
+  summary.title='';summary.dataset.hint='Choose Terminal Shell';
   summary.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.3 5.9 4.7 4.7 4.7-4.7" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const popup=document.createElement('div');popup.className='pynix-terminal-dock-popup';
   popup.setAttribute('role','menu');
@@ -45,6 +45,9 @@ TERMINAL_DOCK_JS = r"""
   header.append(title,sessions,newSession,chevron,gap,tools,hide);
   terminal.insertBefore(header,debugPanelBar.nextSibling);
 
+  const hintStyle=document.createElement('style');
+  hintStyle.textContent='.pynix-terminal-dock-bar [data-hint]{position:relative}.pynix-terminal-dock-bar [data-hint]:hover::after,.pynix-terminal-dock-bar [data-hint]:focus-visible::after{content:attr(data-hint);position:absolute;z-index:300;top:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#383a40;border:1px solid #575a63;border-radius:6px;color:#e5e6ea;padding:6px 9px;font:12px/17px -apple-system,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 4px 14px #0006}';
+  document.head.appendChild(hintStyle);
   const makePanel=(cls,label)=>{
    const panel=document.createElement('div');panel.className=cls;
    panel.setAttribute('aria-label',label);
@@ -61,6 +64,7 @@ TERMINAL_DOCK_JS = r"""
   pynix.log.textContent='PYNIX Console — type help for supported commands.\n';
   const shellTabs=new Map();
   let activeId=null,scope='other',serial=0,pynixBusy=false;
+  const pynixTabs=new Map();let pynixId=null,pynixSerial=0,pynixPending=null,shellCreating=false;
   let defaultShell='zsh';
   try{defaultShell=localStorage.getItem('pynix.ide.defaultShell')||'zsh';}catch(_){}
   if(!['bash','zsh'].includes(defaultShell))defaultShell='zsh';
@@ -93,10 +97,12 @@ TERMINAL_DOCK_JS = r"""
    const legacy=document.querySelectorAll('.workspace-mode .rail>.rail-item')[4];
    legacy?.classList.toggle('active',visible&&scope==='system');
    legacy?.setAttribute('aria-pressed',String(visible&&scope==='system'));
-   title.textContent=scope==='pynix'?'PYNIX Terminal':scope==='system'?'Terminal':(
+   title.textContent=scope==='pynix'?'PYNIX Console':scope==='system'?'Terminal':(
     selectedTool==='TERMINAL'?'Run':selectedTool[0]+selectedTool.slice(1).toLowerCase());
-   sessions.hidden=scope!=='system';
-   newSession.hidden=scope!=='system';
+   sessions.hidden=scope==='other';
+   newSession.hidden=scope==='other';
+   newSession.dataset.hint=scope==='pynix'?'New Console Tab (⌘T)':'New Tab (⌘T)';
+   paintSessions();
    chevron.hidden=scope!=='system';
    publish();
   };
@@ -105,6 +111,7 @@ TERMINAL_DOCK_JS = r"""
    if(scope===id&&isVisible()){setToolWindowVisible(false);return;}
    scope=id;setToolWindowVisible(true);
    if(id==='system'&&!shellTabs.size)createShell(defaultShell);
+   if(id==='pynix'&&!pynixTabs.size)createPynixTab();
    if(id==='system')system.input.focus();else pynix.input.focus();
   };
   window.pynixTerminalDock={
@@ -122,17 +129,30 @@ TERMINAL_DOCK_JS = r"""
 
   const paintSessions=()=>{
    sessions.replaceChildren();
-   for(const [id,tab] of shellTabs){
+   const isPynix=scope==='pynix', tabs=isPynix?pynixTabs:shellTabs;
+   const active=isPynix?pynixId:activeId;
+   for(const [id,tab] of tabs){
     const item=document.createElement('div');
-    item.className='pynix-terminal-session-tab'+(id===activeId?' active':'');
+    item.className='pynix-terminal-session-tab'+(id===active?' active':'');
     const button=document.createElement('button');button.type='button';
     button.className='pynix-terminal-session-select';button.textContent=tab.label;
-    button.title=tab.shell;button.setAttribute('aria-selected',String(id===activeId));
-    button.addEventListener('click',()=>{activeId=id;paintSessions();paintShell();});
+    button.title=isPynix?'PYNIX Console':tab.shell;
+    button.setAttribute('aria-selected',String(id===active));
+    button.addEventListener('click',()=>{
+     if(isPynix){pynixId=id;paintSessions();paintPynix();}
+     else{activeId=id;paintSessions();paintShell();}
+    });
     const close=document.createElement('button');close.type='button';
     close.className='pynix-terminal-session-close';close.textContent='×';
     close.setAttribute('aria-label','Close '+tab.label);
-    close.addEventListener('click',()=>native({scope:'shell',action:'close',id}));
+    close.addEventListener('click',()=>{
+     if(isPynix){
+      pynixTabs.delete(id);
+      if(pynixId===id)pynixId=[...pynixTabs.keys()].at(-1)||null;
+      if(!pynixTabs.size)createPynixTab();
+      paintSessions();paintPynix();
+     }else native({scope:'shell',action:'close',id});
+    });
     item.append(button,close);sessions.appendChild(item);
    }
   };
@@ -141,10 +161,28 @@ TERMINAL_DOCK_JS = r"""
    system.log.textContent=tab?.buffer||'';
    system.log.scrollTop=system.log.scrollHeight;
   };
+  const paintPynix=()=>{
+   const tab=pynixTabs.get(pynixId);
+   pynix.log.textContent=tab?.buffer||'';
+   pynix.input.value=tab?.draft||'';
+   pynix.log.scrollTop=pynix.log.scrollHeight;
+  };
+  function createPynixTab(){
+   if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
+   const id='pynix-'+(++pynixSerial);
+   pynixTabs.set(id,{label:pynixSerial===1?'PYNIX':'PYNIX '+pynixSerial,
+    buffer:'PYNIX Console — type help for supported commands.\n',draft:''});
+   pynixId=id;paintSessions();paintPynix();pynix.input.focus();
+  }
   function createShell(shell){
+   if(!shellTabs.size&&shellCreating)return;
+   if(!shellTabs.size)shellCreating=true;
    native({scope:'shell',action:'create',shell});
   }
-  newSession.addEventListener('click',()=>createShell(defaultShell));
+  newSession.addEventListener('click',()=>{
+   if(scope==='pynix')createPynixTab();
+   else if(scope==='system')createShell(defaultShell);
+  });
   const menuButton=(host,label,callback)=>{
    const button=document.createElement('button');button.type='button';
    button.setAttribute('role','menuitem');button.textContent=label;
@@ -174,7 +212,7 @@ TERMINAL_DOCK_JS = r"""
   };
   renderShellMenu();
   chevron.addEventListener('toggle',()=>{if(!chevron.open)renderShellMenu();});
-  for(const [name,id] of [['Terminal','system'],['PYNIX Terminal','pynix']])
+  for(const [name,id] of [['Terminal','system'],['PYNIX Console','pynix']])
    menuButton(toolsPopup,name,()=>select(id));
   menuButton(toolsPopup,'Hide Tool Window',()=>setToolWindowVisible(false));
   document.addEventListener('pointerdown',event=>{
@@ -186,8 +224,8 @@ TERMINAL_DOCK_JS = r"""
     for(const details of [chevron,tools])details.open=false;
    }
    if((event.metaKey||event.ctrlKey)&&!event.altKey&&event.key.toLowerCase()==='t'&&
-     scope==='system'&&isVisible()&&terminal.contains(document.activeElement)){
-    event.preventDefault();createShell(defaultShell);
+     ['system','pynix'].includes(scope)&&isVisible()&&terminal.contains(document.activeElement)){
+    event.preventDefault();if(scope==='pynix')createPynixTab();else createShell(defaultShell);
    }
   },true);
   system.input.addEventListener('keydown',event=>{
@@ -201,22 +239,27 @@ TERMINAL_DOCK_JS = r"""
   pynix.input.addEventListener('keydown',event=>{
    if(event.key!=='Enter'||event.shiftKey)return;
    event.preventDefault();
-   const command=pynix.input.value.trim();pynix.input.value='';
+   const command=pynix.input.value.trim();
    if(!command||pynixBusy)return;
-   append(pynix.log,'pynix> '+command+'\n');pynixBusy=true;
+   pynix.input.value='';
+   const tab=pynixTabs.get(pynixId);if(!tab)return;
+   tab.draft='';tab.buffer+='pynix> '+command+'\n';paintPynix();
+   pynixPending=pynixId;pynixBusy=true;
    native({scope:'pynix',action:'execute',command});
   });
   window.pynixTerminalNativeEvent=event=>{
    if(!event||typeof event!=='object')return;
    if(event.scope==='pynix'){
     pynixBusy=false;
-    append(pynix.log,(event.data||event.error||'')+'\n');
+    const tab=pynixTabs.get(pynixPending);
+    if(tab)tab.buffer+=String(event.data||event.error||'')+'\n';
+    pynixPending=null;if(scope==='pynix')paintPynix();
     return;
    }
    if(event.scope!=='shell')return;
-   if(event.error){append(system.log,'[Terminal] '+event.error+'\n');return;}
+   if(event.error){shellCreating=false;append(system.log,'[Terminal] '+event.error+'\n');return;}
    if(event.kind==='created'){
-    serial++;
+    shellCreating=false;serial++;
     const id=event.id;
     shellTabs.set(id,{shell:event.shell,label:serial===1?'Local':event.shell+' '+serial,buffer:''});
     activeId=id;paintSessions();paintShell();system.input.focus();
@@ -224,6 +267,7 @@ TERMINAL_DOCK_JS = r"""
     shellTabs.delete(event.id);
     if(activeId===event.id)activeId=[...shellTabs.keys()].at(-1)||null;
     paintSessions();paintShell();
+    if(!shellTabs.size&&scope==='system'&&isVisible())createShell(defaultShell);
    }else if(event.kind==='output'){
     const tab=shellTabs.get(event.id);if(!tab)return;
     tab.buffer=(tab.buffer+(event.data||'')).slice(-200000);
