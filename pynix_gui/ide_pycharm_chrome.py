@@ -946,7 +946,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  color:#c6c8d0!important
 }
 .workspace-mode .pynix-terminal-session-tab.active{
- background:#363940!important;border-color:#4a4d56!important;color:#e4e7ec!important
+ background:#253c66!important;border-color:#3b66b0!important;color:#e4eaf5!important
 }
 .workspace-mode .pynix-terminal-session-select,.workspace-mode .pynix-terminal-session-close{
  display:inline-flex!important;align-items:center!important;justify-content:center!important;
