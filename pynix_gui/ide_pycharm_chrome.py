@@ -768,6 +768,19 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-editor-minimap canvas:focus-visible{
  outline:1px solid #7fa4d6!important;outline-offset:-2px!important
 }
+
+/* IDE V4 Project text size parity. The source editor's live CSS uses
+   13px (both editable text and read-only code). Previous Project styles
+   still forced 12px on .entry/.project-label and the muted root path.
+   Keep the 24px tree row geometry, SVG sizes and Project toolbar intact. */
+.workspace-mode .tree .project-entry{
+ font-size:13px!important;
+}
+.workspace-mode .tree .project-entry .project-label,
+.workspace-mode .tree .project-entry .pynix-project-root-name,
+.workspace-mode .tree .project-entry .pynix-project-root-path{
+ font-size:13px!important;
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
