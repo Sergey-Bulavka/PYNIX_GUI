@@ -29,7 +29,16 @@ TAB_CONTROL_JS = r"""
   tabs.replaceChildren(strip,actions);
   const popup=document.createElement('div');popup.className='pynix-tabs-popup';
   popup.setAttribute('role','menu');popup.hidden=true;document.body.appendChild(popup);
-  const recent=[],closed=[];let hidden=[],menu=null,frame=0,bulk=[];
+  const recent=[],closed=[],locations=[];let hidden=[],menu=null,frame=0,bulk=[];
+  const recordLocation=()=>{
+   if(!current||!editorInput.value)return;
+   const start=editorInput.selectionStart||0;
+   const line=editorInput.value.slice(0,start).split('\n').length;
+   if(locations[0]?.name===current&&locations[0]?.line===line)return;
+   locations.unshift({name:current,line});if(locations.length>50)locations.pop();
+  };
+  editorInput.addEventListener('keyup',recordLocation);
+  editorInput.addEventListener('mouseup',recordLocation);
   const visited=name=>{
    const i=recent.indexOf(name);if(i>=0)recent.splice(i,1);
    recent.unshift(name);if(recent.length>50)recent.pop();
@@ -90,6 +99,18 @@ TAB_CONTROL_JS = r"""
      item.appendChild(close);
     }return;
    }
+   if(menu==='locations'){
+    const entries=locations.filter(x=>byName.has(x.name)).slice(0,30);
+    if(!entries.length)row('No recent locations',null,{disabled:true});
+    for(const entry of entries)
+     row(entry.name+':'+entry.line,()=>{
+      show(entry.name);
+      requestAnimationFrame(()=>selectNavigationLocation({
+       source:entry.name,line:entry.line,column:1
+      }));
+     },{icon:byName.get(entry.name)?.icon||'file'});
+    return;
+   }
    if(menu==='recent'){
     const entries=recent.filter(x=>byName.has(x)).slice(0,30);
     if(!entries.length)row('No recent files',null,{disabled:true});
@@ -98,7 +119,7 @@ TAB_CONTROL_JS = r"""
     return;
    }
    row('Recent Files',()=>openMenu('recent'),{shortcut:'⌘E'});
-   row('Recent Locations',null,{disabled:true,shortcut:'⇧⌘E'});
+   row('Recent Locations',()=>openMenu('locations'),{shortcut:'⇧⌘E'});
    row('Go to File...',()=>window.pynixOpenSearchEverywhere?.(),{shortcut:'⇧⌘O'});
    divider();
    row('Close All Tabs',()=>startBulk([...openTabs]),{disabled:!openTabs.length});
@@ -153,6 +174,6 @@ TAB_CONTROL_JS = r"""
    closed.unshift(name);if(closed.length>30)closed.pop();
    if(bulk.length)queueMicrotask(nextBulk);schedule();
   };
-  return {strip,schedule,visited,tabDidClose,stopBulk:()=>{bulk=[];}};
+  return {strip,schedule,visited,recordLocation,tabDidClose,stopBulk:()=>{bulk=[];}};
  })();
 """
