@@ -252,7 +252,7 @@ TERMINAL_DOCK_JS = r"""
   function createPynixTab(){
    if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
    const id='pynix-'+(++pynixSerial);
-   pynixTabs.set(id,{label:pynixSerial===1?'Local':'Local '+pynixSerial,
+   pynixTabs.set(id,{label:pynixTabs.size===0?'Local':'Local '+pynixSerial,
     buffer:'PYNIX Console — type help for supported commands.\n',draft:''});
    pynixId=id;paintSessions();paintPynix();pynix.input.focus();
   }
