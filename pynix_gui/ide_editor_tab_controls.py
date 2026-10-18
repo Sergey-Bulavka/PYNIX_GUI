@@ -140,7 +140,7 @@ TAB_CONTROL_JS = r"""
    },{disabled:!closed.some(x=>byName.has(x)&&!openTabs.includes(x))});
    divider();
    row('Bookmark Open Tabs...',bookmarkOpenTabs,{disabled:!openTabs.length});
-   row('Open Bookmarked Tabs...',()=>openMenu('bookmarks'),{disabled:!bookmarked.length});
+   if(bookmarked.length)row('Open Bookmarked Tabs...',()=>openMenu('bookmarks'));
    divider();
    row('Configure Editor Tabs...',()=>openMenu('preferences'));
    row(pref.minimap?'Hide Minimap':'Show Minimap',toggleMinimap);
@@ -162,6 +162,15 @@ TAB_CONTROL_JS = r"""
    if(event.key==='Escape'&&menu){
     event.preventDefault();event.stopPropagation();
     const target=menu==='hidden'?hiddenButton:moreButton;dismiss();target.focus();return;
+   }
+   if(event.metaKey&&!event.ctrlKey&&!event.altKey){
+    const key=event.key.toLowerCase();
+    if(key==='e'){
+     event.preventDefault();openMenu(event.shiftKey?'locations':'recent');return;
+    }
+    if(key==='o'&&event.shiftKey){
+     event.preventDefault();dismiss();window.pynixOpenSearchEverywhere?.();return;
+    }
    }
    if(!menu||!popup.contains(document.activeElement))return;
    const items=[...popup.querySelectorAll('.pynix-tabs-menu-item:not(:disabled)')];
