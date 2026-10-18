@@ -62,8 +62,8 @@ TERMINAL_DOCK_JS = r"""
   .pynix-terminal-dock-bar{display:flex;align-items:center;min-width:0}
   .pynix-terminal-dock-title,.pynix-terminal-new,.pynix-terminal-tab-overflow,
   .pynix-terminal-options-menu,.pynix-terminal-dock-hide{flex-shrink:0}
-  .pynix-terminal-session-tabs{display:flex!important;align-items:center;min-width:0!important;width:auto!important;max-width:none!important;overflow:hidden;flex:1 1 auto!important}
-  .pynix-terminal-dock-gap{flex:0 0 0!important;width:0!important;margin:0!important}
+  /* The authoritative flex contract is in ide_pycharm_chrome.py.
+     Do not override the gap or session-strip width from a late stylesheet. */
   .pynix-terminal-tab-overflow>summary{width:27px;height:28px;display:flex!important;align-items:center;justify-content:center;padding:0!important;line-height:1!important;list-style:none}
   .pynix-terminal-tab-overflow>summary::-webkit-details-marker{display:none}
   .pynix-terminal-tab-overflow>summary svg{display:block;flex:none}
@@ -160,28 +160,40 @@ TERMINAL_DOCK_JS = r"""
 
   const updateOverflow=()=>{
    if(scope==='other'){overflow.hidden=true;return;}
-   // Reserve the right-side controls before measuring the tab viewport.
-   const active=scope==='pynix'?pynixId:activeId;
+   // Measure every tab at its natural width. Overflow is only displayed
+   // when there really is insufficient room for all sessions.
    const items=[...sessions.children];
    for(const item of items)item.hidden=false;
    overflow.hidden=true;
-   const natural=items.reduce((total,item)=>total+item.getBoundingClientRect().width,0);
-   if(sessions.clientWidth<1)return;
-   if(natural<=sessions.clientWidth+1)return;
+   if(!items.length)return;
+   const widths=items.map(item=>item.getBoundingClientRect().width);
+   const spacing=4;  // Matches the session-strip gap in PyCharm chrome CSS.
+   const required=widths.reduce((total,width)=>total+width,0)+spacing*(items.length-1);
+   if(required<=sessions.clientWidth+0.5)return;
    overflow.hidden=false;
-   const room=sessions.clientWidth;
-   if(room<1)return;
-   let used=0;
-   const hidden=[];
-   for(let index=0;index<items.length;index++){
-    const item=items[index],width=item.getBoundingClientRect().width;
-    if(used+width>room+0.5){item.hidden=true;hidden.push(index);}
-    else used+=width;
-   }
-   overflowPopup.replaceChildren();
+   const available=sessions.clientWidth;
    const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
-   for(const index of hidden){
-    const [id,tab]=tabs[index];
+   const active=scope==='pynix'?pynixId:activeId;
+   const activeIndex=Math.max(0,tabs.findIndex(([id])=>id===active));
+   const shown=new Set();
+   let used=0;
+   const include=index=>{
+    if(index<0||index>=items.length)return false;
+    const cost=widths[index]+(shown.size?spacing:0);
+    if(shown.size&&used+cost>available+0.5)return false;
+    shown.add(index);used+=cost;return true;
+   };
+   // Keep the selected tab visible, even if it was chosen from overflow.
+   include(activeIndex);
+   // Show recent tabs nearby rather than hiding the active one behind a menu.
+   for(let i=activeIndex+1;i<items.length;i++)if(!include(i))break;
+   for(let i=activeIndex-1;i>=0;i--)if(!include(i))break;
+   overflowPopup.replaceChildren();
+   for(let i=0;i<items.length;i++){
+    items[i].hidden=!shown.has(i);
+    if(shown.has(i))continue;
+    const [id,tab]=tabs[i];
+    if(!tab)continue;
     const entry=document.createElement('button');entry.type='button';
     entry.className='pynix-overflow-entry';entry.setAttribute('role','menuitem');
     entry.textContent=(id===active?'✓ ':'')+tab.label;
@@ -398,7 +410,7 @@ TERMINAL_DOCK_JS = r"""
    if(event.kind==='created'){
     shellCreating=false;serial++;
     const id=event.id;
-    shellTabs.set(id,{shell:event.shell,label:serial===1?'Local':event.shell+' '+serial,buffer:''});
+    shellTabs.set(id,{shell:event.shell,label:shellTabs.size===0?'Local':'Local '+serial,buffer:''});
     activeId=id;paintSessions();paintShell();system.input.focus();
    }else if(event.kind==='closed'){
     shellTabs.delete(event.id);
