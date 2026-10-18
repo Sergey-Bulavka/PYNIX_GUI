@@ -29,11 +29,22 @@ TERMINAL_DOCK_JS = r"""
   const popup=document.createElement('div');popup.className='pynix-terminal-dock-popup';
   popup.setAttribute('role','menu');
   chevron.append(summary,popup);
+  const overflow=document.createElement('details');
+  overflow.className='pynix-terminal-tab-overflow';
+  overflow.hidden=true;
+  const overflowToggle=document.createElement('summary');
+  overflowToggle.className='pynix-terminal-dock-action';
+  overflowToggle.innerHTML='⌄';
+  overflowToggle.setAttribute('aria-label','More Tabs');
+  overflowToggle.dataset.hint='More Tabs';
+  const overflowPopup=document.createElement('div');
+  overflowPopup.className='pynix-terminal-dock-popup';overflowPopup.setAttribute('role','menu');
+  overflow.append(overflowToggle,overflowPopup);
   const gap=document.createElement('span');gap.className='pynix-terminal-dock-gap';
   const tools=document.createElement('details');tools.className='pynix-terminal-options-menu';
   const more=document.createElement('summary');
   more.className='pynix-terminal-dock-action';more.textContent='⋮';
-  more.title='Tool Window Options';
+  more.title='';more.dataset.hint='Options';more.setAttribute('aria-label','Options');
   const toolsPopup=document.createElement('div');
   toolsPopup.className='pynix-terminal-dock-popup';toolsPopup.setAttribute('role','menu');
   tools.append(more,toolsPopup);
@@ -42,11 +53,25 @@ TERMINAL_DOCK_JS = r"""
   hide.textContent='−';hide.title='Hide Tool Window';
   hide.setAttribute('aria-label','Hide Tool Window');
   hide.addEventListener('click',()=>setToolWindowVisible(false));
-  header.append(title,sessions,newSession,chevron,gap,tools,hide);
+  header.append(title,sessions,newSession,overflow,chevron,gap,tools,hide);
   terminal.insertBefore(header,debugPanelBar.nextSibling);
 
   const hintStyle=document.createElement('style');
   hintStyle.textContent='.pynix-terminal-dock-bar [data-hint]{position:relative}.pynix-terminal-dock-bar [data-hint]:hover::after,.pynix-terminal-dock-bar [data-hint]:focus-visible::after{content:attr(data-hint);position:absolute;z-index:300;top:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#383a40;border:1px solid #575a63;border-radius:6px;color:#e5e6ea;padding:6px 9px;font:12px/17px -apple-system,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 4px 14px #0006}';
+  hintStyle.textContent+=`
+  .pynix-terminal-dock-bar{display:flex;align-items:center;min-width:0}
+  .pynix-terminal-dock-title,.pynix-terminal-new,.pynix-terminal-tab-overflow,
+  .pynix-terminal-options-menu,.pynix-terminal-dock-hide{flex-shrink:0}
+  .pynix-terminal-session-tabs{display:flex;align-items:center;min-width:0;overflow:hidden;flex:1 1 auto}
+  .pynix-terminal-session-tab{flex-shrink:0}\n  .pynix-terminal-session-tab[hidden]{display:none!important}
+  .pynix-terminal-tab-overflow{position:relative;flex-shrink:0}
+  .pynix-terminal-tab-overflow[hidden]{display:none!important}
+  .pynix-terminal-tab-overflow>.pynix-terminal-dock-popup{right:0;left:auto;min-width:175px;max-height:320px;overflow-y:auto}
+  .pynix-terminal-tab-overflow .pynix-overflow-entry{display:block;width:100%;text-align:left}
+  .pynix-terminal-options-menu .pynix-terminal-menu-divider{height:1px;background:#41434a;margin:6px 2px}
+  .pynix-terminal-options-menu .pynix-terminal-menu-sub{padding-left:16px}
+  .pynix-terminal-options-menu .pynix-terminal-menu-disabled{opacity:.5}
+  `;
   document.head.appendChild(hintStyle);
   const makePanel=(cls,label)=>{
    const panel=document.createElement('div');panel.className=cls;
@@ -104,6 +129,7 @@ TERMINAL_DOCK_JS = r"""
    newSession.dataset.hint=scope==='pynix'?'New Console Tab (⌘T)':'New Tab (⌘T)';
    paintSessions();
    chevron.hidden=scope!=='system';
+   renderOptions();
    publish();
   };
   const select=id=>{
@@ -127,6 +153,41 @@ TERMINAL_DOCK_JS = r"""
    if(event.key==='Enter'||event.key===' '){event.preventDefault();select('system');}
   });
 
+  const updateOverflow=()=>{
+   if(scope==='other'){overflow.hidden=true;return;}
+   // Reserve the right-side controls before measuring the tab viewport.
+   const active=scope==='pynix'?pynixId:activeId;
+   const items=[...sessions.children];
+   for(const item of items)item.hidden=false;
+   overflow.hidden=true;
+   const natural=items.reduce((total,item)=>total+item.getBoundingClientRect().width,0);
+   if(natural<=sessions.clientWidth+1)return;
+   overflow.hidden=false;
+   const room=sessions.clientWidth;
+   let used=0;
+   const hidden=[];
+   for(let index=0;index<items.length;index++){
+    const item=items[index],width=item.getBoundingClientRect().width;
+    if(used+width>room){item.hidden=true;hidden.push(index);}
+    else used+=width;
+   }
+   overflowPopup.replaceChildren();
+   const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
+   for(const index of hidden){
+    const [id,tab]=tabs[index];
+    const entry=document.createElement('button');entry.type='button';
+    entry.className='pynix-overflow-entry';entry.setAttribute('role','menuitem');
+    entry.textContent=(id===active?'✓ ':'')+tab.label;
+    entry.addEventListener('click',()=>{
+     overflow.open=false;
+     if(scope==='pynix'){
+      if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
+      pynixId=id;paintSessions();paintPynix();
+     }else{activeId=id;paintSessions();paintShell();}
+    });
+    overflowPopup.appendChild(entry);
+   }
+  };
   const paintSessions=()=>{
    sessions.replaceChildren();
    const isPynix=scope==='pynix', tabs=isPynix?pynixTabs:shellTabs;
@@ -156,6 +217,7 @@ TERMINAL_DOCK_JS = r"""
     });
     item.append(button,close);sessions.appendChild(item);
    }
+   requestAnimationFrame(updateOverflow);
   };
   const paintShell=()=>{
    const tab=shellTabs.get(activeId);
@@ -171,7 +233,7 @@ TERMINAL_DOCK_JS = r"""
   function createPynixTab(){
    if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
    const id='pynix-'+(++pynixSerial);
-   pynixTabs.set(id,{label:pynixSerial===1?'PYNIX':'PYNIX '+pynixSerial,
+   pynixTabs.set(id,{label:pynixSerial===1?'Local':'Local '+pynixSerial,
     buffer:'PYNIX Console — type help for supported commands.\n',draft:''});
    pynixId=id;paintSessions();paintPynix();pynix.input.focus();
   }
@@ -184,6 +246,74 @@ TERMINAL_DOCK_JS = r"""
    if(scope==='pynix')createPynixTab();
    else if(scope==='system')createShell(defaultShell);
   });
+  const menuDivider=host=>{
+   const line=document.createElement('div');line.className='pynix-terminal-menu-divider';
+   line.setAttribute('role','separator');host.appendChild(line);
+  };
+  let showToolbar=true,viewMode='Docked';
+  const renderOptions=()=>{
+   toolsPopup.replaceChildren();
+   const option=(label,action)=>menuButton(toolsPopup,label,action);
+   if(scope==='system'){
+    option('Terminal Engine  ›',()=>renderOptionsSub('Engine'));
+    option('✓ Show AI Agents in Toolbar',()=>{
+     showAiAgents=!showAiAgents;renderOptions();
+    });
+    option('⚙ Settings',()=>{chevron.open=true;renderShellMenu(true);});
+    menuDivider(toolsPopup);
+   }
+   option('Close All',()=>{
+    if(scope==='pynix'){pynixTabs.clear();pynixId=null;createPynixTab();}
+    else if(scope==='system'){
+     for(const id of shellTabs.keys())native({scope:'shell',action:'close',id});
+    }else setToolWindowVisible(false);
+   });
+   option((showToolbar?'✓ ':'')+'Show Toolbar',()=>{
+    showToolbar=!showToolbar;
+    newSession.hidden=!showToolbar||scope==='other';
+    chevron.hidden=!showToolbar||scope!=='system';
+    renderOptions();
+   });
+   option('View Mode  ›',()=>renderOptionsSub('View Mode'));
+   option('Move to  ›',()=>renderOptionsSub('Move to'));
+   option('Resize  ›',()=>renderOptionsSub('Resize'));
+   menuDivider(toolsPopup);
+   option('Remove from Sidebar',()=>{
+    const rail=document.querySelectorAll('.workspace-mode .rail>.rail-item')[scope==='pynix'?5:4];
+    if(rail)rail.hidden=true;
+   });
+  };
+  let showAiAgents=true;
+  const renderOptionsSub=kind=>{
+   toolsPopup.replaceChildren();
+   menuButton(toolsPopup,'← Back',()=>{renderOptions();tools.open=true;});
+   if(kind==='Engine'){
+    for(const shell of ['zsh','bash'])
+     menuButton(toolsPopup,(shell===defaultShell?'✓ ':'')+shell,()=>{
+      defaultShell=shell;setDefaultShell(shell);
+     });
+   }else if(kind==='View Mode'){
+    for(const mode of ['Docked','Floating'])
+     menuButton(toolsPopup,(viewMode===mode?'✓ ':'')+mode,()=>{
+      viewMode=mode;
+      terminal.classList.toggle('pynix-terminal-floating',mode==='Floating');
+      renderOptions();
+     });
+   }else if(kind==='Move to'){
+    for(const side of ['Bottom','Top'])
+     menuButton(toolsPopup,side,()=>{
+      terminal.style.order=side==='Top'?'-1':'';
+      renderOptions();
+     });
+   }else if(kind==='Resize'){
+    for(const direction of ['Larger','Smaller'])
+     menuButton(toolsPopup,direction,()=>{
+      const height=terminal.getBoundingClientRect().height;
+      terminal.style.setProperty('--terminal-height',Math.max(90,Math.min(window.innerHeight*.55,height+(direction==='Larger'?80:-80)))+'px');
+      renderOptions();
+     });
+   }
+  };
   const menuButton=(host,label,callback)=>{
    const button=document.createElement('button');button.type='button';
    button.setAttribute('role','menuitem');button.textContent=label;
@@ -213,16 +343,14 @@ TERMINAL_DOCK_JS = r"""
   };
   renderShellMenu();
   chevron.addEventListener('toggle',()=>{if(!chevron.open)renderShellMenu();});
-  for(const [name,id] of [['Terminal','system'],['PYNIX Console','pynix']])
-   menuButton(toolsPopup,name,()=>select(id));
-  menuButton(toolsPopup,'Hide Tool Window',()=>setToolWindowVisible(false));
+  renderOptions();
   document.addEventListener('pointerdown',event=>{
-   for(const details of [chevron,tools])
+   for(const details of [chevron,tools,overflow])
     if(details.open&&!details.contains(event.target))details.open=false;
   });
   document.addEventListener('keydown',event=>{
    if(event.key==='Escape'){
-    for(const details of [chevron,tools])details.open=false;
+    for(const details of [chevron,tools,overflow])details.open=false;
    }
    if((event.metaKey||event.ctrlKey)&&!event.altKey&&event.key.toLowerCase()==='t'&&
      ['system','pynix'].includes(scope)&&isVisible()&&terminal.contains(document.activeElement)){
@@ -288,6 +416,8 @@ TERMINAL_DOCK_JS = r"""
     scope='other';sync();
    }
   });
+  new ResizeObserver(()=>requestAnimationFrame(updateOverflow)).observe(sessions);
+  window.addEventListener('resize',updateOverflow);
   // Initial dock is collapsed, without taking space from Project/editor.
   setToolWindowVisible(false);
  }
