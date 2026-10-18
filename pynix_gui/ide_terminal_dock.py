@@ -62,7 +62,7 @@ TERMINAL_DOCK_JS = r"""
   .pynix-terminal-dock-bar{display:flex;align-items:center;min-width:0}
   .pynix-terminal-dock-title,.pynix-terminal-new,.pynix-terminal-tab-overflow,
   .pynix-terminal-options-menu,.pynix-terminal-dock-hide{flex-shrink:0}
-  .pynix-terminal-session-tabs{display:flex!important;align-items:center;min-width:0!important;width:0!important;max-width:none!important;overflow:hidden;flex:1 1 0%!important}
+  .pynix-terminal-session-tabs{display:flex!important;align-items:center;min-width:0!important;width:auto!important;max-width:none!important;overflow:hidden;flex:1 1 auto!important}
   .pynix-terminal-dock-gap{flex:0 0 0!important;width:0!important;margin:0!important}
   .pynix-terminal-tab-overflow>summary{width:27px;height:28px;display:flex!important;align-items:center;justify-content:center;padding:0!important;line-height:1!important;list-style:none}
   .pynix-terminal-tab-overflow>summary::-webkit-details-marker{display:none}
@@ -166,9 +166,11 @@ TERMINAL_DOCK_JS = r"""
    for(const item of items)item.hidden=false;
    overflow.hidden=true;
    const natural=items.reduce((total,item)=>total+item.getBoundingClientRect().width,0);
+   if(sessions.clientWidth<1)return;
    if(natural<=sessions.clientWidth+1)return;
    overflow.hidden=false;
    const room=sessions.clientWidth;
+   if(room<1)return;
    let used=0;
    const hidden=[];
    for(let index=0;index<items.length;index++){
@@ -422,7 +424,12 @@ TERMINAL_DOCK_JS = r"""
     scope='other';sync();
    }
   });
-  new ResizeObserver(()=>requestAnimationFrame(updateOverflow)).observe(header);
+  let overflowResizePending=false;
+  new ResizeObserver(()=>{
+   if(overflowResizePending)return;
+   overflowResizePending=true;
+   requestAnimationFrame(()=>{overflowResizePending=false;updateOverflow();});
+  }).observe(terminal);
   window.addEventListener('resize',updateOverflow);
   // Initial dock is collapsed, without taking space from Project/editor.
   setToolWindowVisible(false);
