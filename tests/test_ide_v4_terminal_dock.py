@@ -127,6 +127,7 @@ class Fake{
   };
  }
  append(...items){this.children.push(...items);}
+ appendChild(item){this.children.push(item);return item;}
  insertBefore(item){this.children.push(item);}
  setAttribute(key,value){this.attrs[key]=value;}
  getAttribute(key){return this.attrs[key];}
