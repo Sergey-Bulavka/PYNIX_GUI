@@ -781,6 +781,127 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .tree .project-entry .pynix-project-root-path{
  font-size:13px!important;
 }
+
+/* Native V4 PyCharm terminal tool-window: preserve the original content
+   controller; only the visible chrome changes. The editor and Project tree
+   get ALL released height because the dock and resizer leave flex layout. */
+.workspace-mode .layout>.section:first-child>.card:first-child>.ide{
+ height:auto!important;min-height:0!important;flex:1 1 0%!important;
+ max-height:none!important;overflow:hidden!important
+}
+.workspace-mode .ide>.tree,
+.workspace-mode .ide>.editor{
+ min-height:0!important;
+}
+.workspace-mode .integrated-terminal.pynix-tool-window-collapsed{
+ display:none!important;height:0!important;min-height:0!important;
+ margin:0!important;flex:0 0 0px!important
+}
+.workspace-mode .terminal-resizer[hidden]{
+ display:none!important;height:0!important;min-height:0!important
+}
+.workspace-mode .pynix-tool-window-restore{
+ display:none!important
+}
+/* Old VS Code-like "Terminal / Problems / Output / Debug Console" tabs stay
+   in DOM as programmatic command targets, but the visible dock is PyCharm. */
+.workspace-mode .integrated-terminal .terminal-tabs,
+.workspace-mode .integrated-terminal .pynix-terminal-session{
+ display:none!important
+}
+.workspace-mode .integrated-terminal{
+ display:flex;flex-direction:column;
+ background:#1e1f22!important;border:0!important;
+ border-radius:9px!important;overflow:hidden!important;
+ min-height:135px;max-height:55vh
+}
+.workspace-mode .integrated-terminal .pynix-terminal-dock-bar{
+ box-sizing:border-box!important;order:0!important;
+ display:flex!important;align-items:center!important;flex:0 0 36px!important;
+ min-width:0!important;height:36px!important;min-height:36px!important;
+ padding:0 8px 0 12px!important;gap:6px!important;
+ background:#242528!important;border-bottom:1px solid #393a3f!important;
+ color:#cfd1d6!important;
+ font:500 12px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important
+}
+.workspace-mode .pynix-terminal-dock-title{
+ flex:0 0 auto;min-width:66px;max-width:150px;
+ color:#d5d7dc;font-size:13px;font-weight:600;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.workspace-mode .pynix-terminal-dock-session{
+ box-sizing:border-box;display:inline-flex;align-items:center;gap:4px;
+ min-width:0;height:27px;max-width:180px;padding:0 4px 0 10px;
+ background:#363941;border:1px solid #494b53;border-radius:7px;
+ color:#e0e1e5;font-size:12px
+}
+.workspace-mode .pynix-terminal-dock-session[hidden]{display:none!important}
+.workspace-mode .pynix-terminal-dock-action{
+ box-sizing:border-box!important;display:inline-flex!important;
+ align-items:center!important;justify-content:center!important;
+ width:27px!important;min-width:27px!important;height:27px!important;min-height:27px!important;
+ margin:0!important;padding:0!important;
+ border:0!important;border-radius:6px!important;
+ background:transparent!important;color:#bfc2ca!important;
+ font:400 18px/1 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ cursor:pointer!important
+}
+.workspace-mode .pynix-terminal-dock-action:hover:not(:disabled),
+.workspace-mode .pynix-terminal-dock-action:focus-visible,
+.workspace-mode .pynix-terminal-dock-bar details[open]>summary{
+ background:#3a3d45!important;color:#f1f2f6!important
+}
+.workspace-mode .pynix-terminal-dock-action:disabled{
+ opacity:.42!important;cursor:default!important
+}
+.workspace-mode .pynix-terminal-dock-bar details{position:relative;flex:0 0 auto}
+.workspace-mode .pynix-terminal-dock-bar details>summary{
+ list-style:none;cursor:pointer
+}
+.workspace-mode .pynix-terminal-dock-bar details>summary::-webkit-details-marker{
+ display:none!important
+}
+.workspace-mode .pynix-terminal-dock-popup{
+ position:absolute;z-index:300;top:calc(100% + 7px);right:0;
+ box-sizing:border-box;width:max-content;min-width:153px;max-width:240px;
+ padding:4px;background:#2e3036;border:1px solid #555760;
+ border-radius:8px;box-shadow:0 12px 27px #0009
+}
+.workspace-mode .pynix-terminal-dock-popup>button{
+ box-sizing:border-box;display:block;width:100%;min-height:28px;
+ padding:4px 10px;border:0;border-radius:5px;background:transparent;
+ text-align:left;color:#d9dbe2;white-space:nowrap;font:12px/18px -apple-system,system-ui,sans-serif;
+ cursor:pointer
+}
+.workspace-mode .pynix-terminal-dock-popup>button:hover,
+.workspace-mode .pynix-terminal-dock-popup>button:focus-visible{
+ background:#314b78!important;color:#fff!important
+}
+.workspace-mode .pynix-terminal-dock-gap{
+ display:block;flex:1 1 0;min-width:0
+}
+.workspace-mode .pynix-terminal-dock-agents{
+ flex:0 1 auto;min-width:0;border:0;border-radius:5px;
+ background:transparent;color:#9da1ab;
+ font:500 12px/1 -apple-system,system-ui,sans-serif;
+ white-space:nowrap;cursor:default;padding:5px
+}
+.workspace-mode .pynix-terminal-dock-agents:disabled{opacity:.7}
+.workspace-mode .integrated-terminal .terminal-console{
+ order:2!important;flex:1 1 0%!important;min-height:0!important;
+ box-sizing:border-box!important;background:#1e1f22!important;
+ color:#bfc4cd!important;border:0!important;
+ padding:9px 13px!important;overflow:auto!important;
+ font:13px/19px ui-monospace,SFMono-Regular,Menlo,monospace!important
+}
+.workspace-mode .integrated-terminal .pynix-debug-panel-toolbar{
+ order:1!important
+}
+@media(max-width:850px){
+ .workspace-mode .pynix-terminal-dock-title{min-width:49px}
+ .workspace-mode .pynix-terminal-dock-session{max-width:110px}
+ .workspace-mode .pynix-terminal-dock-agents{display:none}
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
