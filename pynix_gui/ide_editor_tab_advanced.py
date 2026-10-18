@@ -164,4 +164,4 @@ TAB_ADVANCED_JS = r"""
   const toggleMinimap=()=>setMinimap(!pref.minimap);
   // Defer until the parent tab controller has installed its width scheduler.
   requestAnimationFrame(()=>{applyOptions();scheduleMinimap();});
-""
+"""
