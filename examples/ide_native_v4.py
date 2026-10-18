@@ -906,10 +906,69 @@ def main() -> None:
             drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)
             refresh_native_drag_areas()
 
+    # System Terminal and PYNIX Console deliberately have independent native
+    # backends. The frontend does not launch a real shell until + or Terminal.
+    import atexit
+    from pynix_gui.ide_terminal_sessions import (
+        LocalTerminalSessions, PynixCommandConsole, TerminalSessionError,
+    )
+    native_shells = LocalTerminalSessions(session.root)
+    atexit.register(native_shells.shutdown)
+    command_python = args.compiler_python or session.root / ".venv" / "bin" / "python"
+    if not command_python.is_file():
+        command_python = Path(sys.executable)
+    pynix_commands = PynixCommandConsole(session.root, command_python)
+
+    def publish_terminal_event(payload):
+        import json
+        serialized = json.dumps(payload, ensure_ascii=False).replace(
+            "<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        script = "window.pynixTerminalNativeEvent?.(" + serialized + ");"
+        NSOperationQueue.mainQueue().addOperationWithBlock_(
+            lambda: view.evaluateJavaScript_completionHandler_(script, None))
+
+    class TerminalSessionHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            request = {}
+            try:
+                request = normalize_webkit_request(message.body())
+                scope = str(request.get("scope", ""))
+                action = str(request.get("action", ""))
+                if scope == "shell":
+                    if action == "create":
+                        result = native_shells.create(str(request.get("shell", "")))
+                    elif action == "poll":
+                        result = native_shells.poll(str(request.get("id", "")))
+                    elif action == "write":
+                        result = native_shells.write(
+                            str(request.get("id", "")), request.get("data", ""))
+                    elif action == "close":
+                        result = native_shells.close(str(request.get("id", "")))
+                    else:
+                        raise TerminalSessionError("Unknown shell action")
+                    publish_terminal_event({"scope": "shell", **result})
+                elif scope == "pynix" and action == "execute":
+                    command = request.get("command", "")
+                    if not isinstance(command, str):
+                        raise TerminalSessionError("PYNIX command must be text")
+                    def worker():
+                        result = pynix_commands.execute(command)
+                        publish_terminal_event({"scope": "pynix", "data": result})
+                    run_threading.Thread(target=worker, daemon=True).start()
+                else:
+                    raise TerminalSessionError("Unknown terminal command")
+            except (TerminalSessionError, OSError, ValueError, TypeError) as exc:
+                publish_terminal_event({
+                    "scope": "pynix" if str(request.get("scope", "")) == "pynix" else "shell",
+                    "error": str(exc),
+                })
+
+    terminal_session_handler = TerminalSessionHandler.alloc().init()
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(
         toolbar_drag_handler, "pynixToolbarDragRegion")
+    controller.addScriptMessageHandler_name_(terminal_session_handler, "pynixTerminalSession")
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")

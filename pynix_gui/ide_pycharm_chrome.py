@@ -902,6 +902,87 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  .workspace-mode .pynix-terminal-dock-session{max-width:110px}
  .workspace-mode .pynix-terminal-dock-agents{display:none}
 }
+
+/* Separate live system PTYs and PYNIX compiler console. */
+.workspace-mode .integrated-terminal .terminal-console[hidden],
+.workspace-mode .integrated-terminal .pynix-system-terminal[hidden],
+.workspace-mode .integrated-terminal .pynix-language-terminal[hidden],
+.workspace-mode .pynix-terminal-dock-bar [hidden]{display:none!important}
+.workspace-mode .pynix-system-terminal,.workspace-mode .pynix-language-terminal{
+ order:2!important;display:flex!important;flex-direction:column!important;
+ box-sizing:border-box!important;flex:1 1 0%!important;min-width:0!important;
+ min-height:0!important;overflow:hidden!important;padding:6px 11px!important;
+ gap:3px!important;background:#1e1f22!important
+}
+.workspace-mode .pynix-terminal-log{
+ flex:1 1 auto!important;min-height:0!important;overflow:auto!important;
+ padding:3px 0!important;margin:0!important;min-width:0!important;
+ background:transparent!important;color:#d4d7dd!important;
+ font:13px/19px ui-monospace,SFMono-Regular,Menlo,monospace!important;
+ white-space:pre-wrap!important;overflow-wrap:anywhere!important
+}
+.workspace-mode .pynix-terminal-input{
+ box-sizing:border-box!important;flex:0 0 26px!important;width:100%!important;
+ resize:none!important;min-height:26px!important;max-height:26px!important;
+ border:0!important;border-top:1px solid #383b42!important;
+ outline:none!important;border-radius:0!important;background:transparent!important;
+ padding:4px 2px!important;color:#dce2e9!important;
+ font:13px/19px ui-monospace,SFMono-Regular,Menlo,monospace!important
+}
+.workspace-mode .pynix-terminal-session-tabs{
+ display:flex!important;align-items:center!important;gap:3px!important;
+ flex:0 1 auto!important;min-width:0!important;max-width:min(50%,560px)!important;
+ overflow-x:auto!important;scrollbar-width:none!important;height:32px!important
+}
+.workspace-mode .pynix-terminal-session-tabs::-webkit-scrollbar{display:none}
+.workspace-mode .pynix-terminal-session-tab{
+ display:flex!important;align-items:center!important;flex:0 0 auto!important;
+ height:30px!important;max-width:180px!important;
+ border-radius:7px!important;padding:0 3px 0 7px!important;
+ background:transparent!important;border:1px solid transparent!important;
+ color:#c6c8d0!important
+}
+.workspace-mode .pynix-terminal-session-tab.active{
+ background:#363940!important;border-color:#4a4d56!important;color:#e4e7ec!important
+}
+.workspace-mode .pynix-terminal-session-select,.workspace-mode .pynix-terminal-session-close{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ height:24px!important;background:transparent!important;color:inherit!important;
+ border:0!important;padding:0!important;cursor:pointer!important
+}
+.workspace-mode .pynix-terminal-session-select{
+ flex:1 1 auto!important;min-width:0!important;
+ font:500 12px/1 -apple-system,system-ui,sans-serif!important;
+ white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
+}
+.workspace-mode .pynix-terminal-session-close{
+ width:23px!important;min-width:23px!important;font-size:17px!important;border-radius:5px!important
+}
+.workspace-mode .pynix-terminal-session-close:hover{background:#4c5059!important}
+.workspace-mode .pynix-terminal-shell-dropdown{position:relative!important}
+.workspace-mode .pynix-terminal-shell-chevron{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ padding:0!important;line-height:0!important
+}
+.workspace-mode .pynix-terminal-shell-chevron svg{
+ display:block!important;width:15px!important;height:15px!important;
+ min-width:15px!important;flex:0 0 15px!important
+}
+.workspace-mode .pynix-terminal-dock-menu-separator{
+ height:1px!important;background:#494b52!important;margin:4px 6px!important
+}
+.workspace-mode .pynix-terminal-new,.workspace-mode .pynix-terminal-shell-dropdown{
+ opacity:0!important;pointer-events:none!important
+}
+.workspace-mode .integrated-terminal:hover .pynix-terminal-new,
+.workspace-mode .integrated-terminal:hover .pynix-terminal-shell-dropdown,
+.workspace-mode .integrated-terminal:focus-within .pynix-terminal-new,
+.workspace-mode .integrated-terminal:focus-within .pynix-terminal-shell-dropdown,
+.workspace-mode .pynix-terminal-shell-dropdown[open]{
+ opacity:1!important;pointer-events:auto!important
+}
+.workspace-mode .pynix-terminal-dock-bar details[hidden]{display:none!important}
+.workspace-mode .pynix-terminal-dock-popup{z-index:600!important}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
