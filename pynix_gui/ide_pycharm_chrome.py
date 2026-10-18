@@ -400,7 +400,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .tree .pynix-project-view-switcher>summary{
  width:auto!important;min-width:68px!important;padding:0 4px!important;
  display:inline-flex!important;align-items:center!important;gap:6px!important;
- color:#d0d2d7!important;font-size:12px!important;font-weight:600!important
+ color:#d0d2d7!important;font-size:13px!important;font-weight:600!important
 }
 .workspace-mode .tree .pynix-project-view-switcher>summary svg{
  width:14px!important;height:14px!important;
