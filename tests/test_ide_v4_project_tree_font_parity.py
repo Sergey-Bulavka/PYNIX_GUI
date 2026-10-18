@@ -22,7 +22,7 @@ def test_reference_editor_is_13px_in_edit_and_preview_modes():
 def test_file_tree_names_and_path_match_editor_font_without_changing_row_geometry():
     marker="/* IDE V4 Project text size parity."
     assert marker in CHROME_STYLE
-    layer=CHROME_STYLE.split(marker,1)[1]
+    layer=CHROME_STYLE.split(marker,1)[1].split("/* Native V4 PyCharm terminal tool-window:",1)[0]
     assert ".workspace-mode .tree .project-entry{" in layer
     assert ".workspace-mode .tree .project-entry .project-label," in layer
     assert ".workspace-mode .tree .project-entry .pynix-project-root-name," in layer
