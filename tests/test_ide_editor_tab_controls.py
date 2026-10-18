@@ -81,7 +81,9 @@ def test_menu_matches_reference_but_unimplemented_actions_are_disabled():
         "Show Minimap",
     ):
         assert label in TAB_CONTROL_JS,label
-    assert "row('Recent Locations',null,{disabled:true" in TAB_CONTROL_JS
+    assert "row('Recent Locations',()=>openMenu('locations')" in TAB_CONTROL_JS
+    assert "recordLocation=()=>{" in TAB_CONTROL_JS
+    assert "selectNavigationLocation({" in TAB_CONTROL_JS
     assert "row('Bookmark Open Tabs...',null,{disabled:true})" in TAB_CONTROL_JS
     assert "row('Configure Editor Tabs...',null,{disabled:true})" in TAB_CONTROL_JS
     assert "row('Show Minimap',null,{disabled:true})" in TAB_CONTROL_JS
