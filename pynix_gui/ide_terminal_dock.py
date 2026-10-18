@@ -125,10 +125,10 @@ TERMINAL_DOCK_JS = r"""
    title.textContent=scope==='pynix'?'PYNIX Console':scope==='system'?'Terminal':(
     selectedTool==='TERMINAL'?'Run':selectedTool[0]+selectedTool.slice(1).toLowerCase());
    sessions.hidden=scope==='other';
-   newSession.hidden=scope==='other';
+   newSession.hidden=scope==='other'||!showToolbar;
    newSession.dataset.hint=scope==='pynix'?'New Console Tab (⌘T)':'New Tab (⌘T)';
    paintSessions();
-   chevron.hidden=scope!=='system';
+   chevron.hidden=scope!=='system'||!showToolbar;
    renderOptions();
    publish();
   };
@@ -255,8 +255,8 @@ TERMINAL_DOCK_JS = r"""
    toolsPopup.replaceChildren();
    const option=(label,action)=>menuButton(toolsPopup,label,action);
    if(scope==='system'){
-    option('Terminal Engine  ›',()=>renderOptionsSub('Engine'));
-    option('✓ Show AI Agents in Toolbar',()=>{
+    option('Terminal Engine  ›',()=>{renderOptionsSub('Engine');tools.open=true;});
+    option((showAiAgents?'✓ ':'')+'Show AI Agents in Toolbar',()=>{
      showAiAgents=!showAiAgents;renderOptions();
     });
     option('⚙ Settings',()=>{chevron.open=true;renderShellMenu(true);});
@@ -274,9 +274,9 @@ TERMINAL_DOCK_JS = r"""
     chevron.hidden=!showToolbar||scope!=='system';
     renderOptions();
    });
-   option('View Mode  ›',()=>renderOptionsSub('View Mode'));
-   option('Move to  ›',()=>renderOptionsSub('Move to'));
-   option('Resize  ›',()=>renderOptionsSub('Resize'));
+   option('View Mode  ›',()=>{renderOptionsSub('View Mode');tools.open=true;});
+   option('Move to  ›',()=>{renderOptionsSub('Move to');tools.open=true;});
+   option('Resize  ›',()=>{renderOptionsSub('Resize');tools.open=true;});
    menuDivider(toolsPopup);
    option('Remove from Sidebar',()=>{
     const rail=document.querySelectorAll('.workspace-mode .rail>.rail-item')[scope==='pynix'?5:4];
@@ -287,6 +287,7 @@ TERMINAL_DOCK_JS = r"""
   const renderOptionsSub=kind=>{
    toolsPopup.replaceChildren();
    menuButton(toolsPopup,'← Back',()=>{renderOptions();tools.open=true;});
+   tools.open=true;
    if(kind==='Engine'){
     for(const shell of ['zsh','bash'])
      menuButton(toolsPopup,(shell===defaultShell?'✓ ':'')+shell,()=>{
@@ -416,7 +417,7 @@ TERMINAL_DOCK_JS = r"""
     scope='other';sync();
    }
   });
-  new ResizeObserver(()=>requestAnimationFrame(updateOverflow)).observe(sessions);
+  new ResizeObserver(()=>requestAnimationFrame(updateOverflow)).observe(header);
   window.addEventListener('resize',updateOverflow);
   // Initial dock is collapsed, without taking space from Project/editor.
   setToolWindowVisible(false);
