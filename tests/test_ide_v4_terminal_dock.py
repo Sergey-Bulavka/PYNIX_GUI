@@ -108,3 +108,93 @@ def test_native_v4_embed_and_full_chrome_js_syntax(tmp_path):
         iconless=True,
     )
     assert "Native V4 PyCharm terminal tool-window" in full
+
+
+def test_terminal_rail_clicks_and_tool_menu_actually_toggle_in_node():
+    """A DOM-like Node harness exercises events, not just CSS text matching."""
+    node=shutil.which("node")
+    if node is None:
+        pytest.skip("Node.js unavailable")
+    fixture=r"""
+class Fake{
+ constructor(name='div'){
+  this.name=name;this.children=[];this.events={};this.attrs={};
+  this.className='';this.hidden=false;this.disabled=false;this.title='';
+  const classes=new Set();
+  this.classList={
+   toggle:(key,yes)=>{if(yes)classes.add(key);else classes.delete(key);},
+   contains:key=>classes.has(key)
+  };
+ }
+ append(...items){this.children.push(...items);}
+ insertBefore(item){this.children.push(item);}
+ setAttribute(key,value){this.attrs[key]=value;}
+ getAttribute(key){return this.attrs[key];}
+ addEventListener(name,cb){(this.events[name]??=[]).push(cb);}
+ emit(name,event={}){for(const fn of this.events[name]||[])fn(event);}
+ click(){this.emit('click',{target:this});}
+ querySelectorAll(selector){
+  return selector==='strong,span'?this.children:
+   selector==='[role="tab"]'?this.children:[];
+ }
+}
+const terminal=new Fake('terminal'),toolTabs=new Fake('tabs');
+const debugPanelBar=new Fake('debug');
+const railTerminal=new Fake('rail');
+const terminalResizer={hidden:false},dockRestore={hidden:true};
+let selectedTool='TERMINAL',layoutChanges=[];
+let rail=[new Fake(),new Fake(),new Fake(),new Fake(),railTerminal];
+const dockMode=['TERMINAL','PROBLEMS','OUTPUT','DEBUG CONSOLE'];
+for(const name of dockMode){
+ const tab=new Fake('tab');
+ tab.textContent=name;tab.attrs.role='tab';
+ tab.click=()=>{
+  selectedTool=name;
+  setToolWindowVisible(true);
+  toolTabs.emit('click',{target:tab});
+ };
+ toolTabs.children.push(tab);
+}
+const document={
+ createElement:name=>new Fake(name),
+ querySelectorAll:()=>rail,
+ addEventListener:()=>{}
+};
+const window={};
+function setToolWindowVisible(state){
+ terminal.classList.toggle('pynix-tool-window-collapsed',!state);
+ terminalResizer.hidden=!state;
+ dockRestore.hidden=state;
+ layoutChanges.push(state);
+ window.pynixTerminalDock?.sync();
+}
+"""
+    checks=r"""
+const require=(condition,message)=>{if(!condition)throw Error(message);};
+require(terminal.classList.contains('pynix-tool-window-collapsed'),'Initial Terminal must be hidden');
+require(terminalResizer.hidden,'Initial resizer must be hidden');
+railTerminal.click();
+require(!terminal.classList.contains('pynix-tool-window-collapsed'),'Click must open Terminal');
+require(railTerminal.classList.contains('active'),'Sidebar must activate');
+railTerminal.click();
+require(terminal.classList.contains('pynix-tool-window-collapsed'),'Second click must hide');
+require(!railTerminal.classList.contains('active'),'Sidebar must deactivate');
+toolTabs.children[1].click();
+require(!terminal.classList.contains('pynix-tool-window-collapsed'),'Problems must reopen dock');
+require(selectedTool==='PROBLEMS','Problems selected');
+railTerminal.click();
+require(selectedTool==='TERMINAL','Sidebar must switch from Problems to Terminal');
+require(!terminal.classList.contains('pynix-tool-window-collapsed'),'Terminal remains visible');
+window.pynixTerminalDock.hide();
+require(terminal.classList.contains('pynix-tool-window-collapsed'),'Hide action must collapse');
+window.pynixTerminalDock.show();
+require(!terminal.classList.contains('pynix-tool-window-collapsed'),'Show action must reopen');
+require(layoutChanges.join(',')==='false,true,false,true,true,false,true',
+  'Unexpected dock transitions: '+JSON.stringify(layoutChanges));
+console.log('terminal toggle events passed');
+"""
+    script=fixture+TERMINAL_DOCK_JS+checks
+    result=subprocess.run([node,"-e",script],text=True,
+                          encoding="utf-8",capture_output=True,timeout=20)
+    assert result.returncode==0,result.stderr
+    assert "terminal toggle events passed" in result.stdout
