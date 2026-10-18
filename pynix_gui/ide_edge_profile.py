@@ -85,8 +85,8 @@ MORE_TOOL_WINDOWS = (
 EXISTING_ACTIONS = {
     "Project": "rail:0", "Search": "rail:1",
     "Version Control": "rail:2", "Run": "rail:3",
-    "PYNIX Terminal": "rail:4",
-    "Terminal": "rail:4", "Git": "rail:2",
+    "PYNIX Terminal": "terminal:pynix",
+    "Terminal": "terminal:system", "Git": "rail:2",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
 }
 
@@ -395,6 +395,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
   if(command.startsWith('rail:')){
    const index=Number(command.slice(5));
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[index]?.click();
+  }else if(command.startsWith('terminal:')){
+   window.pynixTerminalDock?.select(command.slice(9));
   }else if(command.startsWith('dock:')){
    const label=command.slice(5);
    const tab=[...document.querySelectorAll('.workspace-mode .terminal-tabs>span,.workspace-mode .terminal-tabs>strong')]
@@ -464,6 +466,17 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     };
     sync();
     if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
+   }
+   if(entry.action?.startsWith('terminal:')){
+    const scope=entry.action.slice(9);
+    const sync=event=>{
+     const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
+     const active=Boolean(state.visible&&state.scope===scope);
+     button.setAttribute('aria-pressed',String(active));
+     button.setAttribute('aria-expanded',String(active));
+    };
+    window.addEventListener('pynix:terminal-change',sync);
+    sync();
    }
    container.appendChild(button);
    if(edge==='left-top'&&entry.label==='Pull Requests'){
