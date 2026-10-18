@@ -931,7 +931,12 @@ def main() -> None:
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             request = {}
             try:
-                request = normalize_webkit_request(message.body())
+                # Terminal commands have no source line/column. Navigation's
+                # validator must not be applied to shell and console messages.
+                raw = message.body()
+                if not hasattr(raw, "items"):
+                    raise TerminalSessionError("Invalid terminal request")
+                request = dict(raw)
                 scope = str(request.get("scope", ""))
                 action = str(request.get("action", ""))
                 if scope == "shell":
