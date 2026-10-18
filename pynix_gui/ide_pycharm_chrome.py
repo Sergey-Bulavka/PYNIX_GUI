@@ -674,7 +674,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
    This is intentionally the last layer; legacy popup styles remain above. */
 .workspace-mode>.pynix-tabs-popup{
  box-sizing:border-box!important;
- width:min(262px,calc(100vw - 12px))!important;
+ width:min(228px,calc(100vw - 12px))!important;
  min-width:0!important;max-width:calc(100vw - 12px)!important;
  max-height:min(485px,calc(100vh - 16px))!important;
  padding:4px!important;border-radius:7px!important;
@@ -683,14 +683,14 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row{
  box-sizing:border-box!important;display:flex!important;align-items:center!important;
- min-height:29px!important;border-radius:5px!important;
+ min-height:27px!important;border-radius:5px!important;
  padding:0!important;margin:0!important;
  background:transparent!important
 }
 .workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item{
  box-sizing:border-box!important;
  display:flex!important;align-items:center!important;min-width:0!important;
- flex:1 1 0%!important;min-height:29px!important;height:29px!important;
+ flex:1 1 0%!important;min-height:27px!important;height:27px!important;
  padding:4px 8px!important;margin:0!important;gap:7px!important;
  background:transparent!important;border:0!important;border-radius:5px!important;
  color:#d2d4da!important;cursor:pointer!important;
