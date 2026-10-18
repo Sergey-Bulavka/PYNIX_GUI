@@ -586,6 +586,88 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .editor-tabs{
  height:43px!important;min-height:43px!important;max-height:43px!important;
 }
+
+/* Real editor V4 tabs: one clipped strip plus persistent right actions.
+   Popups attach to body because the editor-tab row must clip tab overflow. */
+.workspace-mode .editor-tabs{
+ display:flex!important;align-items:center!important;flex-wrap:nowrap!important;
+ box-sizing:border-box!important;height:43px!important;min-height:43px!important;
+ max-height:43px!important;overflow:hidden!important;gap:0!important;
+ padding:5px 6px 9px!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-strip{
+ flex:1 1 auto!important;min-width:0!important;width:0!important;
+ display:flex!important;align-items:center!important;gap:4px!important;
+ overflow:hidden!important;white-space:nowrap!important
+}
+.workspace-mode .editor-tabs .pynix-editor-tab[hidden]{
+ display:none!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-actions{
+ display:flex!important;align-items:center!important;justify-content:flex-end!important;
+ flex:0 0 auto!important;gap:3px!important;padding:0 2px 0 5px!important;
+ height:100%!important;min-width:0!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-action{
+ box-sizing:border-box!important;flex:0 0 29px!important;
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ width:29px!important;min-width:29px!important;height:29px!important;min-height:29px!important;
+ margin:0!important;padding:5px!important;border:0!important;border-radius:7px!important;
+ background:transparent!important;color:#bfc1c7!important;cursor:pointer!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-action[hidden]{
+ display:none!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-action>svg{
+ width:19px!important;height:19px!important;display:block!important;flex:0 0 19px!important
+}
+.workspace-mode .editor-tabs .pynix-tabs-action:hover,
+.workspace-mode .editor-tabs .pynix-tabs-action:focus-visible,
+.workspace-mode .editor-tabs .pynix-tabs-action[aria-expanded="true"]{
+ background:#3a3d45!important;color:#f0f1f4!important;
+ outline:none!important
+}
+.workspace-mode>.pynix-tabs-popup{
+ box-sizing:border-box;position:fixed;z-index:11000;
+ min-width:246px;max-width:min(420px,calc(100vw - 12px));
+ max-height:min(570px,calc(100vh - 12px));overflow-y:auto;
+ background:#2e3036;border:1px solid #575a63;border-radius:9px;
+ padding:6px;box-shadow:0 12px 35px #0009
+}
+.workspace-mode>.pynix-tabs-popup[hidden]{display:none!important}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row{
+ display:flex;align-items:center;min-height:32px;border-radius:6px;
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item{
+ display:flex;align-items:center;gap:9px;flex:1 1 auto;min-width:0;min-height:32px;
+ background:transparent;border:0;border-radius:6px;color:#d4d5da;
+ font:13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+ padding:5px 9px;text-align:left;cursor:pointer
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-row.active{
+ background:#304d79
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item:hover:not(:disabled),
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item:focus-visible,
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-close:hover{
+ background:#365785;color:#fff;outline:none
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-item:disabled{
+ opacity:.46;cursor:default
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-label{
+ flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-shortcut{
+ flex:0 0 auto;color:#a6a8b1;font-size:12px;margin-left:12px
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-menu-close{
+ flex:0 0 25px;width:25px;height:25px;border:0;border-radius:5px;
+ background:transparent;color:#c5c6cd;font-size:19px;cursor:pointer
+}
+.workspace-mode>.pynix-tabs-popup .pynix-tabs-divider{
+ height:1px;background:#484b53;margin:6px 4px
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>

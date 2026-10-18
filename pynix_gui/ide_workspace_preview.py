@@ -11,6 +11,7 @@ from pathlib import Path
 from .ide_workspace_session import WorkspaceSession
 from .ide_syntax_highlight import highlight_document
 from .ide_editor_lexer import EDITOR_LEXER_JS
+from .ide_editor_tab_controls import TAB_CONTROL_JS
 from .ide_file_icons import file_icon_type, ICON_BY_EXTENSION, SPECIAL_NAMES
 
 
@@ -1930,6 +1931,7 @@ editorInput.addEventListener('keydown',event=>{
    if(!file||!openTabs.includes(source))return;
    if(payload.error){
      pendingCloseAfterSave=null;
+     tabControls.stopBulk();
      // Never discard a dirty buffer or silently close the tab on save failure.
      file.coreSyncError=String(payload.error);
      const indicator=document.querySelector('.pynix-core-bridge-indicator');
@@ -2266,6 +2268,7 @@ editorInput.addEventListener('keydown',event=>{
    }
    if(reply?.closed){finishTabClose(source);return;}
    if(file)file.coreSyncError=String(reply?.error||'IDE Core refused to close document');
+   tabControls.stopBulk();
    window.alert('Close failed: '+String(reply?.error||'Unknown Core error'));
  };
  function finishTabClose(name){
@@ -2273,6 +2276,7 @@ editorInput.addEventListener('keydown',event=>{
    const index=openTabs.indexOf(name);
    if(index<0)return;
    openTabs.splice(index,1);
+   tabControls.tabDidClose(name);
    const file=byName.get(name);
    if(file){file.unloaded=true;file.text='';file.tokens=null;file.savedText=undefined;file.dirty=false;file.coreSyncError=null;}
    if(current===name){
@@ -2305,7 +2309,7 @@ editorInput.addEventListener('keydown',event=>{
      item.type='button';item.textContent=text;
      item.addEventListener('click',handler);actions.appendChild(item);return item;
    };
-   const cancel=button('Cancel',dismiss);
+   const cancel=button('Cancel',()=>{tabControls.stopBulk();dismiss();});
    button('Don’t Save',()=>{
      dismiss();
      closeTabNow(name,true);
@@ -2326,8 +2330,9 @@ editorInput.addEventListener('keydown',event=>{
    document.body.appendChild(overlay);cancel.focus();
    overlay.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();dismiss();}});
  }
+ __PYNIX_TAB_CONTROLS__
  function renderTabs(){
-   tabs.replaceChildren();
+   tabControls.strip.replaceChildren();
    for(const fileName of openTabs){
      const file=byName.get(fileName);
      const wrap=document.createElement('div');
@@ -2378,8 +2383,9 @@ editorInput.addEventListener('keydown',event=>{
      close.setAttribute('aria-label','Close '+fileName);
      close.addEventListener('click',()=>requestCloseTab(fileName));
      wrap.append(label,close);
-     tabs.appendChild(wrap);
+     tabControls.strip.appendChild(wrap);
    }
+   tabControls.schedule();
  }
  function show(name) {
    if (!byName.has(name)) return;
@@ -2397,6 +2403,7 @@ editorInput.addEventListener('keydown',event=>{
    }
    if (!openTabs.includes(name)) openTabs.push(name);
    current = name;
+   tabControls.visited(name);
    selectedPath = name;
    const segments=name.split('/');
    for(let i=1;i<segments.length;i++)expanded.add(segments.slice(0,i).join('/'));
@@ -2421,6 +2428,7 @@ editorInput.addEventListener('keydown',event=>{
      }
    } else renderCode(file);
    updateEditingView();
+   tabControls.recordLocation();
    document.dispatchEvent(new CustomEvent('pynix:file-opened',{detail:{source:name}}));
    renderTree();
  }
@@ -2714,7 +2722,7 @@ editorInput.addEventListener('keydown',event=>{
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
-</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PROJECT_PATH_PAYLOAD", json.dumps("~/" + session.root.relative_to(Path.home()).as_posix() if session.root.is_relative_to(Path.home()) else str(session.root), ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
+</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("__PYNIX_TAB_CONTROLS__", TAB_CONTROL_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PROJECT_PATH_PAYLOAD", json.dumps("~/" + session.root.relative_to(Path.home()).as_posix() if session.root.is_relative_to(Path.home()) else str(session.root), ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:

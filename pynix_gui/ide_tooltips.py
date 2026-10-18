@@ -85,6 +85,7 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
   '.pynix-debug-panel-toolbar button[title]',
   '.pynix-editor-tab button[title]',
   '.pynix-editor-tab [title]',
+  '.pynix-tabs-action',
   '.pynix-project-header-actions [title]',
  ].join(',');
  let tip=null,nameNode=null,shortcutNode=null;
