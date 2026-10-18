@@ -17,8 +17,8 @@ three commands are inactive, and menu rows lack full-width highlight on hover.
 ## Native PYNIX design
 1. Keep the existing PYNIX V4 tab model as the single source of file identity,
    modified buffers, close confirmation and source navigation.
-2. Match compact spacing with a final, high-specificity CSS layer: 262px
-   popup maximum target width, 29px row hitboxes, 13px labels, 13.5px
+2. Match compact spacing with a final, high-specificity CSS layer: 228px
+   popup target width, 27px row hitboxes, 13px labels, 13.5px
    shortcut glyphs, 17px file icons, 4px separators. Apply hover/focus/
    selection highlight to the entire row with `!important` to override old
    layers. Allow Arrow Up/Down, Home/End and Escape keyboard interaction.
