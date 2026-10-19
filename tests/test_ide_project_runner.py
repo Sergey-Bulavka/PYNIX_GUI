@@ -71,7 +71,9 @@ def test_restart_is_generation_guarded_and_nonblocking():
     assert 'run_generation["value"] == generation' in native
     assert "run_threading.Thread(target=stop_or_restart, daemon=True).start()" in native
     assert "restartButton.textContent='Restart'" in preview
-    assert "if(action==='run'||action==='restart')" in preview
+    assert "const prior=action==='restart'?lastRunRequest:null;" in preview
+    assert "const source=prior?(prior.source||null)" in preview
+    assert "bridge.postMessage(request)" in preview
 
 
 def test_run_error_locations_are_clickable_and_bounded():
@@ -207,7 +209,8 @@ def test_native_run_buttons_select_current_file_and_output_window():
     assert 'source not in available_sources' in native
     assert 'start_project_run(mode, source)' in native
     assert "window.pynixProjectRunResult=packet=>" in preview
-    assert "consoleTab?.click()" in preview
+    assert "window.pynixTerminalDock?.showRun?.();" in preview
+    assert "consoleTab?.click()" not in preview
     assert "runActions.hidden=!(scope==='other'&&selectedTool==='TERMINAL')" in dock
     assert "document.querySelector('.pynix-stop-action')?.click()" in dock
     assert "setRunState:running=>" in dock
@@ -223,3 +226,38 @@ def test_run_output_links_support_python_tracebacks_and_pynix_locations():
     assert r"\\.(?:pnx|py)" in preview
     assert 'line.match(/File ["\']' in preview
     assert "new CustomEvent('pynix:navigate'" in preview
+
+
+def test_run_sidebar_does_not_switch_project_tree():
+    root = Path(__file__).resolve().parents[1]
+    edge = (root / "pynix_gui/ide_edge_profile.py").read_text(encoding="utf-8")
+    dock = (root / "pynix_gui/ide_terminal_dock.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    html = (root / "examples/icon_direction_preview.html").read_text(encoding="utf-8")
+
+    assert '"Run": "run-window"' in edge
+    assert "if(command==='run-window')" in edge
+    assert "window.pynixTerminalDock?.toggleRun?.();" in edge
+    assert '"Run": "rail:3"' not in edge
+
+    assert "showRun,toggleRun" in dock
+    assert "activateToolView('TERMINAL');" in dock
+    assert "setToolWindowVisible(true);" in dock
+    assert "const detail={scope,tool:selectedTool,visible:isVisible()};" in dock
+    assert "state.tool==='TERMINAL'" in edge
+
+    assert "window.pynixTerminalDock?.showRun?.();" in preview
+    assert "consoleTab?.click()" not in preview
+    assert "setToolWindowVisible(true);\n   consoleTab?.click();" not in preview
+    assert "if(i===3&&document.body.classList.contains('workspace-mode'))" in html
+    assert "window.pynixTerminalDock?.toggleRun?.();return;" in html
+
+
+def test_current_file_regex_has_valid_python_string_escape():
+    import ast
+    root = Path(__file__).resolve().parents[1]
+    preview_file = root / "pynix_gui/ide_workspace_preview.py"
+    source = preview_file.read_text(encoding="utf-8")
+    ast.parse(source)
+    assert r"if(!/\\.(pnx|py)$/i.test(source)" in source
+    assert r"if(!/\.(pnx|py)$/i.test(source)" not in source
