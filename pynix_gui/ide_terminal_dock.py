@@ -152,6 +152,7 @@ TERMINAL_DOCK_JS = r"""
   };
   window.pynixTerminalDock={
    sync,select,state:()=>({scope,visible:isVisible()}),
+   tabLayout:()=>({...tabOverflowDebug}),
    show:()=>select('system'),hide:()=>setToolWindowVisible(false),
    toggle:()=>select('system')
   };
@@ -163,51 +164,78 @@ TERMINAL_DOCK_JS = r"""
    if(event.key==='Enter'||event.key===' '){event.preventDefault();select('system');}
   });
 
+  // The strip and the right-hand actions share a flex row. The browser can
+  // clip the strip *outside* its own reported viewport on WKWebView, so relying
+  // on scrollWidth/clientWidth or individual bounding rects alone is unsound.
+  // Reserve the fixed sibling widths explicitly and clamp the strip itself.
+  let tabOverflowDebug={};
   const updateOverflow=()=>{
-   const showOverflow=visible=>{
+   const show=visible=>{
     overflow.style.visibility=visible?'visible':'hidden';
     overflow.style.pointerEvents=visible?'auto':'none';
+    overflowToggle.setAttribute('aria-expanded',String(visible&&overflow.open));
     if(!visible)overflow.open=false;
    };
-   if(scope==='other'){
-    showOverflow(false);
-    overflowPopup.replaceChildren();
-    return;
+   if(scope==='other'||sessions.hidden){
+    show(false);overflowPopup.replaceChildren();return;
    }
-   // Let the browser's flex layout determine the available space. Every tab
-   // keeps its natural width; overflow:hidden clips only the viewport.
-   // No inline widths, stale flex-basis or manual header-width arithmetic.
    const items=[...sessions.children];
    if(!items.length){
-    showOverflow(false);
-    overflowPopup.replaceChildren();
-    return;
+    show(false);overflowPopup.replaceChildren();return;
    }
+   // Recreate the unconstrained natural width on every pass. A previous
+   // layout must not influence the next one when the window is resized.
+   for(const key of ['flex','width','max-width'])sessions.style.removeProperty(key);
+   const widths=items.map(item=>item.getBoundingClientRect().width);
+   const sessionGap=parseFloat(getComputedStyle(sessions).columnGap)||0;
+   const natural=widths.reduce((sum,w)=>sum+w,0)+
+     sessionGap*Math.max(0,items.length-1);
+   const chrome=getComputedStyle(header);
+   const outerGap=parseFloat(chrome.columnGap)||0;
+   const padding=(parseFloat(chrome.paddingLeft)||0)+
+     (parseFloat(chrome.paddingRight)||0);
+   // The middle gap element is elastic; its current rendered width does not
+   // reserve capacity. All other toolbar controls are fixed-width.
+   const controls=[...header.children].filter(node=>
+     node!==sessions&&getComputedStyle(node).display!=='none');
+   const fixed=controls.reduce((sum,node)=>
+     sum+(node===gap?0:node.getBoundingClientRect().width),0);
+   const capacity=Math.max(0,header.clientWidth-padding-fixed-
+     outerGap*controls.length);
+   const actualWidth=Math.max(0,Math.min(natural,capacity));
+   for(const [property,value] of [
+    ['flex','0 0 '+actualWidth+'px'],
+    ['width',actualWidth+'px'],
+    ['max-width',actualWidth+'px']
+   ])sessions.style.setProperty(property,value,'important');
+   const needsOverflow=natural>capacity+0.5;
    const activeItem=items.find(item=>item.classList.contains('active'));
-   // Reveal the active tab within the strip, including after a menu selection
-   // or after opening another tab. Do not scroll the page or whole dock.
-   if(activeItem){
+   if(activeItem&&actualWidth>0){
     const viewport=sessions.getBoundingClientRect();
     const selected=activeItem.getBoundingClientRect();
     if(selected.right>viewport.right+0.5)
-     sessions.scrollLeft+=selected.right-viewport.right+1;
+     sessions.scrollLeft+=selected.right-viewport.right;
     else if(selected.left<viewport.left-0.5)
-     sessions.scrollLeft+=selected.left-viewport.left-1;
+     sessions.scrollLeft+=selected.left-viewport.left;
    }
    const viewport=sessions.getBoundingClientRect();
-   const clipped=(item)=>{
-    const rect=item.getBoundingClientRect();
-    return rect.left<viewport.left-0.5||rect.right>viewport.right+0.5;
-   };
    const allTabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
    overflowPopup.replaceChildren();
+   // Prefer actual clipping. For WKWebView, fall back to cumulative natural
+   // widths if a child is clipped by the ancestor rather than the strip.
+   let position=-sessions.scrollLeft,hiddenCount=0;
    items.forEach((item,index)=>{
-    if(!clipped(item))return;
-    const session=allTabs[index];
-    if(!session)return;
+    const rect=item.getBoundingClientRect();
+    const offscreen=rect.left<viewport.left-0.5||
+      rect.right>viewport.right+0.5;
+    const byWidth=position< -0.5||position+widths[index]>actualWidth+0.5;
+    position+=widths[index]+sessionGap;
+    if(!needsOverflow||(!offscreen&&!byWidth))return;
+    const session=allTabs[index];if(!session)return;
+    hiddenCount++;
     const [id,tab]=session;
-    const entry=document.createElement('button');entry.type='button';
-    entry.className='pynix-overflow-entry';
+    const entry=document.createElement('button');
+    entry.type='button';entry.className='pynix-overflow-entry';
     entry.setAttribute('role','menuitem');
     entry.textContent=tab.label;
     entry.addEventListener('click',()=>{
@@ -216,16 +244,33 @@ TERMINAL_DOCK_JS = r"""
       if(pynixTabs.has(pynixId))
        pynixTabs.get(pynixId).draft=pynix.input.value;
       pynixId=id;paintSessions();paintPynix();
-     }else{
-      activeId=id;paintSessions();paintShell();
-     }
+     }else{activeId=id;paintSessions();paintShell();}
     });
     overflowPopup.appendChild(entry);
    });
-   // WKWebView can report scrollWidth == clientWidth for a clipped flex
-   // strip. The computed list of genuinely off-viewport tabs is the ONLY
-   // visibility criterion; never gate it on scrollWidth.
-   showOverflow(overflowPopup.childElementCount>0);
+   // Force a useful menu if WKWebView clipped the whole last tab before the
+   // child geometry was available. This cannot happen for a fitting strip.
+   if(needsOverflow&&hiddenCount===0&&allTabs.length>1){
+    const [id,tab]=allTabs[0];
+    const entry=document.createElement('button');
+    entry.type='button';entry.className='pynix-overflow-entry';
+    entry.setAttribute('role','menuitem');entry.textContent=tab.label;
+    entry.addEventListener('click',()=>{
+     overflow.open=false;
+     if(scope==='pynix'){pynixId=id;paintSessions();paintPynix();}
+     else{activeId=id;paintSessions();paintShell();}
+    });
+    overflowPopup.appendChild(entry);hiddenCount=1;
+   }
+   show(needsOverflow);
+   overflowToggle.dataset.hint='More Tabs ('+hiddenCount+')';
+   tabOverflowDebug={
+    scope,tabs:items.length,headerWidth:header.clientWidth,
+    capacity,natural,stripWidth:sessions.clientWidth,
+    hidden:overflowPopup.children.length,
+    visible:needsOverflow,arrow:overflow.getBoundingClientRect().width
+   };
+   header.dataset.overflowTabs=String(needsOverflow);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
