@@ -142,3 +142,35 @@ def test_services_do_not_auto_call_remote_tools():
     assert '"method": "initialize"' in source
     assert '"method": "tools/list"' in source
     assert '"method": "tools/call"' not in source
+
+
+def test_services_tree_and_options_actions_are_real_not_inert():
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "pynix_gui/ide_services_dock.py").read_text(encoding="utf-8")
+    css = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    backend = (root / "pynix_gui/ide_project_services.py").read_text(encoding="utf-8")
+    assert 'data-sv="toolbar"' in ui
+    assert 'data-sv="optionsMenu"' in ui
+    assert 'data-sv="sessionTab"' in ui
+    assert 'data-sv="callsTab"' in ui
+    assert "svCollapsed.add('Run Configurations')" in ui
+    assert "svCollapsed.add('MCP SSE')" in ui
+    assert "svCollapsed.clear();svDraw();" in ui
+    assert "title.addEventListener('click',()=>{" in ui
+    assert "svGrouped=!svGrouped;svDraw();" in ui
+    assert "servicesPane.classList.toggle('hide-tree')" in ui
+    assert ".pynix-services-pane.hide-tree .pynix-services-sidebar" in css
+    assert "sv('toolbar').contains(event.target)" in ui
+    assert '"version": "0.1.0"' in backend
+    assert "svField(session,'Version',item.version||'—')" in ui
+    assert "const svDuration=seconds=>{" in ui
+    assert "svDuration(Date.now()/1000-item.since)" in ui
+
+
+def test_service_profiles_do_not_accept_credentials_or_remote_plaintext(tmp_path):
+    registry = ProjectServices(tmp_path, config_dir=tmp_path / "cfg")
+    for url in ("http://127.0.0.2:8888/sse", "http://example.com/sse",
+                "https://user:secret@example.com/sse"):
+        with pytest.raises(ServicesError):
+            registry.add("insecure", url)
+    assert registry.list()["services"] == []
