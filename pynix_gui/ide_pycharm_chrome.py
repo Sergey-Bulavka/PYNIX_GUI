@@ -1212,10 +1212,24 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-header button>svg,
 .workspace-mode .pynix-services-toolbar>button>svg,
 .workspace-mode .pynix-services-item-icon>svg{
- display:block!important;flex:0 0 18px!important;
- width:18px!important;height:18px!important;
- max-width:18px!important;max-height:18px!important;
+ display:block!important;flex:0 0 16px!important;
+ width:16px!important;height:16px!important;
+ max-width:16px!important;max-height:16px!important;
  color:inherit;vertical-align:middle!important;margin:0!important
+}
+/* PyCharm Services: original 16x16 glyphs, tiny JetBrains dropdown overlay,
+   and the separator between Add Session and tree expansion actions. */
+.workspace-mode .pynix-services-toolbar>button{position:relative!important}
+.workspace-mode .pynix-services-toolbar .pynix-services-dropdown{
+ position:absolute!important;right:0!important;bottom:0!important;
+ margin:0!important;flex:none!important;
+ width:16px!important;height:16px!important;max-width:16px!important;
+ max-height:16px!important;pointer-events:none!important
+}
+.workspace-mode .pynix-services-toolbar-separator{
+ display:block!important;box-sizing:border-box;
+ flex:0 0 1px!important;width:1px!important;height:23px!important;
+ margin:0 2px!important;background:#383a40!important
 }
 .workspace-mode .pynix-services-header button:hover,
 .workspace-mode .pynix-services-toolbar>button:hover{background:#343741}
@@ -1271,7 +1285,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-item:focus-visible{outline:1px solid #6a9fff}
 .workspace-mode .pynix-services-item-icon{
  display:inline-flex;align-items:center;justify-content:center;
- flex:0 0 18px;min-width:18px;height:18px;color:#aab5cb
+ flex:0 0 16px;min-width:16px;height:16px;color:#aab5cb
 }
 .workspace-mode .pynix-services-status{margin-left:auto;color:#6ac187}
 .workspace-mode .pynix-services-main{
