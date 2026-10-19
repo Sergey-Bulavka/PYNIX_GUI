@@ -19,18 +19,42 @@ class ProjectRunner:
         self.process: subprocess.Popen | None = None
         self._lock = threading.Lock()
 
-    def start(self, *, mode: str = "run") -> None:
+    def start(self, *, mode: str = "run", source: str | None = None) -> None:
         if mode not in {"run", "check"}:
             raise RunError("Unsupported run configuration")
         with self._lock:
             if self.process is not None and self.process.poll() is None:
                 raise RunError("A PYNIX process is already running")
-            if not (self.root / "pynix.toml").is_file():
-                raise RunError("A pynix.toml project manifest is required")
-            if not self.python.is_file():
-                raise RunError("PYNIX compiler interpreter is unavailable")
+            if source is None:
+                if not (self.root / "pynix.toml").is_file():
+                    raise RunError("A pynix.toml project manifest is required")
+                if not self.python.is_file():
+                    raise RunError("PYNIX compiler interpreter is unavailable")
+                command = [str(self.python), "-u", "-m", "compiler", mode, str(self.root)]
+            else:
+                if not isinstance(source, str) or not source or "\\x00" in source:
+                    raise RunError("Invalid run source")
+                if mode != "run":
+                    raise RunError("Single-file execution supports Run only")
+                candidate = self.root / source
+                resolved = candidate.resolve()
+                if (candidate.is_absolute() or not resolved.is_relative_to(self.root)
+                        or not resolved.is_file() or resolved.suffix not in {".pnx", ".py"}):
+                    raise RunError("Run requires a saved .pnx or .py file inside the project")
+                if resolved.suffix == ".pnx":
+                    if not self.python.is_file():
+                        raise RunError("PYNIX compiler interpreter is unavailable")
+                    command = [str(self.python), "-u", "-m", "compiler", "run",
+                               str(resolved), "--single-file"]
+                else:
+                    # Python files use the selected project's interpreter when
+                    # available; they must not be sent to the PYNIX compiler.
+                    import sys
+                    project_python = self.root / ".venv" / "bin" / "python"
+                    interpreter = project_python if project_python.is_file() else Path(sys.executable)
+                    command = [str(interpreter), "-u", str(resolved)]
             self.process = subprocess.Popen(
-                [str(self.python), "-u", "-m", "compiler", mode, str(self.root)],
+                command,
                 cwd=self.root, stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                 text=True, encoding="utf-8", errors="replace",
