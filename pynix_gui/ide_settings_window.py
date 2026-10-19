@@ -133,7 +133,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#191a1c;color:#c9cbd0}
 .footer button{font:inherit;border:1px solid #454851;background:#26282d;color:#d8dae0;border-radius:5px;padding:5px 16px;cursor:pointer}
 .footer button.primary{background:#356dda;border-color:#356dda;color:white;min-width:72px}
 .footer button:disabled{opacity:.4;cursor:default}
-.footer .help{margin-right:auto;background:transparent;border:0;font-size:16px;padding:6px}
+.footer .help{background:transparent;border:0;font-size:16px;padding:6px}
+.footer #restore{margin-right:auto}
+.footer #restore[hidden]{display:none}
 .warning{color:#e8b779;margin:12px 0 0}
 """
 
@@ -142,12 +144,14 @@ SETTINGS_JS = r"""
 (() => {
  const categories=__CATEGORIES__;
  const initial=__INITIAL__;
+ const defaults=__DEFAULTS__;
  let draft={...initial},dirty=false,current='Editor';
  const nav=document.getElementById('nav'),body=document.getElementById('content');
  const path=document.getElementById('pagePath'),apply=document.getElementById('apply');
+ const restore=document.getElementById('restore'),ok=document.getElementById('ok');
  const send=(data)=>window.webkit?.messageHandlers?.pynixSettings?.postMessage(data);
  const esc=value=>String(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
- const groups=new Map(categories),buttons=new Map();
+ const groups=new Map(categories);
  let expanded=new Set(['Editor']);
  const hasChildren=name=>(groups.get(name)||[]).length>0;
  const isChild=name=>categories.find(([group,children])=>children.includes(name))?.[0]||null;
@@ -180,6 +184,14 @@ SETTINGS_JS = r"""
  const paragraph=(text,klass='desc')=>{
   const p=document.createElement('p');p.className=klass;p.textContent=text;body.appendChild(p);
  };
+ const validDraft=()=>Object.values(draft).every(Number.isFinite)&&
+  draft['editor.font_size']>=8&&draft['editor.font_size']<=36&&
+  draft['editor.line_height']>=1&&draft['editor.line_height']<=2.5;
+ const refreshDirty=()=>{
+  dirty=Object.keys(initial).some(key=>draft[key]!==initial[key]);
+  apply.disabled=!dirty||!validDraft();
+  ok.disabled=!validDraft();
+ };
  const setting=(label,key,step,min,max)=>{
   const row=document.createElement('div');row.className='setting';
   const l=document.createElement('label');l.textContent=label;
@@ -188,16 +200,15 @@ SETTINGS_JS = r"""
   l.htmlFor='setting-'+key;input.id=l.htmlFor;
   input.addEventListener('input',()=>{
    draft[key]=Number(input.value);
-   const valid=Object.keys(draft).every(k=>Number.isFinite(draft[k]))&&
-    draft['editor.font_size']>=8&&draft['editor.font_size']<=36&&
-    draft['editor.line_height']>=1&&draft['editor.line_height']<=2.5;
-   dirty=true;apply.disabled=!valid;
-   document.getElementById('ok').disabled=!valid;
+   refreshDirty();
   });
   row.append(l,input);body.appendChild(row);
  };
  const showPage=(name)=>{
-  current=name;body.replaceChildren();path.textContent=(isChild(name)?isChild(name)+'  ›  ':'')+name;
+  current=name;
+  const parent=isChild(name);if(parent)expanded.add(parent);
+  restore.hidden=name!=='Font';
+  body.replaceChildren();path.textContent=(parent?parent+'  ›  ':'')+name;
   drawTree();
   if(name==='Editor'){
    paragraph('Personalize source-code appearance, highlighting, tabs, caret behavior, templates and encodings.');
@@ -230,6 +241,11 @@ SETTINGS_JS = r"""
   }
  };
  document.getElementById('filter').addEventListener('input',drawTree);
+ restore.addEventListener('click',()=>{
+  draft['editor.font_size']=defaults['editor.font_size'];
+  draft['editor.line_height']=defaults['editor.line_height'];
+  showPage('Font');refreshDirty();
+ });
  document.getElementById('cancel').addEventListener('click',()=>send({action:'close'}));
  document.getElementById('apply').addEventListener('click',()=>send({action:'save',values:draft,close:false}));
  document.getElementById('ok').addEventListener('click',()=>{
@@ -242,13 +258,16 @@ SETTINGS_JS = r"""
   }
   initial['editor.font_size']=draft['editor.font_size'];
   initial['editor.line_height']=draft['editor.line_height'];
-  dirty=false;apply.disabled=true;document.getElementById('error').textContent='';
+  refreshDirty();document.getElementById('error').textContent='';
  };
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape')send({action:'close'});
   if(e.key==='Enter'&&e.metaKey&&!document.getElementById('ok').disabled)
    document.getElementById('ok').click();
  });
+ window.pynixSettingsNavigate=page=>{
+  if(groups.has(page)||isChild(page))showPage(page);
+ };
  showPage('Editor');
 })();
 """
@@ -264,6 +283,7 @@ def settings_html(values: dict[str, float], page: str = "Editor") -> str:
     initial = json.dumps(validated)
     # Replace tokens in JS source, never interpolate into HTML attributes.
     script = SETTINGS_JS.replace("__CATEGORIES__", categories).replace("__INITIAL__", initial)
+    script = script.replace("__DEFAULTS__", json.dumps(DEFAULTS))
     script = script.replace("showPage('Editor');", "showPage(" + json.dumps(page) + ");")
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
@@ -276,7 +296,8 @@ def settings_html(values: dict[str, float], page: str = "Editor") -> str:
         '<main class="main"><div class="header" id="pagePath">Editor</div>'
         '<section class="content" id="content"></section></main>'
         '<footer class="footer"><button class="help" title="Help"'
-        ' disabled>?</button><span id="error" class="warning"></span>'
+        ' disabled>?</button><button id="restore" hidden>'
+        'Restore Font Defaults</button><span id="error" class="warning"></span>'
         '<button id="cancel">Cancel</button><button id="apply" disabled>Apply</button>'
         '<button class="primary" id="ok">OK</button></footer>'
         '</div><script>' + script + '</script></body></html>'
