@@ -36,9 +36,16 @@ existing run/debug listeners.
   windows already available in the running workspace.
 - Selecting a file or declaration calls the real V4 source-opening API;
   declarations also request positioning at the definition line.
-- The settings gear opens the existing tool window. Its yellow dot appears
-  only for `window.pynixIDEUpdatesAvailable === true`; no update provider
-  is wired and the default is no notification.
+- The settings gear opens the PyCharm-like top-right **menu**. Its Settings…
+  item (and macOS Command+,) opens a **separate native NSWindow**, not the old
+  sixth rail tool window. Search Everywhere → Settings uses the same route.
+- Native Settings V1 has functional Editor → Font size and line-height,
+  persisted atomically in the current macOS user's Application Support/PYNIX.
+  Other categories currently provide navigable structure and explicitly
+  identify unimplemented controls; they do not pretend to work.
+- The gear's yellow update dot appears only for
+  `window.pynixIDEUpdatesAvailable === true`; no update provider is wired,
+  and the default is no notification.
 - The old trial-status position now holds a green **outlined** non-clickable
   `Beta Version · 1.1.26-dev` status. This is the documented
   PYNIX_IDE version, **not** the independent PYNIX_GUI package version.
