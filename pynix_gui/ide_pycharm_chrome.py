@@ -1082,19 +1082,48 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .pynix-packages-list{flex:1;min-height:0;overflow:auto;padding:3px 6px}
 .workspace-mode .pynix-packages-item{
- box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;
- padding:6px 8px;border:0;border-radius:5px;text-align:left;
- background:transparent;color:#d1d3dc;font:13px/1.3 -apple-system,system-ui,sans-serif;
+ box-sizing:border-box;width:100%;min-height:26px;
+ display:flex;align-items:center;gap:6px;
+ padding:3px 8px;border:0;border-radius:5px;text-align:left;
+ background:transparent;color:#d1d3dc;
+ font:13px/18px -apple-system,system-ui,sans-serif;
  cursor:pointer;
 }
 .workspace-mode .pynix-packages-item:hover{background:#343841}
+.workspace-mode .pynix-packages-item:focus-visible{
+ outline:1px solid #5987dd;outline-offset:-1px
+}
 .workspace-mode .pynix-packages-item[aria-selected="true"]{background:#294876;color:#f1f3f8}
 .workspace-mode .pynix-packages-cube{
  display:inline-flex;align-items:center;justify-content:center;
  width:16px;height:16px;flex:0 0 16px;color:#4f8fff
 }
-.workspace-mode .pynix-packages-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.workspace-mode .pynix-packages-item-version{margin-left:auto;color:#9599a4;white-space:nowrap}
+.workspace-mode .pynix-packages-item-name{
+ flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.workspace-mode .pynix-packages-item-version{
+ flex:0 0 auto;color:#9599a4;white-space:nowrap
+}
+.workspace-mode .pynix-packages-update{
+ box-sizing:border-box;display:inline-flex;align-items:center;
+ justify-content:center;flex:0 0 24px;width:24px;height:24px;
+ padding:0;margin-left:3px;
+ border:0;border-radius:5px;background:transparent;
+ color:#5796ff;cursor:pointer
+}
+.workspace-mode .pynix-packages-update:hover:not(:disabled){
+ background:#30415e;color:#80afff
+}
+.workspace-mode .pynix-packages-update:focus-visible{
+ outline:1px solid #70a5ff;outline-offset:-1px
+}
+.workspace-mode .pynix-packages-update:disabled{
+ opacity:.4;cursor:default
+}
+.workspace-mode .pynix-packages-update>svg{
+ display:block;width:20px;height:20px;min-width:20px;min-height:20px;
+ flex:0 0 20px
+}
 .workspace-mode .pynix-packages-no-results{padding:10px;color:#9599a4}
 .workspace-mode .pynix-packages-right{position:relative;flex:1;min-width:0;min-height:0;overflow:auto;padding:16px 20px}
 .workspace-mode .pynix-packages-empty{
