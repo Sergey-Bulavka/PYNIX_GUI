@@ -159,7 +159,7 @@ def test_services_tree_and_options_actions_are_real_not_inert():
     assert "svCollapsed.clear();svDraw();" in ui
     assert "title.addEventListener('click',()=>{" in ui
     assert "svGrouped=!svGrouped;svDraw();" in ui
-    assert "servicesPane.classList.toggle('hide-tree')" in ui
+    assert "servicesPane.classList.toggle('hide-tree',!svPreferences.showTree)" in ui
     assert ".pynix-services-pane.hide-tree .pynix-services-sidebar" in css
     assert "sv('toolbar').contains(event.target)" in ui
     assert '"version": "0.1.0"' in backend
@@ -213,7 +213,10 @@ def test_services_uses_exact_bundled_jetbrains_svg_assets():
         "expand": "general/expandAll",
         "collapse": "general/collapseAll",
         "dropdown": "general/dropdown",
-        "refresh": "general/refresh",
+        "refresh": "general/locate",
+        "settings": "general/settings",
+        "chevronRight": "general/chevronRight",
+        "help": "general/help",
         "options": "general/moreVertical",
         "hide": "general/hide",
         "run": "toolwindows/run",
@@ -257,3 +260,71 @@ def test_services_jetbrains_icons_keep_native_16px_size_in_mac_theme():
         assert ".workspace-mode.pynix-iconless .pynix-services-pane " + selector in iconless
     assert "display:block!important" in iconless
     assert "width:16px!important;height:16px!important" in iconless
+
+
+def test_services_right_actions_match_pycharm_and_only_appear_on_hover():
+    from pynix_gui.ide_services_dock import SERVICES_JETBRAINS_ICON_NAMES, SERVICES_DOCK_JS
+    from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+    from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog
+
+    assert SERVICES_JETBRAINS_ICON_NAMES["refresh"] == "general/locate"
+    assert "general/refresh" not in SERVICES_JETBRAINS_ICON_NAMES.values()
+    assert JetBrainsIconCatalog(BUNDLED_ICONS).svg("general/locate", dark=True)
+    assert 'data-sv="refresh" title="Select Active Service"' in SERVICES_DOCK_JS
+    assert "sv('refresh').addEventListener('click',()=>{" in SERVICES_DOCK_JS
+    assert "svRefresh();" in SERVICES_DOCK_JS
+
+    root = Path(__file__).resolve().parents[1]
+    css = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    for action in ('refresh', 'options', 'hide'):
+        assert 'button[data-sv="' + action + '"]' in css
+    assert "opacity:0!important;visibility:hidden!important" in css
+    assert "pointer-events:none!important" in css
+    assert ".pynix-services-pane:hover .pynix-services-header>button" in css
+    assert 'button:focus-visible' in css
+
+
+def test_services_options_menu_matches_jetbrains_with_real_actions():
+    ui = (Path(__file__).resolve().parents[1] /
+          "pynix_gui/ide_services_dock.py").read_text(encoding="utf-8")
+    for item in (
+        "Navigate with Single Click", "Always Select Opened Element",
+        "Always Select Active Service", "Show Services Tree",
+        "Configure Services Tool Window", "Double Click to Run Configuration",
+        "Show Toolbar", "View Mode", "Move to", "Resize",
+        "Remove from Sidebar", "Restore to Sidebar", "Help",
+    ):
+        assert item in ui
+    assert "document.body.appendChild(optionsMenu);" in ui
+    assert "optionsMenu.setAttribute('aria-label','Services Options');" in ui
+    assert "new CustomEvent('pynix:services-pin'" in ui
+    assert "localStorage.setItem('pynix.services.options'" in ui
+    assert "servicesPane.classList.toggle('hide-toolbar'" in ui
+    assert "servicesPane.classList.toggle('hide-tree'" in ui
+    assert "terminal.style.setProperty('flex-basis'" in ui
+    assert "window.open('https://www.jetbrains.com/help/pycharm/services-tool-window.html'" in ui
+    assert "svOption('Floating',null,{parent:host,disabled:true});" in ui
+    assert "svOption('Windowed',null,{parent:host,disabled:true});" in ui
+    assert "svOption('Left',null,{parent:host,disabled:true});" in ui
+    assert "svOption('Right',null,{parent:host,disabled:true});" in ui
+    assert "sv('options').setAttribute('aria-expanded'" in ui
+    assert "const svShowOptions=()=>{" in ui
+
+
+def test_services_sidebar_can_be_restored_through_more_tool_windows():
+    root = Path(__file__).resolve().parents[1]
+    edge = (root / "pynix_gui/ide_edge_profile.py").read_text(encoding="utf-8")
+    assert '("Services", "toolwindows/services", "", "services-window")' in edge
+    assert "window.addEventListener('pynix:services-pin',syncPin);" in edge
+    assert "button.classList.toggle('pynix-services-unpinned',!pinned)" in edge
+    assert ".pynix-extra-tool.pynix-services-unpinned{display:none!important}" in edge
+
+
+def test_services_option_submenus_can_float_outside_dock():
+    root = Path(__file__).resolve().parents[1]
+    css = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
+    assert "position:fixed!important;top:0;left:0;" in css
+    assert "overflow:visible!important" in css
+    assert ".pynix-services-option-wrap.has-submenu:hover>.pynix-services-submenu" in css
+    assert ".pynix-services-options-menu .pynix-services-option-mark>svg" in iconless
