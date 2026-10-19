@@ -167,6 +167,9 @@ TERMINAL_DOCK_JS = r"""
     return;
    }
    const items=[...sessions.children];
+   // Undo previous constrained width BEFORE measuring the new natural sizes.
+   // Otherwise the old width leaks into all subsequent overflow decisions.
+   for(const name of ['width','max-width','flex'])sessions.style.removeProperty(name);
    // Re-measure all sessions, including tabs hidden on the previous pass.
    for(const item of items)item.hidden=false;
    overflow.hidden=true;
@@ -181,15 +184,15 @@ TERMINAL_DOCK_JS = r"""
    // Instead, reserve the width of every other header control explicitly.
    const headerRoom=()=>{
     const style=getComputedStyle(header);
-    const gap=parseFloat(style.columnGap)||0;
+    const columnGap=parseFloat(style.columnGap)||0;
     const padding=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
     const visible=[...header.children].filter(node=>
       node!==sessions&&getComputedStyle(node).display!=='none');
     // The elastic spacer expands into unused room. It is not reserved space.
     const fixed=visible.reduce((sum,node)=>
       sum+(node===gap?0:node.getBoundingClientRect().width),0);
-    // n visible peers plus the session strip means n flex gaps.
-    return Math.max(0,header.clientWidth-padding-fixed-gap*visible.length);
+    // Count layout gaps using a separate name: gap is the DOM flex spacer.
+    return Math.max(0,header.clientWidth-padding-fixed-columnGap*visible.length);
    };
    let available=headerRoom();
    const needsOverflow=natural>available+0.5;
@@ -197,13 +200,14 @@ TERMINAL_DOCK_JS = r"""
     overflow.hidden=false;
     available=headerRoom(); // Reserve the chevron before fitting sessions.
    }
-   // Use only the width actually needed by tabs. The spacer to the right
-   // stays elastic, keeping Options/Hide pinned to the panel's far edge.
-   const stripWidth=Math.min(natural,available);
-   sessions.style.setProperty('flex','0 0 '+stripWidth+'px','important');
-   sessions.style.setProperty('width',stripWidth+'px','important');
-   sessions.style.setProperty('max-width',stripWidth+'px','important');
+   const setStripWidth=width=>{
+    const safe=Math.max(0,Math.min(width,available));
+    sessions.style.setProperty('flex','0 0 '+safe+'px','important');
+    sessions.style.setProperty('width',safe+'px','important');
+    sessions.style.setProperty('max-width',safe+'px','important');
+   };
    if(!needsOverflow){
+    setStripWidth(natural);
     overflowPopup.replaceChildren();
     return;
    }
@@ -240,6 +244,9 @@ TERMINAL_DOCK_JS = r"""
     });
     overflowPopup.appendChild(entry);
    }
+   // A subset of tabs may fit. Put + immediately beside those tabs,
+   // leaving the remaining header width to the elastic right spacer.
+   setStripWidth(used);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
