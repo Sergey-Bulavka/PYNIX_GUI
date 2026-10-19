@@ -12,7 +12,7 @@ SEARCH_SCRIPT = r"""<script id="pynix-search-everywhere-script">
  window.pynixSearchEverywhereInstalled=true;
  let backdrop=null,input=null,results=null,catalog=[],visible=[],chosen=0;
  const toolWindows=[
-  ['Project',0],['Search',1],['Version Control',2],['Settings',5],
+  ['Project',0],['Search',1],['Version Control',2],
  ];
  const actions=[
   ['Run Current File','.pynix-pycharm-center>.pynix-run-action'],
@@ -26,7 +26,9 @@ SEARCH_SCRIPT = r"""<script id="pynix-search-everywhere-script">
  const activate=entry=>{
   if(!entry)return;
   close();
-  if(entry.source){
+  if(entry.settings){
+   window.pynixOpenSettingsWindow?.('Editor');
+  }else if(entry.source){
    window.pynixOpenSourceFromSearch?.(entry.source,entry.line||1);
   }else if(entry.action){
    document.querySelector(entry.action)?.click();
@@ -133,6 +135,8 @@ SEARCH_SCRIPT = r"""<script id="pynix-search-everywhere-script">
      label:name,rail
     });
   }
+  if(typeof window.pynixOpenSettingsWindow==='function')
+   catalog.push({category:'Settings',label:'Settings',settings:true});
   for(const [name,action] of actions){
    if(document.querySelector(action))
     catalog.push({category:'Actions',label:name,action});
