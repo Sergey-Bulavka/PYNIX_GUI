@@ -1154,6 +1154,134 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  .workspace-mode .pynix-packages-left{flex-basis:260px;min-width:160px}
  .workspace-mode .pynix-packages-interpreter{max-width:40%}
 }
+
+/* Services: split-tree tool window, matching native PyCharm dark tool chrome. */
+.workspace-mode .integrated-terminal .pynix-services-pane{
+ position:absolute!important;inset:0!important;z-index:8!important;
+ display:flex!important;flex-direction:column!important;min-width:0;
+ background:#1b1c1f!important;color:#ced0d8!important;overflow:hidden!important;
+ font:13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important
+}
+.workspace-mode .integrated-terminal .pynix-services-pane[hidden]{display:none!important}
+.workspace-mode .pynix-services-header{
+ display:flex;align-items:center;gap:7px;box-sizing:border-box;
+ height:46px;flex:0 0 46px;padding:0 13px;
+ border-bottom:1px solid #36383e
+}
+.workspace-mode .pynix-services-header strong{font-size:15px;font-weight:650;color:#d9dbe2}
+.workspace-mode .pynix-services-fill{flex:1 1 auto}
+.workspace-mode .pynix-services-header button,
+.workspace-mode .pynix-services-toolbar>button{
+ width:28px;height:28px;min-width:28px;border:0;border-radius:5px;
+ background:transparent;color:#c1c4ce;display:flex;align-items:center;
+ justify-content:center;font:20px/1 -apple-system,system-ui,sans-serif;cursor:pointer
+}
+.workspace-mode .pynix-services-header button:hover,
+.workspace-mode .pynix-services-toolbar>button:hover{background:#343741}
+.workspace-mode .pynix-services-content{
+ flex:1 1 auto;min-height:0;display:flex;overflow:hidden
+}
+.workspace-mode .pynix-services-sidebar{
+ flex:0 0 38%;min-width:225px;max-width:52%;
+ display:flex;flex-direction:column;min-height:0;
+ border-right:1px solid #36383e;box-sizing:border-box
+}
+.workspace-mode .pynix-services-toolbar{
+ flex:0 0 40px;display:flex;gap:4px;align-items:center;
+ padding:0 9px;border-bottom:1px solid #282a2f;position:relative
+}
+.workspace-mode .pynix-services-toolbar>button{font-size:19px}
+.workspace-mode .pynix-services-menu{
+ position:absolute;top:35px;left:8px;min-width:220px;max-width:300px;
+ background:#2b2e35;border:1px solid #53565f;border-radius:8px;
+ padding:5px;z-index:25;box-shadow:0 8px 20px #0009;
+ display:flex;flex-direction:column
+}
+.workspace-mode .pynix-services-menu[hidden]{display:none!important}
+.workspace-mode .pynix-services-menu button{
+ border:0;background:transparent;color:#d7d9df;
+ border-radius:4px;padding:8px 11px;text-align:left;
+ cursor:pointer;font:13px/1.2 -apple-system,system-ui,sans-serif
+}
+.workspace-mode .pynix-services-menu button:hover{background:#3d506f}
+.workspace-mode .pynix-services-tree{
+ flex:1 1 auto;overflow:auto;min-height:0;padding:8px 8px
+}
+.workspace-mode .pynix-services-group{
+ color:#898d98;font-size:12px;padding:7px 8px 4px;
+ font-weight:600
+}
+.workspace-mode .pynix-services-item{
+ display:flex;align-items:center;gap:9px;box-sizing:border-box;
+ border:0;border-radius:6px;width:100%;min-height:29px;
+ padding:4px 9px;background:transparent;
+ color:#d0d2dc;cursor:pointer;text-align:left;
+ font:13px/1.25 -apple-system,system-ui,sans-serif
+}
+.workspace-mode .pynix-services-item>span:nth-child(2){
+ min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap
+}
+.workspace-mode .pynix-services-item:hover{background:#34373f}
+.workspace-mode .pynix-services-item[aria-selected="true"]{
+ background:#304a76;color:#edf1fa
+}
+.workspace-mode .pynix-services-item:focus-visible{outline:1px solid #6a9fff}
+.workspace-mode .pynix-services-item-icon{color:#9ab7fb;font-size:16px}
+.workspace-mode .pynix-services-status{margin-left:auto;color:#6ac187}
+.workspace-mode .pynix-services-main{
+ flex:1 1 auto;display:flex;flex-direction:column;
+ min-width:0;min-height:0;overflow:hidden
+}
+.workspace-mode .pynix-services-tabs{
+ display:flex;align-items:center;gap:8px;box-sizing:border-box;
+ padding:4px 7px;height:41px;flex:0 0 41px;
+ border-bottom:1px solid #34363b
+}
+.workspace-mode .pynix-services-tabs button{
+ height:33px;padding:0 12px;border:1px solid transparent;
+ border-radius:6px;background:transparent;
+ color:#c9cbd4;font:13px/1.3 -apple-system,system-ui,sans-serif;
+ cursor:pointer
+}
+.workspace-mode .pynix-services-tabs button.active{
+ background:#293e64;border-color:#3869b5;color:#e8eefc
+}
+.workspace-mode .pynix-services-details{
+ flex:1;min-height:0;overflow:auto;padding:16px;box-sizing:border-box
+}
+.workspace-mode .pynix-services-empty,
+.workspace-mode .pynix-services-muted{
+ color:#878a93;font-size:13px
+}
+.workspace-mode .pynix-services-empty{
+ text-align:center;padding-top:23%;font-size:15px
+}
+.workspace-mode .pynix-services-field{
+ display:grid;grid-template-columns:minmax(80px,120px) minmax(0,1fr);
+ gap:10px;align-items:start;padding:5px 0;word-break:break-word
+}
+.workspace-mode .pynix-services-field>span:first-child{color:#b6b8c1}
+.workspace-mode .pynix-services-field>span:last-child{color:#d6d8e0}
+.workspace-mode .pynix-services-actions{
+ display:flex;flex-wrap:wrap;gap:7px;margin:18px 0 8px
+}
+.workspace-mode .pynix-services-action{
+ background:#303641;border:1px solid #505969;border-radius:5px;
+ color:#e0e3ed;padding:5px 10px;cursor:pointer;font-size:12px
+}
+.workspace-mode .pynix-services-action:hover:not(:disabled){background:#3e5070}
+.workspace-mode .pynix-services-action:disabled{opacity:.38;cursor:default}
+.workspace-mode .pynix-services-call{
+ display:grid;grid-template-columns:85px minmax(65px,110px) 1fr;
+ gap:8px;padding:7px 2px;border-bottom:1px solid #2d2f36;
+ word-break:break-word;font-size:12px
+}
+.workspace-mode .pynix-services-call time{color:#999eab}
+.workspace-mode .pynix-services-call strong{color:#a1bffb;font-weight:500}
+@media(max-width:800px){
+ .workspace-mode .pynix-services-sidebar{flex-basis:42%;min-width:170px}
+ .workspace-mode .pynix-services-field{grid-template-columns:90px minmax(0,1fr)}
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
