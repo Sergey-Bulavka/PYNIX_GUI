@@ -80,10 +80,11 @@ TERMINAL_DOCK_JS = r"""
   .workspace-mode .integrated-terminal .pynix-tab-overflow-control{
    box-sizing:border-box!important;position:relative!important;
    flex:0 0 27px!important;width:27px!important;min-width:27px!important;
-   display:none!important;align-items:center!important;justify-content:center!important
+   display:flex!important;align-items:center!important;justify-content:center!important;
+   visibility:hidden!important;pointer-events:none!important
   }
   .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs{
-   display:flex!important
+   visibility:visible!important;pointer-events:auto!important
   }
   .workspace-mode .pynix-tab-overflow-trigger{
    width:27px!important;height:27px!important;min-width:27px!important;
@@ -202,7 +203,9 @@ TERMINAL_DOCK_JS = r"""
     // The class drives !important CSS in WKWebView, avoiding conflicting
     // inline visibility state from previous layout passes.
     overflow.classList.toggle('has-hidden-tabs',hasHidden);
-    overflow.style.setProperty('display',hasHidden?'flex':'none','important');
+    // A reserved slot prevents a 27px capacity jump when the arrow appears.
+    overflow.style.setProperty('visibility',hasHidden?'visible':'hidden','important');
+    overflow.style.setProperty('pointer-events',hasHidden?'auto':'none','important');
     if(!hasHidden)closeOverflow();
     header.dataset.overflowTabs=String(hasHidden);
     overflowToggle.dataset.hint='More Tabs ('+hiddenTabs.length+')';
