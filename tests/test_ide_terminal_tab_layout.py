@@ -51,7 +51,7 @@ def test_tab_overflow_uses_actual_browser_clipping():
     # The flexbox viewport, not a computed header budget, determines which
     # session tabs are accessible through the overflow chevron.
     assert "sessions.getBoundingClientRect()" in TERMINAL_DOCK_JS
-    assert "sessions.scrollWidth>sessions.clientWidth+0.5" in TERMINAL_DOCK_JS
+    assert "sessions.scrollWidth>sessions.clientWidth+0.5" not in TERMINAL_DOCK_JS
     assert "rect.left<viewport.left-0.5||rect.right>viewport.right+0.5" in TERMINAL_DOCK_JS
     assert "if(!clipped(item))return;" in TERMINAL_DOCK_JS
     assert "overflowPopup.childElementCount>0" in TERMINAL_DOCK_JS
@@ -74,3 +74,10 @@ def test_overflow_chevron_has_stable_slot_next_to_options():
     assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
     assert "overflowToggle.innerHTML='<svg viewBox=" in TERMINAL_DOCK_JS
     assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
+
+
+def test_overflow_arrow_has_fixed_visible_layout_slot():
+    assert ".workspace-mode .pynix-terminal-tab-overflow{display:block!important" in TERMINAL_DOCK_JS
+    assert "flex:0 0 27px!important" in TERMINAL_DOCK_JS
+    assert "showOverflow(overflowPopup.childElementCount>0);" in TERMINAL_DOCK_JS
+    assert "if(!items.length||sessions.clientWidth<=0)" not in TERMINAL_DOCK_JS
