@@ -1029,6 +1029,39 @@ def main() -> None:
                      "requestId": request.get("requestId", 0) if "request" in locals() else 0,
                      "error": str(exc)[:1000]})
 
+    from pynix_gui.ide_project_services import ProjectServices, ServicesError
+    services_registry = ProjectServices(session.root)
+
+    def publish_services_result(result):
+        payload = run_json.dumps(result, ensure_ascii=False).replace(
+            "<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        script = "window.pynixServicesResult?.(" + payload + ");"
+        NSOperationQueue.mainQueue().addOperationWithBlock_(
+            lambda: view.evaluateJavaScript_completionHandler_(script, None))
+
+    class ServicesHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            try:
+                request = dict(message.body())
+                action = request.get("action")
+                if action == "list":
+                    pass
+                elif action == "add":
+                    services_registry.add(request.get("name"), request.get("url"))
+                elif action == "remove":
+                    services_registry.remove(request.get("id"))
+                elif action == "connect":
+                    services_registry.connect(request.get("id"))
+                elif action == "disconnect":
+                    services_registry.disconnect(request.get("id"))
+                else:
+                    raise ServicesError("Unsupported Services action")
+                publish_services_result(services_registry.list())
+            except (ServicesError, OSError, ValueError, TypeError) as exc:
+                publish_services_result({"error": str(exc)[:400]})
+
+    services_handler = ServicesHandler.alloc().init()
+
     packages_handler = PackagesHandler.alloc().init()
     terminal_session_handler = TerminalSessionHandler.alloc().init()
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
@@ -1037,6 +1070,7 @@ def main() -> None:
         toolbar_drag_handler, "pynixToolbarDragRegion")
     controller.addScriptMessageHandler_name_(terminal_session_handler, "pynixTerminalSession")
     controller.addScriptMessageHandler_name_(packages_handler, "pynixPackages")
+    controller.addScriptMessageHandler_name_(services_handler, "pynixServices")
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
@@ -1095,6 +1129,7 @@ def main() -> None:
     finally:
         debug_client.close()
         project_runner.close()
+        services_registry.close()
         if core_reader is not None:
             core_reader.close()
 
