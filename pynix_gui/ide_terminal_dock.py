@@ -35,7 +35,8 @@ TERMINAL_DOCK_JS = r"""
   const overflowToggle=document.createElement('button');
   overflowToggle.type='button';
   overflowToggle.className='pynix-terminal-dock-action pynix-tab-overflow-trigger';
-  overflowToggle.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // Use the same platform-rendered chevron as the terminal shell selector.
+  overflowToggle.textContent='⌄';
   overflowToggle.setAttribute('aria-label','More Tabs');
   overflowToggle.setAttribute('aria-haspopup','menu');
   overflowToggle.setAttribute('aria-expanded','false');
@@ -83,12 +84,16 @@ TERMINAL_DOCK_JS = r"""
    display:flex!important;align-items:center!important;justify-content:center!important;
    visibility:hidden!important;pointer-events:none!important
   }
-  .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs{
-   visibility:visible!important;pointer-events:auto!important
+  .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs,
+  .workspace-mode .integrated-terminal .pynix-terminal-dock-bar:has(.pynix-terminal-session-tab[hidden]) .pynix-tab-overflow-control{
+   display:flex!important;visibility:visible!important;
+   opacity:1!important;pointer-events:auto!important
   }
   .workspace-mode .pynix-tab-overflow-trigger{
    width:27px!important;height:27px!important;min-width:27px!important;
    display:flex!important;align-items:center!important;justify-content:center!important;
+   font:500 22px/1 -apple-system,system-ui,sans-serif!important;
+   color:#c6c8d0!important;
    opacity:1!important;visibility:visible!important;pointer-events:auto!important
   }
   .pynix-tab-overflow-trigger svg{width:16px;height:16px;display:block;flex:none}
@@ -203,8 +208,12 @@ TERMINAL_DOCK_JS = r"""
     // The class drives !important CSS in WKWebView, avoiding conflicting
     // inline visibility state from previous layout passes.
     overflow.classList.toggle('has-hidden-tabs',hasHidden);
-    // A reserved slot prevents a 27px capacity jump when the arrow appears.
+    header.classList.toggle('has-overflow-tabs',hasHidden);
+    // Keep the chevron's slot stable while unconditionally applying its
+    // computed state. Both the class and :has([hidden]) independently reveal it.
+    overflow.style.setProperty('display','flex','important');
     overflow.style.setProperty('visibility',hasHidden?'visible':'hidden','important');
+    overflow.style.setProperty('opacity',hasHidden?'1':'0','important');
     overflow.style.setProperty('pointer-events',hasHidden?'auto':'none','important');
     if(!hasHidden)closeOverflow();
     header.dataset.overflowTabs=String(hasHidden);
@@ -285,6 +294,19 @@ TERMINAL_DOCK_JS = r"""
     overflowPopup.appendChild(entry);
    }
    setOverflow(hidden);
+   // In a native WebKit render pass an ancestor may clip the strip even
+   // when a width estimate said all items fit. A fully missing earlier tab
+   // must still make the overflow control visible.
+   requestAnimationFrame(()=>{
+    if(scope==='other'||sessions.hidden)return;
+    const hiddenNow=[...sessions.children].filter(el=>{
+     const rect=el.getBoundingClientRect();
+     const box=sessions.getBoundingClientRect();
+     return el.hidden||rect.right<box.left-0.5||rect.left>box.right+0.5;
+    });
+    if(hiddenNow.length&&!overflow.classList.contains('has-hidden-tabs'))
+     setOverflow(hiddenNow);
+   });
    tabOverflowDebug={
     scope,tabs:tabs.length,available,filled,activeIndex,
     shown:[...shown].sort((a,b)=>a-b),
@@ -370,6 +392,18 @@ TERMINAL_DOCK_JS = r"""
     option('⚙ Settings',()=>{chevron.open=true;renderShellMenu(true);});
     menuDivider(toolsPopup);
    }
+   option('Tab Layout Diagnostics',()=>{
+    const info=window.pynixTerminalDock.tabLayout();
+    const labels=[...sessions.children].map(el=>({
+     label:el.textContent.trim(),hidden:el.hidden,
+     left:Math.round(el.getBoundingClientRect().left),
+     right:Math.round(el.getBoundingClientRect().right)
+    }));
+    const report=JSON.stringify({...info,labels,arrowDisplay:getComputedStyle(overflow).display,
+     arrowVisibility:getComputedStyle(overflow).visibility,hiddenAttribute:overflow.hasAttribute('hidden')});
+    if(scope==='pynix')pynix.log.textContent+='\n[Tab layout] '+report+'\n';
+    else system.log.textContent+='\n[Tab layout] '+report+'\n';
+   });
    option('Close All',()=>{
     if(scope==='pynix'){pynixTabs.clear();pynixId=null;createPynixTab();}
     else if(scope==='system'){
