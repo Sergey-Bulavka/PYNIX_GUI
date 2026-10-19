@@ -1092,8 +1092,14 @@ def main() -> None:
                     self, "pynixSettings")
                 settings_state["window"] = settings_window
                 settings_state["view"] = settings_view
-            settings_state["view"].loadHTMLString_baseURL_(
-                settings_html(settings_store.read(), page), None)
+            # Reopening the visible window must not wipe unapplied edits.
+            # Route to the requested page in the existing document instead.
+            if settings_state["window"].isVisible():
+                settings_state["view"].evaluateJavaScript_completionHandler_(
+                    "window.pynixSettingsNavigate?.(" + json.dumps(page) + ");", None)
+            else:
+                settings_state["view"].loadHTMLString_baseURL_(
+                    settings_html(settings_store.read(), page), None)
             settings_state["window"].makeKeyAndOrderFront_(None)
             app.activateIgnoringOtherApps_(True)
 
