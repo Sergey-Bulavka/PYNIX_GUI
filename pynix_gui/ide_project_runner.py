@@ -36,9 +36,9 @@ class ProjectRunner:
                     raise RunError("Invalid run source")
                 if mode != "run":
                     raise RunError("Single-file execution supports Run only")
-                candidate = self.root / source
-                resolved = candidate.resolve()
-                if (candidate.is_absolute() or not resolved.is_relative_to(self.root)
+                relative = Path(source)
+                resolved = (self.root / relative).resolve()
+                if (relative.is_absolute() or not resolved.is_relative_to(self.root)
                         or not resolved.is_file() or resolved.suffix not in {".pnx", ".py"}):
                     raise RunError("Run requires a saved .pnx or .py file inside the project")
                 if resolved.suffix == ".pnx":
