@@ -13,8 +13,20 @@ PACKAGES_DOCK_JS = r"""
     '<button class="pynix-packages-refresh" type="button" aria-label="Refresh packages" title="Refresh packages">↻</button>',
     '<button class="pynix-packages-hide" type="button" aria-label="Hide packages" title="Hide packages">−</button></div>',
     '<div class="pynix-packages-content"><div class="pynix-packages-left">',
-    '<div class="pynix-packages-searchbar"><input class="pynix-packages-search" type="search" placeholder="Search packages…" aria-label="Search packages"/>',
-    '<button class="pynix-packages-pypi" type="button" title="Search exact name on PyPI">PyPI ↗</button></div>',
+    '<div class="pynix-packages-searchbar">',
+    '<label class="pynix-packages-searchbox">',
+    '<span class="pynix-packages-search-icon" aria-hidden="true">',
+    '<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">',
+    '<circle cx="6.8" cy="6.8" r="4.6"></circle><path d="m10.3 10.3 3.5 3.5"></path>',
+    '</svg></span>',
+    '<input class="pynix-packages-search" type="search" placeholder="Search for more packages" aria-label="Search packages"/>',
+    '</label>',
+    '<button class="pynix-packages-pypi" type="button" title="Find package on PyPI" aria-label="Find package on PyPI">',
+    '<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">',
+    '<path d="m2.5 5.7 6.2-3.4 6.2 3.4v7.1l-6.2 3.4-6.2-3.4z"></path>',
+    '<path d="m2.5 5.7 6.2 3.4 6.2-3.4M8.7 9.1v7.1"></path>',
+    '<path d="M15.5 12.3v6.2M12.4 15.4h6.2" stroke-width="1.8"></path>',
+    '</svg></button></div>',
     '<div class="pynix-packages-status" role="status">Loading installed packages…</div>',
     '<div class="pynix-packages-list" role="listbox" aria-label="Installed packages"></div></div>',
     '<div class="pynix-packages-right"><div class="pynix-packages-empty">Select package to view documentation</div>',
@@ -56,7 +68,10 @@ PACKAGES_DOCK_JS = r"""
       row.className='pynix-packages-item';row.setAttribute('role','option');
       row.setAttribute('aria-selected',String(item.name===packageName));
       const ico=document.createElement('span');ico.className='pynix-packages-cube';
-      ico.textContent='⬡';ico.setAttribute('aria-hidden','true');
+      ico.setAttribute('aria-hidden','true');
+      ico.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linejoin="round" aria-hidden="true">'+
+        '<path d="M2 4.9 8 1.7l6 3.2v6.5L8 14.7l-6-3.3z"></path>'+
+        '<path d="M2 4.9 8 8.3l6-3.4M8 8.3v6.4"></path></svg>';
       const name=document.createElement('span');name.className='pynix-packages-item-name';name.textContent=item.name;
       const version=document.createElement('span');version.className='pynix-packages-item-version';version.textContent=item.version;
       row.append(ico,name,version);
