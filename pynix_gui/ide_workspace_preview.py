@@ -1035,7 +1035,7 @@ __PYNIX_DISPLAY_LEXER__
      window.alert('Open a .pnx or .py file before running.');return;
    }
    if(isFile){
-     if(!/\.(pnx|py)$/i.test(source)||!byName.has(source)){
+     if(!/\\.(pnx|py)$/i.test(source)||!byName.has(source)){
        window.alert('Run supports saved .pnx and .py project files.');return;
      }
      if(byName.get(source).dirty){
@@ -1091,11 +1091,11 @@ __PYNIX_DISPLAY_LEXER__
    runButton.disabled=isProjectRunning;
    restartButton.disabled=state==='stopping';
    stopButton.disabled=!isProjectRunning;
-   const tabs=document.querySelector('.terminal-tabs');
+   // PyCharm Run output belongs to the bottom Run tool window.
+   // Selecting the legacy TERMINAL tab by synthetic click could activate
+   // gallery handlers and rewrite the Project explorer's contents.
+   window.pynixTerminalDock?.showRun?.();
    const consolePanel=document.querySelector('.terminal-console');
-   const consoleTab=[...tabs?.children||[]].find(item=>item.textContent.trim()==='TERMINAL');
-   setToolWindowVisible(true);
-   consoleTab?.click();
    if(!consolePanel)return;
    if(state==='running')consolePanel.textContent=
      'Running '+(lastRunRequest?.source||'PYNIX project')+'…';
