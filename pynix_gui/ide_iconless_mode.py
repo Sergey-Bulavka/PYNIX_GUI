@@ -67,6 +67,21 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  width:20px!important;height:20px!important;
  min-width:20px!important;min-height:20px!important;
 }
+/* Services buttons and service-type badges are real controls, not the legacy
+   icon placeholders suppressed by the global native iconless rule.
+   Restore only their explicitly owned SVGs; never unhide unrelated chrome. */
+.workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-header button>svg,
+.workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-toolbar>button>svg,
+.workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-item-icon>svg{
+ display:block!important;
+ visibility:visible!important;
+ opacity:1!important;
+ width:18px!important;height:18px!important;
+ min-width:18px!important;min-height:18px!important;
+ max-width:18px!important;max-height:18px!important;
+ flex:0 0 18px!important;
+ transform:none!important;
+}
 /* Only the perimeter groups and two native project/Git buttons use icons.
    Other visual rails, tree badges and editor icons stay hidden. */
 .workspace-mode.pynix-iconless
