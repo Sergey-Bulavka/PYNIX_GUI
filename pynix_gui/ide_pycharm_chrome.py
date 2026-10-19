@@ -1225,7 +1225,36 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .workspace-mode .pynix-services-option-shortcut{
- margin-left:auto;color:#888c96;font-size:13px;white-space:nowrap
+ margin-left:auto;flex:0 0 auto;color:#888c96;
+ font:400 13px/16px -apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif;
+ white-space:nowrap
+}
+/* Native macOS shortcut symbols shown in JetBrains context menus.
+   Align Shift, Command and T optically instead of shaping a mixed run. */
+.workspace-mode .pynix-services-option-shortcut.pynix-services-shortcut-keys{
+ display:inline-flex!important;align-items:center!important;
+ justify-content:flex-end!important;gap:0!important;
+ width:34px!important;height:16px!important;
+ letter-spacing:0!important;white-space:nowrap!important
+}
+.workspace-mode .pynix-services-shortcut-key{
+ display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;
+ box-sizing:border-box!important;height:16px!important;
+ padding:0!important;margin:0!important;flex-shrink:0!important;
+ font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",sans-serif!important;
+ font-weight:400!important;font-style:normal!important;
+ line-height:16px!important;letter-spacing:0!important;
+ font-kerning:none!important;font-variant-ligatures:none!important
+}
+.workspace-mode .pynix-services-shortcut-shift{
+ width:12px!important;font-size:14px!important
+}
+.workspace-mode .pynix-services-shortcut-command{
+ width:13px!important;font-size:14px!important
+}
+.workspace-mode .pynix-services-shortcut-letter{
+ width:9px!important;font-size:13px!important
 }
 .workspace-mode .pynix-services-option-mark>svg,
 .workspace-mode .pynix-services-option-arrow{
