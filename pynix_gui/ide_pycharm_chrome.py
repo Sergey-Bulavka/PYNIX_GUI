@@ -1170,6 +1170,22 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .pynix-services-header strong{font-size:15px;font-weight:650;color:#d9dbe2}
 .workspace-mode .pynix-services-fill{flex:1 1 auto}
+.workspace-mode .pynix-services-header{position:relative!important}
+.workspace-mode .pynix-services-pane.hide-tree .pynix-services-sidebar{display:none!important}
+.workspace-mode .pynix-services-options-menu{
+ position:absolute;top:38px;right:48px;z-index:30;min-width:208px;
+ background:#2b2e35;border:1px solid #53565f;border-radius:7px;
+ box-shadow:0 8px 24px #000a;padding:5px;display:flex;flex-direction:column
+}
+.workspace-mode .pynix-services-options-menu[hidden]{display:none!important}
+.workspace-mode .pynix-services-options-menu button{
+ border:0!important;background:transparent!important;color:#d7d9df!important;
+ font:13px/1.25 -apple-system,system-ui,sans-serif!important;
+ padding:8px 10px!important;text-align:left!important;
+ width:auto!important;height:auto!important;min-width:0!important;
+ justify-content:flex-start!important;cursor:pointer;border-radius:5px
+}
+.workspace-mode .pynix-services-options-menu button:hover{background:#405270!important}
 .workspace-mode .pynix-services-header button,
 .workspace-mode .pynix-services-toolbar>button{
  width:28px;height:28px;min-width:28px;border:0;border-radius:5px;
@@ -1208,9 +1224,12 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  flex:1 1 auto;overflow:auto;min-height:0;padding:8px 8px
 }
 .workspace-mode .pynix-services-group{
- color:#898d98;font-size:12px;padding:7px 8px 4px;
- font-weight:600
+ box-sizing:border-box;display:block;width:100%;text-align:left;
+ border:0;background:transparent;color:#898d98;
+ font:600 12px/1.4 -apple-system,system-ui,sans-serif;
+ padding:7px 8px 4px;border-radius:5px;cursor:pointer
 }
+.workspace-mode .pynix-services-group:hover{background:#2c2f36}
 .workspace-mode .pynix-services-item{
  display:flex;align-items:center;gap:9px;box-sizing:border-box;
  border:0;border-radius:6px;width:100%;min-height:29px;
