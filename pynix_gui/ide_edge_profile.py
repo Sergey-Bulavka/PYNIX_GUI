@@ -78,6 +78,7 @@ MORE_TOOL_WINDOWS = (
     ("Learn", "toolwindows/learn", "", ""),
     ("Python Process Output", "pythonProcessOutput/process", "", ""),
     ("TODO", "toolwindows/todo", "", ""),
+    ("Services", "toolwindows/services", "", "services-window"),
 )
 
 # Only this group is iconographic in the native iconless preview.
@@ -136,6 +137,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  fill:#ffffff!important
 }
 .workspace-mode .pynix-extra-tool[aria-disabled="true"]{opacity:.56;cursor:default}
+.workspace-mode .pynix-extra-tool.pynix-services-unpinned{display:none!important}
 .workspace-mode .pynix-extra-tool svg{display:block;width:20px;height:20px;flex:0 0 20px}
 .workspace-mode .pynix-extra-tool:focus-visible,
 .workspace-mode .pynix-tool-profile-more:focus-visible{
@@ -478,6 +480,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
    }
    if(entry.action==='services-window'){
+    const syncPin=event=>{
+     let pinned=event?.detail?.pinned;
+     if(typeof pinned!=='boolean'){
+      try{pinned=localStorage.getItem('pynix.services.unpinned')!=='true';}
+      catch(_){pinned=true;}
+     }
+     button.classList.toggle('pynix-services-unpinned',!pinned);
+    };
+    window.addEventListener('pynix:services-pin',syncPin);
+    syncPin();
     const sync=event=>{
      const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
      const active=Boolean(state.visible&&state.scope==='services');
