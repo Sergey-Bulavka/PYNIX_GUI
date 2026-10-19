@@ -15,8 +15,9 @@ SERVICES_DOCK_JS = r"""
     <div class="pynix-services-sidebar"><nav class="pynix-services-toolbar" data-sv="toolbar">
      <button data-sv="add" title="Add Service">＋</button>
      <button data-sv="group" title="Group by Type">◉</button>
-     <button data-sv="expand" title="Expand All">⌄</button>
-     <button data-sv="collapse" title="Collapse All">⌃</button>
+     <button data-sv="newMcp" title="Add MCP SSE Connection" aria-label="Add MCP SSE Connection">⊞</button>
+     <button data-sv="expand" title="Expand All" aria-label="Expand All">⌄</button>
+     <button data-sv="collapse" title="Collapse All" aria-label="Collapse All">⌃</button>
      <div data-sv="menu" class="pynix-services-menu" role="menu" hidden></div>
     </nav><div data-sv="tree" class="pynix-services-tree" role="tree"></div></div>
     <div class="pynix-services-main"><nav class="pynix-services-tabs">
@@ -29,6 +30,28 @@ SERVICES_DOCK_JS = r"""
    </div>`;
   terminal.appendChild(servicesPane);
   const sv=key=>servicesPane.querySelector('[data-sv="'+key+'"]');
+  // JetBrains-like line icons: keep vectors independent of system Unicode glyphs.
+  // The native iconless theme explicitly opts this toolbar into SVG rendering.
+  const svIcon=paths=>'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+paths+'</svg>';
+  const svIcons={
+   add:'<path d="M10 3v14M3 10h14"/>',
+   group:'<path d="M1.6 10c2.15-3.9 5.2-5.85 8.4-5.85S16.25 6.1 18.4 10c-2.15 3.9-5.2 5.85-8.4 5.85S3.75 13.9 1.6 10z"/><circle cx="10" cy="10" r="2.8"/><path d="m16.7 16.5 1.5 1.5" stroke-width="1.25"/>',
+   newMcp:'<path d="M13.3 4.5H5.1c-1.35 0-2.1.75-2.1 2.1v8.3c0 1.35.75 2.1 2.1 2.1h8.3c1.35 0 2.1-.75 2.1-2.1v-3.4"/><path d="M15.7 1.8v8M11.7 5.8h8"/>',
+   expand:'<path d="m6 8 4-4 4 4M6 16l4-4 4 4"/>',
+   collapse:'<path d="m6 4 4 4 4-4M6 12l4 4 4-4"/>',
+   refresh:'<circle cx="10" cy="10" r="7.1"/><path d="M10 1.7v5M10 13.3v5M1.7 10h5M13.3 10h5"/>',
+   options:'<circle cx="10" cy="4" r="1.15" fill="currentColor" stroke="none"/><circle cx="10" cy="10" r="1.15" fill="currentColor" stroke="none"/><circle cx="10" cy="16" r="1.15" fill="currentColor" stroke="none"/>',
+   hide:'<path d="M3 10h14"/>',
+   run:'<path d="m6 3.8 9 6.2-9 6.2z"/>',
+   mcp:'<path d="M7.5 12.5 14.4 5.6a3 3 0 0 0-4.25-4.25L3.5 8a5 5 0 0 0 7.1 7.1l6-6a3.35 3.35 0 0 0-4.75-4.75L5.4 10.8"/>'
+  };
+  for(const key of ['add','group','newMcp','expand','collapse','refresh','options','hide'])
+   sv(key).innerHTML=svIcon(svIcons[key]);
+  sv('add').setAttribute('aria-label','Add Service');
+  sv('group').setAttribute('aria-label','Group by Type');
+  sv('refresh').setAttribute('aria-label','Refresh Services');
+  sv('options').setAttribute('aria-label','Options');
+  sv('hide').setAttribute('aria-label','Hide Services');
   let svProfiles=[],svSelected='',svTab='session',svGrouped=true;
   const svCollapsed=new Set();
   const svRunStates=new Map();
@@ -166,7 +189,7 @@ SERVICES_DOCK_JS = r"""
      button.setAttribute('role','treeitem');
      button.setAttribute('aria-selected',String(item.id===svSelected));
      const icon=document.createElement('span');icon.className='pynix-services-item-icon';
-     icon.textContent=item.type==='run'?'▷':'♧';
+     icon.innerHTML=svIcon(item.type==='run'?svIcons.run:svIcons.mcp);
      const name=document.createElement('span');name.textContent=item.name;
      const state=document.createElement('span');state.className='pynix-services-status';
      state.textContent=['connected','running'].includes(item.state)?'●':
@@ -190,13 +213,15 @@ SERVICES_DOCK_JS = r"""
    menuAction('Run Configuration → '+name,()=>{
     svIncluded.add(id);svSave();svSelected='run:'+id;svDraw();
    });
-  menuAction('MCP SSE Connection…',()=>{
+  const svAddMcp=()=>{
    const name=window.prompt('Service name:');
    if(name===null)return;
    const url=window.prompt('MCP SSE URL (HTTPS or localhost HTTP):');
    if(url!==null)svSend('add',{name,url});
-  });
+  };
+  menuAction('MCP SSE Connection…',svAddMcp);
   sv('add').addEventListener('click',()=>menu.hidden=!menu.hidden);
+  sv('newMcp').addEventListener('click',svAddMcp);
   const optionsMenu=sv('optionsMenu');
   const optionsButton=(text,callback)=>{
    const button=document.createElement('button');button.type='button';
