@@ -405,3 +405,38 @@ def test_services_options_labels_are_13px_without_changing_jetbrains_svg_size():
     assert "width:190px!important" in menu
     assert "font:400 13px/18px" in header
     assert "width:16px!important;height:16px!important" in menu
+
+
+def test_services_tree_shortcut_uses_mac_key_glyphs_not_one_font_fallback_run():
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "pynix_gui/ide_services_dock.py").read_text(encoding="utf-8")
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    menu = chrome.split("/* JetBrains Services Options is portaled")[1].split(
+        "/* Header actions are contextual")[0]
+
+    # It is a native Mac keyboard shortcut, not a JetBrains SVG toolbar icon.
+    assert "if(config.shortcut==='⇧⌘T'){" in ui
+    assert "hint.classList.add('pynix-services-shortcut-keys');" in ui
+    assert "hint.setAttribute('aria-label','Shift Command T');" in ui
+    assert "[['shift','⇧'],['command','⌘'],['letter','T']]" in ui
+    assert "part.textContent=glyph;" in ui
+    assert "part.setAttribute('aria-hidden','true');" in ui
+    assert "}else hint.textContent=config.shortcut;" in ui
+    assert "toggle('Show Services Tree','showTree',null,'⇧⌘T');" in ui
+
+    # JetBrains-like fixed macOS metrics, with a shared baseline and tighter gap.
+    assert "font:400 13px/16px -apple-system" in menu
+    assert ".pynix-services-option-shortcut.pynix-services-shortcut-keys{" in menu
+    assert "width:34px!important;height:16px!important" in menu
+    assert "align-items:center!important" in menu
+    for selector, width, size in (
+        ("shift", 12, 14),
+        ("command", 13, 14),
+        ("letter", 9, 13),
+    ):
+        block = menu.split(
+            ".workspace-mode .pynix-services-shortcut-" + selector + "{"
+        )[1].split("}")[0]
+        assert f"width:{width}px!important" in block
+        assert f"font-size:{size}px!important" in block
+    assert "font:400 13px/18px" in menu  # Main menu typography is unchanged.
