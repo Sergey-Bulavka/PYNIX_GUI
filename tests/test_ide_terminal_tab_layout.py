@@ -68,3 +68,15 @@ def test_overflow_measurements_do_not_reuse_constrained_width():
     assert "setStripWidth(used)" in TERMINAL_DOCK_JS
     assert "setStripWidth(natural)" in TERMINAL_DOCK_JS
     assert "const gap=parseFloat(style.columnGap)" not in TERMINAL_DOCK_JS
+
+
+def test_overflow_chevron_has_stable_slot_and_is_shown_for_hidden_tabs():
+    # HTML hidden + the chrome's [hidden] !important selector previously
+    # suppressed the chevron despite an existing overflow menu.
+    assert "overflow.hidden=false;" in TERMINAL_DOCK_JS
+    assert "overflow.hidden=true;" not in TERMINAL_DOCK_JS
+    assert "overflow.style.visibility='hidden'" in TERMINAL_DOCK_JS
+    assert "const hasHiddenTabs=overflowPopup.children.length>0" in TERMINAL_DOCK_JS
+    assert "overflow.style.visibility=hasHiddenTabs?'visible':'hidden'" in TERMINAL_DOCK_JS
+    assert "overflow.style.pointerEvents=hasHiddenTabs?'auto':'none'" in TERMINAL_DOCK_JS
+    assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
