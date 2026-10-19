@@ -1482,8 +1482,15 @@ body.workspace-mode{background:#1e1f22!important;color:#c9cbd0!important;font-fa
  }
  buttons.forEach((b,i)=>{b.setAttribute('role','button');b.tabIndex=0;
   b.setAttribute('aria-label',['Explorer','Search','Source Control','Run','Terminal','Settings'][i]);
-  b.addEventListener('click',()=>select(i));
-  b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select(i)}});
+  const activate=()=>{
+   // The gallery-only Run selector must not rewrite the real Project tree.
+   if(i===3&&document.body.classList.contains('workspace-mode')){
+    window.pynixTerminalDock?.toggleRun?.();return;
+   }
+   select(i);
+  };
+  b.addEventListener('click',activate);
+  b.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate()}});
  });
 })();
 </script><script>
