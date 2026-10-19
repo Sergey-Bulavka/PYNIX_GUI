@@ -230,7 +230,10 @@ TERMINAL_DOCK_JS = r"""
       rect.right>viewport.right+0.5;
     const byWidth=position< -0.5||position+widths[index]>actualWidth+0.5;
     position+=widths[index]+sessionGap;
-    if(!needsOverflow||(!offscreen&&!byWidth))return;
+    // A scrolled strip can hide entire tabs to the left even if the
+    // natural-width budget says everything fits. Visibility is the source
+    // of truth; never gate invisible tabs on needsOverflow.
+    if(!offscreen&&!byWidth)return;
     const session=allTabs[index];if(!session)return;
     hiddenCount++;
     const [id,tab]=session;
@@ -262,15 +265,18 @@ TERMINAL_DOCK_JS = r"""
     });
     overflowPopup.appendChild(entry);hiddenCount=1;
    }
-   show(needsOverflow);
+   // Menu visibility follows missing tabs (including fully offscreen
+   // sessions such as Local and Local 2 when Local 7 is selected).
+   const hasInvisibleTabs=hiddenCount>0;
+   show(hasInvisibleTabs);
    overflowToggle.dataset.hint='More Tabs ('+hiddenCount+')';
    tabOverflowDebug={
     scope,tabs:items.length,headerWidth:header.clientWidth,
     capacity,natural,stripWidth:sessions.clientWidth,
     hidden:overflowPopup.children.length,
-    visible:needsOverflow,arrow:overflow.getBoundingClientRect().width
+    visible:hasInvisibleTabs,arrow:overflow.getBoundingClientRect().width
    };
-   header.dataset.overflowTabs=String(needsOverflow);
+   header.dataset.overflowTabs=String(hasInvisibleTabs);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
