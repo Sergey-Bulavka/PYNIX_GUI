@@ -121,3 +121,20 @@ def test_no_overflow_when_every_tab_fits():
     visible, hidden = _paginate([148] * 7, 1100, 6)
     assert visible == list(range(7))
     assert hidden == []
+
+
+def test_hidden_tabs_arrow_works_without_svg_or_has_selector():
+    assert "overflowToggle.textContent='⌄';" in TERMINAL_DOCK_JS
+    assert ".pynix-tab-overflow-control.has-hidden-tabs{" in TERMINAL_DOCK_JS
+    assert ".pynix-terminal-dock-bar:has(.pynix-terminal-session-tab[hidden])" in TERMINAL_DOCK_JS
+    assert "header.classList.toggle('has-overflow-tabs',hasHidden)" in TERMINAL_DOCK_JS
+    assert "overflow.style.setProperty('display','flex','important')" in TERMINAL_DOCK_JS
+    assert "overflow.style.setProperty('visibility',hasHidden?'visible':'hidden','important')" in TERMINAL_DOCK_JS
+    assert "overflow.style.setProperty('opacity',hasHidden?'1':'0','important')" in TERMINAL_DOCK_JS
+
+
+def test_options_exposes_native_layout_diagnostics():
+    assert "option('Tab Layout Diagnostics',()=>{" in TERMINAL_DOCK_JS
+    assert "arrowDisplay:getComputedStyle(overflow).display" in TERMINAL_DOCK_JS
+    assert "arrowVisibility:getComputedStyle(overflow).visibility" in TERMINAL_DOCK_JS
+    assert "[Tab layout]" in TERMINAL_DOCK_JS
