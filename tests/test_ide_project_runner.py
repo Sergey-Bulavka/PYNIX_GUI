@@ -213,3 +213,13 @@ def test_native_run_buttons_select_current_file_and_output_window():
     assert "setRunState:running=>" in dock
     assert "['file','Current File']" in chrome
     assert "['run','Run Project']" in chrome
+
+
+def test_run_output_links_support_python_tracebacks_and_pynix_locations():
+    preview = (
+        Path(__file__).resolve().parents[1] /
+        "pynix_gui" / "ide_workspace_preview.py"
+    ).read_text(encoding="utf-8")
+    assert r"\\.(?:pnx|py)" in preview
+    assert 'line.match(/File ["\']' in preview
+    assert "new CustomEvent('pynix:navigate'" in preview
