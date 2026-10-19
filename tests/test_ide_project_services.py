@@ -122,7 +122,8 @@ def test_services_sidebar_and_dock_are_isolated_from_project_and_packages():
     assert "const toggleServices=()=>select('services');" in dock
     assert "servicesPane.hidden=!(visible&&scope==='services');" in dock
     assert "packagesPane.hidden=!(visible&&scope==='packages');" in dock
-    assert 'TERMINAL_DOCK_JS.replace("__PYNIX_PACKAGES_DOCK__", PACKAGES_DOCK_JS).replace("__PYNIX_SERVICES_DOCK__", SERVICES_DOCK_JS)' in workspace
+    assert 'TERMINAL_DOCK_JS.replace("__PYNIX_PACKAGES_DOCK__", PACKAGES_DOCK_JS)' in workspace
+    assert 'SERVICES_DOCK_JS.replace("__PYNIX_SERVICES_JETBRAINS_ICONS__", services_jetbrains_icons_json())' in workspace
     assert "window.pynixServicesRunEvent?.(packet,lastRunRequest);" in workspace
     assert "controller.addScriptMessageHandler_name_(services_handler, \"pynixServices\")" in native
     assert "services_registry.close()" in native
@@ -196,25 +197,58 @@ def test_services_header_is_inside_rounded_dock_with_13px_regular_text():
     assert "font-size:13px!important" in style
 
 
-def test_services_icons_are_vector_based_and_survive_native_iconless_mode():
+def test_services_uses_exact_bundled_jetbrains_svg_assets():
+    import json
+    from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+    from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog
+    from pynix_gui.ide_services_dock import (
+        SERVICES_JETBRAINS_ICON_NAMES, services_jetbrains_icons_json,
+        SERVICES_DOCK_JS,
+    )
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    expected = {
+        "add": "general/add",
+        "group": "general/show",
+        "newMcp": "general/openNewTab",
+        "expand": "general/expandAll",
+        "collapse": "general/collapseAll",
+        "dropdown": "general/dropdown",
+        "refresh": "general/refresh",
+        "options": "general/moreVertical",
+        "hide": "general/hide",
+        "run": "toolwindows/run",
+        "mcp": "nodes/services",
+    }
+    assert SERVICES_JETBRAINS_ICON_NAMES == expected
+    icons = json.loads(services_jetbrains_icons_json())
+    assert set(icons) == set(expected)
+    for slot, name in expected.items():
+        source = catalog.svg(name, dark=True, compact=True)
+        assert source is not None, name
+        assert icons[slot] == source  # Unchanged, checksum-verified JetBrains artwork.
+        assert "Copyright" in source and "Apache 2.0" in source
+    assert "const svIcons=__PYNIX_SERVICES_JETBRAINS_ICONS__;" in SERVICES_DOCK_JS
+    assert "new DOMParser().parseFromString(source,'image/svg+xml')" in SERVICES_DOCK_JS
+    assert "svg.classList.add('pynix-services-jb-icon');" in SERVICES_DOCK_JS
+    assert "sv(key).replaceChildren(vector);" in SERVICES_DOCK_JS
+    assert "const dropdown=svIcon('dropdown');" in SERVICES_DOCK_JS
+    assert "icon.appendChild(typeIcon);" in SERVICES_DOCK_JS
+    assert 'class="pynix-services-toolbar-separator"' in SERVICES_DOCK_JS
+    assert 'data-sv="newMcp"' in SERVICES_DOCK_JS
+    assert "sv('newMcp').addEventListener('click',svAddMcp);" in SERVICES_DOCK_JS
+    assert "menuAction('MCP SSE Connection…',svAddMcp);" in SERVICES_DOCK_JS
+    assert "const svIcon=paths=>'<svg" not in SERVICES_DOCK_JS
+
+
+def test_services_jetbrains_icons_keep_native_16px_size_in_mac_theme():
     root = Path(__file__).resolve().parents[1]
-    ui = (root / "pynix_gui/ide_services_dock.py").read_text(encoding="utf-8")
     chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
     iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
-
-    assert "const svIcon=paths=>'<svg" in ui
-    assert "sv(key).innerHTML=svIcon(svIcons[key]);" in ui
-    assert "icon.innerHTML=svIcon(item.type==='run'?svIcons.run:svIcons.mcp);" in ui
-    for key in ("add", "group", "newMcp", "expand", "collapse",
-                "refresh", "options", "hide", "run", "mcp"):
-        assert key + ":" in ui or key + ":'" in ui
-    assert 'data-sv="newMcp"' in ui
-    assert "sv('newMcp').addEventListener('click',svAddMcp);" in ui
-    assert "menuAction('MCP SSE Connection…',svAddMcp);" in ui
-    assert "ico.textContent='◉'" not in ui
-    assert "data-sv=\"group\" title=\"Group by Type\">◉" not in ui
     assert ".workspace-mode .pynix-services-header button>svg," in chrome
     assert ".workspace-mode .pynix-services-toolbar>button>svg," in chrome
+    assert "width:16px!important;height:16px!important" in chrome
+    assert ".pynix-services-toolbar .pynix-services-dropdown{" in chrome
+    assert ".pynix-services-toolbar-separator{" in chrome
     for selector in (
         ".pynix-services-header button>svg",
         ".pynix-services-toolbar>button>svg",
@@ -222,3 +256,4 @@ def test_services_icons_are_vector_based_and_survive_native_iconless_mode():
     ):
         assert ".workspace-mode.pynix-iconless .pynix-services-pane " + selector in iconless
     assert "display:block!important" in iconless
+    assert "width:16px!important;height:16px!important" in iconless
