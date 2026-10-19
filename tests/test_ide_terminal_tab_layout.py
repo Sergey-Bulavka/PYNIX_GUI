@@ -47,37 +47,33 @@ def test_both_tools_have_local_tabs_and_pycharmlike_selected_highlight():
     assert "border-color:#3b66b0!important" in active
 
 
-def test_tab_overflow_uses_actual_browser_clipping():
-    # The flexbox viewport, not a computed header budget, determines which
-    # session tabs are accessible through the overflow chevron.
-    assert "sessions.getBoundingClientRect()" in TERMINAL_DOCK_JS
-    assert "sessions.scrollWidth>sessions.clientWidth+0.5" not in TERMINAL_DOCK_JS
-    assert "rect.left<viewport.left-0.5||rect.right>viewport.right+0.5" in TERMINAL_DOCK_JS
-    assert "if(!clipped(item))return;" in TERMINAL_DOCK_JS
-    assert "overflowPopup.childElementCount>0" in TERMINAL_DOCK_JS
-    assert "overflow.style.visibility=visible?'visible':'hidden'" in TERMINAL_DOCK_JS
-    assert "overflow.style.pointerEvents=visible?'auto':'none'" in TERMINAL_DOCK_JS
+def test_overflow_budget_uses_dock_width_and_reserved_controls():
+    # WKWebView may clip outside the strip's reported scroll viewport;
+    # explicitly reserve fixed toolbar controls before showing overflow.
+    assert "const natural=widths.reduce((sum,w)=>sum+w,0)" in TERMINAL_DOCK_JS
+    assert "const capacity=Math.max(0,header.clientWidth-padding-fixed-" in TERMINAL_DOCK_JS
+    assert "outerGap*controls.length" in TERMINAL_DOCK_JS
+    assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
+    assert "const needsOverflow=natural>capacity+0.5" in TERMINAL_DOCK_JS
+    assert "sessions.style.setProperty(property,value,'important')" in TERMINAL_DOCK_JS
+    assert "show(needsOverflow);" in TERMINAL_DOCK_JS
 
 
-def test_active_tab_is_scrolled_into_view_without_changing_dock_layout():
+def test_hidden_tab_menu_and_active_tab_preserved():
     assert "const activeItem=items.find(item=>item.classList.contains('active'))" in TERMINAL_DOCK_JS
-    assert "sessions.scrollLeft+=selected.right-viewport.right+1" in TERMINAL_DOCK_JS
-    assert "sessions.scrollLeft+=selected.left-viewport.left-1" in TERMINAL_DOCK_JS
-    assert "for(const name of ['width','max-width','flex'])" not in TERMINAL_DOCK_JS
-    assert "setStripWidth(" not in TERMINAL_DOCK_JS
-    assert "headerRoom=" not in TERMINAL_DOCK_JS
+    assert "sessions.scrollLeft+=selected.right-viewport.right" in TERMINAL_DOCK_JS
+    assert "sessions.scrollLeft+=selected.left-viewport.left" in TERMINAL_DOCK_JS
+    assert "entry.setAttribute('role','menuitem')" in TERMINAL_DOCK_JS
+    assert "const byWidth=position< -0.5||position+widths[index]>actualWidth+0.5" in TERMINAL_DOCK_JS
+    assert "tabOverflowDebug={" in TERMINAL_DOCK_JS
+    assert "tabLayout:()=>({...tabOverflowDebug})" in TERMINAL_DOCK_JS
 
 
-def test_overflow_chevron_has_stable_slot_next_to_options():
+def test_overflow_arrow_remains_next_to_options():
     assert "overflow.hidden=false;" in TERMINAL_DOCK_JS
     assert "overflow.hidden=true;" not in TERMINAL_DOCK_JS
     assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
     assert "overflowToggle.innerHTML='<svg viewBox=" in TERMINAL_DOCK_JS
     assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
-
-
-def test_overflow_arrow_has_fixed_visible_layout_slot():
     assert ".workspace-mode .pynix-terminal-tab-overflow{display:block!important" in TERMINAL_DOCK_JS
     assert "flex:0 0 27px!important" in TERMINAL_DOCK_JS
-    assert "showOverflow(overflowPopup.childElementCount>0);" in TERMINAL_DOCK_JS
-    assert "if(!items.length||sessions.clientWidth<=0)" not in TERMINAL_DOCK_JS
