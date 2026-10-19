@@ -11,7 +11,7 @@ SERVICES_DOCK_JS = r"""
     <button data-sv="options" title="Options">⋮</button>
     <button data-sv="hide" title="Hide Services">−</button></header>
    <div class="pynix-services-content">
-    <div class="pynix-services-sidebar"><nav class="pynix-services-toolbar">
+    <div class="pynix-services-sidebar"><nav class="pynix-services-toolbar" data-sv="toolbar">
      <button data-sv="add" title="Add Service">＋</button>
      <button data-sv="group" title="Group by Type">◉</button>
      <button data-sv="expand" title="Expand All">⌄</button>
@@ -29,7 +29,7 @@ SERVICES_DOCK_JS = r"""
   terminal.appendChild(servicesPane);
   const sv=key=>servicesPane.querySelector('[data-sv="'+key+'"]');
   let svProfiles=[],svSelected='',svTab='session',svGrouped=true;
-  let svRunState='idle',svRunStarted=0;
+  const svRunStates=new Map();
   let svIncluded=new Set();
   try{
    const stored=JSON.parse(localStorage.getItem('pynix.services.run-types')||'[]');
@@ -46,7 +46,7 @@ SERVICES_DOCK_JS = r"""
   const svRefresh=()=>svSend('list');
   const svItems=()=>[
    ...Object.keys(svNames).filter(id=>svIncluded.has(id)).map(id=>({
-    id:'run:'+id,name:svNames[id],type:'run',state:svRunState
+    id:'run:'+id,name:svNames[id],type:'run',state:(svRunStates.get(id)?.state||'idle')
    })),...svProfiles
   ];
   const svField=(host,key,value)=>{
@@ -75,9 +75,10 @@ SERVICES_DOCK_JS = r"""
    if(!item)return;
    if(item.type==='run'){
     svField(session,'Configuration',item.name);
-    svField(session,'Status',svRunState);
-    if(svRunStarted&&svRunState==='running')
-     svField(session,'Duration',Math.floor((Date.now()-svRunStarted)/1000)+' s');
+    const run=svRunStates.get(item.id.slice(4))||{state:'idle',since:0};
+    svField(session,'Status',run.state);
+    if(run.since&&run.state==='running')
+     svField(session,'Duration',Math.floor((Date.now()-run.since)/1000)+' s');
     const actions=document.createElement('div');actions.className='pynix-services-actions';
     svAction(actions,'Run',()=>{
      const select=document.querySelector('.pynix-run-mode');
@@ -85,8 +86,8 @@ SERVICES_DOCK_JS = r"""
      select.value=item.id.slice(4);
      select.dispatchEvent(new Event('change',{bubbles:true}));
      document.querySelector('.pynix-run-action')?.click();
-    },svRunState==='running');
-    svAction(actions,'Stop',()=>document.querySelector('.pynix-stop-action')?.click(),svRunState!=='running');
+    },run.state==='running');
+    svAction(actions,'Stop',()=>document.querySelector('.pynix-stop-action')?.click(),run.state!=='running');
     svAction(actions,'Open Run',()=>window.pynixTerminalDock?.showRun?.());
     svAction(actions,'Remove from Services',()=>{
      svIncluded.delete(item.id.slice(4));svSave();svSelected='';svDraw();
@@ -193,11 +194,15 @@ SERVICES_DOCK_JS = r"""
    }
    if(Array.isArray(result?.services)){svProfiles=result.services;svDraw();}
   };
-  window.pynixServicesRunEvent=packet=>{
+  window.pynixServicesRunEvent=(packet,request)=>{
    const state=packet?.state;
-   if(state==='running'){svRunState='running';svRunStarted=Date.now();}
-   if(['finished','error','idle'].includes(state))svRunState=state;
-   if(!servicesPane.hidden&&state!=='output')svDetail();
+   const key=request?.source?'file':request?.mode;
+   if(!['file','run','check'].includes(key))return;
+   const previous=svRunStates.get(key)||{state:'idle',since:0};
+   if(state==='running')svRunStates.set(key,{state:'running',since:Date.now()});
+   if(['finished','error','idle'].includes(state))
+    svRunStates.set(key,{state,since:previous.since});
+   if(!servicesPane.hidden&&state!=='output'){svDraw();}
   };
   const servicesOnShow=()=>{svDraw();svRefresh();};
   window.setInterval(()=>{
