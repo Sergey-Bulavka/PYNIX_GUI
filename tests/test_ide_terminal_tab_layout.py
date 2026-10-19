@@ -47,36 +47,30 @@ def test_both_tools_have_local_tabs_and_pycharmlike_selected_highlight():
     assert "border-color:#3b66b0!important" in active
 
 
-def test_tab_overflow_uses_header_capacity_not_previously_shrunk_strip():
-    assert "const headerRoom=()=>{" in TERMINAL_DOCK_JS
-    assert "header.clientWidth-padding-fixed-columnGap*visible.length" in TERMINAL_DOCK_JS
-    assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
-    assert "const needsOverflow=natural>available+0.5" in TERMINAL_DOCK_JS
-    assert "overflow.hidden=false" in TERMINAL_DOCK_JS
-    assert "sessions.style.setProperty('width',safe+'px','important')" in TERMINAL_DOCK_JS
-    assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
+def test_tab_overflow_uses_actual_browser_clipping():
+    # The flexbox viewport, not a computed header budget, determines which
+    # session tabs are accessible through the overflow chevron.
+    assert "sessions.getBoundingClientRect()" in TERMINAL_DOCK_JS
+    assert "sessions.scrollWidth>sessions.clientWidth+0.5" in TERMINAL_DOCK_JS
+    assert "rect.left<viewport.left-0.5||rect.right>viewport.right+0.5" in TERMINAL_DOCK_JS
+    assert "if(!clipped(item))return;" in TERMINAL_DOCK_JS
+    assert "overflowPopup.childElementCount>0" in TERMINAL_DOCK_JS
+    assert "overflow.style.visibility=visible?'visible':'hidden'" in TERMINAL_DOCK_JS
+    assert "overflow.style.pointerEvents=visible?'auto':'none'" in TERMINAL_DOCK_JS
 
 
-def test_overflow_measurements_do_not_reuse_constrained_width():
-    # Previous layout left max-width/flex inline, causing progressively more
-    # tabs to overlap or disappear after opening another session.
-    assert "for(const name of ['width','max-width','flex'])sessions.style.removeProperty(name)" in TERMINAL_DOCK_JS
-    assert "const columnGap=parseFloat(style.columnGap)||0" in TERMINAL_DOCK_JS
-    assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
-    assert "fixed-columnGap*visible.length" in TERMINAL_DOCK_JS
-    assert "const setStripWidth=width=>{" in TERMINAL_DOCK_JS
-    assert "setStripWidth(used)" in TERMINAL_DOCK_JS
-    assert "setStripWidth(natural)" in TERMINAL_DOCK_JS
-    assert "const gap=parseFloat(style.columnGap)" not in TERMINAL_DOCK_JS
+def test_active_tab_is_scrolled_into_view_without_changing_dock_layout():
+    assert "const activeItem=items.find(item=>item.classList.contains('active'))" in TERMINAL_DOCK_JS
+    assert "sessions.scrollLeft+=selected.right-viewport.right+1" in TERMINAL_DOCK_JS
+    assert "sessions.scrollLeft+=selected.left-viewport.left-1" in TERMINAL_DOCK_JS
+    assert "for(const name of ['width','max-width','flex'])" not in TERMINAL_DOCK_JS
+    assert "setStripWidth(" not in TERMINAL_DOCK_JS
+    assert "headerRoom=" not in TERMINAL_DOCK_JS
 
 
-def test_overflow_chevron_has_stable_slot_and_is_shown_for_hidden_tabs():
-    # HTML hidden + the chrome's [hidden] !important selector previously
-    # suppressed the chevron despite an existing overflow menu.
+def test_overflow_chevron_has_stable_slot_next_to_options():
     assert "overflow.hidden=false;" in TERMINAL_DOCK_JS
     assert "overflow.hidden=true;" not in TERMINAL_DOCK_JS
-    assert "overflow.style.visibility='hidden'" in TERMINAL_DOCK_JS
-    assert "const hasHiddenTabs=overflowPopup.children.length>0" in TERMINAL_DOCK_JS
-    assert "overflow.style.visibility=hasHiddenTabs?'visible':'hidden'" in TERMINAL_DOCK_JS
-    assert "overflow.style.pointerEvents=hasHiddenTabs?'auto':'none'" in TERMINAL_DOCK_JS
     assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
+    assert "overflowToggle.innerHTML='<svg viewBox=" in TERMINAL_DOCK_JS
+    assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
