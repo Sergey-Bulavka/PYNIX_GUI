@@ -191,7 +191,7 @@ def test_native_iconless_mode_restores_packages_svg_glyphs():
     for selector in selectors:
         full = ".workspace-mode.pynix-iconless .pynix-packages-pane " + selector
         assert full in ICONLESS_STYLE
-        assert selector.replace(">svg", "") in PACKAGES_DOCK_JS
+        assert selector.removeprefix(".").replace(">svg", "") in PACKAGES_DOCK_JS
     # The explicit, !important restore rule beats .workspace-mode svg.
     override = ICONLESS_STYLE.split("/* Packages is a functional native tool window")[1]
     override = override.split("/* Only the perimeter groups")[0]
