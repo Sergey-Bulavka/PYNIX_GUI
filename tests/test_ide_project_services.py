@@ -215,6 +215,7 @@ def test_services_uses_exact_bundled_jetbrains_svg_assets():
         "dropdown": "general/dropdown",
         "refresh": "general/locate",
         "settings": "general/settings",
+        "checked": "actions/checked",
         "chevronRight": "general/chevronRight",
         "help": "general/help",
         "options": "general/moreVertical",
@@ -330,14 +331,14 @@ def test_services_option_submenus_can_float_outside_dock():
     assert ".pynix-services-options-menu .pynix-services-option-mark>svg" in iconless
 
 
-def test_services_options_are_compact_with_larger_jetbrains_icons():
+def test_services_options_use_original_consistent_16px_jetbrains_icons():
     root = Path(__file__).resolve().parents[1]
     chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
     iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
     menu = chrome.split("/* JetBrains Services Options is portaled")[1].split(
         "/* Header actions are contextual")[0]
 
-    # Keep labels at 13 px but bring the row spacing closer to PyCharm.
+    # Do not change compact rows or the global menu label typography.
     assert "height:27px!important" in menu
     assert "min-height:27px!important" in menu
     assert "height:31px!important" not in menu
@@ -345,24 +346,44 @@ def test_services_options_are_compact_with_larger_jetbrains_icons():
     assert "padding:4px!important;display:flex!important" in menu
     assert "background:#45474e!important;margin:3px 5px!important" in menu
 
-    # Checkmarks, JetBrains settings/help icons and submenu arrows are larger.
+    # The 20px mark slot preserves PyCharm alignment but its contents
+    # (checkbox, gear, Help, submenu chevron) must all be native 16px SVGs.
     mark = menu.split(".workspace-mode .pynix-services-option-mark{")[1].split("}")[0]
     assert "width:20px!important;height:20px!important" in mark
-    assert "font-size:18px!important" in mark
-    icon = menu.split(".workspace-mode .pynix-services-option-mark svg{")[1].split("}")[0]
-    assert "width:20px!important;height:20px!important" in icon
-    arrow = menu.split(".workspace-mode .pynix-services-option-arrow{")[1].split("}")[0]
-    assert "width:18px!important;height:18px!important" in arrow
+    assert "font-size:13px!important" in mark
+    icons = menu.split(".workspace-mode .pynix-services-option-mark>svg,")[1].split("}")[0]
+    assert ".workspace-mode .pynix-services-option-arrow{" in icons
+    assert "width:16px!important;height:16px!important" in icons
+    assert "max-width:16px!important;max-height:16px!important" in icons
+    assert "width:20px!important;height:20px!important" not in icons
+    assert "width:18px!important;height:18px!important" not in icons
 
-    # Native iconless mode normally forces SVG sizes to 16 px, so keep
-    # the scoped menu overrides without enlarging Services toolbar icons.
-    for selector, dimension in (
-        (".pynix-services-option-mark>svg", "20px"),
-        (".pynix-services-option-arrow", "18px"),
-    ):
-        block = iconless.rsplit(
-            ".workspace-mode.pynix-iconless .pynix-services-options-menu " + selector
-            + "{", 1
-        )[1].split("}")[0]
-        assert f"width:{dimension}!important;height:{dimension}!important" in block
-    assert ".pynix-services-pane .pynix-services-header button>svg" in iconless
+    # Normal macOS iconless theme must not blow up individual icons.
+    theme = iconless.split(
+        "/* Options is portaled to body; restore original JetBrains 16x16 SVG sizes"
+    )[1].split("/* Only the perimeter")[0]
+    assert ".pynix-services-option-mark>svg," in theme
+    assert ".pynix-services-option-arrow{" in theme
+    assert "width:16px!important;height:16px!important" in theme
+    assert "width:20px!important;height:20px!important" not in theme
+    assert "width:18px!important;height:18px!important" not in theme
+
+
+def test_services_options_checkmarks_use_original_jetbrains_asset():
+    from pynix_gui.ide_services_dock import (
+        SERVICES_JETBRAINS_ICON_NAMES, SERVICES_DOCK_JS, services_jetbrains_icons_json,
+    )
+    from pynix_gui.ide_icon_parity import BUNDLED_ICONS
+    from pynix_gui.ide_jetbrains_icons import JetBrainsIconCatalog
+    import json
+
+    assert SERVICES_JETBRAINS_ICON_NAMES["checked"] == "actions/checked"
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    exact_svg = catalog.svg("actions/checked", dark=True, compact=True)
+    assert exact_svg
+    assert json.loads(services_jetbrains_icons_json())["checked"] == exact_svg
+    assert "const check=svIcon('checked');" in SERVICES_DOCK_JS
+    assert "if(check)mark.appendChild(check);" in SERVICES_DOCK_JS
+    assert "mark.textContent='✓';" not in SERVICES_DOCK_JS
+    assert "const svg=svIcon(config.icon);" in SERVICES_DOCK_JS
+    assert "const arrow=svIcon('chevronRight');" in SERVICES_DOCK_JS
