@@ -284,6 +284,7 @@ TERMINAL_DOCK_JS = r"""
     const entry=document.createElement('button');
     entry.type='button';
     entry.className='pynix-overflow-entry';
+    entry.dataset.sessionId=id;
     entry.setAttribute('role','menuitem');
     entry.textContent=tab.label;
     entry.addEventListener('click',()=>{
@@ -304,13 +305,37 @@ TERMINAL_DOCK_JS = r"""
    // must still make the overflow control visible.
    requestAnimationFrame(()=>{
     if(scope==='other'||sessions.hidden)return;
-    const hiddenNow=[...sessions.children].filter(el=>{
+    const hiddenNow=[...sessions.children].map((el,i)=>({el,i})).filter(({el})=>{
      const rect=el.getBoundingClientRect();
      const box=sessions.getBoundingClientRect();
      return el.hidden||rect.right<box.left-0.5||rect.left>box.right+0.5;
     });
-    if(hiddenNow.length&&!overflow.classList.contains('has-hidden-tabs'))
-     setOverflow(hiddenNow);
+    // Reconcile the popup itself, not merely its button. Some WebKit builds
+    // report the initial flex width before the last layout pass.
+    const existing=new Set([...overflowPopup.children].map(el=>el.dataset.sessionId));
+    for(const {i} of hiddenNow){
+     const [id,tab]=tabs[i]||[];
+     if(!id||existing.has(id))continue;
+     const entry=document.createElement('button');
+     entry.type='button';entry.className='pynix-overflow-entry';
+     entry.dataset.sessionId=id;
+     entry.setAttribute('role','menuitem');
+     entry.textContent=tab.label;
+     entry.addEventListener('click',()=>{
+      closeOverflow();
+      if(scope==='pynix'){
+       if(pynixTabs.has(pynixId))
+        pynixTabs.get(pynixId).draft=pynix.input.value;
+       pynixId=id;paintSessions();paintPynix();
+      }else{activeId=id;paintSessions();paintShell();}
+     });
+     overflowPopup.appendChild(entry);existing.add(id);
+    }
+    if(hiddenNow.length){
+     setOverflow([...overflowPopup.children]);
+     tabOverflowDebug.hidden=[...overflowPopup.children].map(el=>el.textContent);
+     tabOverflowDebug.arrowVisibility=getComputedStyle(overflow).visibility;
+    }
    });
    tabOverflowDebug={
     scope,tabs:tabs.length,available,filled,activeIndex,
