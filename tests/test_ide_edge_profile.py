@@ -74,7 +74,7 @@ def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     assert "Debug" not in PINNED_TOOLS
     assert "Search" not in PINNED_TOOLS
     assert "Version Control" not in PINNED_TOOLS
-    assert EXISTING_ACTIONS["Run"] == "rail:3"
+    assert EXISTING_ACTIONS["Run"] == "run-window"
     assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
     assert "x.pinned" in EDGE_PROFILE_SCRIPT
@@ -172,14 +172,15 @@ def test_left_top_more_popup_matches_pycharm_reference_in_exact_order():
     labels = [item[0] for item in MORE_TOOL_WINDOWS]
     assert labels == [
         "Bookmarks", "Find", "Debug", "Coverage", "Endpoints",
-        "Hierarchy", "Learn", "Python Process Output", "TODO",
+        "Hierarchy", "Learn", "Python Process Output", "TODO", "Services",
     ]
     assert [item[2] for item in MORE_TOOL_WINDOWS] == [
-        "⌘2", "⌘3", "⌘5", "", "", "", "", "", "",
+        "⌘2", "⌘3", "⌘5", "", "", "", "", "", "", "",
     ]
     assert MORE_TOOL_WINDOWS[1][3] == "rail:1"
     assert MORE_TOOL_WINDOWS[2][3] == "dock:DEBUG CONSOLE"
-    assert all(not item[3] for item in MORE_TOOL_WINDOWS[3:])
+    assert all(not item[3] for item in MORE_TOOL_WINDOWS[3:-1])
+    assert MORE_TOOL_WINDOWS[-1][3] == "services-window"
     assert "const leftTopMore=__MORE_WINDOW_DATA__;" in EDGE_PROFILE_SCRIPT
     assert "if(edge==='left-top'){" in EDGE_PROFILE_SCRIPT
     assert "row.className='pynix-more-item';" in EDGE_PROFILE_SCRIPT
@@ -260,13 +261,13 @@ def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button()
         "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
         "Terminal", "Problems", "Git",
     )
-    assert EXISTING_ACTIONS["Run"] == "rail:3"
+    assert EXISTING_ACTIONS["Run"] == "run-window"
     assert EXISTING_ACTIONS["PYNIX Terminal"] == "terminal:pynix"
     assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
     assert EXISTING_ACTIONS["Git"] == "rail:2"
-    assert "Services" not in EXISTING_ACTIONS
-    assert "PYNIX Packages" not in EXISTING_ACTIONS
+    assert EXISTING_ACTIONS["Services"] == "services-window"
+    assert EXISTING_ACTIONS["PYNIX Packages"] == "packages-window"
     assert "if(edge==='left-bottom'||edge==='right-top'){" in EDGE_PROFILE_SCRIPT
     assert "host.appendChild(container);" in EDGE_PROFILE_SCRIPT
 
