@@ -9,6 +9,7 @@ SERVICES_DOCK_JS = r"""
     <strong>Services</strong><span class="pynix-services-fill"></span>
     <button data-sv="refresh" title="Refresh Services">⟳</button>
     <button data-sv="options" title="Options">⋮</button>
+    <div data-sv="optionsMenu" class="pynix-services-options-menu" role="menu" hidden></div>
     <button data-sv="hide" title="Hide Services">−</button></header>
    <div class="pynix-services-content">
     <div class="pynix-services-sidebar"><nav class="pynix-services-toolbar" data-sv="toolbar">
@@ -187,7 +188,30 @@ SERVICES_DOCK_JS = r"""
    if(url!==null)svSend('add',{name,url});
   });
   sv('add').addEventListener('click',()=>menu.hidden=!menu.hidden);
-  sv('options').addEventListener('click',()=>menu.hidden=!menu.hidden);
+  const optionsMenu=sv('optionsMenu');
+  const optionsButton=(text,callback)=>{
+   const button=document.createElement('button');button.type='button';
+   button.setAttribute('role','menuitem');button.textContent=text;
+   button.addEventListener('click',()=>{
+    optionsMenu.hidden=true;callback();updateOptions();
+   });
+   optionsMenu.appendChild(button);return button;
+  };
+  const groupOption=optionsButton('Group Services by Type',()=>{
+   svGrouped=!svGrouped;svDraw();
+  });
+  const treeOption=optionsButton('Show Services Tree',()=>{
+   servicesPane.classList.toggle('hide-tree');
+  });
+  const updateOptions=()=>{
+   groupOption.textContent=(svGrouped?'✓ ':'  ')+'Group Services by Type';
+   treeOption.textContent=(!servicesPane.classList.contains('hide-tree')?'✓ ':'  ')+
+    'Show Services Tree';
+  };
+  sv('options').addEventListener('click',()=>{
+   menu.hidden=true;updateOptions();
+   optionsMenu.hidden=!optionsMenu.hidden;
+  });
   sv('group').addEventListener('click',()=>{svGrouped=!svGrouped;svDraw();});
   sv('expand').addEventListener('click',()=>{svGrouped=true;svCollapsed.clear();svDraw();});
   sv('collapse').addEventListener('click',()=>{
@@ -198,7 +222,10 @@ SERVICES_DOCK_JS = r"""
   sv('sessionTab').addEventListener('click',()=>{svTab='session';svDetail();});
   sv('callsTab').addEventListener('click',()=>{svTab='calls';svDetail();});
   document.addEventListener('pointerdown',event=>{
-   if(!sv('toolbar').contains(event.target)&&!sv('options').contains(event.target))menu.hidden=true;
+   if(!sv('toolbar').contains(event.target)&&!sv('options').contains(event.target))
+    menu.hidden=true;
+   if(!optionsMenu.contains(event.target)&&!sv('options').contains(event.target))
+    optionsMenu.hidden=true;
   });
   window.pynixServicesResult=result=>{
    if(result?.error){
