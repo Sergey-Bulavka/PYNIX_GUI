@@ -44,6 +44,27 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
 .workspace-mode .pynix-debug-panel-toolbar svg {
  display:none!important;
 }
+/* Packages is a functional native tool window, not a legacy pictogram.
+   Its three controlled SVG glyphs must survive the global iconless
+   "svg {display:none!important}" rule, just like Project tree glyphs.
+   Keep this opt-in narrow so the rest of iconless chrome stays unchanged. */
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-search-icon>svg,
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-pypi>svg,
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-cube>svg {
+ display:block!important;
+ visibility:visible!important;
+ opacity:1!important;
+ flex:none!important;
+}
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-search-icon>svg,
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-cube>svg {
+ width:16px!important;height:16px!important;
+ min-width:16px!important;min-height:16px!important;
+}
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-pypi>svg {
+ width:20px!important;height:20px!important;
+ min-width:20px!important;min-height:20px!important;
+}
 /* Only the perimeter groups and two native project/Git buttons use icons.
    Other visual rails, tree badges and editor icons stay hidden. */
 .workspace-mode.pynix-iconless
