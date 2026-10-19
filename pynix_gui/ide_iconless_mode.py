@@ -76,10 +76,10 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  display:block!important;
  visibility:visible!important;
  opacity:1!important;
- width:18px!important;height:18px!important;
- min-width:18px!important;min-height:18px!important;
- max-width:18px!important;max-height:18px!important;
- flex:0 0 18px!important;
+ width:16px!important;height:16px!important;
+ min-width:16px!important;min-height:16px!important;
+ max-width:16px!important;max-height:16px!important;
+ flex:0 0 16px!important;
  transform:none!important;
 }
 /* Only the perimeter groups and two native project/Git buttons use icons.
