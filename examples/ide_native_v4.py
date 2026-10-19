@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import sys
 import argparse
+import json
 from pathlib import Path
 
 PREVIEW_PATH = Path(__file__).with_name("icon_direction_preview.html")
