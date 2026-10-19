@@ -49,9 +49,22 @@ def test_both_tools_have_local_tabs_and_pycharmlike_selected_highlight():
 
 def test_tab_overflow_uses_header_capacity_not_previously_shrunk_strip():
     assert "const headerRoom=()=>{" in TERMINAL_DOCK_JS
-    assert "header.clientWidth-padding-fixed-gap*visible.length" in TERMINAL_DOCK_JS
+    assert "header.clientWidth-padding-fixed-columnGap*visible.length" in TERMINAL_DOCK_JS
     assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
     assert "const needsOverflow=natural>available+0.5" in TERMINAL_DOCK_JS
     assert "overflow.hidden=false" in TERMINAL_DOCK_JS
-    assert "sessions.style.setProperty('width',stripWidth+'px','important')" in TERMINAL_DOCK_JS
+    assert "sessions.style.setProperty('width',safe+'px','important')" in TERMINAL_DOCK_JS
     assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
+
+
+def test_overflow_measurements_do_not_reuse_constrained_width():
+    # Previous layout left max-width/flex inline, causing progressively more
+    # tabs to overlap or disappear after opening another session.
+    assert "for(const name of ['width','max-width','flex'])sessions.style.removeProperty(name)" in TERMINAL_DOCK_JS
+    assert "const columnGap=parseFloat(style.columnGap)||0" in TERMINAL_DOCK_JS
+    assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
+    assert "fixed-columnGap*visible.length" in TERMINAL_DOCK_JS
+    assert "const setStripWidth=width=>{" in TERMINAL_DOCK_JS
+    assert "setStripWidth(used)" in TERMINAL_DOCK_JS
+    assert "setStripWidth(natural)" in TERMINAL_DOCK_JS
+    assert "const gap=parseFloat(style.columnGap)" not in TERMINAL_DOCK_JS
