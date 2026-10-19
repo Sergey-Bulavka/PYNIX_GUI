@@ -122,7 +122,7 @@ def test_packages_ui_is_isolated_from_project_tree_and_run():
     assert "window.pynixTerminalDock?.togglePackages?.()" in edge
     assert "const togglePackages=()=>select('packages');" in dock
     assert "packagesPane.hidden=!(visible&&scope==='packages');" in dock
-    assert "header.hidden=visible&&scope==='packages';" in dock
+    assert "header.hidden=visible&&(scope==='packages'||scope==='services');" in dock
     assert "toolConsole.hidden=scope!=='other';" in dock
     assert "window.pynixPackagesResult=result=>" in package_ui
     assert "pynixPackages" in package_ui
