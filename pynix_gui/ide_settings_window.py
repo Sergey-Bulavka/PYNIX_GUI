@@ -254,12 +254,17 @@ SETTINGS_JS = r"""
 """
 
 
-def settings_html(values: dict[str, float]) -> str:
+def settings_html(values: dict[str, float], page: str = "Editor") -> str:
     validated = validate_editor_settings(values)
+    available = {parent for parent, _ in CATEGORIES}
+    available.update(child for _, children in CATEGORIES for child in children)
+    if page not in available:
+        page = "Editor"
     categories = json.dumps(CATEGORIES, ensure_ascii=False)
     initial = json.dumps(validated)
     # Replace tokens in JS source, never interpolate into HTML attributes.
     script = SETTINGS_JS.replace("__CATEGORIES__", categories).replace("__INITIAL__", initial)
+    script = script.replace("showPage('Editor');", "showPage(" + json.dumps(page) + ");")
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
