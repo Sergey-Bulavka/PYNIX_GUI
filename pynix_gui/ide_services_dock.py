@@ -19,7 +19,10 @@ SERVICES_JETBRAINS_ICON_NAMES = {
     "expand": "general/expandAll",
     "collapse": "general/collapseAll",
     "dropdown": "general/dropdown",
-    "refresh": "general/refresh",
+    "refresh": "general/locate",
+    "settings": "general/settings",
+    "chevronRight": "general/chevronRight",
+    "help": "general/help",
     "options": "general/moreVertical",
     "hide": "general/hide",
     "run": "toolwindows/run",
@@ -47,7 +50,7 @@ SERVICES_DOCK_JS = r"""
   servicesPane.innerHTML=`
    <header class="pynix-services-header">
     <strong>Services</strong><span class="pynix-services-fill"></span>
-    <button data-sv="refresh" title="Refresh Services"></button>
+    <button data-sv="refresh" title="Select Active Service" aria-label="Select Active Service"></button>
     <button data-sv="options" title="Options"></button>
     <div data-sv="optionsMenu" class="pynix-services-options-menu" role="menu" hidden></div>
     <button data-sv="hide" title="Hide Services"></button></header>
@@ -100,7 +103,7 @@ SERVICES_DOCK_JS = r"""
   }
   sv('add').setAttribute('aria-label','Add Service');
   sv('group').setAttribute('aria-label','Group by Type');
-  sv('refresh').setAttribute('aria-label','Refresh Services');
+  sv('refresh').setAttribute('aria-label','Select Active Service');
   sv('options').setAttribute('aria-label','Options');
   sv('hide').setAttribute('aria-label','Hide Services');
   let svProfiles=[],svSelected='',svTab='session',svGrouped=true;
@@ -114,12 +117,41 @@ SERVICES_DOCK_JS = r"""
   }catch(_){}
   const svNames={file:'Current File',run:'Run Project',check:'Check Project'};
   const svSave=()=>{try{localStorage.setItem('pynix.services.run-types',JSON.stringify([...svIncluded]));}catch(_){}};
+  const svPreferences={
+   singleClick:true,alwaysSelectOpened:false,alwaysSelectActive:true,
+   showTree:true,doubleClickRun:true,showToolbar:true
+  };
+  try{
+   const stored=JSON.parse(localStorage.getItem('pynix.services.options')||'{}');
+   if(stored&&typeof stored==='object')
+    for(const key of Object.keys(svPreferences))
+     if(typeof stored[key]==='boolean')svPreferences[key]=stored[key];
+  }catch(_){}
+  const svSavePreferences=()=>{
+   try{localStorage.setItem('pynix.services.options',JSON.stringify(svPreferences));}catch(_){}
+  };
+  const svApplyPreferences=()=>{
+   servicesPane.classList.toggle('hide-tree',!svPreferences.showTree);
+   servicesPane.classList.toggle('hide-toolbar',!svPreferences.showToolbar);
+  };
+  svApplyPreferences();
+  const svcSelectedActive=()=>{
+   if(svPreferences.alwaysSelectActive)
+    sv('tree').querySelector('.pynix-services-item[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
+  };
   const svSend=(action,extra={})=>{
    const bridge=window.webkit?.messageHandlers?.pynixServices;
    if(!bridge){sv('empty').textContent='Services requires native PYNIX IDE.';return false;}
    bridge.postMessage({action,...extra});return true;
   };
   const svRefresh=()=>svSend('list');
+  const svRunConfiguration=mode=>{
+   const select=document.querySelector('.pynix-run-mode');
+   if(!select)return;
+   select.value=mode;
+   select.dispatchEvent(new Event('change',{bubbles:true}));
+   document.querySelector('.pynix-run-action')?.click();
+  };
   const svItems=()=>[
    ...Object.keys(svNames).filter(id=>svIncluded.has(id)).map(id=>({
     id:'run:'+id,name:svNames[id],type:'run',state:(svRunStates.get(id)?.state||'idle')
@@ -164,13 +196,8 @@ SERVICES_DOCK_JS = r"""
     if(run.since&&run.state==='running')
      svField(session,'Duration',svDuration((Date.now()-run.since)/1000));
     const actions=document.createElement('div');actions.className='pynix-services-actions';
-    svAction(actions,'Run',()=>{
-     const select=document.querySelector('.pynix-run-mode');
-     if(!select)return;
-     select.value=item.id.slice(4);
-     select.dispatchEvent(new Event('change',{bubbles:true}));
-     document.querySelector('.pynix-run-action')?.click();
-    },run.state==='running');
+    svAction(actions,'Run',()=>svRunConfiguration(item.id.slice(4)),
+     run.state==='running');
     svAction(actions,'Stop',()=>document.querySelector('.pynix-stop-action')?.click(),run.state!=='running');
     svAction(actions,'Open Run',()=>window.pynixTerminalDock?.showRun?.());
     svAction(actions,'Remove from Services',()=>{
@@ -248,7 +275,14 @@ SERVICES_DOCK_JS = r"""
       item.state==='connecting'?'◌':item.state==='error'?'!':'';
      state.title=item.state||'';
      button.append(icon,name,state);
-     button.addEventListener('click',()=>{svSelected=item.id;svDraw();});
+     button.addEventListener('click',()=>{
+      if(svPreferences.singleClick){svSelected=item.id;svDraw();}
+     });
+     button.addEventListener('dblclick',()=>{
+      svSelected=item.id;svDraw();
+      if(item.type==='run'&&svPreferences.doubleClickRun)
+       svRunConfiguration(item.id.slice(4));
+     });
      tree.appendChild(button);
     }
    }
@@ -303,7 +337,11 @@ SERVICES_DOCK_JS = r"""
   sv('collapse').addEventListener('click',()=>{
    svGrouped=true;svCollapsed.add('Run Configurations');svCollapsed.add('MCP SSE');svDraw();
   });
-  sv('refresh').addEventListener('click',svRefresh);
+  // PyCharm's bullseye selects an active item; refresh occurs independently.
+  sv('refresh').addEventListener('click',()=>{
+   const active=svItems().find(item=>['connected','connecting','running'].includes(item.state));
+   if(active){svSelected=active.id;svDraw();svcSelectedActive();}else svRefresh();
+  });
   sv('hide').addEventListener('click',()=>setToolWindowVisible(false));
   sv('sessionTab').addEventListener('click',()=>{svTab='session';svDetail();});
   sv('callsTab').addEventListener('click',()=>{svTab='calls';svDetail();});
