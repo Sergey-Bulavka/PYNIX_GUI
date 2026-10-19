@@ -72,7 +72,9 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
    Restore only their explicitly owned SVGs; never unhide unrelated chrome. */
 .workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-header button>svg,
 .workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-toolbar>button>svg,
-.workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-item-icon>svg{
+.workspace-mode.pynix-iconless .pynix-services-pane .pynix-services-item-icon>svg,
+.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-mark>svg,
+.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-arrow{
  display:block!important;
  visibility:visible!important;
  opacity:1!important;
