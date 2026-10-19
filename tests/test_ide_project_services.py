@@ -123,7 +123,7 @@ def test_services_sidebar_and_dock_are_isolated_from_project_and_packages():
     assert "servicesPane.hidden=!(visible&&scope==='services');" in dock
     assert "packagesPane.hidden=!(visible&&scope==='packages');" in dock
     assert 'TERMINAL_DOCK_JS.replace("__PYNIX_PACKAGES_DOCK__", PACKAGES_DOCK_JS).replace("__PYNIX_SERVICES_DOCK__", SERVICES_DOCK_JS)' in workspace
-    assert "window.pynixServicesRunEvent?.(packet);" in workspace
+    assert "window.pynixServicesRunEvent?.(packet,lastRunRequest);" in workspace
     assert "controller.addScriptMessageHandler_name_(services_handler, \"pynixServices\")" in native
     assert "services_registry.close()" in native
     assert ".pynix-services-pane[hidden]" in chrome
