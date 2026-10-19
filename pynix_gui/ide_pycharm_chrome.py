@@ -1452,6 +1452,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .pynix-ide-gear-menu{
  position:fixed!important;z-index:100100!important;box-sizing:border-box!important;
  width:254px!important;max-width:calc(100vw - 16px)!important;
+ max-height:calc(100vh - 16px)!important;overflow-y:auto!important;
  padding:5px!important;background:#292b31!important;
  border:1px solid #555862!important;border-radius:9px!important;
  box-shadow:0 12px 30px #0009!important;
@@ -1795,15 +1796,36 @@ CHROME_SCRIPT = r"""<script>
   const dismissGear=()=>{
    gearMenu.hidden=true;settings.setAttribute('aria-expanded','false');
   };
-  settings.addEventListener('click',()=>{
-   const next=gearMenu.hidden;
-   if(!next){dismissGear();return;}
-   gearMenu.hidden=false;settings.setAttribute('aria-expanded','true');
+  const positionGear=()=>{
+   if(gearMenu.hidden)return;
    const r=settings.getBoundingClientRect();
    const w=gearMenu.offsetWidth||254,h=gearMenu.offsetHeight||340;
    gearMenu.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';
    gearMenu.style.top=Math.max(8,Math.min(r.bottom+5,innerHeight-h-8))+'px';
+  };
+  settings.addEventListener('click',()=>{
+   const next=gearMenu.hidden;
+   if(!next){dismissGear();return;}
+   gearMenu.hidden=false;settings.setAttribute('aria-expanded','true');
+   positionGear();
   });
+  settings.addEventListener('keydown',event=>{
+   if(event.key!=='ArrowDown')return;
+   event.preventDefault();
+   if(gearMenu.hidden)settings.click();
+   gearMenu.querySelector('button:not(:disabled)')?.focus();
+  });
+  gearMenu.addEventListener('keydown',event=>{
+   if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key))return;
+   const items=[...gearMenu.querySelectorAll('button:not(:disabled)')];
+   if(!items.length)return;
+   event.preventDefault();
+   const index=items.indexOf(document.activeElement);
+   const target=event.key==='Home'?0:event.key==='End'?items.length-1:
+    (index+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;
+   items[target]?.focus();
+  });
+  window.addEventListener('resize',positionGear);
   document.addEventListener('pointerdown',event=>{
    if(!gearMenu.hidden&&!gearMenu.contains(event.target)&&
       !settings.contains(event.target))dismissGear();
