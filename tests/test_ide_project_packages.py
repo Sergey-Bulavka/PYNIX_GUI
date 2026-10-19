@@ -158,7 +158,12 @@ def test_packages_icons_match_pycharm_search_install_and_package_list():
     assert '<circle cx="6.8" cy="6.8" r="4.6"></circle>' in ui
     assert 'placeholder="Search for more packages"' in ui
     assert 'class="pynix-packages-pypi"' in ui
-    assert 'M15.5 12.3v6.2M12.4 15.4h6.2' in ui
+    # JetBrains-style: open right/bottom cube and separate bright-blue plus.
+    assert 'M2.5 5.1 9.3 1.7l6.8 3.4-6.8 3.5z' in ui
+    assert 'M9.3 8.6v3.6M16.1 5.1v4.6' in ui
+    assert 'M15.8 11.8v6.5M12.55 15.05h6.5' in ui
+    assert 'stroke="#4f8fff"' in ui
+    assert 'M15.5 12.3v6.2M12.4 15.4h6.2' not in ui
     assert "ico.innerHTML='<svg viewBox=" in ui
     assert 'M2 4.9 8 1.7l6 3.2v6.5' in ui
     assert "ico.textContent='⬡'" not in ui
