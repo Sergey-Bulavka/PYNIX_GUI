@@ -207,3 +207,78 @@ def test_native_iconless_mode_restores_packages_svg_glyphs():
     page = apply_iconless_mode('<body class="workspace-mode"></body>')
     assert '<body class="workspace-mode pynix-iconless">' in page
     assert override in page
+
+
+def test_outdated_packages_are_reported_separately(monkeypatch, env):
+    calls = []
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs))
+        return subprocess.CompletedProcess(
+            command, 0,
+            json.dumps([
+                {"name": "requests", "version": "2.31.0",
+                 "latest_version": "2.32.3", "latest_filetype": "wheel"},
+                {"name": "bad package", "version": "1", "latest_version": "2"},
+            ]),
+            "WARNING: pip index is slow",
+        )
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    result = env.list_outdated()
+    assert result == {"updates": [
+        {"name": "requests", "version": "2.31.0", "latestVersion": "2.32.3"},
+    ]}
+    assert calls[0][0] == [
+        str(env.python), "-m", "pip", "list", "--outdated",
+        "--format=json", "--disable-pip-version-check",
+    ]
+    assert calls[0][1]["timeout"] == 60
+    assert calls[0][1]["cwd"] == env.root
+
+
+def test_outdated_check_fails_without_breaking_installed_list(monkeypatch, env):
+    def fake_run(command, **kwargs):
+        return subprocess.CompletedProcess(command, 1, "", "Index unavailable")
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(PackageError, match="Index unavailable"):
+        env.list_outdated()
+
+
+def test_packages_rows_compact_and_updates_conditional():
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "pynix_gui/ide_packages_dock.py").read_text(encoding="utf-8")
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
+
+    assert "padding:3px 8px" in chrome
+    assert "min-height:26px" in chrome
+    assert "font:13px/18px" in chrome
+    assert "row.className='pynix-packages-item'" in ui
+    assert "const row=document.createElement('div');row.tabIndex=0;" in ui
+    assert "const update=packageUpdates.get(packageKey(item.name));" in ui
+    assert "if(update){" in ui
+    assert "button.className='pynix-packages-update'" in ui
+    assert "button.title='Update '+item.name" in ui
+    assert "event.stopPropagation();" in ui
+    assert "packageChange('upgrade',item.name);" in ui
+    assert "window.confirm(message)" in ui
+    assert "packageUpdates.clear();" in ui
+    assert "packageSend('outdated')" in ui
+    assert "if(result.requestId!==packagePendingOutdated||!packagePendingOutdated)return;" in ui
+    assert "packageUpdates.set(packageKey(item.name),item);" in ui
+    assert '"outdated"' in native
+    assert "packages_manager.list_outdated()" in native
+    assert ".pynix-packages-update>svg" in iconless
+    assert ".pynix-packages-update>svg" in chrome
+
+
+def test_packages_update_icons_appear_only_for_outdated_installed_items():
+    ui = (Path(__file__).resolve().parents[1] / "pynix_gui" /
+          "ide_packages_dock.py").read_text(encoding="utf-8")
+    assert "new Map()" in ui
+    assert "if(update){" in ui
+    assert "row.appendChild(button);" in ui
+    assert "packagePendingOutdated=packageSerial+1;" in ui
+    assert "const count=packageInstalled.filter(item=>packageUpdates.has(packageKey(item.name))).length;" in ui
+    assert " · up to date" in ui
+    assert " · update check unavailable" in ui
