@@ -40,7 +40,7 @@ def test_shell_tabs_and_menu_are_real_not_disabled_or_shared_output():
         "scope:'shell',action:'close'",
         "for(const shell of ['bash','zsh'])",
         "menuButton(popup,'Settings'",
-        "serial===1?'Local':event.shell+' '+serial",
+        "shellTabs.size===0?'Local':'Local '+serial",
         "const shellTabs=new Map()",
         "const pynix=makePanel('pynix-language-terminal'",
         "pynix.input.addEventListener('keydown'",
@@ -136,10 +136,13 @@ def test_terminal_scope_switches_without_activating_both_tools():
     setup=r"""
 let scope='other',open=false,spawnCount=0,events=[];
 const system={input:{focus(){}}},pynix={input:{focus(){}}};
-const shellTabs=new Map();
+const shellTabs=new Map(),pynixTabs=new Map();
 let defaultShell='zsh';
 const isVisible=()=>open;
 const createShell=()=>{spawnCount++;};
+const createPynixTab=()=>{pynixTabs.set('pynix-1',{});};
+const packagesOnShow=()=>{};
+const servicesOnShow=()=>{};
 const setToolWindowVisible=value=>{
  open=value;events.push({scope,open});
 };
