@@ -1027,7 +1027,8 @@ __PYNIX_DISPLAY_LEXER__
    // Restart must relaunch the original configuration, not whichever file
    // happened to become active while the program was running.
    const prior=action==='restart'?lastRunRequest:null;
-   const source=prior?.source||(runModeSelect.value==='file'?current:null);
+   const source=prior?(prior.source||null):
+    (runModeSelect.value==='file'?current:null);
    const mode=prior?.mode||(runModeSelect.value==='file'?'run':runModeSelect.value);
    const isFile=!!source;
    if(runModeSelect.value==='file'&&!prior&&!source){
@@ -1049,7 +1050,7 @@ __PYNIX_DISPLAY_LEXER__
      }
      lastRunRequest={mode};
      // Existing project and check configurations remain supported.
-     bridge.postMessage({action,mode:runModeSelect.value});
+     bridge.postMessage({action,mode});
    }
  }
  const restartButton=document.createElement('button');
