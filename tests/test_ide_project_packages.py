@@ -170,3 +170,35 @@ def test_packages_icons_match_pycharm_search_install_and_package_list():
     assert ".pynix-packages-pypi svg," in chrome
     assert ".pynix-packages-cube svg{" in chrome
     assert "width:16px;height:16px;flex:0 0 16px;color:#4f8fff" in chrome
+
+
+def test_native_iconless_mode_restores_packages_svg_glyphs():
+    """The normal macOS launch applies the global iconless SVG ban.
+
+    Package search, PyPI button, and installed-package cubes are native
+    controls, so their specific opt-in rules must win that cascade.
+    """
+    from pynix_gui.ide_iconless_mode import ICONLESS_STYLE, apply_iconless_mode
+    from pynix_gui.ide_packages_dock import PACKAGES_DOCK_JS
+
+    assert ".workspace-mode svg," in ICONLESS_STYLE
+    assert "display:none!important;" in ICONLESS_STYLE
+    selectors = (
+        ".pynix-packages-search-icon>svg",
+        ".pynix-packages-pypi>svg",
+        ".pynix-packages-cube>svg",
+    )
+    for selector in selectors:
+        full = ".workspace-mode.pynix-iconless .pynix-packages-pane " + selector
+        assert full in ICONLESS_STYLE
+        assert selector.replace(">svg", "") in PACKAGES_DOCK_JS
+    # The explicit, !important restore rule beats .workspace-mode svg.
+    override = ICONLESS_STYLE.split("/* Packages is a functional native tool window")[1]
+    override = override.split("/* Only the perimeter groups")[0]
+    assert "display:block!important" in override
+    assert "visibility:visible!important" in override
+    assert "width:16px!important;height:16px!important" in override
+    assert "width:20px!important;height:20px!important" in override
+    page = apply_iconless_mode('<body class="workspace-mode"></body>')
+    assert '<body class="workspace-mode pynix-iconless">' in page
+    assert override in page
