@@ -18,8 +18,13 @@ def test_generated_editor_javascript_parses_with_node_when_available(tmp_path):
     assert html.startswith("<script>")
     assert html.endswith("</script>")
     program = html.removeprefix("<script>").removesuffix("</script>")
+    # On Windows a large --check program piped through stdin can stall
+    # intermittently under CI load. Parse the same generated JS from disk.
+    program_path = tmp_path / "workspace.js"
+    program_path.write_text(program, encoding="utf-8")
     result = subprocess.run(
-        [node, "--check"], input=program, text=True, encoding="utf-8", capture_output=True, timeout=20
+        [node, "--check", str(program_path)],
+        text=True, encoding="utf-8", capture_output=True, timeout=40,
     )
     assert result.returncode == 0, result.stderr
 
