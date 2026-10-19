@@ -338,11 +338,13 @@ def test_services_options_use_original_consistent_16px_jetbrains_icons():
     menu = chrome.split("/* JetBrains Services Options is portaled")[1].split(
         "/* Header actions are contextual")[0]
 
-    # Do not change compact rows or the global menu label typography.
-    assert "height:27px!important" in menu
-    assert "min-height:27px!important" in menu
-    assert "height:31px!important" not in menu
-    assert "font:400 13px/18px" in menu
+    # Only Services Options uses 18px; the tool window outside keeps 13px.
+    assert "height:36px!important" in menu
+    assert "min-height:36px!important" in menu
+    assert "height:27px!important" not in menu
+    assert "font:400 18px/24px" in menu
+    assert "width:420px!important" in menu
+    assert "margin-left:auto;color:#888c96;font-size:16px" in menu
     assert "padding:4px!important;display:flex!important" in menu
     assert "background:#45474e!important;margin:3px 5px!important" in menu
 
@@ -387,3 +389,19 @@ def test_services_options_checkmarks_use_original_jetbrains_asset():
     assert "mark.textContent='✓';" not in SERVICES_DOCK_JS
     assert "const svg=svIcon(config.icon);" in SERVICES_DOCK_JS
     assert "const arrow=svIcon('chevronRight');" in SERVICES_DOCK_JS
+
+def test_services_options_labels_are_18px_without_changing_jetbrains_svg_size():
+    root = Path(__file__).resolve().parents[1]
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    full = chrome.split("/* Services: split-tree tool window")[1].split("</style>")[0]
+    menu = full.split("/* JetBrains Services Options is portaled")[1].split(
+        "/* Header actions are contextual")[0]
+    header = full.split(".workspace-mode .integrated-terminal .pynix-services-header strong{")[1].split("}")[0]
+
+    assert "font:400 18px/24px" in menu
+    assert "font:400 13px/18px" not in menu
+    assert "height:36px!important" in menu
+    assert "width:420px!important" in menu
+    assert "width:260px!important" in menu  # Submenus also fit 18px labels.
+    assert "font:400 13px/18px" in header  # Main Services remains 13px.
+    assert "width:16px!important;height:16px!important" in menu  # Original JetBrains SVGs.
