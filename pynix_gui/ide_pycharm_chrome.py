@@ -1191,7 +1191,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  position:fixed!important;top:0;left:0;right:auto!important;
  box-sizing:border-box!important;z-index:99999!important;
  width:322px!important;min-width:322px!important;max-width:calc(100vw - 16px)!important;
- max-height:calc(100vh - 16px)!important;overflow-y:auto!important;
+ max-height:calc(100vh - 16px)!important;overflow:visible!important;
  background:#282a2f!important;border:1px solid #595b62!important;
  border-radius:9px!important;box-shadow:0 9px 28px #000b!important;
  padding:6px!important;display:flex!important;flex-direction:column!important;
