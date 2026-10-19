@@ -360,9 +360,9 @@ def test_services_options_are_compact_with_larger_jetbrains_icons():
         (".pynix-services-option-mark>svg", "20px"),
         (".pynix-services-option-arrow", "18px"),
     ):
-        block = iconless.split(
+        block = iconless.rsplit(
             ".workspace-mode.pynix-iconless .pynix-services-options-menu " + selector
-            + "{"
+            + "{", 1
         )[1].split("}")[0]
         assert f"width:{dimension}!important;height:{dimension}!important" in block
     assert ".pynix-services-pane .pynix-services-header button>svg" in iconless
