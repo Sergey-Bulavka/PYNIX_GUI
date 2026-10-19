@@ -13,6 +13,7 @@ from .ide_syntax_highlight import highlight_document
 from .ide_editor_lexer import EDITOR_LEXER_JS
 from .ide_editor_tab_controls import TAB_CONTROL_JS
 from .ide_terminal_dock import TERMINAL_DOCK_JS
+from .ide_packages_dock import PACKAGES_DOCK_JS
 from .ide_file_icons import file_icon_type, ICON_BY_EXTENSION, SPECIAL_NAMES
 
 
@@ -2755,7 +2756,7 @@ editorInput.addEventListener('keydown',event=>{
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
-</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("__PYNIX_TAB_CONTROLS__", TAB_CONTROL_JS).replace("__PYNIX_TERMINAL_DOCK__", TERMINAL_DOCK_JS).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PROJECT_PATH_PAYLOAD", json.dumps("~/" + session.root.relative_to(Path.home()).as_posix() if session.root.is_relative_to(Path.home()) else str(session.root), ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
+</script>""".replace("__PYNIX_DISPLAY_LEXER__", EDITOR_LEXER_JS).replace("__PYNIX_TAB_CONTROLS__", TAB_CONTROL_JS).replace("__PYNIX_TERMINAL_DOCK__", TERMINAL_DOCK_JS.replace("__PYNIX_PACKAGES_DOCK__", PACKAGES_DOCK_JS)).replace("PROJECT_NAME_PAYLOAD", json.dumps(session.root.name, ensure_ascii=False)).replace("PROJECT_PATH_PAYLOAD", json.dumps("~/" + session.root.relative_to(Path.home()).as_posix() if session.root.is_relative_to(Path.home()) else str(session.root), ensure_ascii=False)).replace("FOLDER_PAYLOAD", folder_payload).replace("PAYLOAD", payload)
 
 
 def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
