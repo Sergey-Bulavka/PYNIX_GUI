@@ -84,19 +84,15 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  flex:0 0 16px!important;
  transform:none!important;
 }
-/* Match Services Options glyph sizes in the normal macOS iconless build.
-   Restrict larger sizes to this menu; keep toolbar/tree JetBrains SVGs at 16px. */
-.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-mark>svg{
- width:20px!important;height:20px!important;
- min-width:20px!important;min-height:20px!important;
- max-width:20px!important;max-height:20px!important;
- flex:0 0 20px!important
-}
+/* Options is portaled to body; restore original JetBrains 16x16 SVG sizes
+   there as well, without exposing unrelated icons hidden by this theme. */
+.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-mark>svg,
 .workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-arrow{
- width:18px!important;height:18px!important;
- min-width:18px!important;min-height:18px!important;
- max-width:18px!important;max-height:18px!important;
- flex:0 0 18px!important
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:16px!important;height:16px!important;
+ min-width:16px!important;min-height:16px!important;
+ max-width:16px!important;max-height:16px!important;
+ flex:0 0 16px!important;transform:none!important
 }
 /* Only the perimeter groups and two native project/Git buttons use icons.
    Other visual rails, tree badges and editor icons stay hidden. */
