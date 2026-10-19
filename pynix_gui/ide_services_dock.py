@@ -29,6 +29,7 @@ SERVICES_DOCK_JS = r"""
   terminal.appendChild(servicesPane);
   const sv=key=>servicesPane.querySelector('[data-sv="'+key+'"]');
   let svProfiles=[],svSelected='',svTab='session',svGrouped=true;
+  const svCollapsed=new Set();
   const svRunStates=new Map();
   let svIncluded=new Set();
   try{
@@ -121,7 +122,8 @@ SERVICES_DOCK_JS = r"""
    if(!calls.children.length)calls.textContent='No MCP protocol events yet. Connect to an SSE server.';
   };
   const svDraw=()=>{
-   const tree=sv('tree');tree.replaceChildren();
+   const tree=sv('tree');const previousScroll=tree.scrollTop;
+   tree.replaceChildren();
    const items=svItems();
    if(svSelected&&!items.some(x=>x.id===svSelected))svSelected='';
    if(!svSelected&&items.length)svSelected=items[0].id;
@@ -136,8 +138,17 @@ SERVICES_DOCK_JS = r"""
    ]){
     if(!group.length)continue;
     if(svGrouped){
-     const title=document.createElement('div');title.className='pynix-services-group';
-     title.textContent=label;tree.appendChild(title);
+     const title=document.createElement('button');
+     title.type='button';title.className='pynix-services-group';
+     title.textContent=(svCollapsed.has(label)?'▸ ':'▾ ')+label;
+     title.setAttribute('aria-expanded',String(!svCollapsed.has(label)));
+     title.addEventListener('click',()=>{
+      if(svCollapsed.has(label))svCollapsed.delete(label);
+      else svCollapsed.add(label);
+      svDraw();
+     });
+     tree.appendChild(title);
+     if(svCollapsed.has(label))continue;
     }
     for(const item of group){
      const button=document.createElement('button');button.type='button';
@@ -156,7 +167,7 @@ SERVICES_DOCK_JS = r"""
      tree.appendChild(button);
     }
    }
-   svDetail();
+   svDetail();tree.scrollTop=previousScroll;
   };
   const menu=sv('menu');
   const menuAction=(title,callback)=>{
@@ -178,8 +189,10 @@ SERVICES_DOCK_JS = r"""
   sv('add').addEventListener('click',()=>menu.hidden=!menu.hidden);
   sv('options').addEventListener('click',()=>menu.hidden=!menu.hidden);
   sv('group').addEventListener('click',()=>{svGrouped=!svGrouped;svDraw();});
-  sv('expand').addEventListener('click',()=>{svGrouped=false;svDraw();});
-  sv('collapse').addEventListener('click',()=>{svGrouped=true;svDraw();});
+  sv('expand').addEventListener('click',()=>{svGrouped=true;svCollapsed.clear();svDraw();});
+  sv('collapse').addEventListener('click',()=>{
+   svGrouped=true;svCollapsed.add('Run Configurations');svCollapsed.add('MCP SSE');svDraw();
+  });
   sv('refresh').addEventListener('click',svRefresh);
   sv('hide').addEventListener('click',()=>setToolWindowVisible(false));
   sv('sessionTab').addEventListener('click',()=>{svTab='session';svDetail();});
