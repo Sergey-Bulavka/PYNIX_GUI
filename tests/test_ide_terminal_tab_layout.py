@@ -1,7 +1,8 @@
-"""Regression checks for explicit tab pagination in native IDE V4.
+"""Terminal tab overflow contracts for native IDE V4.
 
-These static contracts complement, but do not replace, macOS WKWebView
-visual checks. Tab presence is determined by the PYNIX session maps.
+The JavaScript is embedded in the preview bootstrap. These assertions guard
+WKWebView-specific visibility and tab pagination behaviour. Visual acceptance
+on macOS remains a separate step.
 """
 import re
 
@@ -9,69 +10,101 @@ from pynix_gui.ide_pycharm_chrome import CHROME_STYLE
 from pynix_gui.ide_terminal_dock import TERMINAL_DOCK_JS
 
 
-def rule(selector):
-    match = re.search(re.escape(selector) + r"\s*\{([^}]*)\}", CHROME_STYLE)
-    assert match is not None, selector
-    return match.group(1)
+def css_rule(selector):
+    found = re.search(re.escape(selector) + r"\s*\{([^}]*)\}", CHROME_STYLE)
+    assert found is not None, selector
+    return found.group(1)
 
 
-def test_tab_strip_preserves_flex_alignment_without_overlap():
-    strip = rule(".workspace-mode .pynix-terminal-session-tabs")
+def test_tab_strips_and_actions_retain_pycharm_spacing():
+    strip = css_rule(".workspace-mode .pynix-terminal-session-tabs")
     assert "display:flex!important" in strip
-    assert "overflow:hidden!important" in strip
     assert "gap:4px!important" in strip
-    assert "max-width:none!important" in strip
-    item = rule(".workspace-mode .pynix-terminal-session-tab")
-    assert "flex:0 0 auto!important" in item
-    assert "width:0!important" not in TERMINAL_DOCK_JS
-
-
-def test_right_toolbar_controls_stay_at_right():
-    spacer = rule(".workspace-mode .pynix-terminal-dock-gap")
+    assert "overflow:hidden!important" in strip
+    assert "flex:0 1 auto!important" in strip
+    spacer = css_rule(".workspace-mode .pynix-terminal-dock-gap")
     assert "flex:1 1 auto!important" in spacer
     assert "margin-left:auto!important" in spacer
     assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
 
 
-def test_both_console_scopes_keep_independent_local_tabs():
+def test_overflow_menu_uses_session_map_not_scroll_coordinates():
+    for expected in (
+        "for(const item of items)item.hidden=false;",
+        "const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()]",
+        "const activeIndex=Math.max(0,tabs.findIndex(",
+        "item.hidden=!shown.has(i);",
+        "if(item.hidden)hidden.push(i);",
+        "for(const i of hidden){",
+        "entry.setAttribute('role','menuitem');",
+        "const hasHidden=hiddenTabs.length>0;",
+        "overflow.classList.toggle('has-hidden-tabs',hasHidden);",
+    ):
+        assert expected in TERMINAL_DOCK_JS
+    assert "sessions.scrollWidth" not in TERMINAL_DOCK_JS
+    assert "const offscreen=" not in TERMINAL_DOCK_JS
+
+
+def test_overflow_icon_visibility_is_class_driven_and_not_inline_hidden():
+    assert "overflow.hidden=false;" in TERMINAL_DOCK_JS
+    assert ".pynix-terminal-tab-overflow:not(.has-hidden-tabs){" in TERMINAL_DOCK_JS
+    assert ".pynix-terminal-tab-overflow.has-hidden-tabs{" in TERMINAL_DOCK_JS
+    assert "visibility:visible!important" in TERMINAL_DOCK_JS
+    assert "opacity:1!important" in TERMINAL_DOCK_JS
+    assert "overflow.style.visibility=" not in TERMINAL_DOCK_JS
+    assert "overflow.style.pointerEvents=" not in TERMINAL_DOCK_JS
+    assert "overflowToggle.dataset.hint='More Tabs ('+hiddenTabs.length+')'" in TERMINAL_DOCK_JS
+    assert "header.dataset.overflowTabs=String(hasHidden)" in TERMINAL_DOCK_JS
+
+
+def test_active_tab_remains_visible_and_hidden_tab_is_selectable():
+    assert "include(activeIndex);" in TERMINAL_DOCK_JS
+    assert "pynixId=id;paintSessions();paintPynix();" in TERMINAL_DOCK_JS
+    assert "activeId=id;paintSessions();paintShell();" in TERMINAL_DOCK_JS
+    assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
+    assert "tabLayout:()=>({...tabOverflowDebug})" in TERMINAL_DOCK_JS
+
+
+def test_both_panels_keep_independent_local_tabs():
     assert "const shellTabs=new Map();" in TERMINAL_DOCK_JS
     assert "const pynixTabs=new Map();" in TERMINAL_DOCK_JS
     assert "label:pynixTabs.size===0?'Local'" in TERMINAL_DOCK_JS
     assert "label:shellTabs.size===0?'Local'" in TERMINAL_DOCK_JS
-    assert "if(scope==='pynix')createPynixTab()" in TERMINAL_DOCK_JS
 
 
-def test_pagination_is_data_driven_not_scroll_clipping():
-    assert "items.forEach(item=>{item.hidden=false;});" in TERMINAL_DOCK_JS
-    assert "const activeIndex=Math.max(0,tabs.findIndex" in TERMINAL_DOCK_JS
-    assert "item.hidden=!shown.has(index)" in TERMINAL_DOCK_JS
-    assert "if(item.hidden)hidden.push(index)" in TERMINAL_DOCK_JS
-    assert "for(const index of hidden)" in TERMINAL_DOCK_JS
-    assert "sessions.scrollLeft=0" in TERMINAL_DOCK_JS
-    assert "sessions.scrollWidth>" not in TERMINAL_DOCK_JS
-    assert "const offscreen=" not in TERMINAL_DOCK_JS
+def _paginate(widths, available, active, gap=4):
+    # Model of the same active-first budgeting rule used in the browser.
+    selected = set()
+    consumed = 0
+
+    def include(i):
+        nonlocal consumed
+        if i < 0 or i >= len(widths) or i in selected:
+            return False
+        extra = widths[i] + (gap if selected else 0)
+        if selected and consumed + extra > available + 0.5:
+            return False
+        selected.add(i)
+        consumed += extra
+        return True
+
+    include(active)
+    for i in range(active - 1, -1, -1):
+        if not include(i):
+            break
+    for i in range(active + 1, len(widths)):
+        if not include(i):
+            break
+    return sorted(selected), [i for i in range(len(widths)) if i not in selected]
 
 
-def test_overflow_chevron_shows_only_for_missing_tabs():
-    assert "const visible=hidden.length>0;" in TERMINAL_DOCK_JS
-    assert "setArrow(visible);" in TERMINAL_DOCK_JS
-    assert "overflow.style.visibility=visible?'visible':'hidden'" in TERMINAL_DOCK_JS
-    assert "overflow.style.pointerEvents=visible?'auto':'none'" in TERMINAL_DOCK_JS
-    assert "overflowToggle.dataset.hint='More Tabs ('+hidden.length+')'" in TERMINAL_DOCK_JS
-    assert "entry.setAttribute('role','menuitem')" in TERMINAL_DOCK_JS
-    assert ".workspace-mode .pynix-terminal-tab-overflow{display:block!important" in TERMINAL_DOCK_JS
-    assert "flex:0 0 27px!important" in TERMINAL_DOCK_JS
+def test_seven_tabs_hide_local_and_local_2_when_only_five_fit():
+    visible, hidden = _paginate([148] * 7, 780, 6)
+    assert visible == [2, 3, 4, 5, 6]
+    assert hidden == [0, 1]
 
 
-def test_active_tab_and_overflow_selection_work():
-    assert "add(activeIndex);" in TERMINAL_DOCK_JS
-    assert "if(scope==='pynix'){" in TERMINAL_DOCK_JS
-    assert "pynixId=id;paintSessions();paintPynix();" in TERMINAL_DOCK_JS
-    assert "activeId=id;paintSessions();paintShell();" in TERMINAL_DOCK_JS
-    assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
-
-
-def test_overflow_debug_state_reports_missing_labels():
-    assert "tabLayout:()=>({...tabOverflowDebug})" in TERMINAL_DOCK_JS
-    assert "hidden:hidden.map(index=>tabs[index][1].label)" in TERMINAL_DOCK_JS
-    assert "header.dataset.overflowTabs=String(visible)" in TERMINAL_DOCK_JS
+def test_no_overflow_when_every_tab_fits():
+    visible, hidden = _paginate([148] * 7, 1100, 6)
+    assert visible == list(range(7))
+    assert hidden == []
