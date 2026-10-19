@@ -45,16 +45,29 @@ def test_overflow_menu_uses_session_map_not_scroll_coordinates():
     assert "const offscreen=" not in TERMINAL_DOCK_JS
 
 
-def test_overflow_icon_visibility_is_class_driven_and_not_inline_hidden():
-    assert "overflow.hidden=false;" in TERMINAL_DOCK_JS
-    assert ".pynix-terminal-tab-overflow:not(.has-hidden-tabs){" in TERMINAL_DOCK_JS
-    assert ".pynix-terminal-tab-overflow.has-hidden-tabs{" in TERMINAL_DOCK_JS
+def test_overflow_control_is_real_button_with_independent_menu():
+    assert "const overflow=document.createElement('div');" in TERMINAL_DOCK_JS
+    assert "const overflowToggle=document.createElement('button');" in TERMINAL_DOCK_JS
+    assert "overflowToggle.setAttribute('aria-haspopup','menu');" in TERMINAL_DOCK_JS
+    assert "overflowToggle.addEventListener('click',()=>{" in TERMINAL_DOCK_JS
+    assert "overflowPopup.hidden=!nextOpen;" in TERMINAL_DOCK_JS
+    assert "overflowToggle.setAttribute('aria-expanded',String(nextOpen));" in TERMINAL_DOCK_JS
+    assert "const closeOverflow=()=>{" in TERMINAL_DOCK_JS
+    assert "overflow.classList.toggle('has-hidden-tabs',hasHidden);" in TERMINAL_DOCK_JS
+    assert "overflow.style.setProperty('visibility',hasHidden?'visible':'hidden','important');" in TERMINAL_DOCK_JS
+    assert "overflow.style.setProperty('pointer-events',hasHidden?'auto':'none','important');" in TERMINAL_DOCK_JS
+    assert ".pynix-tab-overflow-control.has-hidden-tabs{" in TERMINAL_DOCK_JS
     assert "visibility:visible!important" in TERMINAL_DOCK_JS
-    assert "opacity:1!important" in TERMINAL_DOCK_JS
-    assert "overflow.style.visibility=" not in TERMINAL_DOCK_JS
-    assert "overflow.style.pointerEvents=" not in TERMINAL_DOCK_JS
-    assert "overflowToggle.dataset.hint='More Tabs ('+hiddenTabs.length+')'" in TERMINAL_DOCK_JS
-    assert "header.dataset.overflowTabs=String(hasHidden)" in TERMINAL_DOCK_JS
+    assert "overflow.open=false" not in TERMINAL_DOCK_JS
+
+
+def test_overflow_reserves_permanent_27px_slot_next_to_options():
+    assert "header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide)" in TERMINAL_DOCK_JS
+    assert "flex:0 0 27px!important" in TERMINAL_DOCK_JS
+    assert "display:flex!important;align-items:center!important;justify-content:center!important" in TERMINAL_DOCK_JS
+    assert ".pynix-tab-overflow-popup[hidden]{display:none!important}" in TERMINAL_DOCK_JS
+    assert ".pynix-tab-overflow-popup:not([hidden]){display:block!important}" in TERMINAL_DOCK_JS
+    assert "overflowPopup.setAttribute('role','menu');" in TERMINAL_DOCK_JS
 
 
 def test_active_tab_remains_visible_and_hidden_tab_is_selectable():
