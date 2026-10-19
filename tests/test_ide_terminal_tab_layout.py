@@ -123,8 +123,15 @@ def test_no_overflow_when_every_tab_fits():
     assert hidden == []
 
 
-def test_hidden_tabs_arrow_works_without_svg_or_has_selector():
-    assert "overflowToggle.textContent='⌄';" in TERMINAL_DOCK_JS
+def test_both_chevrons_are_matching_centered_svg_icons():
+    icon = 'M4.5 6.25 8 9.75 11.5 6.25'
+    assert TERMINAL_DOCK_JS.count(icon) == 2
+    assert "overflowToggle.innerHTML='<svg viewBox=" in TERMINAL_DOCK_JS
+    assert "summary.innerHTML='<svg viewBox=" in TERMINAL_DOCK_JS
+    assert ".workspace-mode .pynix-tab-overflow-trigger svg," in TERMINAL_DOCK_JS
+    assert ".workspace-mode .pynix-terminal-shell-chevron svg{" in TERMINAL_DOCK_JS
+    assert "align-items:center!important;justify-content:center!important" in TERMINAL_DOCK_JS
+    assert "overflowToggle.textContent='⌄';" not in TERMINAL_DOCK_JS
     assert ".pynix-tab-overflow-control.has-hidden-tabs{" in TERMINAL_DOCK_JS
     assert ".pynix-terminal-dock-bar:has(.pynix-terminal-session-tab[hidden])" in TERMINAL_DOCK_JS
     assert "header.classList.toggle('has-overflow-tabs',hasHidden)" in TERMINAL_DOCK_JS
@@ -149,3 +156,14 @@ def test_native_final_layout_pass_reconciles_menu_and_arrow():
     assert "overflowPopup.appendChild(entry);existing.add(id);" in TERMINAL_DOCK_JS
     assert "setOverflow([...overflowPopup.children]);" in TERMINAL_DOCK_JS
     assert "tabOverflowDebug.hidden=[...overflowPopup.children].map(el=>el.textContent);" in TERMINAL_DOCK_JS
+
+
+def test_terminal_tabs_and_editor_use_13px_font():
+    assert "font:500 13px/1 -apple-system,system-ui,sans-serif!important" in CHROME_STYLE
+    assert ".workspace-mode .editor-tabs .pynix-editor-tab-label{" in CHROME_STYLE
+    assert ".workspace-mode .pynix-edit-layer .pynix-source-input," in CHROME_STYLE
+    assert ".workspace-mode .pynix-edit-layer .pynix-edit-highlight," in CHROME_STYLE
+    assert ".workspace-mode .pynix-edit-layer .pynix-edit-gutter{" in CHROME_STYLE
+    assert ".workspace-mode .pynix-editor-code .pynix-code-line," in CHROME_STYLE
+    assert ".workspace-mode .pynix-editor-gutter .pynix-gutter-line{" in CHROME_STYLE
+    assert CHROME_STYLE.count("font-size:13px!important") >= 3
