@@ -1096,8 +1096,8 @@ __PYNIX_DISPLAY_LEXER__
    // PyCharm Run output belongs to the bottom Run tool window.
    // Selecting the legacy TERMINAL tab by synthetic click could activate
    // gallery handlers and rewrite the Project explorer's contents.
-   window.pynixServicesRunEvent?.(packet);
-   if(window.pynixTerminalDock?.state?.().scope!=='services')
+   window.pynixServicesRunEvent?.(packet,lastRunRequest);
+   if(window.pynixTerminalDock?.state?.()?.scope!=='services')
     window.pynixTerminalDock?.showRun?.();
    const consolePanel=document.querySelector('.terminal-console');
    if(!consolePanel)return;
