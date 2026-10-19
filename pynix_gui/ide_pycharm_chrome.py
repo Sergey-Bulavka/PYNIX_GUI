@@ -1256,14 +1256,23 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-shortcut-letter{
  width:9px!important;font-size:13px!important
 }
-.workspace-mode .pynix-services-option-mark>svg,
-.workspace-mode .pynix-services-option-arrow{
- display:block!important;flex:0 0 16px!important;
- width:16px!important;height:16px!important;
- min-width:16px!important;min-height:16px!important;
- max-width:16px!important;max-height:16px!important
+/* Measured against the PyCharm screenshot at the same text scale.
+   Original JetBrains 16x16 viewBoxes are preserved; only their display boxes
+   are reduced to match the apparent size of the native menu artwork.
+   Keep the 20px mark lane for consistent left alignment. */
+.workspace-mode .pynix-services-option-mark>svg{
+ display:block!important;flex:0 0 13px!important;
+ width:13px!important;height:13px!important;
+ min-width:13px!important;min-height:13px!important;
+ max-width:13px!important;max-height:13px!important
 }
-.workspace-mode .pynix-services-option-arrow{margin-left:auto!important}
+.workspace-mode .pynix-services-option-arrow{
+ display:block!important;flex:0 0 14px!important;
+ width:14px!important;height:14px!important;
+ min-width:14px!important;min-height:14px!important;
+ max-width:14px!important;max-height:14px!important;
+ margin-left:auto!important
+}
 .workspace-mode .pynix-services-options-divider{
  height:1px!important;min-height:1px!important;flex:0 0 1px!important;
  background:#45474e!important;margin:3px 5px!important
