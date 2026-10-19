@@ -53,7 +53,7 @@ TERMINAL_DOCK_JS = r"""
   hide.textContent='−';hide.title='Hide Tool Window';
   hide.setAttribute('aria-label','Hide Tool Window');
   hide.addEventListener('click',()=>setToolWindowVisible(false));
-  header.append(title,sessions,newSession,overflow,chevron,gap,tools,hide);
+  header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide);
   terminal.insertBefore(header,debugPanelBar.nextSibling);
 
   const hintStyle=document.createElement('style');
@@ -159,33 +159,65 @@ TERMINAL_DOCK_JS = r"""
   });
 
   const updateOverflow=()=>{
-   if(scope==='other'){overflow.hidden=true;return;}
-   // Measure every tab at its natural width. Overflow is only displayed
-   // when there really is insufficient room for all sessions.
+   if(scope==='other'){
+    overflow.open=false;overflow.hidden=true;
+    sessions.style.removeProperty('width');
+    sessions.style.removeProperty('flex');
+    sessions.style.removeProperty('max-width');
+    return;
+   }
    const items=[...sessions.children];
+   // Re-measure all sessions, including tabs hidden on the previous pass.
    for(const item of items)item.hidden=false;
    overflow.hidden=true;
+   overflow.open=false;
    if(!items.length)return;
    const widths=items.map(item=>item.getBoundingClientRect().width);
-   const spacing=4;  // Matches the session-strip gap in PyCharm chrome CSS.
-   const required=widths.reduce((total,width)=>total+width,0)+spacing*(items.length-1);
-   if(required<=sessions.clientWidth+0.5)return;
-   overflow.hidden=false;
-   const available=sessions.clientWidth;
+   const gapBetweenTabs=parseFloat(getComputedStyle(sessions).columnGap)||0;
+   const natural=widths.reduce((sum,width)=>sum+width,0)+
+     Math.max(0,items.length-1)*gapBetweenTabs;
+   // The session strip's own clientWidth cannot tell us how much space is
+   // available: its width:max-content/flex sizing can mask overflow.
+   // Instead, reserve the width of every other header control explicitly.
+   const headerRoom=()=>{
+    const style=getComputedStyle(header);
+    const gap=parseFloat(style.columnGap)||0;
+    const padding=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
+    const visible=[...header.children].filter(node=>
+      node!==sessions&&getComputedStyle(node).display!=='none');
+    const fixed=visible.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0);
+    // n visible peers plus the session strip means n flex gaps.
+    return Math.max(0,header.clientWidth-padding-fixed-gap*visible.length);
+   };
+   let available=headerRoom();
+   const needsOverflow=natural>available+0.5;
+   if(needsOverflow){
+    overflow.hidden=false;
+    available=headerRoom(); // Reserve the chevron before fitting sessions.
+   }
+   // Use only the width actually needed by tabs. The spacer to the right
+   // stays elastic, keeping Options/Hide pinned to the panel's far edge.
+   const stripWidth=Math.min(natural,available);
+   sessions.style.setProperty('flex','0 0 '+stripWidth+'px','important');
+   sessions.style.setProperty('width',stripWidth+'px','important');
+   sessions.style.setProperty('max-width',stripWidth+'px','important');
+   if(!needsOverflow){
+    overflowPopup.replaceChildren();
+    return;
+   }
    const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
    const active=scope==='pynix'?pynixId:activeId;
    const activeIndex=Math.max(0,tabs.findIndex(([id])=>id===active));
    const shown=new Set();
    let used=0;
    const include=index=>{
-    if(index<0||index>=items.length)return false;
-    const cost=widths[index]+(shown.size?spacing:0);
+    if(index<0||index>=items.length||shown.has(index))return false;
+    const cost=widths[index]+(shown.size?gapBetweenTabs:0);
     if(shown.size&&used+cost>available+0.5)return false;
     shown.add(index);used+=cost;return true;
    };
-   // Keep the selected tab visible, even if it was chosen from overflow.
+   // Keep the selected session visible. Other sessions go in the menu.
    include(activeIndex);
-   // Show recent tabs nearby rather than hiding the active one behind a menu.
    for(let i=activeIndex+1;i<items.length;i++)if(!include(i))break;
    for(let i=activeIndex-1;i>=0;i--)if(!include(i))break;
    overflowPopup.replaceChildren();
