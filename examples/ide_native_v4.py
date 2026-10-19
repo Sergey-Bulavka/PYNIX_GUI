@@ -987,12 +987,12 @@ def main() -> None:
             try:
                 request = dict(message.body())
                 action = request.get("action")
-                if action not in {"list", "details", "install", "upgrade", "uninstall"}:
+                if action not in {"list", "outdated", "details", "install", "upgrade", "uninstall"}:
                     raise PackageError("Unsupported package action")
                 name = request.get("name", "")
                 version = request.get("version", "")
                 request_id = int(request.get("requestId", 0))
-                if action != "list":
+                if action not in {"list", "outdated"}:
                     name = packages_manager.name(name)
                 if action == "install" and version:
                     version = packages_manager.version(version)
@@ -1004,6 +1004,8 @@ def main() -> None:
                     try:
                         if action == "list":
                             result = packages_manager.list_installed()
+                        elif action == "outdated":
+                            result = packages_manager.list_outdated()
                         elif action == "details":
                             result = {"details": packages_manager.details(name)}
                         else:
