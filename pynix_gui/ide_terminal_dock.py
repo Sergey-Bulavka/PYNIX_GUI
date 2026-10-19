@@ -74,7 +74,7 @@ TERMINAL_DOCK_JS = r"""
   .pynix-terminal-tab-overflow>summary svg{display:block;flex:none}
   .pynix-terminal-new{order:0}
   .pynix-terminal-session-tab{flex-shrink:0}\n  .pynix-terminal-session-tab[hidden]{display:none!important}
-  .pynix-terminal-tab-overflow{position:relative;flex-shrink:0}
+  .workspace-mode .pynix-terminal-tab-overflow{display:block!important;position:relative!important;flex:0 0 27px!important;width:27px!important;min-width:27px!important;opacity:1!important}
   .pynix-terminal-tab-overflow[hidden]{display:none!important}
   .pynix-terminal-tab-overflow>.pynix-terminal-dock-popup{right:0;left:auto;min-width:175px;max-height:320px;overflow-y:auto}
   .pynix-terminal-tab-overflow .pynix-overflow-entry{display:block;width:100%;text-align:left}
@@ -178,7 +178,7 @@ TERMINAL_DOCK_JS = r"""
    // keeps its natural width; overflow:hidden clips only the viewport.
    // No inline widths, stale flex-basis or manual header-width arithmetic.
    const items=[...sessions.children];
-   if(!items.length||sessions.clientWidth<=0){
+   if(!items.length){
     showOverflow(false);
     overflowPopup.replaceChildren();
     return;
@@ -222,10 +222,10 @@ TERMINAL_DOCK_JS = r"""
     });
     overflowPopup.appendChild(entry);
    });
-   // scrollWidth reflects actual clipping, not an estimated header budget.
-   // The list itself is authoritative: no hidden tabs, no chevron.
-   showOverflow(overflowPopup.childElementCount>0&&
-     sessions.scrollWidth>sessions.clientWidth+0.5);
+   // WKWebView can report scrollWidth == clientWidth for a clipped flex
+   // strip. The computed list of genuinely off-viewport tabs is the ONLY
+   // visibility criterion; never gate it on scrollWidth.
+   showOverflow(overflowPopup.childElementCount>0);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
