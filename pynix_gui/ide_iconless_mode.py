@@ -84,15 +84,22 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  flex:0 0 16px!important;
  transform:none!important;
 }
-/* Options is portaled to body; restore original JetBrains 16x16 SVG sizes
-   there as well, without exposing unrelated icons hidden by this theme. */
-.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-mark>svg,
+/* Options popup lives outside the dock. Restore its original JetBrains
+   SVG artwork with the separately calibrated sizes of the PyCharm menu.
+   This more specific rule overrides the general 16px iconless fallback. */
+.workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-mark>svg{
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:13px!important;height:13px!important;
+ min-width:13px!important;min-height:13px!important;
+ max-width:13px!important;max-height:13px!important;
+ flex:0 0 13px!important;transform:none!important
+}
 .workspace-mode.pynix-iconless .pynix-services-options-menu .pynix-services-option-arrow{
  display:block!important;visibility:visible!important;opacity:1!important;
- width:16px!important;height:16px!important;
- min-width:16px!important;min-height:16px!important;
- max-width:16px!important;max-height:16px!important;
- flex:0 0 16px!important;transform:none!important
+ width:14px!important;height:14px!important;
+ min-width:14px!important;min-height:14px!important;
+ max-width:14px!important;max-height:14px!important;
+ flex:0 0 14px!important;transform:none!important
 }
 /* Only the perimeter groups and two native project/Git buttons use icons.
    Other visual rails, tree badges and editor icons stay hidden. */
