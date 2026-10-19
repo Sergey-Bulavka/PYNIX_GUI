@@ -56,7 +56,7 @@ def test_overflow_budget_uses_dock_width_and_reserved_controls():
     assert "node===gap?0:node.getBoundingClientRect().width" in TERMINAL_DOCK_JS
     assert "const needsOverflow=natural>capacity+0.5" in TERMINAL_DOCK_JS
     assert "sessions.style.setProperty(property,value,'important')" in TERMINAL_DOCK_JS
-    assert "show(needsOverflow);" in TERMINAL_DOCK_JS
+    assert "show(hasInvisibleTabs);" in TERMINAL_DOCK_JS
 
 
 def test_hidden_tab_menu_and_active_tab_preserved():
@@ -77,3 +77,15 @@ def test_overflow_arrow_remains_next_to_options():
     assert "requestAnimationFrame(updateOverflow)" in TERMINAL_DOCK_JS
     assert ".workspace-mode .pynix-terminal-tab-overflow{display:block!important" in TERMINAL_DOCK_JS
     assert "flex:0 0 27px!important" in TERMINAL_DOCK_JS
+
+
+def test_fully_offscreen_tabs_enable_chevron_even_if_budget_fits():
+    # Regression: with Local 7 selected, Local and Local 2 can be scrolled
+    # wholly past the left edge while needsOverflow is false in WKWebView.
+    assert "const offscreen=rect.left<viewport.left-0.5||" in TERMINAL_DOCK_JS
+    assert "rect.right>viewport.right+0.5;" in TERMINAL_DOCK_JS
+    assert "if(!offscreen&&!byWidth)return;" in TERMINAL_DOCK_JS
+    assert "if(!needsOverflow||" not in TERMINAL_DOCK_JS
+    assert "const hasInvisibleTabs=hiddenCount>0;" in TERMINAL_DOCK_JS
+    assert "show(hasInvisibleTabs);" in TERMINAL_DOCK_JS
+    assert "header.dataset.overflowTabs=String(hasInvisibleTabs);" in TERMINAL_DOCK_JS
