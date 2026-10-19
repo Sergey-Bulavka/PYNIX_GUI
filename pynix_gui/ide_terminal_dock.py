@@ -25,7 +25,7 @@ TERMINAL_DOCK_JS = r"""
   summary.className='pynix-terminal-dock-action pynix-terminal-shell-chevron';
   summary.setAttribute('aria-label','Choose Terminal Shell');
   summary.title='';summary.dataset.hint='Choose Terminal Shell';
-  summary.innerHTML='<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m3.3 5.9 4.7 4.7 4.7-4.7" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  summary.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4.5 6.25 8 9.75 11.5 6.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const popup=document.createElement('div');popup.className='pynix-terminal-dock-popup';
   popup.setAttribute('role','menu');
   chevron.append(summary,popup);
@@ -35,8 +35,8 @@ TERMINAL_DOCK_JS = r"""
   const overflowToggle=document.createElement('button');
   overflowToggle.type='button';
   overflowToggle.className='pynix-terminal-dock-action pynix-tab-overflow-trigger';
-  // Use the same platform-rendered chevron as the terminal shell selector.
-  overflowToggle.textContent='⌄';
+  // Same vector chevron for Shell and Hidden Tabs: matching geometry and centering.
+  overflowToggle.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4.5 6.25 8 9.75 11.5 6.25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   overflowToggle.setAttribute('aria-label','More Tabs');
   overflowToggle.setAttribute('aria-haspopup','menu');
   overflowToggle.setAttribute('aria-expanded','false');
@@ -94,14 +94,23 @@ TERMINAL_DOCK_JS = r"""
    display:flex!important;visibility:visible!important;
    opacity:1!important;pointer-events:auto!important
   }
-  .workspace-mode .pynix-tab-overflow-trigger{
+  .workspace-mode .pynix-tab-overflow-trigger,
+  .workspace-mode .pynix-terminal-shell-chevron{
+   box-sizing:border-box!important;
    width:27px!important;height:27px!important;min-width:27px!important;
-   display:flex!important;align-items:center!important;justify-content:center!important;
-   font:500 22px/1 -apple-system,system-ui,sans-serif!important;
-   color:#c6c8d0!important;
+   display:inline-flex!important;align-items:center!important;justify-content:center!important;
+   padding:0!important;margin:0!important;line-height:0!important;
+   color:#c6c8d0!important
+  }
+  .workspace-mode .pynix-tab-overflow-trigger{
    opacity:1!important;visibility:visible!important;pointer-events:auto!important
   }
-  .pynix-tab-overflow-trigger svg{width:16px;height:16px;display:block;flex:none}
+  .workspace-mode .pynix-tab-overflow-trigger svg,
+  .workspace-mode .pynix-terminal-shell-chevron svg{
+   display:block!important;width:16px!important;height:16px!important;
+   min-width:16px!important;min-height:16px!important;flex:0 0 16px!important;
+   margin:0!important;vertical-align:middle!important
+  }
   .workspace-mode .pynix-tab-overflow-popup{
    position:absolute!important;top:calc(100% + 7px)!important;
    right:0!important;left:auto!important;z-index:900!important;
