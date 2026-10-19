@@ -41,6 +41,10 @@ existing run/debug listeners.
   sixth rail tool window. Search Everywhere → Settings uses the same route.
 - Native Settings V1 has functional Editor → Font size and line-height,
   persisted atomically in the current macOS user's Application Support/PYNIX.
+  The Font page supports Restore Font Defaults and validates staged edits.
+  Reopening an already visible Settings window navigates without reloading
+  and losing the working copy. The gear menu supports keyboard navigation
+  and viewport-aware positioning.
   Other categories currently provide navigable structure and explicitly
   identify unimplemented controls; they do not pretend to work.
 - The gear's yellow update dot appears only for
@@ -75,13 +79,19 @@ existing run/debug listeners.
 6. Edit an in-memory file and confirm symbols search without saving.
 7. No update dot is shown absent a genuine status signal.
 8. Recheck project/branch/current file/Run/Debug/More Actions and dragging.
-9. Run focused and complete regressions; perform manual macOS visual
-   acceptance before merging.
+9. Enter an editor-font setting and reopen Settings through the gear or
+   Command+, while the window is visible. The draft must survive; Cancel must
+   discard it, and Apply/OK must persist it. Restore Font Defaults on the
+   Font page should restore the two editor-only values.
+10. Open the gear via keyboard, navigate enabled items using arrow keys,
+    Home and End, and verify popup positioning after a window resize.
+11. Run focused and complete regressions; perform manual macOS visual
+    acceptance before merging.
 
 ## Commands
 
 ```bash
-python -m pytest tests/test_ide_search_everywhere.py tests/test_ide_pycharm_chrome.py tests/test_ide_tooltips.py -q
+python -m pytest tests/test_ide_settings_window.py tests/test_ide_native_menu.py tests/test_ide_search_everywhere.py tests/test_ide_pycharm_chrome.py tests/test_ide_tooltips.py -q
 python -m pytest -q
 git diff --check
 ```
