@@ -1008,23 +1008,49 @@ __PYNIX_DISPLAY_LEXER__
  const runModeSelect=document.createElement('select');
  runModeSelect.className='pynix-run-mode';
  runModeSelect.setAttribute('aria-label','PYNIX run configuration');
- for(const [value,label] of [['run','Run project'],['check','Check project']]){
+ for(const [value,label] of [['file','Current File'],['run','Run project'],['check','Check project']]){
    const option=document.createElement('option');
    option.value=value;option.textContent=label;
    runModeSelect.appendChild(option);
  }
  document.querySelector('.workspace-toolbar')?.appendChild(runModeSelect);
  let isProjectRunning=false;
+ let lastRunRequest=null;
  function runProjectAction(action){
-   if(action==='run'||action==='restart'){
-     persistBuffer();
+   const bridge=window.webkit?.messageHandlers?.pynixProjectRun;
+   if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
+   if(action==='stop'){
+     bridge.postMessage({action:'stop'});
+     return;
+   }
+   persistBuffer();
+   // Restart must relaunch the original configuration, not whichever file
+   // happened to become active while the program was running.
+   const prior=action==='restart'?lastRunRequest:null;
+   const source=prior?.source||(runModeSelect.value==='file'?current:null);
+   const mode=prior?.mode||(runModeSelect.value==='file'?'run':runModeSelect.value);
+   const isFile=!!source;
+   if(runModeSelect.value==='file'&&!prior&&!source){
+     window.alert('Open a .pnx or .py file before running.');return;
+   }
+   if(isFile){
+     if(!/\\.(pnx|py)$/i.test(source)||!byName.has(source)){
+       window.alert('Run supports saved .pnx and .py project files.');return;
+     }
+     if(byName.get(source).dirty){
+       window.alert('Save '+source+' before running.');return;
+     }
+     const request={action,mode:'run',source};
+     lastRunRequest={mode:'run',source};
+     bridge.postMessage(request);
+   }else{
      if([...byName.values()].some(file=>file.dirty)){
        window.alert('Save all changes before running the PYNIX project.');return;
      }
+     lastRunRequest={mode};
+     // Existing project and check configurations remain supported.
+     bridge.postMessage({action,mode:runModeSelect.value});
    }
-   const bridge=window.webkit?.messageHandlers?.pynixProjectRun;
-   if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
-   bridge.postMessage({action,mode:runModeSelect.value});
  }
  const restartButton=document.createElement('button');
  restartButton.type='button';restartButton.className='nav-action pynix-restart-action';
@@ -1059,6 +1085,7 @@ __PYNIX_DISPLAY_LEXER__
    const state=packet?.state||'error';
    if(state==='running')isProjectRunning=true;
    if(state==='finished'||state==='error'||state==='idle')isProjectRunning=false;
+   window.pynixTerminalDock?.setRunState?.(isProjectRunning);
    runButton.disabled=isProjectRunning;
    restartButton.disabled=state==='stopping';
    stopButton.disabled=!isProjectRunning;
@@ -1068,7 +1095,8 @@ __PYNIX_DISPLAY_LEXER__
    setToolWindowVisible(true);
    consoleTab?.click();
    if(!consolePanel)return;
-   if(state==='running')consolePanel.textContent='Running PYNIX project…';
+   if(state==='running')consolePanel.textContent=
+     'Running '+(lastRunRequest?.source||'PYNIX project')+'…';
    else if(state==='output'){
      const chunk=typeof packet.chunk==='string'?packet.chunk:'';
      consolePanel.textContent=(consolePanel.textContent||'')+chunk;
