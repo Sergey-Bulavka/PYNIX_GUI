@@ -27,9 +27,13 @@ SHELLS = {"bash": "/bin/bash", "zsh": "/bin/zsh"}
 
 
 class LocalTerminalSessions:
-    """Up to eight independent, responsive PTYs; no blocking reads on WK UI."""
+    """Independent responsive PTYs; no blocking reads on the WK UI thread.
 
-    def __init__(self, cwd: Path, limit: int = 8):
+    A configurable safety ceiling protects the desktop from accidental PTY
+    exhaustion; it is not a visible tab-count restriction.
+    """
+
+    def __init__(self, cwd: Path, limit: int = 64):
         self.cwd = Path(cwd).resolve()
         self.limit = limit
         self._sessions: dict[str, tuple[subprocess.Popen, int, object, str]] = {}
@@ -38,7 +42,9 @@ class LocalTerminalSessions:
         if shell not in SHELLS or not Path(SHELLS[shell]).is_file():
             raise TerminalSessionError("Available shells: bash, zsh")
         if len(self._sessions) >= self.limit:
-            raise TerminalSessionError("Maximum of 8 terminal sessions")
+            raise TerminalSessionError(
+                f"Maximum of {self.limit} concurrent terminal sessions"
+            )
         if os.name != "posix":
             raise TerminalSessionError("PTY shell sessions require macOS/POSIX")
         master, slave = os.openpty()
