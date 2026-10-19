@@ -111,6 +111,7 @@ class ProjectServices:
                     "state": runtime.get("state", "disconnected"),
                     "since": runtime.get("since"),
                     "client": "PYNIX IDE",
+                    "version": "0.1.0",
                     "transport": "SSE",
                     "tools": list(runtime.get("tools", [])),
                     "events": list(runtime.get("events", []))[-100:],
