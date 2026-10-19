@@ -29,20 +29,31 @@ TERMINAL_DOCK_JS = r"""
   const popup=document.createElement('div');popup.className='pynix-terminal-dock-popup';
   popup.setAttribute('role','menu');
   chevron.append(summary,popup);
-  const overflow=document.createElement('details');
-  overflow.className='pynix-terminal-tab-overflow';
-  // Keep a fixed 27px slot next to Options. Using the HTML hidden attribute
-  // made the chevron depend on conflicting !important CSS and could suppress
-  // it even when tabs were already clipped.
-  overflow.hidden=false;
-  // Visibility is controlled solely by has-hidden-tabs, not inline styles.
-  const overflowToggle=document.createElement('summary');
-  overflowToggle.className='pynix-terminal-dock-action';
+  // Use an ordinary button, independent of <details>/summary WebKit styling.
+  const overflow=document.createElement('div');
+  overflow.className='pynix-tab-overflow-control';
+  const overflowToggle=document.createElement('button');
+  overflowToggle.type='button';
+  overflowToggle.className='pynix-terminal-dock-action pynix-tab-overflow-trigger';
   overflowToggle.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   overflowToggle.setAttribute('aria-label','More Tabs');
+  overflowToggle.setAttribute('aria-haspopup','menu');
+  overflowToggle.setAttribute('aria-expanded','false');
   overflowToggle.dataset.hint='More Tabs';
   const overflowPopup=document.createElement('div');
-  overflowPopup.className='pynix-terminal-dock-popup';overflowPopup.setAttribute('role','menu');
+  overflowPopup.className='pynix-terminal-dock-popup pynix-tab-overflow-popup';
+  overflowPopup.setAttribute('role','menu');
+  overflowPopup.hidden=true;
+  const closeOverflow=()=>{
+   overflowPopup.hidden=true;
+   overflowToggle.setAttribute('aria-expanded','false');
+  };
+  overflowToggle.addEventListener('click',()=>{
+   if(!overflow.classList.contains('has-hidden-tabs'))return;
+   const nextOpen=overflowPopup.hidden;
+   overflowPopup.hidden=!nextOpen;
+   overflowToggle.setAttribute('aria-expanded',String(nextOpen));
+  });
   overflow.append(overflowToggle,overflowPopup);
   const gap=document.createElement('span');gap.className='pynix-terminal-dock-gap';
   const tools=document.createElement('details');tools.className='pynix-terminal-options-menu';
@@ -64,21 +75,33 @@ TERMINAL_DOCK_JS = r"""
   hintStyle.textContent='.pynix-terminal-dock-bar [data-hint]{position:relative}.pynix-terminal-dock-bar [data-hint]:hover::after,.pynix-terminal-dock-bar [data-hint]:focus-visible::after{content:attr(data-hint);position:absolute;z-index:300;top:calc(100% + 7px);left:50%;transform:translateX(-50%);background:#383a40;border:1px solid #575a63;border-radius:6px;color:#e5e6ea;padding:6px 9px;font:12px/17px -apple-system,sans-serif;white-space:nowrap;pointer-events:none;box-shadow:0 4px 14px #0006}';
   hintStyle.textContent+=`
   .pynix-terminal-dock-bar{display:flex;align-items:center;min-width:0}
-  .pynix-terminal-dock-title,.pynix-terminal-new,.pynix-terminal-tab-overflow,
+  .pynix-terminal-dock-title,.pynix-terminal-new,
   .pynix-terminal-options-menu,.pynix-terminal-dock-hide{flex-shrink:0}
-  /* The authoritative flex contract is in ide_pycharm_chrome.py.
-     Do not override the gap or session-strip width from a late stylesheet. */
-  .pynix-terminal-tab-overflow>summary{width:27px;height:28px;display:flex!important;align-items:center;justify-content:center;padding:0!important;line-height:1!important;list-style:none}
-  .pynix-terminal-tab-overflow>summary::-webkit-details-marker{display:none}
-  .pynix-terminal-tab-overflow>summary svg{display:block;flex:none}
+  .workspace-mode .integrated-terminal .pynix-tab-overflow-control{
+   box-sizing:border-box!important;position:relative!important;
+   flex:0 0 27px!important;width:27px!important;min-width:27px!important;
+   display:none!important;align-items:center!important;justify-content:center!important
+  }
+  .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs{
+   display:flex!important
+  }
+  .workspace-mode .pynix-tab-overflow-trigger{
+   width:27px!important;height:27px!important;min-width:27px!important;
+   display:flex!important;align-items:center!important;justify-content:center!important;
+   opacity:1!important;visibility:visible!important;pointer-events:auto!important
+  }
+  .pynix-tab-overflow-trigger svg{width:16px;height:16px;display:block;flex:none}
+  .workspace-mode .pynix-tab-overflow-popup{
+   position:absolute!important;top:calc(100% + 7px)!important;
+   right:0!important;left:auto!important;z-index:900!important;
+   min-width:175px!important;max-height:320px;overflow-y:auto
+  }
+  .workspace-mode .pynix-tab-overflow-popup[hidden]{display:none!important}
+  .workspace-mode .pynix-tab-overflow-popup:not([hidden]){display:block!important}
+  .pynix-tab-overflow-popup .pynix-overflow-entry{display:block;width:100%;text-align:left}
   .pynix-terminal-new{order:0}
-  .pynix-terminal-session-tab{flex-shrink:0}\n  .pynix-terminal-session-tab[hidden]{display:none!important}
-  .workspace-mode .pynix-terminal-tab-overflow{display:block!important;position:relative!important;flex:0 0 27px!important;width:27px!important;min-width:27px!important}
-  .workspace-mode .pynix-terminal-tab-overflow:not(.has-hidden-tabs){visibility:hidden!important;opacity:0!important;pointer-events:none!important}
-  .workspace-mode .pynix-terminal-tab-overflow.has-hidden-tabs{visibility:visible!important;opacity:1!important;pointer-events:auto!important}
-  .pynix-terminal-tab-overflow[hidden]{display:none!important}
-  .pynix-terminal-tab-overflow>.pynix-terminal-dock-popup{right:0;left:auto;min-width:175px;max-height:320px;overflow-y:auto}
-  .pynix-terminal-tab-overflow .pynix-overflow-entry{display:block;width:100%;text-align:left}
+  .pynix-terminal-session-tab{flex-shrink:0}
+  .pynix-terminal-session-tab[hidden]{display:none!important}
   .pynix-terminal-options-menu .pynix-terminal-menu-divider{height:1px;background:#41434a;margin:6px 2px}
   .pynix-terminal-options-menu .pynix-terminal-menu-sub{padding-left:16px}
   .pynix-terminal-options-menu .pynix-terminal-menu-disabled{opacity:.5}
@@ -179,7 +202,8 @@ TERMINAL_DOCK_JS = r"""
     // The class drives !important CSS in WKWebView, avoiding conflicting
     // inline visibility state from previous layout passes.
     overflow.classList.toggle('has-hidden-tabs',hasHidden);
-    if(!hasHidden)overflow.open=false;
+    overflow.style.setProperty('display',hasHidden?'flex':'none','important');
+    if(!hasHidden)closeOverflow();
     header.dataset.overflowTabs=String(hasHidden);
     overflowToggle.dataset.hint='More Tabs ('+hiddenTabs.length+')';
     overflowToggle.setAttribute('aria-label',
@@ -246,7 +270,7 @@ TERMINAL_DOCK_JS = r"""
     entry.setAttribute('role','menuitem');
     entry.textContent=tab.label;
     entry.addEventListener('click',()=>{
-     overflow.open=false;
+     closeOverflow();
      if(scope==='pynix'){
       if(pynixTabs.has(pynixId))
        pynixTabs.get(pynixId).draft=pynix.input.value;
@@ -263,6 +287,7 @@ TERMINAL_DOCK_JS = r"""
     shown:[...shown].sort((a,b)=>a-b),
     hidden:hidden.map(i=>tabs[i][1].label),
     arrowClass:overflow.className,
+    arrowDisplay:getComputedStyle(overflow).display,
     arrowVisibility:getComputedStyle(overflow).visibility,
     arrowWidth:overflow.getBoundingClientRect().width,
     tabWidth:sessions.getBoundingClientRect().width
@@ -426,12 +451,14 @@ TERMINAL_DOCK_JS = r"""
   chevron.addEventListener('toggle',()=>{if(!chevron.open)renderShellMenu();});
   renderOptions();
   document.addEventListener('pointerdown',event=>{
-   for(const details of [chevron,tools,overflow])
+   for(const details of [chevron,tools])
     if(details.open&&!details.contains(event.target))details.open=false;
+   if(!overflow.contains(event.target))closeOverflow();
   });
   document.addEventListener('keydown',event=>{
    if(event.key==='Escape'){
-    for(const details of [chevron,tools,overflow])details.open=false;
+    for(const details of [chevron,tools])details.open=false;
+    closeOverflow();
    }
    if((event.metaKey||event.ctrlKey)&&!event.altKey&&event.key.toLowerCase()==='t'&&
      ['system','pynix'].includes(scope)&&isVisible()&&terminal.contains(document.activeElement)){
