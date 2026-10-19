@@ -168,75 +168,79 @@ TERMINAL_DOCK_JS = r"""
   // clip the strip *outside* its own reported viewport on WKWebView, so relying
   // on scrollWidth/clientWidth or individual bounding rects alone is unsound.
   // Reserve the fixed sibling widths explicitly and clamp the strip itself.
+  // Explicit, data-driven tab pagination: WKWebView can leave earlier tabs
+  // fully outside a scroll viewport without reporting reliable scroll sizes.
+  // Hidden tabs are now the items deliberately NOT selected for display.
   let tabOverflowDebug={};
   const updateOverflow=()=>{
-   const show=visible=>{
+   const setArrow=visible=>{
     overflow.style.visibility=visible?'visible':'hidden';
     overflow.style.pointerEvents=visible?'auto':'none';
-    overflowToggle.setAttribute('aria-expanded',String(visible&&overflow.open));
     if(!visible)overflow.open=false;
    };
    if(scope==='other'||sessions.hidden){
-    show(false);overflowPopup.replaceChildren();return;
+    setArrow(false);overflowPopup.replaceChildren();return;
    }
    const items=[...sessions.children];
    if(!items.length){
-    show(false);overflowPopup.replaceChildren();return;
+    setArrow(false);overflowPopup.replaceChildren();return;
    }
-   // Recreate the unconstrained natural width on every pass. A previous
-   // layout must not influence the next one when the window is resized.
-   for(const key of ['flex','width','max-width'])sessions.style.removeProperty(key);
+   // Always restore the full list before measuring widths, including any
+   // tabs previously moved to the overflow menu.
+   items.forEach(item=>{item.hidden=false;});
+   for(const key of ['flex','width','max-width'])
+    sessions.style.removeProperty(key);
+   sessions.scrollLeft=0;
    const widths=items.map(item=>item.getBoundingClientRect().width);
    const sessionGap=parseFloat(getComputedStyle(sessions).columnGap)||0;
-   const natural=widths.reduce((sum,w)=>sum+w,0)+
+   const natural=widths.reduce((sum,width)=>sum+width,0)+
      sessionGap*Math.max(0,items.length-1);
-   const chrome=getComputedStyle(header);
-   const outerGap=parseFloat(chrome.columnGap)||0;
-   const padding=(parseFloat(chrome.paddingLeft)||0)+
-     (parseFloat(chrome.paddingRight)||0);
-   // The middle gap element is elastic; its current rendered width does not
-   // reserve capacity. All other toolbar controls are fixed-width.
-   const controls=[...header.children].filter(node=>
+   const style=getComputedStyle(header);
+   const outerGap=parseFloat(style.columnGap)||0;
+   const padding=(parseFloat(style.paddingLeft)||0)+
+     (parseFloat(style.paddingRight)||0);
+   const fixedControls=[...header.children].filter(node=>
      node!==sessions&&getComputedStyle(node).display!=='none');
-   const fixed=controls.reduce((sum,node)=>
+   // Exclude the elastic spacer, but reserve the overflow chevron's 27px
+   // and every other button before allocating space to the tab strip.
+   const fixedWidth=fixedControls.reduce((sum,node)=>
      sum+(node===gap?0:node.getBoundingClientRect().width),0);
-   const capacity=Math.max(0,header.clientWidth-padding-fixed-
-     outerGap*controls.length);
-   const actualWidth=Math.max(0,Math.min(natural,capacity));
-   for(const [property,value] of [
-    ['flex','0 0 '+actualWidth+'px'],
-    ['width',actualWidth+'px'],
-    ['max-width',actualWidth+'px']
-   ])sessions.style.setProperty(property,value,'important');
-   const needsOverflow=natural>capacity+0.5;
-   const activeItem=items.find(item=>item.classList.contains('active'));
-   if(activeItem&&actualWidth>0){
-    const viewport=sessions.getBoundingClientRect();
-    const selected=activeItem.getBoundingClientRect();
-    if(selected.right>viewport.right+0.5)
-     sessions.scrollLeft+=selected.right-viewport.right;
-    else if(selected.left<viewport.left-0.5)
-     sessions.scrollLeft+=selected.left-viewport.left;
-   }
-   const viewport=sessions.getBoundingClientRect();
-   const allTabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
-   overflowPopup.replaceChildren();
-   // Prefer actual clipping. For WKWebView, fall back to cumulative natural
-   // widths if a child is clipped by the ancestor rather than the strip.
-   let position=-sessions.scrollLeft,hiddenCount=0;
+   const available=Math.max(0,header.clientWidth-padding-fixedWidth-
+     outerGap*fixedControls.length);
+   const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
+   const active=scope==='pynix'?pynixId:activeId;
+   const activeIndex=Math.max(0,tabs.findIndex(([id])=>id===active));
+   let consumed=0;
+   const shown=new Set();
+   const add=index=>{
+    if(index<0||index>=items.length||shown.has(index))return false;
+    const needed=widths[index]+(shown.size?sessionGap:0);
+    if(shown.size>0&&consumed+needed>available+0.5)return false;
+    consumed+=needed;shown.add(index);return true;
+   };
+   // The selected tab is always shown. Fill remaining space with its
+   // neighbors, favoring earlier tabs when the newest tab is active.
+   add(activeIndex);
+   for(let i=activeIndex-1;i>=0;i--)if(!add(i))break;
+   for(let i=activeIndex+1;i<items.length;i++)if(!add(i))break;
+   const hidden=[];
    items.forEach((item,index)=>{
-    const rect=item.getBoundingClientRect();
-    const offscreen=rect.left<viewport.left-0.5||
-      rect.right>viewport.right+0.5;
-    const byWidth=position< -0.5||position+widths[index]>actualWidth+0.5;
-    position+=widths[index]+sessionGap;
-    // A scrolled strip can hide entire tabs to the left even if the
-    // natural-width budget says everything fits. Visibility is the source
-    // of truth; never gate invisible tabs on needsOverflow.
-    if(!offscreen&&!byWidth)return;
-    const session=allTabs[index];if(!session)return;
-    hiddenCount++;
-    const [id,tab]=session;
+    item.hidden=!shown.has(index);
+    if(item.hidden)hidden.push(index);
+   });
+   // No scrolling: this strips a common source of permanently invisible
+   // tabs and keeps visible tabs in their original DOM order.
+   sessions.scrollLeft=0;
+   const width=Math.max(0,Math.min(consumed,available));
+   for(const [property,value] of [
+    ['flex','0 0 '+width+'px'],
+    ['width',width+'px'],
+    ['max-width',width+'px']
+   ])sessions.style.setProperty(property,value,'important');
+   overflowPopup.replaceChildren();
+   for(const index of hidden){
+    const [id,tab]=tabs[index];
+    if(!tab)continue;
     const entry=document.createElement('button');
     entry.type='button';entry.className='pynix-overflow-entry';
     entry.setAttribute('role','menuitem');
@@ -250,33 +254,17 @@ TERMINAL_DOCK_JS = r"""
      }else{activeId=id;paintSessions();paintShell();}
     });
     overflowPopup.appendChild(entry);
-   });
-   // Force a useful menu if WKWebView clipped the whole last tab before the
-   // child geometry was available. This cannot happen for a fitting strip.
-   if(needsOverflow&&hiddenCount===0&&allTabs.length>1){
-    const [id,tab]=allTabs[0];
-    const entry=document.createElement('button');
-    entry.type='button';entry.className='pynix-overflow-entry';
-    entry.setAttribute('role','menuitem');entry.textContent=tab.label;
-    entry.addEventListener('click',()=>{
-     overflow.open=false;
-     if(scope==='pynix'){pynixId=id;paintSessions();paintPynix();}
-     else{activeId=id;paintSessions();paintShell();}
-    });
-    overflowPopup.appendChild(entry);hiddenCount=1;
    }
-   // Menu visibility follows missing tabs (including fully offscreen
-   // sessions such as Local and Local 2 when Local 7 is selected).
-   const hasInvisibleTabs=hiddenCount>0;
-   show(hasInvisibleTabs);
-   overflowToggle.dataset.hint='More Tabs ('+hiddenCount+')';
+   const visible=hidden.length>0;
+   setArrow(visible);
+   overflowToggle.dataset.hint='More Tabs ('+hidden.length+')';
+   header.dataset.overflowTabs=String(visible);
    tabOverflowDebug={
-    scope,tabs:items.length,headerWidth:header.clientWidth,
-    capacity,natural,stripWidth:sessions.clientWidth,
-    hidden:overflowPopup.children.length,
-    visible:hasInvisibleTabs,arrow:overflow.getBoundingClientRect().width
+    scope,tabs:items.length,natural,available,consumed,shown:[...shown],
+    hidden:hidden.map(index=>tabs[index][1].label),
+    arrowVisible:visible,arrowWidth:overflow.getBoundingClientRect().width,
+    firstVisible:items.find(item=>!item.hidden)?.textContent||''
    };
-   header.dataset.overflowTabs=String(hasInvisibleTabs);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
