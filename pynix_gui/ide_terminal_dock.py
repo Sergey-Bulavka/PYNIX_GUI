@@ -201,7 +201,7 @@ TERMINAL_DOCK_JS = r"""
   };
   const isVisible=()=>!terminal.classList.contains('pynix-tool-window-collapsed');
   const publish=()=>{
-   const detail={scope,visible:isVisible()};
+   const detail={scope,tool:selectedTool,visible:isVisible()};
    window.dispatchEvent(new CustomEvent('pynix:terminal-change',{detail}));
   };
   const sync=()=>{
@@ -231,8 +231,31 @@ TERMINAL_DOCK_JS = r"""
    if(id==='pynix'&&!pynixTabs.size)createPynixTab();
    if(id==='system')system.input.focus();else pynix.input.focus();
   };
+  const showRun=()=>{
+   // Run is a bottom tool window. Never click a left rail proxy: its
+   // gallery handler replaces the Project explorer DOM.
+   scope='other';
+   activateToolView('TERMINAL');
+   if(toolTabs){
+    for(const tab of toolTabs.children){
+     const selected=tab.textContent.trim()==='TERMINAL'&&tab.getAttribute('role')==='tab';
+     if(tab.getAttribute('role')==='tab'){
+      tab.classList.toggle('pynix-active-tab',selected);
+      tab.setAttribute('aria-selected',String(selected));
+     }
+    }
+   }
+   debugPanelBar.hidden=true;
+   setToolWindowVisible(true);
+  };
+  const toggleRun=()=>{
+   if(scope==='other'&&selectedTool==='TERMINAL'&&isVisible())
+    setToolWindowVisible(false);
+   else showRun();
+  };
   window.pynixTerminalDock={
-   sync,select,state:()=>({scope,visible:isVisible()}),
+   sync,select,showRun,toggleRun,
+   state:()=>({scope,tool:selectedTool,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
    setRunState:running=>{
     if(running)hadRun=true;
