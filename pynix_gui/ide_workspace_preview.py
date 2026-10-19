@@ -1034,7 +1034,7 @@ __PYNIX_DISPLAY_LEXER__
      window.alert('Open a .pnx or .py file before running.');return;
    }
    if(isFile){
-     if(!/\\.(pnx|py)$/i.test(source)||!byName.has(source)){
+     if(!/\.(pnx|py)$/i.test(source)||!byName.has(source)){
        window.alert('Run supports saved .pnx and .py project files.');return;
      }
      if(byName.get(source).dirty){
