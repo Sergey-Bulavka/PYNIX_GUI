@@ -1125,7 +1125,8 @@ CHROME_SCRIPT = r"""<script>
   popup.className='pynix-config-options';popup.hidden=true;
   popup.setAttribute('role','menu');
   const options=[
-   ['run','Current File'],
+   ['file','Current File'],
+   ['run','Run Project'],
    ['check','Check Project'],
   ];
   const close=()=>{
@@ -1134,7 +1135,8 @@ CHROME_SCRIPT = r"""<script>
   };
   const sync=()=>{
    const value=select.value;
-   name.textContent=value==='check'?'Check Project':'Current File';
+   name.textContent=value==='check'?'Check Project':
+    value==='run'?'Run Project':'Current File';
    button.dataset.pynixTooltip='Run configuration: '+name.textContent;
    button.setAttribute('aria-label',button.dataset.pynixTooltip);
    for(const item of popup.children)
