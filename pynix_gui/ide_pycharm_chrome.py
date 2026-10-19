@@ -1219,7 +1219,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-option-mark{
  display:inline-flex!important;align-items:center!important;justify-content:center!important;
  flex:0 0 20px!important;width:20px!important;height:20px!important;
- color:#c8cbd4!important;font-size:18px!important;font-weight:500!important
+ color:#c8cbd4!important;font-size:13px!important;font-weight:400!important
 }
 .workspace-mode .pynix-services-option-label{
  min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
@@ -1227,16 +1227,14 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-option-shortcut{
  margin-left:auto;color:#888c96;font-size:13px;white-space:nowrap
 }
-.workspace-mode .pynix-services-option-mark svg{
- display:block!important;flex:0 0 20px!important;
- width:20px!important;height:20px!important;
- max-width:20px!important;max-height:20px!important
-}
+.workspace-mode .pynix-services-option-mark>svg,
 .workspace-mode .pynix-services-option-arrow{
- display:block!important;margin-left:auto!important;
- flex:0 0 18px!important;width:18px!important;height:18px!important;
- max-width:18px!important;max-height:18px!important
+ display:block!important;flex:0 0 16px!important;
+ width:16px!important;height:16px!important;
+ min-width:16px!important;min-height:16px!important;
+ max-width:16px!important;max-height:16px!important
 }
+.workspace-mode .pynix-services-option-arrow{margin-left:auto!important}
 .workspace-mode .pynix-services-options-divider{
  height:1px!important;min-height:1px!important;flex:0 0 1px!important;
  background:#45474e!important;margin:3px 5px!important
