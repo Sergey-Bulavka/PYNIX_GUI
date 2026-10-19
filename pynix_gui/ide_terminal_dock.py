@@ -84,7 +84,12 @@ TERMINAL_DOCK_JS = r"""
    display:flex!important;align-items:center!important;justify-content:center!important;
    visibility:hidden!important;pointer-events:none!important
   }
-  .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs,
+  /* Keep the class selector separate: unsupported :has must never
+     invalidate the primary visibility rule on older WebKit builds. */
+  .workspace-mode .integrated-terminal .pynix-tab-overflow-control.has-hidden-tabs{
+   display:flex!important;visibility:visible!important;
+   opacity:1!important;pointer-events:auto!important
+  }
   .workspace-mode .integrated-terminal .pynix-terminal-dock-bar:has(.pynix-terminal-session-tab[hidden]) .pynix-tab-overflow-control{
    display:flex!important;visibility:visible!important;
    opacity:1!important;pointer-events:auto!important
