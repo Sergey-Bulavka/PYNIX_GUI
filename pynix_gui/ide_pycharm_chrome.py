@@ -1447,6 +1447,37 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  .workspace-mode .pynix-services-sidebar{flex-basis:42%;min-width:170px}
  .workspace-mode .pynix-services-field{grid-template-columns:90px minmax(0,1fr)}
 }
+
+/* The titlebar gear opens a popup; it is not an alias for a tool-rail button. */
+.pynix-ide-gear-menu{
+ position:fixed!important;z-index:100100!important;box-sizing:border-box!important;
+ width:254px!important;max-width:calc(100vw - 16px)!important;
+ padding:5px!important;background:#292b31!important;
+ border:1px solid #555862!important;border-radius:9px!important;
+ box-shadow:0 12px 30px #0009!important;
+ color:#d7d9df!important;font:13px/18px -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important
+}
+.pynix-ide-gear-menu[hidden]{display:none!important}
+.pynix-ide-gear-item{
+ display:flex!important;box-sizing:border-box!important;align-items:center!important;
+ width:100%!important;height:30px!important;padding:0 9px!important;
+ text-align:left!important;gap:10px!important;
+ border:0!important;border-radius:5px!important;
+ background:transparent!important;color:#d7d9df!important;
+ font:400 13px/18px -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ cursor:pointer!important
+}
+.pynix-ide-gear-item:hover:not(:disabled),
+.pynix-ide-gear-item:focus-visible{background:#315182!important}
+.pynix-ide-gear-item:disabled{opacity:.44!important;cursor:default!important}
+.pynix-ide-gear-item svg{
+ display:block!important;flex:0 0 16px!important;width:16px!important;height:16px!important
+}
+.pynix-ide-gear-symbol{display:inline-flex!important;align-items:center!important;
+ justify-content:center!important;flex:0 0 16px!important;width:16px!important}
+.pynix-ide-gear-caption{flex:1;min-width:0}
+.pynix-ide-gear-shortcut{color:#9a9da7;white-space:nowrap}
+.pynix-ide-gear-divider{height:1px!important;margin:5px 4px!important;background:#43464f!important}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
@@ -1703,10 +1734,85 @@ CHROME_SCRIPT = r"""<script>
    'Search Everywhere ⇧ ⇧','Searches for:',
    '- Classes','- Files','- Tool Windows','- Actions','- Settings'
   ].join('\n');
-  const settings=toolButton('IDE and Project Settings','general/settings',()=>{
-   document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();
-  });
+  const settings=toolButton('IDE and Project Settings','general/settings',()=>{});
   settings.classList.add('pynix-ide-settings');
+  settings.setAttribute('aria-haspopup','menu');
+  settings.setAttribute('aria-expanded','false');
+  const gearMenu=document.createElement('div');
+  gearMenu.className='pynix-ide-gear-menu';
+  gearMenu.setAttribute('role','menu');
+  gearMenu.setAttribute('aria-label','IDE and Project Settings');
+  gearMenu.hidden=true;
+  document.body.appendChild(gearMenu);
+  const openSettings=(page='Editor')=>{
+   const bridge=window.webkit?.messageHandlers?.pynixIDEWindow;
+   if(bridge){bridge.postMessage({action:'open-settings',page});}
+   else window.alert('Settings window requires the native PYNIX IDE on macOS.');
+  };
+  const gearItem=(label,callback,{icon,shortcut,disabled}={})=>{
+   const button=document.createElement('button');
+   button.type='button';button.className='pynix-ide-gear-item';
+   button.setAttribute('role','menuitem');
+   button.disabled=!!disabled;
+   const leading=document.createElement('span');leading.className='pynix-ide-gear-symbol';
+   const glyph=icon?makeIcon(icon):null;
+   if(glyph)leading.appendChild(glyph);
+   const caption=document.createElement('span');caption.className='pynix-ide-gear-caption';
+   caption.textContent=label;
+   button.append(leading,caption);
+   if(shortcut){
+    const hint=document.createElement('span');hint.className='pynix-ide-gear-shortcut';
+    hint.textContent=shortcut;button.appendChild(hint);
+   }
+   button.addEventListener('click',()=>{
+    gearMenu.hidden=true;settings.setAttribute('aria-expanded','false');
+    if(callback)callback();
+   });
+   gearMenu.appendChild(button);
+   return button;
+  };
+  const gearDivider=()=>{
+   const item=document.createElement('div');item.className='pynix-ide-gear-divider';
+   item.setAttribute('role','separator');gearMenu.appendChild(item);
+  };
+  gearItem('PYNIX IDE · __IDE_VERSION__',null,{disabled:true});
+  gearDivider();
+  gearItem('Run Anything…',()=>window.pynixOpenSearchEverywhere?.());
+  gearDivider();
+  gearItem('Settings…',()=>openSettings('Editor'),{
+   icon:'general/settings',shortcut:'⌘,'
+  });
+  gearItem('Plugins…',null,{disabled:true});
+  gearDivider();
+  gearItem('Backup and Sync…',null,{disabled:true});
+  gearDivider();
+  gearItem('Theme…',()=>openSettings('Appearance'));
+  gearItem('Keymap…',()=>openSettings('Keymap'));
+  gearItem('View Mode…',null,{disabled:true});
+  gearDivider();
+  gearItem('Customize Main Toolbar',null,{disabled:true});
+  const dismissGear=()=>{
+   gearMenu.hidden=true;settings.setAttribute('aria-expanded','false');
+  };
+  settings.addEventListener('click',()=>{
+   const next=gearMenu.hidden;
+   if(!next){dismissGear();return;}
+   gearMenu.hidden=false;settings.setAttribute('aria-expanded','true');
+   const r=settings.getBoundingClientRect();
+   const w=gearMenu.offsetWidth||254,h=gearMenu.offsetHeight||340;
+   gearMenu.style.left=Math.max(8,Math.min(r.right-w,innerWidth-w-8))+'px';
+   gearMenu.style.top=Math.max(8,Math.min(r.bottom+5,innerHeight-h-8))+'px';
+  });
+  document.addEventListener('pointerdown',event=>{
+   if(!gearMenu.hidden&&!gearMenu.contains(event.target)&&
+      !settings.contains(event.target))dismissGear();
+  });
+  document.addEventListener('keydown',event=>{
+   if(event.key==='Escape'&&!gearMenu.hidden){dismissGear();settings.focus();}
+   if(event.key===','&&event.metaKey&&!event.shiftKey&&!event.altKey){
+    event.preventDefault();dismissGear();openSettings('Editor');
+   }
+  },true);
   const updateSettingsIndicator=()=>{
    // The signal is false until a real update service explicitly sets it.
    const available=window.pynixIDEUpdatesAvailable===true;
