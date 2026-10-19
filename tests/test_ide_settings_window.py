@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -21,7 +22,8 @@ def test_settings_defaults_and_versioned_persistence_are_user_scoped(tmp_path):
     assert store.write(desired) == desired
     assert store.read() == desired
     assert json.loads(file.read_text(encoding="utf-8")) == desired
-    assert file.stat().st_mode & 0o077 == 0
+    if os.name == "posix":
+        assert file.stat().st_mode & 0o077 == 0
 
 
 @pytest.mark.parametrize("bad", [
