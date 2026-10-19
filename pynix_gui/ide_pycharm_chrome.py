@@ -1186,20 +1186,87 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-fill{flex:1 1 auto}
 .workspace-mode .pynix-services-header{position:relative!important}
 .workspace-mode .pynix-services-pane.hide-tree .pynix-services-sidebar{display:none!important}
+/* JetBrains Services Options is portaled above the dock, never clipped. */
 .workspace-mode .pynix-services-options-menu{
- position:absolute;top:38px;right:48px;z-index:30;min-width:208px;
- background:#2b2e35;border:1px solid #53565f;border-radius:7px;
- box-shadow:0 8px 24px #000a;padding:5px;display:flex;flex-direction:column
+ position:fixed!important;top:0;left:0;right:auto!important;
+ box-sizing:border-box!important;z-index:99999!important;
+ width:322px!important;min-width:322px!important;max-width:calc(100vw - 16px)!important;
+ max-height:calc(100vh - 16px)!important;overflow-y:auto!important;
+ background:#282a2f!important;border:1px solid #595b62!important;
+ border-radius:9px!important;box-shadow:0 9px 28px #000b!important;
+ padding:6px!important;display:flex!important;flex-direction:column!important;
+ color:#d5d7df!important;font:400 13px/18px -apple-system,system-ui,sans-serif!important
 }
 .workspace-mode .pynix-services-options-menu[hidden]{display:none!important}
 .workspace-mode .pynix-services-options-menu button{
+ box-sizing:border-box!important;width:100%!important;height:31px!important;
+ min-width:0!important;min-height:31px!important;
  border:0!important;background:transparent!important;color:#d7d9df!important;
- font:13px/1.25 -apple-system,system-ui,sans-serif!important;
- padding:8px 10px!important;text-align:left!important;
- width:auto!important;height:auto!important;min-width:0!important;
- justify-content:flex-start!important;cursor:pointer;border-radius:5px
+ font:400 13px/18px -apple-system,system-ui,sans-serif!important;
+ padding:0 8px!important;text-align:left!important;
+ display:flex!important;align-items:center!important;gap:8px!important;
+ justify-content:flex-start!important;cursor:pointer;border-radius:5px!important
 }
-.workspace-mode .pynix-services-options-menu button:hover{background:#405270!important}
+.workspace-mode .pynix-services-options-menu button:hover:not(:disabled),
+.workspace-mode .pynix-services-options-menu .has-submenu:hover>button,
+.workspace-mode .pynix-services-options-menu .submenu-open>button{
+ background:#405270!important
+}
+.workspace-mode .pynix-services-options-menu button:disabled{
+ opacity:.42!important;cursor:default!important
+}
+.workspace-mode .pynix-services-option-wrap{position:relative;flex:0 0 auto}
+.workspace-mode .pynix-services-option-mark{
+ display:inline-flex!important;align-items:center!important;justify-content:center!important;
+ flex:0 0 18px!important;width:18px!important;height:18px!important;
+ color:#c8cbd4!important;font-size:14px!important
+}
+.workspace-mode .pynix-services-option-label{
+ min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.workspace-mode .pynix-services-option-shortcut{
+ margin-left:auto;color:#888c96;font-size:12px;white-space:nowrap
+}
+.workspace-mode .pynix-services-option-arrow{
+ margin-left:auto!important;flex:0 0 16px!important
+}
+.workspace-mode .pynix-services-option-mark svg,
+.workspace-mode .pynix-services-option-arrow{
+ display:block!important;flex:0 0 16px!important;
+ width:16px!important;height:16px!important;max-width:16px!important;max-height:16px!important
+}
+.workspace-mode .pynix-services-options-divider{
+ height:1px!important;min-height:1px!important;flex:0 0 1px!important;
+ background:#45474e!important;margin:5px 5px!important
+}
+.workspace-mode .pynix-services-submenu{
+ display:none!important;position:absolute!important;right:100%!important;left:auto!important;
+ top:-6px!important;z-index:100000!important;
+ width:190px!important;min-width:190px!important;box-sizing:border-box!important;
+ padding:6px!important;background:#282a2f!important;border:1px solid #595b62!important;
+ border-radius:8px!important;box-shadow:0 9px 24px #000a!important
+}
+.workspace-mode .pynix-services-option-wrap.has-submenu:hover>.pynix-services-submenu,
+.workspace-mode .pynix-services-option-wrap.has-submenu:focus-within>.pynix-services-submenu,
+.workspace-mode .pynix-services-option-wrap.submenu-open>.pynix-services-submenu{
+ display:block!important
+}
+.workspace-mode .pynix-services-pane.hide-toolbar .pynix-services-toolbar{
+ display:none!important
+}
+/* Header actions are contextual, just like PyCharm tool-window chrome. */
+.workspace-mode .pynix-services-pane .pynix-services-header>button[data-sv="refresh"],
+.workspace-mode .pynix-services-pane .pynix-services-header>button[data-sv="options"],
+.workspace-mode .pynix-services-pane .pynix-services-header>button[data-sv="hide"]{
+ opacity:0!important;visibility:hidden!important;
+ pointer-events:none!important;transition:opacity 120ms ease!important
+}
+.workspace-mode .pynix-services-pane:hover .pynix-services-header>button[data-sv="refresh"],
+.workspace-mode .pynix-services-pane:hover .pynix-services-header>button[data-sv="options"],
+.workspace-mode .pynix-services-pane:hover .pynix-services-header>button[data-sv="hide"],
+.workspace-mode .pynix-services-pane .pynix-services-header>button:focus-visible{
+ opacity:1!important;visibility:visible!important;pointer-events:auto!important
+}
 .workspace-mode .pynix-services-header button,
 .workspace-mode .pynix-services-toolbar>button{
  box-sizing:border-box!important;
