@@ -352,7 +352,21 @@ SERVICES_DOCK_JS = r"""
    button.append(mark,text);
    if(config.shortcut){
     const hint=document.createElement('span');hint.className='pynix-services-option-shortcut';
-    hint.textContent=config.shortcut;button.appendChild(hint);
+    if(config.shortcut==='⇧⌘T'){
+     // These are macOS keyboard modifiers, not toolbar SVG icons.
+     // Isolate each glyph so JetBrains-like metrics don't depend on
+     // WebKit kerning a mixed-symbol text run as a single font fallback.
+     hint.classList.add('pynix-services-shortcut-keys');
+     hint.setAttribute('aria-label','Shift Command T');
+     for(const [key,glyph] of [['shift','⇧'],['command','⌘'],['letter','T']]){
+      const part=document.createElement('span');
+      part.className='pynix-services-shortcut-key pynix-services-shortcut-'+key;
+      part.textContent=glyph;
+      part.setAttribute('aria-hidden','true');
+      hint.appendChild(part);
+     }
+    }else hint.textContent=config.shortcut;
+    button.appendChild(hint);
    }
    if(config.submenu){
     row.classList.add('has-submenu');
