@@ -344,7 +344,9 @@ def test_services_options_use_original_consistent_16px_jetbrains_icons():
     assert "height:36px!important" not in menu
     assert "font:400 13px/18px" in menu
     assert "width:322px!important" in menu
-    assert "margin-left:auto;color:#888c96;font-size:13px" in menu
+    shortcut = menu.split(".workspace-mode .pynix-services-option-shortcut{")[1].split("}")[0]
+    assert "margin-left:auto;flex:0 0 auto;color:#888c96;" in shortcut
+    assert "font:400 13px/16px" in shortcut
     assert "padding:4px!important;display:flex!important" in menu
     assert "background:#45474e!important;margin:3px 5px!important" in menu
 
