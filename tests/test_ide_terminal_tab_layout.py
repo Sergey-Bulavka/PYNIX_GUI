@@ -138,3 +138,14 @@ def test_options_exposes_native_layout_diagnostics():
     assert "arrowDisplay:getComputedStyle(overflow).display" in TERMINAL_DOCK_JS
     assert "arrowVisibility:getComputedStyle(overflow).visibility" in TERMINAL_DOCK_JS
     assert "[Tab layout]" in TERMINAL_DOCK_JS
+
+
+def test_native_final_layout_pass_reconciles_menu_and_arrow():
+    # Fully hidden tabs must remain selectable even when WebKit resolves
+    # flex measurements after the initial requestAnimationFrame.
+    assert "const hiddenNow=[...sessions.children].map((el,i)=>({el,i}))" in TERMINAL_DOCK_JS
+    assert "return el.hidden||rect.right<box.left-0.5||rect.left>box.right+0.5" in TERMINAL_DOCK_JS
+    assert "entry.dataset.sessionId=id;" in TERMINAL_DOCK_JS
+    assert "overflowPopup.appendChild(entry);existing.add(id);" in TERMINAL_DOCK_JS
+    assert "setOverflow([...overflowPopup.children]);" in TERMINAL_DOCK_JS
+    assert "tabOverflowDebug.hidden=[...overflowPopup.children].map(el=>el.textContent);" in TERMINAL_DOCK_JS
