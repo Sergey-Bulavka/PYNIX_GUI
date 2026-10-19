@@ -202,7 +202,7 @@ class ProjectServices:
             request = urllib.request.Request(
                 profile["url"], headers={"Accept": "text/event-stream",
                                           "Cache-Control": "no-cache"})
-            with self._opener.open(request, timeout=20) as response:
+            with self._opener.open(request, timeout=3600) as response:
                 with self._lock:
                     if stopped.is_set():
                         return
