@@ -44,7 +44,9 @@ PACKAGES_DOCK_JS = r"""
   const packageSearch=packagePart('search'),packageList=packagePart('list');
   const packageStatus=packagePart('status');
   let packageLoaded=false,packageBusy=false,packageName='',packageInstalled=[];
-  let packageSerial=0,packagePendingDetails=0;
+  let packageSerial=0,packagePendingDetails=0,packagePendingOutdated=0;
+  let packageUpdates=new Map();
+  const packageKey=name=>String(name||'').toLowerCase().replace(/[-_.]+/g,'-');
   const packageSend=(action,name,version)=>{
     const native=window.webkit?.messageHandlers?.pynixPackages;
     if(!native){
@@ -58,13 +60,16 @@ PACKAGES_DOCK_JS = r"""
     packageBusy=value;
     for(const key of ['install','upgrade','uninstall','pypi','refresh'])
       packagePart(key).disabled=value;
+    packageListRender();
   };
   const packageListRender=()=>{
     packageList.replaceChildren();
     const search=packageSearch.value.toLowerCase().trim();
     const entries=packageInstalled.filter(item=>item.name.toLowerCase().includes(search));
     for(const item of entries){
-      const row=document.createElement('button');row.type='button';
+      // A row is not a button: it has an independent Update button.
+      // Keep click/keyboard selection without nesting interactive controls.
+      const row=document.createElement('div');row.tabIndex=0;
       row.className='pynix-packages-item';row.setAttribute('role','option');
       row.setAttribute('aria-selected',String(item.name===packageName));
       const ico=document.createElement('span');ico.className='pynix-packages-cube';
@@ -75,7 +80,29 @@ PACKAGES_DOCK_JS = r"""
       const name=document.createElement('span');name.className='pynix-packages-item-name';name.textContent=item.name;
       const version=document.createElement('span');version.className='pynix-packages-item-version';version.textContent=item.version;
       row.append(ico,name,version);
+      const update=packageUpdates.get(packageKey(item.name));
+      if(update){
+        const button=document.createElement('button');
+        button.type='button';button.className='pynix-packages-update';
+        button.disabled=packageBusy;
+        button.title='Update '+item.name+' ('+item.version+' → '+update.latestVersion+')';
+        button.setAttribute('aria-label',button.title);
+        button.innerHTML='<svg viewBox="0 0 20 20" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+          '<circle cx="10" cy="10" r="8"></circle>'+
+          '<path d="M10 5.5v9M6.5 11l3.5 3.5 3.5-3.5"></path></svg>';
+        button.addEventListener('click',event=>{
+          event.stopPropagation();
+          packageChange('upgrade',item.name);
+        });
+        row.appendChild(button);
+      }
       row.addEventListener('click',()=>packageSelect(item.name));
+      row.addEventListener('keydown',event=>{
+        if(event.target!==row)return;
+        if(event.key==='Enter'||event.key===' '){
+          event.preventDefault();packageSelect(item.name);
+        }
+      });
       packageList.appendChild(row);
     }
     if(!entries.length){
@@ -96,6 +123,10 @@ PACKAGES_DOCK_JS = r"""
   };
   const packageRefresh=()=>{
     if(packageBusy)return;
+    // Avoid displaying outdated arrows from a previous installation state.
+    packageUpdates.clear();
+    packagePendingOutdated=0;
+    packageListRender();
     packageStatus.textContent='Reading packages from project .venv…';
     packageSend('list');
   };
@@ -112,16 +143,16 @@ PACKAGES_DOCK_JS = r"""
   };
   packageSearch.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();packageLookUp();}});
   packagePart('pypi').addEventListener('click',packageLookUp);
-  const packageChange=action=>{
-    if(!packageName||packageBusy)return;
+  const packageChange=(action,targetName=packageName)=>{
+    if(!targetName||packageBusy)return;
     const version=packagePart('version').value;
     const message=(action==='uninstall'?'Uninstall':action==='upgrade'?'Upgrade':'Install')+
-      ' '+packageName+(action==='install'&&version?' '+version:'')+
+      ' '+targetName+(action==='install'&&version?' '+version:'')+
       ' in this project .venv?';
     if(!window.confirm(message))return;
     packageBusySet(true);
-    packageStatus.textContent='Running pip '+action+' for '+packageName+'…';
-    if(!packageSend(action,packageName,action==='install'?version:''))
+    packageStatus.textContent='Running pip '+action+' for '+targetName+'…';
+    if(!packageSend(action,targetName,action==='install'?version:''))
       packageBusySet(false);
   };
   for(const action of ['install','upgrade','uninstall'])
@@ -135,8 +166,12 @@ PACKAGES_DOCK_JS = r"""
         item&&typeof item.name==='string'&&typeof item.version==='string'):[];
       packagePart('interpreter').textContent=result.interpreter||'Project .venv';
       packagePart('interpreter').title=result.interpreter||'Project .venv';
-      packageStatus.textContent=packageInstalled.length+' installed packages';
+      packageStatus.textContent=packageInstalled.length+' installed packages · checking updates…';
       packageListRender();
+      // Ask pip asynchronously which packages are outdated; installed rows
+      // remain usable while the network-dependent check runs.
+      packagePendingOutdated=packageSerial+1;
+      if(!packageSend('outdated'))packagePendingOutdated=0;
       // Refresh action buttons immediately after install / uninstall.
       if(packageName&&!packagePart('details').hidden){
         const present=packageInstalled.some(x=>x.name.toLowerCase()===packageName.toLowerCase());
@@ -144,6 +179,25 @@ PACKAGES_DOCK_JS = r"""
         packagePart('upgrade').hidden=!present;
         packagePart('uninstall').hidden=!present;
       }
+      return;
+    }
+    if(result.action==='outdated'){
+      if(result.requestId!==packagePendingOutdated||!packagePendingOutdated)return;
+      packagePendingOutdated=0;
+      packageUpdates.clear();
+      if(result.error){
+        packageStatus.textContent=packageInstalled.length+' installed packages · update check unavailable';
+      }else{
+        const updates=Array.isArray(result.updates)?result.updates:[];
+        for(const item of updates){
+          if(item&&typeof item.name==='string'&&typeof item.latestVersion==='string')
+            packageUpdates.set(packageKey(item.name),item);
+        }
+        const count=packageInstalled.filter(item=>packageUpdates.has(packageKey(item.name))).length;
+        packageStatus.textContent=packageInstalled.length+' installed packages'+
+          (count?' · '+count+' updates available':' · up to date');
+      }
+      packageListRender();
       return;
     }
     if(result.action==='details'){
