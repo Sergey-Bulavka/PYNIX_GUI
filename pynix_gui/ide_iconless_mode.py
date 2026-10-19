@@ -50,7 +50,8 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
    Keep this opt-in narrow so the rest of iconless chrome stays unchanged. */
 .workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-search-icon>svg,
 .workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-pypi>svg,
-.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-cube>svg {
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-cube>svg,
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-update>svg {
  display:block!important;
  visibility:visible!important;
  opacity:1!important;
@@ -61,7 +62,8 @@ ICONLESS_STYLE = """<style id="pynix-iconless-style">
  width:16px!important;height:16px!important;
  min-width:16px!important;min-height:16px!important;
 }
-.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-pypi>svg {
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-pypi>svg,
+.workspace-mode.pynix-iconless .pynix-packages-pane .pynix-packages-update>svg {
  width:20px!important;height:20px!important;
  min-width:20px!important;min-height:20px!important;
 }
