@@ -47,3 +47,14 @@ def test_replace_uses_native_command_option_f():
     source = Path(__import__("pynix_gui.ide_native_menu", fromlist=["__file__"]).__file__).read_text(encoding="utf-8")
     assert 'if command == "edit.replace":' in source
     assert "mask |= appkit.NSEventModifierFlagOption" in source
+
+
+def test_native_app_menu_opens_same_separate_settings_window_with_command_comma():
+    from pynix_gui import ide_native_menu
+    source = Path(ide_native_menu.__file__).read_text(encoding="utf-8")
+    assert 'if command == "ide.settings":' in source
+    assert '"window.pynixOpenSettingsWindow?.(\'Editor\');"' in source
+    assert '"Settings…", "activate:", ","' in source
+    assert 'settings_item.setRepresentedObject_("ide.settings")' in source
+    assert 'settings_item.setKeyEquivalentModifierMask_(appkit.NSEventModifierFlagCommand)' in source
+    assert 'app_menu.addItem_(appkit.NSMenuItem.separatorItem())' in source
