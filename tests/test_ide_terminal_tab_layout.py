@@ -34,7 +34,7 @@ def test_right_side_actions_remain_pinned_to_trailing_edge():
 
 
 def test_overflow_keeps_active_tab_visible_and_has_svg_chevron():
-    assert "include(activeIndex)" in TERMINAL_DOCK_JS
+    assert "const activeItem=items.find(item=>item.classList.contains('active'))" in TERMINAL_DOCK_JS
     assert "entry.setAttribute('role','menuitem')" in TERMINAL_DOCK_JS
     assert 'overflowToggle.innerHTML=\'<svg viewBox="0 0 16 16"' in TERMINAL_DOCK_JS
     assert ".pynix-terminal-session-tab[hidden]{display:none!important}" in TERMINAL_DOCK_JS
