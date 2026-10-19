@@ -205,13 +205,15 @@ TERMINAL_DOCK_JS = r"""
    window.dispatchEvent(new CustomEvent('pynix:terminal-change',{detail}));
   };
   __PYNIX_PACKAGES_DOCK__
+  __PYNIX_SERVICES_DOCK__
   const sync=()=>{
    const visible=isVisible();
    system.panel.hidden=!visible||scope!=='system';
    pynix.panel.hidden=!visible||scope!=='pynix';
    toolConsole.hidden=scope!=='other';
    packagesPane.hidden=!(visible&&scope==='packages');
-   header.hidden=visible&&scope==='packages';
+   servicesPane.hidden=!(visible&&scope==='services');
+   header.hidden=visible&&(scope==='packages'||scope==='services');
    const legacy=document.querySelectorAll('.workspace-mode .rail>.rail-item')[4];
    legacy?.classList.toggle('active',visible&&scope==='system');
    legacy?.setAttribute('aria-pressed',String(visible&&scope==='system'));
@@ -227,13 +229,15 @@ TERMINAL_DOCK_JS = r"""
    publish();
   };
   const select=id=>{
-   if(!['system','pynix','packages'].includes(id))return;
+   if(!['system','pynix','packages','services'].includes(id))return;
    if(scope===id&&isVisible()){setToolWindowVisible(false);return;}
    scope=id;setToolWindowVisible(true);
    if(id==='packages')packagesOnShow();
+   if(id==='services')servicesOnShow();
    if(id==='system'&&!shellTabs.size)createShell(defaultShell);
    if(id==='pynix'&&!pynixTabs.size)createPynixTab();
-   if(id==='system')system.input.focus();else pynix.input.focus();
+   if(id==='system')system.input.focus();
+   else if(id==='pynix')pynix.input.focus();
   };
   const showRun=()=>{
    // Run is a bottom tool window. Never click a left rail proxy: its
@@ -258,8 +262,9 @@ TERMINAL_DOCK_JS = r"""
    else showRun();
   };
   const togglePackages=()=>select('packages');
+  const toggleServices=()=>select('services');
   window.pynixTerminalDock={
-   sync,select,showRun,toggleRun,togglePackages,
+   sync,select,showRun,toggleRun,togglePackages,toggleServices,
    state:()=>({scope,tool:selectedTool,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
    setRunState:running=>{
