@@ -21,6 +21,7 @@ SERVICES_JETBRAINS_ICON_NAMES = {
     "dropdown": "general/dropdown",
     "refresh": "general/locate",
     "settings": "general/settings",
+    "checked": "actions/checked",
     "chevronRight": "general/chevronRight",
     "help": "general/help",
     "options": "general/moreVertical",
@@ -341,7 +342,9 @@ SERVICES_DOCK_JS = r"""
     const svg=svIcon(config.icon);
     if(svg)mark.appendChild(svg);
    }else if(config.checked){
-    mark.textContent='✓';
+    // Check marks are also original 16px JetBrains New UI icons.
+    const check=svIcon('checked');
+    if(check)mark.appendChild(check);
     button.setAttribute('aria-checked','true');
    }else if(config.key)button.setAttribute('aria-checked','false');
    const text=document.createElement('span');
