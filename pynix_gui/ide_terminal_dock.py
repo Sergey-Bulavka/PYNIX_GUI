@@ -185,7 +185,9 @@ TERMINAL_DOCK_JS = r"""
     const padding=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
     const visible=[...header.children].filter(node=>
       node!==sessions&&getComputedStyle(node).display!=='none');
-    const fixed=visible.reduce((sum,node)=>sum+node.getBoundingClientRect().width,0);
+    // The elastic spacer expands into unused room. It is not reserved space.
+    const fixed=visible.reduce((sum,node)=>
+      sum+(node===gap?0:node.getBoundingClientRect().width),0);
     // n visible peers plus the session strip means n flex gaps.
     return Math.max(0,header.clientWidth-padding-fixed-gap*visible.length);
    };
