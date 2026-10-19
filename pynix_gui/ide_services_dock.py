@@ -136,8 +136,13 @@ SERVICES_DOCK_JS = r"""
   };
   svApplyPreferences();
   const svcSelectedActive=()=>{
-   if(svPreferences.alwaysSelectActive)
-    sv('tree').querySelector('.pynix-services-item[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
+   sv('tree').querySelector('.pynix-services-item[aria-selected="true"]')?.scrollIntoView({block:'nearest'});
+  };
+  const svSelectItem=id=>{
+   svSelected=id;
+   for(const item of sv('tree').querySelectorAll('.pynix-services-item'))
+    item.setAttribute('aria-selected',String(item.dataset.serviceId===id));
+   svDetail();
   };
   const svSend=(action,extra={})=>{
    const bridge=window.webkit?.messageHandlers?.pynixServices;
@@ -265,6 +270,7 @@ SERVICES_DOCK_JS = r"""
      const button=document.createElement('button');button.type='button';
      button.className='pynix-services-item';
      button.setAttribute('role','treeitem');
+     button.dataset.serviceId=item.id;
      button.setAttribute('aria-selected',String(item.id===svSelected));
      const icon=document.createElement('span');icon.className='pynix-services-item-icon';
      const typeIcon=svIcon(item.type==='run'?'run':'mcp');
@@ -276,10 +282,10 @@ SERVICES_DOCK_JS = r"""
      state.title=item.state||'';
      button.append(icon,name,state);
      button.addEventListener('click',()=>{
-      if(svPreferences.singleClick){svSelected=item.id;svDraw();}
+      if(svPreferences.singleClick)svSelectItem(item.id);
      });
      button.addEventListener('dblclick',()=>{
-      svSelected=item.id;svDraw();
+      svSelectItem(item.id);
       if(item.type==='run'&&svPreferences.doubleClickRun)
        svRunConfiguration(item.id.slice(4));
      });
@@ -482,8 +488,7 @@ SERVICES_DOCK_JS = r"""
     svProfiles=result.services;
     if(svPreferences.alwaysSelectActive){
      const active=svProfiles.find(item=>['connected','connecting'].includes(item.state));
-     if(active&&(!svSelected||!svItems().some(item=>item.id===svSelected)))
-      svSelected=active.id;
+     if(active&&svSelected!==active.id)svSelected=active.id;
     }
     svDraw();
    }
@@ -493,11 +498,21 @@ SERVICES_DOCK_JS = r"""
    const key=request?.source?'file':request?.mode;
    if(!['file','run','check'].includes(key))return;
    const previous=svRunStates.get(key)||{state:'idle',since:0};
-   if(state==='running')svRunStates.set(key,{state:'running',since:Date.now()});
+   if(state==='running'){
+    svRunStates.set(key,{state:'running',since:Date.now()});
+    if(svPreferences.alwaysSelectOpened&&svIncluded.has(key))
+     svSelected='run:'+key;
+   }
    if(['finished','error','idle'].includes(state))
     svRunStates.set(key,{state,since:previous.since});
    if(!servicesPane.hidden&&state!=='output'){svDraw();}
   };
+  window.addEventListener('pynix:terminal-change',event=>{
+   if(event.detail?.scope!=='services'||!event.detail?.visible){
+    optionsMenu.hidden=true;menu.hidden=true;
+    sv('options').setAttribute('aria-expanded','false');
+   }
+  });
   const servicesOnShow=()=>{svDraw();svRefresh();};
   window.setInterval(()=>{
    if(!servicesPane.hidden){svRefresh();svDetail();}
