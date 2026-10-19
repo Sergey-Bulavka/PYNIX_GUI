@@ -174,3 +174,51 @@ def test_service_profiles_do_not_accept_credentials_or_remote_plaintext(tmp_path
         with pytest.raises(ServicesError):
             registry.add("insecure", url)
     assert registry.list()["services"] == []
+
+
+def test_services_header_is_inside_rounded_dock_with_13px_regular_text():
+    root = Path(__file__).resolve().parents[1]
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    style = chrome.split("/* Services: split-tree tool window")[1].split("</style>")[0]
+
+    assert ".workspace-mode .integrated-terminal .pynix-services-pane{" in style
+    assert "width:100%!important;height:100%!important;min-width:0" in style
+    assert "border-radius:9px!important;overflow:hidden!important" in style
+    assert ".workspace-mode .integrated-terminal .pynix-services-header{" in style
+    assert "height:41px!important;min-height:41px!important;flex:0 0 41px!important" in style
+    assert "background:#1b1c1f!important;border-bottom:1px solid #36383e!important" in style
+    assert "border-radius:9px 9px 0 0!important" in style
+    assert ".workspace-mode .integrated-terminal .pynix-services-header strong{" in style
+    assert "font:400 13px/18px" in style
+    assert "font-size:15px" not in style
+    assert "font-size:12px" not in style
+    assert "font:600 12px" not in style
+    assert "font-size:13px!important" in style
+
+
+def test_services_icons_are_vector_based_and_survive_native_iconless_mode():
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "pynix_gui/ide_services_dock.py").read_text(encoding="utf-8")
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
+
+    assert "const svIcon=paths=>'<svg" in ui
+    assert "sv(key).innerHTML=svIcon(svIcons[key]);" in ui
+    assert "icon.innerHTML=svIcon(item.type==='run'?svIcons.run:svIcons.mcp);" in ui
+    for key in ("add", "group", "newMcp", "expand", "collapse",
+                "refresh", "options", "hide", "run", "mcp"):
+        assert key + ":" in ui or key + ":'" in ui
+    assert 'data-sv="newMcp"' in ui
+    assert "sv('newMcp').addEventListener('click',svAddMcp);" in ui
+    assert "menuAction('MCP SSE Connection…',svAddMcp);" in ui
+    assert "ico.textContent='◉'" not in ui
+    assert "data-sv=\"group\" title=\"Group by Type\">◉" not in ui
+    assert ".workspace-mode .pynix-services-header button>svg," in chrome
+    assert ".workspace-mode .pynix-services-toolbar>button>svg," in chrome
+    for selector in (
+        ".pynix-services-header button>svg",
+        ".pynix-services-toolbar>button>svg",
+        ".pynix-services-item-icon>svg",
+    ):
+        assert ".workspace-mode.pynix-iconless .pynix-services-pane " + selector in iconless
+    assert "display:block!important" in iconless
