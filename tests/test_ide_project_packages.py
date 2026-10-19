@@ -145,3 +145,28 @@ def test_package_controls_require_confirmation_and_use_safe_dom():
     assert "packageList.replaceChildren()" in ui
     assert "packagePart('version').value" in ui
     assert "noopener noreferrer" in ui
+
+
+def test_packages_icons_match_pycharm_search_install_and_package_list():
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "pynix_gui/ide_packages_dock.py").read_text(encoding="utf-8")
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+
+    # Replace platform-dependent Unicode glyphs with stable SVG geometry.
+    assert '<label class="pynix-packages-searchbox">' in ui
+    assert 'class="pynix-packages-search-icon"' in ui
+    assert '<circle cx="6.8" cy="6.8" r="4.6"></circle>' in ui
+    assert 'placeholder="Search for more packages"' in ui
+    assert 'class="pynix-packages-pypi"' in ui
+    assert 'M15.5 12.3v6.2M12.4 15.4h6.2' in ui
+    assert "ico.innerHTML='<svg viewBox=" in ui
+    assert 'M2 4.9 8 1.7l6 3.2v6.5' in ui
+    assert "ico.textContent='⬡'" not in ui
+    assert '>PyPI ↗</button>' not in ui
+
+    # Search box has a single focus frame; all three SVGs are centered.
+    assert ".pynix-packages-searchbox:focus-within{" in chrome
+    assert ".pynix-packages-search-icon svg," in chrome
+    assert ".pynix-packages-pypi svg," in chrome
+    assert ".pynix-packages-cube svg{" in chrome
+    assert "width:16px;height:16px;flex:0 0 16px;color:#4f8fff" in chrome
