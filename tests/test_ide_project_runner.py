@@ -113,8 +113,103 @@ def test_run_configuration_is_restricted_at_native_and_ui_boundaries():
     native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
     preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     assert 'if mode not in ("run", "check"):' in native
-    assert 'start_project_run(mode)' in native
+    assert 'start_project_run(mode, source)' in native
     assert "runModeSelect.setAttribute('aria-label','PYNIX run configuration')" in preview
     assert "['run','Run project']" in preview
     assert "['check','Check project']" in preview
-    assert "bridge.postMessage({action,mode:runModeSelect.value})" in preview
+    assert "bridge.postMessage({action,mode})" in preview
+    assert "bridge.postMessage(request)" in preview
+    assert "['file','Current File']" in preview
+    assert "const source=prior?(prior.source||null)" in preview
+
+
+def test_run_current_pynix_file_invokes_single_file_compiler(tmp_path, monkeypatch):
+    source = tmp_path / "src" / "main.pnx"
+    source.parent.mkdir()
+    source.write_text('print("hello")', encoding="utf-8")
+    python = tmp_path / "compiler_python"
+    python.write_text("", encoding="utf-8")
+    calls = []
+
+    class FakeProcess:
+        returncode = 0
+        stdout = StringIO("hello\\n")
+        def poll(self): return 0
+        def wait(self, timeout=None): return 0
+
+    monkeypatch.setattr(
+        "pynix_gui.ide_project_runner.subprocess.Popen",
+        lambda command, **kwargs: (calls.append((command, kwargs)) or FakeProcess()),
+    )
+    runner = ProjectRunner(tmp_path, python)
+    runner.start(source="src/main.pnx")
+    assert calls[0][0] == [
+        str(python), "-u", "-m", "compiler", "run", str(source), "--single-file"
+    ]
+    assert calls[0][1]["cwd"] == tmp_path
+    assert runner.collect()["exitCode"] == 0
+
+
+def test_run_current_python_file_uses_project_interpreter(tmp_path, monkeypatch):
+    script = tmp_path / "test_diagnostics.py"
+    script.write_text("print('OK')", encoding="utf-8")
+    venv_python = tmp_path / ".venv" / "bin" / "python"
+    venv_python.parent.mkdir(parents=True)
+    venv_python.write_text("", encoding="utf-8")
+    compiler_python = tmp_path / "compiler_python"
+    compiler_python.write_text("", encoding="utf-8")
+    calls = []
+
+    class FakeProcess:
+        returncode = 0
+        stdout = StringIO("OK\\n")
+        def poll(self): return 0
+        def wait(self, timeout=None): return 0
+
+    monkeypatch.setattr(
+        "pynix_gui.ide_project_runner.subprocess.Popen",
+        lambda command, **kwargs: (calls.append(command) or FakeProcess()),
+    )
+    runner = ProjectRunner(tmp_path, compiler_python)
+    runner.start(source="test_diagnostics.py")
+    assert calls == [[str(venv_python), "-u", str(script)]]
+    assert runner.collect()["output"] == "OK\\n"
+
+
+@pytest.mark.parametrize("source", [
+    "../outside.py", "/tmp/outside.py", "missing.pnx",
+    "project/config.toml", "main.pnx;rm -rf .", "",
+])
+def test_run_current_rejects_untrusted_source_paths(tmp_path, source):
+    python = tmp_path / "python"
+    python.write_text("", encoding="utf-8")
+    runner = ProjectRunner(tmp_path, python)
+    with pytest.raises(RunError):
+        runner.start(source=source)
+
+
+def test_run_current_rejects_symlink_outside_root(tmp_path):
+    source = tmp_path.parent / "external_run.py"
+    source.write_text("print('unsafe')", encoding="utf-8")
+    (tmp_path / "external.py").symlink_to(source)
+    python = tmp_path / "python"
+    python.write_text("", encoding="utf-8")
+    with pytest.raises(RunError):
+        ProjectRunner(tmp_path, python).start(source="external.py")
+
+
+def test_native_run_buttons_select_current_file_and_output_window():
+    root = Path(__file__).resolve().parents[1]
+    native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
+    preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
+    dock = (root / "pynix_gui/ide_terminal_dock.py").read_text(encoding="utf-8")
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    assert 'source not in available_sources' in native
+    assert 'start_project_run(mode, source)' in native
+    assert "window.pynixProjectRunResult=packet=>" in preview
+    assert "consoleTab?.click()" in preview
+    assert "runActions.hidden=!(scope==='other'&&selectedTool==='TERMINAL')" in dock
+    assert "document.querySelector('.pynix-stop-action')?.click()" in dock
+    assert "setRunState:running=>" in dock
+    assert "['file','Current File']" in chrome
+    assert "['run','Run Project']" in chrome
