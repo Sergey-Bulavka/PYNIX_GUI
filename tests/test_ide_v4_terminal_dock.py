@@ -16,7 +16,7 @@ def test_two_real_tool_window_actions_never_alias():
     assert EXISTING_ACTIONS["Terminal"]=="terminal:system"
     assert EXISTING_ACTIONS["PYNIX Terminal"]=="terminal:pynix"
     assert "window.pynixTerminalDock={" in TERMINAL_DOCK_JS
-    assert "state:()=>({scope,visible:isVisible()})" in TERMINAL_DOCK_JS
+    assert "state:()=>({scope,tool:selectedTool,visible:isVisible()})" in TERMINAL_DOCK_JS
     assert "window.dispatchEvent(new CustomEvent('pynix:terminal-change',{detail}))" in TERMINAL_DOCK_JS
     assert "const select=id=>{" in TERMINAL_DOCK_JS
     assert "scope===id&&isVisible()" in TERMINAL_DOCK_JS
@@ -25,8 +25,8 @@ def test_two_real_tool_window_actions_never_alias():
 def test_pycharm_shell_header_keeps_functional_buttons():
     for expected in (
         "title.className='pynix-terminal-dock-title'",
-        "newSession.title='New Tab (⌘T)'",
-        "newSession.addEventListener('click',()=>createShell(defaultShell))",
+        "newSession.dataset.hint='New Tab (⌘T)'",
+        "newSession.addEventListener('click',()=>{",
         "summary.className='pynix-terminal-dock-action pynix-terminal-shell-chevron'",
         "summary.innerHTML='<svg viewBox=",
         "for(const shell of ['bash','zsh'])",
