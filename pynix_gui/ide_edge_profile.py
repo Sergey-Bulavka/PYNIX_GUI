@@ -31,7 +31,7 @@ TOOL_WINDOW_PROFILE = (
     ("Run", "toolwindows/run", "left-bottom", "existing"),
     ("PYNIX Terminal", "pynix/pynix-terminal", "left-bottom", "existing"),
     ("PYNIX Packages", "pynix/pynix-packages", "left-bottom", "existing"),
-    ("Services", "toolwindows/services", "left-bottom", "unavailable"),
+    ("Services", "toolwindows/services", "left-bottom", "existing"),
     ("Terminal", "terminal/terminal", "left-bottom", "existing"),
     ("Problems", "toolwindows/problems", "left-bottom", "existing"),
     ("Git", "toolwindows/vcs", "left-bottom", "existing"),
@@ -87,6 +87,7 @@ EXISTING_ACTIONS = {
     "Version Control": "rail:2", "Run": "run-window",
     "PYNIX Terminal": "terminal:pynix",
     "PYNIX Packages": "packages-window",
+    "Services": "services-window",
     "Terminal": "terminal:system", "Git": "rail:2",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
 }
@@ -393,7 +394,9 @@ EDGE_PROFILE_SCRIPT = r"""<script>
  };
  const clickExisting=entry=>{
   const command=entry.action||'';
-  if(command==='packages-window'){
+  if(command==='services-window'){
+   window.pynixTerminalDock?.toggleServices?.();
+  }else if(command==='packages-window'){
    window.pynixTerminalDock?.togglePackages?.();
   }else if(command==='run-window'){
    // Opening Run must not dispatch a click to the gallery rail:3,
@@ -473,6 +476,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     };
     sync();
     if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
+   }
+   if(entry.action==='services-window'){
+    const sync=event=>{
+     const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
+     const active=Boolean(state.visible&&state.scope==='services');
+     button.setAttribute('aria-pressed',String(active));
+     button.setAttribute('aria-expanded',String(active));
+    };
+    window.addEventListener('pynix:terminal-change',sync);
+    sync();
    }
    if(entry.action==='packages-window'){
     const sync=event=>{
