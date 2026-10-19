@@ -1002,6 +1002,91 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-editor-gutter .pynix-gutter-line{
  font-size:13px!important
 }
+
+/* Packages tool window: independent JetBrains-style pane in bottom dock. */
+.workspace-mode .integrated-terminal{position:relative!important}
+.workspace-mode .integrated-terminal .pynix-terminal-dock-bar[hidden]{display:none!important}
+.workspace-mode .integrated-terminal .pynix-packages-pane{
+ position:absolute!important;inset:0!important;z-index:7!important;
+ display:flex!important;flex-direction:column!important;
+ background:#1b1c1f!important;color:#c7c9d1!important;
+ font:13px/1.4 -apple-system,BlinkMacSystemFont,system-ui,sans-serif!important;
+ overflow:hidden!important;
+}
+.workspace-mode .integrated-terminal .pynix-packages-pane[hidden]{display:none!important}
+.workspace-mode .pynix-packages-header{
+ display:flex;align-items:center;gap:12px;height:46px;flex:0 0 46px;
+ padding:0 14px!important;border-bottom:1px solid #34363b;
+ box-sizing:border-box;min-width:0;
+}
+.workspace-mode .pynix-packages-header strong{font-size:15px;font-weight:650;color:#d1d3dc;white-space:nowrap}
+.workspace-mode .pynix-packages-interpreter{
+ margin-left:auto;min-width:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap;color:#858993;
+}
+.workspace-mode .pynix-packages-refresh,.workspace-mode .pynix-packages-hide{
+ background:transparent;border:0;border-radius:5px;color:#c2c5cf;
+ cursor:pointer;width:28px;height:28px;flex:0 0 28px;font-size:21px;
+}
+.workspace-mode .pynix-packages-header button:hover{background:#3a3e46}
+.workspace-mode .pynix-packages-content{flex:1 1 auto;min-height:0;display:flex}
+.workspace-mode .pynix-packages-left{
+ flex:0 0 340px;max-width:45%;min-width:210px;
+ border-right:1px solid #34363b;min-height:0;display:flex;flex-direction:column;
+}
+.workspace-mode .pynix-packages-searchbar{display:flex;gap:8px;padding:10px;border-bottom:1px solid #2c2e33}
+.workspace-mode .pynix-packages-search{
+ flex:1;min-width:0;box-sizing:border-box;background:#222428;
+ color:#d0d3dd;border:1px solid #51535a;border-radius:5px;
+ height:34px;padding:0 10px;font:13px/1.25 -apple-system,system-ui,sans-serif;
+}
+.workspace-mode .pynix-packages-pypi{background:#30343c;color:#a9c3ff;border:0;border-radius:5px;padding:0 9px;cursor:pointer}
+.workspace-mode .pynix-packages-status{
+ padding:6px 12px;color:#888c97;font-size:12px;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;min-height:21px;flex:0 0 auto;
+}
+.workspace-mode .pynix-packages-list{flex:1;min-height:0;overflow:auto;padding:3px 6px}
+.workspace-mode .pynix-packages-item{
+ box-sizing:border-box;width:100%;display:flex;align-items:center;gap:8px;
+ padding:6px 8px;border:0;border-radius:5px;text-align:left;
+ background:transparent;color:#d1d3dc;font:13px/1.3 -apple-system,system-ui,sans-serif;
+ cursor:pointer;
+}
+.workspace-mode .pynix-packages-item:hover{background:#343841}
+.workspace-mode .pynix-packages-item[aria-selected="true"]{background:#294876;color:#f1f3f8}
+.workspace-mode .pynix-packages-cube{font-size:19px;color:#6b9bff;line-height:14px}
+.workspace-mode .pynix-packages-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.workspace-mode .pynix-packages-item-version{margin-left:auto;color:#9599a4;white-space:nowrap}
+.workspace-mode .pynix-packages-no-results{padding:10px;color:#9599a4}
+.workspace-mode .pynix-packages-right{position:relative;flex:1;min-width:0;min-height:0;overflow:auto;padding:16px 20px}
+.workspace-mode .pynix-packages-empty{
+ color:#777b85;position:absolute;left:0;right:0;top:45%;text-align:center;font-size:14px
+}
+.workspace-mode .pynix-packages-details[hidden],
+.workspace-mode .pynix-packages-empty[hidden],
+.workspace-mode .pynix-packages-controls button[hidden]{display:none!important}
+.workspace-mode .pynix-packages-name{font-size:19px;font-weight:650;color:#e0e2e7;margin:0 0 10px}
+.workspace-mode .pynix-packages-summary{color:#b5b8c1;margin:4px 0 14px}
+.workspace-mode .pynix-packages-controls{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:0 0 14px}
+.workspace-mode .pynix-packages-version{
+ background:#292c32;border:1px solid #555860;border-radius:5px;
+ color:#d4d6df;height:30px;max-width:160px;padding:0 5px
+}
+.workspace-mode .pynix-packages-controls button{
+ border:1px solid #4d6191;background:#31548c;color:#edf2ff;
+ cursor:pointer;border-radius:5px;padding:5px 10px;
+}
+.workspace-mode .pynix-packages-controls button:disabled{opacity:.4;cursor:default}
+.workspace-mode .pynix-packages-homepage{color:#79aaff;display:inline-block;margin:4px 0 14px}
+.workspace-mode .pynix-packages-description{
+ margin:0;white-space:pre-wrap;overflow-wrap:anywhere;
+ font:12px/1.5 -apple-system,system-ui,sans-serif;
+ color:#bfc1ca;background:transparent;border:0
+}
+@media(max-width:760px){
+ .workspace-mode .pynix-packages-left{flex-basis:260px;min-width:160px}
+ .workspace-mode .pynix-packages-interpreter{max-width:40%}
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
