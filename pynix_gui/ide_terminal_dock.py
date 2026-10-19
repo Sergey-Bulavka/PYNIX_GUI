@@ -31,7 +31,12 @@ TERMINAL_DOCK_JS = r"""
   chevron.append(summary,popup);
   const overflow=document.createElement('details');
   overflow.className='pynix-terminal-tab-overflow';
-  overflow.hidden=true;
+  // Keep a fixed 27px slot next to Options. Using the HTML hidden attribute
+  // made the chevron depend on conflicting !important CSS and could suppress
+  // it even when tabs were already clipped.
+  overflow.hidden=false;
+  overflow.style.visibility='hidden';
+  overflow.style.pointerEvents='none';
   const overflowToggle=document.createElement('summary');
   overflowToggle.className='pynix-terminal-dock-action';
   overflowToggle.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m3.5 6 4.5 4.5L12.5 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -160,7 +165,9 @@ TERMINAL_DOCK_JS = r"""
 
   const updateOverflow=()=>{
    if(scope==='other'){
-    overflow.open=false;overflow.hidden=true;
+    overflow.open=false;
+    overflow.style.visibility='hidden';
+    overflow.style.pointerEvents='none';
     sessions.style.removeProperty('width');
     sessions.style.removeProperty('flex');
     sessions.style.removeProperty('max-width');
@@ -172,8 +179,9 @@ TERMINAL_DOCK_JS = r"""
    for(const name of ['width','max-width','flex'])sessions.style.removeProperty(name);
    // Re-measure all sessions, including tabs hidden on the previous pass.
    for(const item of items)item.hidden=false;
-   overflow.hidden=true;
    overflow.open=false;
+   overflow.style.visibility='hidden';
+   overflow.style.pointerEvents='none';
    if(!items.length)return;
    const widths=items.map(item=>item.getBoundingClientRect().width);
    const gapBetweenTabs=parseFloat(getComputedStyle(sessions).columnGap)||0;
@@ -196,10 +204,9 @@ TERMINAL_DOCK_JS = r"""
    };
    let available=headerRoom();
    const needsOverflow=natural>available+0.5;
-   if(needsOverflow){
-    overflow.hidden=false;
-    available=headerRoom(); // Reserve the chevron before fitting sessions.
-   }
+   // The arrow occupies a fixed slot throughout the measurement.
+   // Display is controlled by the actual count of hidden tabs below,
+   // never by a hidden attribute that competes with chrome styles.
    const setStripWidth=width=>{
     const safe=Math.max(0,Math.min(width,available));
     sessions.style.setProperty('flex','0 0 '+safe+'px','important');
@@ -247,6 +254,10 @@ TERMINAL_DOCK_JS = r"""
    // A subset of tabs may fit. Put + immediately beside those tabs,
    // leaving the remaining header width to the elastic right spacer.
    setStripWidth(used);
+   // A menu is warranted precisely when at least one tab did not fit.
+   const hasHiddenTabs=overflowPopup.children.length>0;
+   overflow.style.visibility=hasHiddenTabs?'visible':'hidden';
+   overflow.style.pointerEvents=hasHiddenTabs?'auto':'none';
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
