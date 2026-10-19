@@ -51,6 +51,14 @@ SERVICES_DOCK_JS = r"""
     id:'run:'+id,name:svNames[id],type:'run',state:(svRunStates.get(id)?.state||'idle')
    })),...svProfiles
   ];
+  const svDuration=seconds=>{
+   let count=Math.max(0,Math.floor(seconds));
+   const days=Math.floor(count/86400);count%=86400;
+   const hours=Math.floor(count/3600);count%=3600;
+   const mins=Math.floor(count/60);count%=60;
+   return [days?days+' d':null,hours?hours+' h':null,
+    mins?mins+' m':null,count+' s'].filter(Boolean).join(' ');
+  };
   const svField=(host,key,value)=>{
    const row=document.createElement('div');row.className='pynix-services-field';
    const k=document.createElement('span');k.textContent=key;
@@ -80,7 +88,7 @@ SERVICES_DOCK_JS = r"""
     const run=svRunStates.get(item.id.slice(4))||{state:'idle',since:0};
     svField(session,'Status',run.state);
     if(run.since&&run.state==='running')
-     svField(session,'Duration',Math.floor((Date.now()-run.since)/1000)+' s');
+     svField(session,'Duration',svDuration((Date.now()-run.since)/1000));
     const actions=document.createElement('div');actions.className='pynix-services-actions';
     svAction(actions,'Run',()=>{
      const select=document.querySelector('.pynix-run-mode');
@@ -99,10 +107,11 @@ SERVICES_DOCK_JS = r"""
     return;
    }
    svField(session,'Client',item.client||'PYNIX IDE');
+   svField(session,'Version',item.version||'—');
    svField(session,'Transport',item.transport||'SSE');
    svField(session,'Status',item.state||'disconnected');
    svField(session,'Endpoint',item.url);
-   if(item.since)svField(session,'Duration',Math.max(0,Math.floor(Date.now()/1000-item.since))+' s');
+   if(item.since)svField(session,'Duration',svDuration(Date.now()/1000-item.since));
    if(item.error)svField(session,'Error',item.error);
    svField(session,'Discovered tools',(item.tools||[]).length);
    if(item.tools?.length)svField(session,'Available',item.tools.join(', '));
