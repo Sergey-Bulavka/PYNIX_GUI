@@ -121,7 +121,15 @@ PACKAGES_DOCK_JS = r"""
       packagePart('interpreter').textContent=result.interpreter||'Project .venv';
       packagePart('interpreter').title=result.interpreter||'Project .venv';
       packageStatus.textContent=packageInstalled.length+' installed packages';
-      packageListRender();return;
+      packageListRender();
+      // Refresh action buttons immediately after install / uninstall.
+      if(packageName&&!packagePart('details').hidden){
+        const present=packageInstalled.some(x=>x.name.toLowerCase()===packageName.toLowerCase());
+        packagePart('install').hidden=present;
+        packagePart('upgrade').hidden=!present;
+        packagePart('uninstall').hidden=!present;
+      }
+      return;
     }
     if(result.action==='details'){
       if(result.name!==packageName||result.requestId!==packagePendingDetails)return;
