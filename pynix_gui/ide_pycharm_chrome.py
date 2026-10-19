@@ -1749,6 +1749,7 @@ CHROME_SCRIPT = r"""<script>
    if(bridge){bridge.postMessage({action:'open-settings',page});}
    else window.alert('Settings window requires the native PYNIX IDE on macOS.');
   };
+  window.pynixOpenSettingsWindow=openSettings;
   const gearItem=(label,callback,{icon,shortcut,disabled}={})=>{
    const button=document.createElement('button');
    button.type='button';button.className='pynix-ide-gear-item';
