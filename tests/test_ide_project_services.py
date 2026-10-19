@@ -331,7 +331,7 @@ def test_services_option_submenus_can_float_outside_dock():
     assert ".pynix-services-options-menu .pynix-services-option-mark>svg" in iconless
 
 
-def test_services_options_use_original_consistent_16px_jetbrains_icons():
+def test_services_options_use_original_jetbrains_icons_at_pycharm_visual_sizes():
     root = Path(__file__).resolve().parents[1]
     chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
     iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
@@ -350,27 +350,32 @@ def test_services_options_use_original_consistent_16px_jetbrains_icons():
     assert "padding:4px!important;display:flex!important" in menu
     assert "background:#45474e!important;margin:3px 5px!important" in menu
 
-    # The 20px mark slot preserves PyCharm alignment but its contents
-    # (checkbox, gear, Help, submenu chevron) must all be native 16px SVGs.
+    # Original asset viewBoxes remain 16px. The provided screenshot shows
+    # PYNIX check/settings/help ~25/32/18 physical pixels vs PyCharm ~20/26/15.
     mark = menu.split(".workspace-mode .pynix-services-option-mark{")[1].split("}")[0]
     assert "width:20px!important;height:20px!important" in mark
     assert "font-size:13px!important" in mark
-    icons = menu.split(".workspace-mode .pynix-services-option-mark>svg,")[1].split("}")[0]
-    assert ".workspace-mode .pynix-services-option-arrow{" in icons
-    assert "width:16px!important;height:16px!important" in icons
-    assert "max-width:16px!important;max-height:16px!important" in icons
-    assert "width:20px!important;height:20px!important" not in icons
-    assert "width:18px!important;height:18px!important" not in icons
+    ordinary_icons = menu.split(
+        ".workspace-mode .pynix-services-option-mark>svg{"
+    )[1].split("}")[0]
+    submenu_arrows = menu.split(
+        ".workspace-mode .pynix-services-option-arrow{"
+    )[1].split("}")[0]
+    for rule, pixels in ((ordinary_icons, 13), (submenu_arrows, 14)):
+        assert f"width:{pixels}px!important;height:{pixels}px!important" in rule
+        assert f"max-width:{pixels}px!important;max-height:{pixels}px!important" in rule
 
-    # Normal macOS iconless theme must not blow up individual icons.
+    # The default macOS iconless theme also uses !important.
     theme = iconless.split(
-        "/* Options is portaled to body; restore original JetBrains 16x16 SVG sizes"
+        "/* Options popup lives outside the dock."
     )[1].split("/* Only the perimeter")[0]
-    assert ".pynix-services-option-mark>svg," in theme
-    assert ".pynix-services-option-arrow{" in theme
-    assert "width:16px!important;height:16px!important" in theme
-    assert "width:20px!important;height:20px!important" not in theme
-    assert "width:18px!important;height:18px!important" not in theme
+    for selector, pixels in (
+        (".pynix-services-option-mark>svg{", 13),
+        (".pynix-services-option-arrow{", 14),
+    ):
+        rule = theme.split(selector)[1].split("}")[0]
+        assert f"width:{pixels}px!important;height:{pixels}px!important" in rule
+        assert f"flex:0 0 {pixels}px!important" in rule
 
 
 def test_services_options_checkmarks_use_original_jetbrains_asset():
@@ -392,7 +397,7 @@ def test_services_options_checkmarks_use_original_jetbrains_asset():
     assert "const svg=svIcon(config.icon);" in SERVICES_DOCK_JS
     assert "const arrow=svIcon('chevronRight');" in SERVICES_DOCK_JS
 
-def test_services_options_labels_are_13px_without_changing_jetbrains_svg_size():
+def test_services_options_labels_remain_13px_with_calibrated_jetbrains_svg_sizes():
     root = Path(__file__).resolve().parents[1]
     chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
     full = chrome.split("/* Services: split-tree tool window")[1].split("</style>")[0]
@@ -406,7 +411,8 @@ def test_services_options_labels_are_13px_without_changing_jetbrains_svg_size():
     assert "width:322px!important" in menu
     assert "width:190px!important" in menu
     assert "font:400 13px/18px" in header
-    assert "width:16px!important;height:16px!important" in menu
+    assert "width:13px!important;height:13px!important" in menu
+    assert "width:14px!important;height:14px!important" in menu
 
 
 def test_services_tree_shortcut_uses_mac_key_glyphs_not_one_font_fallback_run():
