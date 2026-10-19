@@ -1060,6 +1060,77 @@ def main() -> None:
             except (ServicesError, OSError, ValueError, TypeError) as exc:
                 publish_services_result({"error": str(exc)[:400]})
 
+    # A real separate macOS Settings window (not the old sixth sidebar tool).
+    # Keep the controller and WKWebView alive while the window is visible.
+    from pynix_gui.ide_settings_window import (
+        SettingsStore, settings_html, editor_font_script,
+    )
+    settings_store = SettingsStore()
+    settings_state = {"window": None, "view": None, "handler": None}
+
+    class SettingsWindowHandler(NSObject):
+        def open_window(self, page="Editor"):
+            if settings_state["window"] is None:
+                settings_window = AppKit.NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
+                    AppKit.NSMakeRect(190, 120, 1040, 850),
+                    AppKit.NSWindowStyleMaskTitled
+                    | AppKit.NSWindowStyleMaskClosable
+                    | AppKit.NSWindowStyleMaskMiniaturizable
+                    | AppKit.NSWindowStyleMaskResizable,
+                    AppKit.NSBackingStoreBuffered,
+                    False,
+                )
+                settings_window.setTitle_("Settings — PYNIX")
+                settings_window.setMinSize_(AppKit.NSMakeSize(760, 520))
+                settings_window.setReleasedWhenClosed_(False)
+                settings_view = WebKit.WKWebView.alloc().initWithFrame_(
+                    settings_window.contentView().bounds())
+                settings_view.setAutoresizingMask_(
+                    AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
+                settings_window.setContentView_(settings_view)
+                settings_view.configuration().userContentController().addScriptMessageHandler_name_(
+                    self, "pynixSettings")
+                settings_state["window"] = settings_window
+                settings_state["view"] = settings_view
+            settings_state["view"].loadHTMLString_baseURL_(
+                settings_html(settings_store.read(), page), None)
+            settings_state["window"].makeKeyAndOrderFront_(None)
+            app.activateIgnoringOtherApps_(True)
+
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            import json
+            try:
+                request = dict(message.body()) if hasattr(message.body(), "items") else {}
+                action = request.get("action")
+                if action == "open-settings":
+                    page = request.get("page", "Editor")
+                    if not isinstance(page, str):
+                        page = "Editor"
+                    self.open_window(page)
+                    return
+                if action == "close":
+                    if settings_state["window"] is not None:
+                        settings_state["window"].close()
+                    return
+                if action != "save" or settings_state["view"] is None:
+                    return
+                values = settings_store.write(dict(request.get("values", {})))
+                view.evaluateJavaScript_completionHandler_(
+                    editor_font_script(values), None)
+                settings_state["view"].evaluateJavaScript_completionHandler_(
+                    "window.pynixSettingsSaved({});", None)
+                if request.get("close") is True:
+                    settings_state["window"].close()
+            except (OSError, TypeError, ValueError) as exc:
+                if settings_state["view"] is not None:
+                    message_text = json.dumps(str(exc)[:200])
+                    settings_state["view"].evaluateJavaScript_completionHandler_(
+                        "window.pynixSettingsSaved({error:" + message_text + "});",
+                        None)
+
+    settings_handler = SettingsWindowHandler.alloc().init()
+    settings_state["handler"] = settings_handler
+
     services_handler = ServicesHandler.alloc().init()
 
     packages_handler = PackagesHandler.alloc().init()
@@ -1071,6 +1142,7 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(terminal_session_handler, "pynixTerminalSession")
     controller.addScriptMessageHandler_name_(packages_handler, "pynixPackages")
     controller.addScriptMessageHandler_name_(services_handler, "pynixServices")
+    controller.addScriptMessageHandler_name_(settings_handler, "pynixIDEWindow")
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
@@ -1117,6 +1189,10 @@ def main() -> None:
     from pynix_gui.ide_project_header_sync import apply_project_header_alignment
     document = apply_project_header_alignment(document)
     document = document.replace("</body>", TOOLBAR_DRAG_SCRIPT + "</body>", 1)
+    document = document.replace("</body>",
+        "<script>window.addEventListener('load',function(){" +
+        editor_font_script(settings_store.read()) +
+        "},{once:true});</script></body>", 1)
     view.loadHTMLString_baseURL_(document, url.URLByDeletingLastPathComponent())
     # The original content view remains window-owned and resizable.
     from pynix_gui.ide_native_menu import install_native_workspace_menu
