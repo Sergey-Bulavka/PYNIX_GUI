@@ -56,6 +56,8 @@ def test_settings_page_navigation_reuses_real_sections_without_fake_switches():
     assert 'id="content"' in html
     assert 'id="cancel"' in html
     assert 'id="apply" disabled' in html
+    assert 'id="restore" hidden' in html
+    assert "Restore Font Defaults" in html
     assert 'id="ok"' in html
     assert "showPage(\"Editor\");" in html
     assert "const groups=new Map(categories)" in html
@@ -115,6 +117,39 @@ def test_native_settings_window_and_topbar_menu_are_connected():
     assert "event.metaKey" in chrome
     assert "settings.setAttribute('aria-expanded'" in chrome
     assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();" not in chrome
+
+
+
+def test_settings_font_reset_and_navigation_preserve_unsaved_draft():
+    html = settings_html({"editor.font_size": 17.0, "editor.line_height": 1.5}, "Font")
+    assert 'showPage("Font");' in html
+    assert 'const defaults={"editor.font_size": 13.0, "editor.line_height": 1.2}' in html
+    assert "restore.addEventListener('click',()=>{" in html
+    assert "showPage('Font');refreshDirty();" in html
+    assert "window.pynixSettingsNavigate=page=>" in html
+    assert "if(groups.has(page)||isChild(page))showPage(page);" in html
+    assert "restore.hidden=name!=='Font';" in html
+    assert "dirty=Object.keys(initial).some(key=>draft[key]!==initial[key]);" in html
+    assert "apply.disabled=!dirty||!validDraft();" in html
+
+
+def test_reopening_visible_native_settings_keeps_current_page_draft():
+    source = (Path(__file__).resolve().parents[1] /
+              "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    assert 'if settings_state["window"].isVisible():' in source
+    assert 'window.pynixSettingsNavigate?.(' in source
+    assert 'settings_html(settings_store.read(), page), None)' in source
+    assert 'settings_state["window"].makeKeyAndOrderFront_(None)' in source
+
+
+def test_gear_popup_has_keyboard_and_safe_viewport_navigation():
+    from pynix_gui.ide_pycharm_chrome import CHROME_SCRIPT, CHROME_STYLE
+    assert "settings.addEventListener('keydown',event=>{" in CHROME_SCRIPT
+    assert "gearMenu.addEventListener('keydown',event=>{" in CHROME_SCRIPT
+    assert "gearMenu.querySelector('button:not(:disabled)')?.focus();" in CHROME_SCRIPT
+    assert "const positionGear=()=>{" in CHROME_SCRIPT
+    assert "window.addEventListener('resize',positionGear);" in CHROME_SCRIPT
+    assert "max-height:calc(100vh - 16px)!important" in CHROME_STYLE
 
 
 def test_settings_store_atomic_write_keeps_valid_config_on_failed_input(tmp_path):
