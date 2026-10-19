@@ -1190,19 +1190,19 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-options-menu{
  position:fixed!important;top:0;left:0;right:auto!important;
  box-sizing:border-box!important;z-index:99999!important;
- width:322px!important;min-width:322px!important;max-width:calc(100vw - 16px)!important;
+ width:420px!important;min-width:min(420px, calc(100vw - 16px))!important;max-width:calc(100vw - 16px)!important;
  max-height:calc(100vh - 16px)!important;overflow:visible!important;
  background:#282a2f!important;border:1px solid #595b62!important;
  border-radius:9px!important;box-shadow:0 9px 28px #000b!important;
  padding:4px!important;display:flex!important;flex-direction:column!important;
- color:#d5d7df!important;font:400 13px/18px -apple-system,system-ui,sans-serif!important
+ color:#d5d7df!important;font:400 18px/24px -apple-system,system-ui,sans-serif!important
 }
 .workspace-mode .pynix-services-options-menu[hidden]{display:none!important}
 .workspace-mode .pynix-services-options-menu button{
- box-sizing:border-box!important;width:100%!important;height:27px!important;
- min-width:0!important;min-height:27px!important;
+ box-sizing:border-box!important;width:100%!important;height:36px!important;
+ min-width:0!important;min-height:36px!important;
  border:0!important;background:transparent!important;color:#d7d9df!important;
- font:400 13px/18px -apple-system,system-ui,sans-serif!important;
+ font:400 18px/24px -apple-system,system-ui,sans-serif!important;
  padding:0 8px!important;text-align:left!important;
  display:flex!important;align-items:center!important;gap:6px!important;
  justify-content:flex-start!important;cursor:pointer;border-radius:5px!important
@@ -1225,7 +1225,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  min-width:0;flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis
 }
 .workspace-mode .pynix-services-option-shortcut{
- margin-left:auto;color:#888c96;font-size:13px;white-space:nowrap
+ margin-left:auto;color:#888c96;font-size:16px;white-space:nowrap
 }
 .workspace-mode .pynix-services-option-mark>svg,
 .workspace-mode .pynix-services-option-arrow{
@@ -1242,7 +1242,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 .workspace-mode .pynix-services-submenu{
  display:none!important;position:absolute!important;right:100%!important;left:auto!important;
  top:-6px!important;z-index:100000!important;
- width:190px!important;min-width:190px!important;box-sizing:border-box!important;
+ width:260px!important;min-width:min(260px, calc(100vw - 16px))!important;box-sizing:border-box!important;
  padding:4px!important;background:#282a2f!important;border:1px solid #595b62!important;
  border-radius:8px!important;box-shadow:0 9px 24px #000a!important
 }
