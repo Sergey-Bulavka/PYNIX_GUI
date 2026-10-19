@@ -39,6 +39,10 @@ def install_native_workspace_menu(app, webview, appkit):
     class MenuDispatcher(NSObject):
         def activate_(self, sender):
             command = str(sender.representedObject())
+            if command == "ide.settings":
+                webview.evaluateJavaScript_completionHandler_(
+                    "window.pynixOpenSettingsWindow?.('Editor');", None)
+                return
             if command not in command_ids():
                 return
             script = "window.pynixMenuCommand && window.pynixMenuCommand(" + json.dumps(command) + ");"
@@ -49,6 +53,13 @@ def install_native_workspace_menu(app, webview, appkit):
     app_menu = appkit.NSMenu.alloc().initWithTitle_("PYNIX IDE")
     quit_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
         "Quit PYNIX IDE", "terminate:", "q")
+    settings_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
+        "Settings…", "activate:", ",")
+    settings_item.setTarget_(dispatcher)
+    settings_item.setRepresentedObject_("ide.settings")
+    settings_item.setKeyEquivalentModifierMask_(appkit.NSEventModifierFlagCommand)
+    app_menu.addItem_(settings_item)
+    app_menu.addItem_(appkit.NSMenuItem.separatorItem())
     app_menu.addItem_(quit_item)
     app_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_("", None, "")
     app_item.setSubmenu_(app_menu)
