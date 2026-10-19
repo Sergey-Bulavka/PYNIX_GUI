@@ -1,5 +1,6 @@
 """Services V1 regression tests: registry, SSE transport and native UI."""
 import json
+import os
 import threading
 import uuid
 from collections import deque
@@ -27,7 +28,9 @@ def test_project_profiles_are_isolated_and_persisted_safely(tmp_path):
     assert uuid.UUID(item["id"])
     assert a.path != b.path
     assert b.list()["services"] == []
-    assert a.path.stat().st_mode & 0o077 == 0
+    # Windows reports synthetic st_mode bits; NTFS ACLs are separate.
+    if os.name == "posix":
+        assert a.path.stat().st_mode & 0o077 == 0
     same_project = ProjectServices(tmp_path / "projectA", config_dir=profiles)
     assert same_project.list()["services"][0]["name"] == "MCP Local"
     with pytest.raises(ServicesError, match="already exists"):
