@@ -444,8 +444,8 @@ def main() -> None:
 
     run_generation = {"value": 0}
 
-    def start_project_run(mode="run"):
-        project_runner.start(mode=mode)
+    def start_project_run(mode="run", source=None):
+        project_runner.start(mode=mode, source=source)
         run_generation["value"] += 1
         generation = run_generation["value"]
         publish_run_result({"state": "running"})
@@ -508,22 +508,25 @@ def main() -> None:
             try:
                 request = dict(message.body())
                 action = request.get("action")
+                mode = request.get("mode", "run")
+                source = request.get("source")
+                if mode not in ("run", "check"):
+                    raise RunError("Unsupported run configuration")
+                if source is not None and (
+                    not isinstance(source, str) or source not in available_sources
+                    or not source.endswith((".pnx", ".py"))
+                ):
+                    raise RunError("Unknown or unsupported file for Run")
                 if action == "run":
-                    mode = request.get("mode", "run")
-                    if mode not in ("run", "check"):
-                        raise RunError("Unsupported run configuration")
-                    start_project_run(mode)
+                    start_project_run(mode, source)
                 elif action in ("stop", "restart"):
-                    mode = request.get("mode", "run")
-                    if mode not in ("run", "check"):
-                        raise RunError("Unsupported run configuration")
                     run_generation["value"] += 1
                     publish_run_result({"state": "stopping"})
                     def stop_or_restart():
                         try:
                             project_runner.stop()
                             if action == "restart":
-                                start_project_run(mode)
+                                start_project_run(mode, source)
                             else:
                                 publish_run_result({"state": "idle"})
                         except (RunError, OSError) as exc:
