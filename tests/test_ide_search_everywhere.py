@@ -37,13 +37,17 @@ def test_search_palette_uses_authoritative_buffers_and_safe_targets():
 def test_search_over_available_actions_and_settings_not_an_unconnected_mock():
     for contract in (
         "['Project',0]", "['Search',1]", "['Version Control',2]",
-        "['Settings',5]", "'Run Current File'", "'Debug Current File'",
+        "'Run Current File'", "'Debug Current File'",
         "'Save Source'", "'More Actions'",
         "document.querySelector(entry.action)?.click();",
         "document.querySelectorAll('.workspace-mode .rail>.rail-item')[entry.rail]?.click();",
         "if(document.querySelector(action))",
     ):
         assert contract in SEARCH_SCRIPT, contract
+    assert "if(entry.settings){" in SEARCH_SCRIPT
+    assert "window.pynixOpenSettingsWindow?.('Editor');" in SEARCH_SCRIPT
+    assert "catalog.push({category:'Settings',label:'Settings',settings:true});" in SEARCH_SCRIPT
+    assert "['Settings',5]" not in SEARCH_SCRIPT
     assert "document.body.appendChild(backdrop);" in SEARCH_SCRIPT
     assert "event.key==='ArrowDown'||event.key==='ArrowUp'" in SEARCH_SCRIPT
     assert "event.key==='Enter'" in SEARCH_SCRIPT
