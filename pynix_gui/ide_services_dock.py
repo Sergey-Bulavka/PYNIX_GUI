@@ -7,17 +7,17 @@ SERVICES_DOCK_JS = r"""
   servicesPane.innerHTML=`
    <header class="pynix-services-header">
     <strong>Services</strong><span class="pynix-services-fill"></span>
-    <button data-sv="refresh" title="Refresh Services">⟳</button>
-    <button data-sv="options" title="Options">⋮</button>
+    <button data-sv="refresh" title="Refresh Services"></button>
+    <button data-sv="options" title="Options"></button>
     <div data-sv="optionsMenu" class="pynix-services-options-menu" role="menu" hidden></div>
-    <button data-sv="hide" title="Hide Services">−</button></header>
+    <button data-sv="hide" title="Hide Services"></button></header>
    <div class="pynix-services-content">
     <div class="pynix-services-sidebar"><nav class="pynix-services-toolbar" data-sv="toolbar">
-     <button data-sv="add" title="Add Service">＋</button>
-     <button data-sv="group" title="Group by Type">◉</button>
-     <button data-sv="newMcp" title="Add MCP SSE Connection" aria-label="Add MCP SSE Connection">⊞</button>
-     <button data-sv="expand" title="Expand All" aria-label="Expand All">⌄</button>
-     <button data-sv="collapse" title="Collapse All" aria-label="Collapse All">⌃</button>
+     <button data-sv="add" title="Add Service"></button>
+     <button data-sv="group" title="Group by Type"></button>
+     <button data-sv="newMcp" title="Add MCP SSE Connection" aria-label="Add MCP SSE Connection"></button>
+     <button data-sv="expand" title="Expand All" aria-label="Expand All"></button>
+     <button data-sv="collapse" title="Collapse All" aria-label="Collapse All"></button>
      <div data-sv="menu" class="pynix-services-menu" role="menu" hidden></div>
     </nav><div data-sv="tree" class="pynix-services-tree" role="tree"></div></div>
     <div class="pynix-services-main"><nav class="pynix-services-tabs">
