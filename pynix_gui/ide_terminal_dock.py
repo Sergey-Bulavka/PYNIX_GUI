@@ -204,11 +204,14 @@ TERMINAL_DOCK_JS = r"""
    const detail={scope,tool:selectedTool,visible:isVisible()};
    window.dispatchEvent(new CustomEvent('pynix:terminal-change',{detail}));
   };
+  __PYNIX_PACKAGES_DOCK__
   const sync=()=>{
    const visible=isVisible();
    system.panel.hidden=!visible||scope!=='system';
    pynix.panel.hidden=!visible||scope!=='pynix';
    toolConsole.hidden=scope!=='other';
+   packagesPane.hidden=!(visible&&scope==='packages');
+   header.hidden=visible&&scope==='packages';
    const legacy=document.querySelectorAll('.workspace-mode .rail>.rail-item')[4];
    legacy?.classList.toggle('active',visible&&scope==='system');
    legacy?.setAttribute('aria-pressed',String(visible&&scope==='system'));
@@ -224,9 +227,10 @@ TERMINAL_DOCK_JS = r"""
    publish();
   };
   const select=id=>{
-   if(!['system','pynix'].includes(id))return;
+   if(!['system','pynix','packages'].includes(id))return;
    if(scope===id&&isVisible()){setToolWindowVisible(false);return;}
    scope=id;setToolWindowVisible(true);
+   if(id==='packages')packagesOnShow();
    if(id==='system'&&!shellTabs.size)createShell(defaultShell);
    if(id==='pynix'&&!pynixTabs.size)createPynixTab();
    if(id==='system')system.input.focus();else pynix.input.focus();
@@ -253,8 +257,9 @@ TERMINAL_DOCK_JS = r"""
     setToolWindowVisible(false);
    else showRun();
   };
+  const togglePackages=()=>select('packages');
   window.pynixTerminalDock={
-   sync,select,showRun,toggleRun,
+   sync,select,showRun,toggleRun,togglePackages,
    state:()=>({scope,tool:selectedTool,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
    setRunState:running=>{
