@@ -1034,13 +1034,48 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  flex:0 0 340px;max-width:45%;min-width:210px;
  border-right:1px solid #34363b;min-height:0;display:flex;flex-direction:column;
 }
-.workspace-mode .pynix-packages-searchbar{display:flex;gap:8px;padding:10px;border-bottom:1px solid #2c2e33}
-.workspace-mode .pynix-packages-search{
- flex:1;min-width:0;box-sizing:border-box;background:#222428;
- color:#d0d3dd;border:1px solid #51535a;border-radius:5px;
- height:34px;padding:0 10px;font:13px/1.25 -apple-system,system-ui,sans-serif;
+.workspace-mode .pynix-packages-searchbar{
+ display:flex;align-items:center;gap:8px;padding:10px;
+ border-bottom:1px solid #2c2e33
 }
-.workspace-mode .pynix-packages-pypi{background:#30343c;color:#a9c3ff;border:0;border-radius:5px;padding:0 9px;cursor:pointer}
+.workspace-mode .pynix-packages-searchbox{
+ flex:1 1 auto;min-width:0;height:34px;box-sizing:border-box;
+ display:flex;align-items:center;gap:10px;padding:0 10px 0 12px;
+ background:#222428;border:1px solid #51535a;border-radius:6px;
+ color:#a2a7b3;cursor:text
+}
+.workspace-mode .pynix-packages-searchbox:focus-within{
+ border-color:#4b83ed;outline:2px solid #3b6fe5;outline-offset:-1px
+}
+.workspace-mode .pynix-packages-search-icon{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:16px;height:16px;flex:0 0 16px;color:#c0c3cc
+}
+.workspace-mode .pynix-packages-search{
+ flex:1 1 auto;min-width:0;width:100%;height:100%;box-sizing:border-box;
+ padding:0;border:0;outline:0;background:transparent;
+ color:#d0d3dd;font:13px/1.25 -apple-system,system-ui,sans-serif;
+ -webkit-appearance:none;appearance:none
+}
+.workspace-mode .pynix-packages-search::-webkit-search-cancel-button{
+ -webkit-appearance:none;appearance:none
+}
+.workspace-mode .pynix-packages-pypi{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:34px;height:34px;flex:0 0 34px;padding:0;
+ background:transparent;color:#c7cad3;border:1px solid transparent;
+ border-radius:6px;cursor:pointer
+}
+.workspace-mode .pynix-packages-pypi:hover:not(:disabled),
+.workspace-mode .pynix-packages-pypi:focus-visible{
+ background:#31343b;border-color:#4a4e57;color:#e0e3ea
+}
+.workspace-mode .pynix-packages-pypi:disabled{opacity:.45;cursor:default}
+.workspace-mode .pynix-packages-search-icon svg,
+.workspace-mode .pynix-packages-pypi svg,
+.workspace-mode .pynix-packages-cube svg{
+ display:block;flex:none
+}
 .workspace-mode .pynix-packages-status{
  padding:6px 12px;color:#888c97;font-size:12px;overflow:hidden;
  text-overflow:ellipsis;white-space:nowrap;min-height:21px;flex:0 0 auto;
@@ -1054,7 +1089,10 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .pynix-packages-item:hover{background:#343841}
 .workspace-mode .pynix-packages-item[aria-selected="true"]{background:#294876;color:#f1f3f8}
-.workspace-mode .pynix-packages-cube{font-size:19px;color:#6b9bff;line-height:14px}
+.workspace-mode .pynix-packages-cube{
+ display:inline-flex;align-items:center;justify-content:center;
+ width:16px;height:16px;flex:0 0 16px;color:#4f8fff
+}
 .workspace-mode .pynix-packages-item-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .workspace-mode .pynix-packages-item-version{margin-left:auto;color:#9599a4;white-space:nowrap}
 .workspace-mode .pynix-packages-no-results{padding:10px;color:#9599a4}
