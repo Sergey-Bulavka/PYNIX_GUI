@@ -955,7 +955,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .pynix-terminal-session-select{
  flex:1 1 auto!important;min-width:0!important;
- font:500 12px/1 -apple-system,system-ui,sans-serif!important;
+ font:500 13px/1 -apple-system,system-ui,sans-serif!important;
  white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important
 }
 .workspace-mode .pynix-terminal-session-close{
@@ -986,6 +986,22 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
 }
 .workspace-mode .pynix-terminal-dock-bar details[hidden]{display:none!important}
 .workspace-mode .pynix-terminal-dock-popup{z-index:600!important}
+
+/* V4: use one readable 13px size for tabs and both editor modes.
+   Keep the existing 19/23px line boxes unchanged so caret, lexer mirror
+   and line-number geometry remain aligned. */
+.workspace-mode .editor-tabs .pynix-editor-tab-label{
+ font-size:13px!important
+}
+.workspace-mode .pynix-edit-layer .pynix-source-input,
+.workspace-mode .pynix-edit-layer .pynix-edit-highlight,
+.workspace-mode .pynix-edit-layer .pynix-edit-gutter{
+ font-size:13px!important
+}
+.workspace-mode .pynix-editor-code .pynix-code-line,
+.workspace-mode .pynix-editor-gutter .pynix-gutter-line{
+ font-size:13px!important
+}
 </style>"""
 
 CHROME_SCRIPT = r"""<script>
