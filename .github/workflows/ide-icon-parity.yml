@@ -34,10 +34,14 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install test dependencies
         run: python -m pip install --upgrade pip pytest
-      - name: License, icon activation and native-source tests
+      - name: Native V4 icon, chrome, search and settings regressions
         run: |
           python -m pytest -q \
             tests/test_ide_jetbrains_icons.py \
             tests/test_ide_icon_parity.py \
             tests/test_ide_native_v4.py \
-            tests/test_ide_workspace_preview.py
+            tests/test_ide_workspace_preview.py \
+            tests/test_ide_settings_window.py \
+            tests/test_ide_search_everywhere.py \
+            tests/test_ide_native_menu.py \
+            tests/test_ide_pycharm_chrome.py
