@@ -308,29 +308,149 @@ SERVICES_DOCK_JS = r"""
   menuAction('MCP SSE Connection…',svAddMcp);
   sv('add').addEventListener('click',()=>menu.hidden=!menu.hidden);
   sv('newMcp').addEventListener('click',svAddMcp);
+  // The JetBrains popup is a true overlay; clipping it to the dock would
+  // cut off the long list and its submenus at the bottom tool-window edge.
   const optionsMenu=sv('optionsMenu');
-  const optionsButton=(text,callback)=>{
-   const button=document.createElement('button');button.type='button';
-   button.setAttribute('role','menuitem');button.textContent=text;
-   button.addEventListener('click',()=>{
-    optionsMenu.hidden=true;callback();updateOptions();
-   });
-   optionsMenu.appendChild(button);return button;
+  document.body.appendChild(optionsMenu);
+  optionsMenu.setAttribute('aria-label','Services Options');
+  const svDivider=()=>{
+   const divider=document.createElement('div');
+   divider.className='pynix-services-options-divider';
+   divider.setAttribute('role','separator');
+   optionsMenu.appendChild(divider);
   };
-  const groupOption=optionsButton('Group Services by Type',()=>{
-   svGrouped=!svGrouped;svDraw();
-  });
-  const treeOption=optionsButton('Show Services Tree',()=>{
-   servicesPane.classList.toggle('hide-tree');
-  });
-  const updateOptions=()=>{
-   groupOption.textContent=(svGrouped?'✓ ':'  ')+'Group Services by Type';
-   treeOption.textContent=(!servicesPane.classList.contains('hide-tree')?'✓ ':'  ')+
-    'Show Services Tree';
+  const svOption=(label,callback,config={})=>{
+   const parent=config.parent||optionsMenu;
+   const row=document.createElement('div');row.className='pynix-services-option-wrap';
+   const button=document.createElement('button');
+   button.type='button';button.className='pynix-services-option';
+   button.setAttribute('role',config.key?'menuitemcheckbox':'menuitem');
+   button.disabled=!!config.disabled;
+   if(config.disabled){
+    button.title=config.reason||'Not supported in this version of PYNIX IDE';
+    button.setAttribute('aria-disabled','true');
+   }
+   const mark=document.createElement('span');mark.className='pynix-services-option-mark';
+   if(config.icon){
+    const svg=svIcon(config.icon);
+    if(svg)mark.appendChild(svg);
+   }else if(config.checked){
+    mark.textContent='✓';
+    button.setAttribute('aria-checked','true');
+   }else if(config.key)button.setAttribute('aria-checked','false');
+   const text=document.createElement('span');
+   text.className='pynix-services-option-label';text.textContent=label;
+   button.append(mark,text);
+   if(config.shortcut){
+    const hint=document.createElement('span');hint.className='pynix-services-option-shortcut';
+    hint.textContent=config.shortcut;button.appendChild(hint);
+   }
+   if(config.submenu){
+    row.classList.add('has-submenu');
+    const arrow=svIcon('chevronRight');
+    if(arrow){arrow.classList.add('pynix-services-option-arrow');button.appendChild(arrow);}
+   }
+   row.appendChild(button);parent.appendChild(row);
+   if(config.submenu){
+    const children=document.createElement('div');
+    children.className='pynix-services-submenu';
+    children.setAttribute('role','menu');row.appendChild(children);
+    config.submenu(children);
+    button.setAttribute('aria-haspopup','menu');
+    button.setAttribute('aria-expanded','false');
+    row.addEventListener('mouseenter',()=>button.setAttribute('aria-expanded','true'));
+    row.addEventListener('mouseleave',()=>button.setAttribute('aria-expanded','false'));
+    button.addEventListener('click',()=>row.classList.toggle('submenu-open'));
+   }else if(callback&&!config.disabled){
+    button.addEventListener('click',()=>{
+     optionsMenu.hidden=true;callback();
+    });
+   }
+   return row;
   };
+  const svIsPinned=()=>{
+   try{return localStorage.getItem('pynix.services.unpinned')!=='true';}
+   catch(_){return true;}
+  };
+  const svSetPinned=pinned=>{
+   try{localStorage.setItem('pynix.services.unpinned',String(!pinned));}catch(_){}
+   window.dispatchEvent(new CustomEvent('pynix:services-pin',{detail:{pinned}}));
+  };
+  // We only advertise actually supported tool-window mode/placement here.
+  // Floating and other-edge docking require a separate native window host.
+  const svResizeDock=change=>{
+   if(change==='restore'){
+    terminal.style.removeProperty('height');
+    terminal.style.removeProperty('flex-basis');
+    return;
+   }
+   const current=terminal.getBoundingClientRect().height;
+   const target=Math.max(145,Math.min(window.innerHeight*0.55,
+    Math.round(current+(change==='increase'?70:-70))));
+   terminal.style.setProperty('height',target+'px','important');
+   terminal.style.setProperty('flex-basis',target+'px','important');
+  };
+  const svShowOptions=()=>{
+   optionsMenu.replaceChildren();
+   const toggle=(label,key,handler,shortcut)=>{
+    svOption(label,()=>{svPreferences[key]=!svPreferences[key];
+      svSavePreferences();svApplyPreferences();
+      if(handler)handler();
+    },{key,checked:svPreferences[key],shortcut});
+   };
+   toggle('Navigate with Single Click','singleClick');
+   toggle('Always Select Opened Element','alwaysSelectOpened');
+   toggle('Always Select Active Service','alwaysSelectActive');
+   toggle('Show Services Tree','showTree',null,'⇧⌘T');
+   svOption('Configure Services Tool Window',()=>{
+    menu.hidden=false;
+    sv('add').focus();
+   },{icon:'settings'});
+   toggle('Double Click to Run Configuration','doubleClickRun');
+   svDivider();
+   toggle('Show Toolbar','showToolbar');
+   svOption('View Mode',null,{submenu:host=>{
+    svOption('Docked',()=>{},{parent:host,checked:true});
+    svOption('Floating',null,{parent:host,disabled:true});
+    svOption('Windowed',null,{parent:host,disabled:true});
+   }});
+   svOption('Move to',null,{submenu:host=>{
+    svOption('Bottom',()=>{},{parent:host,checked:true});
+    svOption('Left',null,{parent:host,disabled:true});
+    svOption('Right',null,{parent:host,disabled:true});
+   }});
+   svOption('Resize',null,{submenu:host=>{
+    svOption('Increase Height',()=>svResizeDock('increase'),{parent:host});
+    svOption('Decrease Height',()=>svResizeDock('decrease'),{parent:host});
+    svOption('Restore Height',()=>svResizeDock('restore'),{parent:host});
+   }});
+   svDivider();
+   svOption(svIsPinned()?'Remove from Sidebar':'Restore to Sidebar',
+    ()=>svSetPinned(!svIsPinned()));
+   svDivider();
+   svOption('Help',()=>{
+    window.open('https://www.jetbrains.com/help/pycharm/services-tool-window.html',
+     '_blank','noopener');
+   },{icon:'help'});
+  };
+  const svPlaceOptions=()=>{
+   const rect=sv('options').getBoundingClientRect();
+   const width=optionsMenu.offsetWidth||322;
+   const height=optionsMenu.offsetHeight||540;
+   optionsMenu.style.left=Math.max(8,Math.min(rect.right-width,
+    window.innerWidth-width-8))+'px';
+   optionsMenu.style.top=Math.max(8,Math.min(rect.bottom+5,
+    window.innerHeight-height-8))+'px';
+  };
+  sv('options').setAttribute('aria-haspopup','menu');
+  sv('options').setAttribute('aria-expanded','false');
   sv('options').addEventListener('click',()=>{
-   menu.hidden=true;updateOptions();
-   optionsMenu.hidden=!optionsMenu.hidden;
+   const opening=optionsMenu.hidden;
+   menu.hidden=true;
+   if(opening)svShowOptions();
+   optionsMenu.hidden=!opening;
+   sv('options').setAttribute('aria-expanded',String(opening));
+   if(opening)svPlaceOptions();
   });
   sv('group').addEventListener('click',()=>{svGrouped=!svGrouped;svDraw();});
   sv('expand').addEventListener('click',()=>{svGrouped=true;svCollapsed.clear();svDraw();});
@@ -348,15 +468,25 @@ SERVICES_DOCK_JS = r"""
   document.addEventListener('pointerdown',event=>{
    if(!sv('toolbar').contains(event.target)&&!sv('options').contains(event.target))
     menu.hidden=true;
-   if(!optionsMenu.contains(event.target)&&!sv('options').contains(event.target))
+   if(!optionsMenu.contains(event.target)&&!sv('options').contains(event.target)){
     optionsMenu.hidden=true;
+    sv('options').setAttribute('aria-expanded','false');
+   }
   });
   window.pynixServicesResult=result=>{
    if(result?.error){
     sv('empty').textContent='Services error: '+String(result.error);
     sv('empty').hidden=false;return;
    }
-   if(Array.isArray(result?.services)){svProfiles=result.services;svDraw();}
+   if(Array.isArray(result?.services)){
+    svProfiles=result.services;
+    if(svPreferences.alwaysSelectActive){
+     const active=svProfiles.find(item=>['connected','connecting'].includes(item.state));
+     if(active&&(!svSelected||!svItems().some(item=>item.id===svSelected)))
+      svSelected=active.id;
+    }
+    svDraw();
+   }
   };
   window.pynixServicesRunEvent=(packet,request)=>{
    const state=packet?.state;
