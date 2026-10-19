@@ -60,6 +60,10 @@ class ProjectPackages:
         output = (completed.stdout + "\n" + completed.stderr).strip()[-10000:]
         if completed.returncode != 0:
             raise PackageError(output or f"pip exited with code {completed.returncode}")
+        # JSON is emitted only to stdout. A harmless pip warning on stderr
+        # must never break the Installed Packages panel.
+        if args == ["list", "--format=json"]:
+            return completed.stdout
         return output
 
     def list_installed(self) -> dict:
