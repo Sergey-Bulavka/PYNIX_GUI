@@ -57,6 +57,28 @@ TERMINAL_DOCK_JS = r"""
   });
   overflow.append(overflowToggle,overflowPopup);
   const gap=document.createElement('span');gap.className='pynix-terminal-dock-gap';
+  // Run uses the same bottom dock without becoming a shell or PYNIX console.
+  const runActions=document.createElement('div');
+  runActions.className='pynix-run-dock-actions';
+  runActions.hidden=true;
+  const dockRerun=document.createElement('button');
+  dockRerun.type='button';dockRerun.className='pynix-run-dock-rerun';
+  dockRerun.title='Run / Rerun current configuration';
+  dockRerun.setAttribute('aria-label','Run or rerun');
+  dockRerun.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M12.7 7A5 5 0 1 0 13 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M13 3.5V7.5H9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const dockRunStop=document.createElement('button');
+  dockRunStop.type='button';dockRunStop.className='pynix-run-dock-stop';
+  dockRunStop.title='Stop running process';dockRunStop.disabled=true;
+  dockRunStop.setAttribute('aria-label','Stop run');
+  dockRunStop.innerHTML='<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="4" y="4" width="8" height="8" rx="1.25" fill="currentColor"/></svg>';
+  let hadRun=false;
+  dockRerun.addEventListener('click',()=>{
+   document.querySelector(hadRun?'.pynix-restart-action':'.pynix-run-action')?.click();
+  });
+  dockRunStop.addEventListener('click',()=>{
+   document.querySelector('.pynix-stop-action')?.click();
+  });
+  runActions.append(dockRerun,dockRunStop);
   const tools=document.createElement('details');tools.className='pynix-terminal-options-menu';
   const more=document.createElement('summary');
   more.className='pynix-terminal-dock-action';more.textContent='⋮';
@@ -70,6 +92,7 @@ TERMINAL_DOCK_JS = r"""
   hide.setAttribute('aria-label','Hide Tool Window');
   hide.addEventListener('click',()=>setToolWindowVisible(false));
   header.append(title,sessions,newSession,chevron,gap,overflow,tools,hide);
+  header.insertBefore(runActions,gap);
   terminal.insertBefore(header,debugPanelBar.nextSibling);
 
   const hintStyle=document.createElement('style');
@@ -119,6 +142,19 @@ TERMINAL_DOCK_JS = r"""
   .workspace-mode .pynix-tab-overflow-popup[hidden]{display:none!important}
   .workspace-mode .pynix-tab-overflow-popup:not([hidden]){display:block!important}
   .pynix-tab-overflow-popup .pynix-overflow-entry{display:block;width:100%;text-align:left}
+  .workspace-mode .pynix-run-dock-actions{
+   display:inline-flex!important;align-items:center!important;gap:4px!important;
+   flex:0 0 auto!important;margin-left:6px!important
+  }
+  .workspace-mode .pynix-run-dock-actions[hidden]{display:none!important}
+  .workspace-mode .pynix-run-dock-actions button{
+   box-sizing:border-box;width:26px;height:26px;min-width:26px;
+   display:flex;align-items:center;justify-content:center;
+   border:0;background:transparent;color:#c1c5cd;border-radius:5px;cursor:pointer
+  }
+  .workspace-mode .pynix-run-dock-actions button:disabled{opacity:.4;cursor:default}
+  .workspace-mode .pynix-run-dock-actions button:hover:not(:disabled){background:#3a3d45}
+  .workspace-mode .pynix-run-dock-actions svg{display:block;flex:0 0 16px}
   .pynix-terminal-new{order:0}
   .pynix-terminal-session-tab{flex-shrink:0}
   .pynix-terminal-session-tab[hidden]{display:none!important}
@@ -181,6 +217,7 @@ TERMINAL_DOCK_JS = r"""
    sessions.hidden=scope==='other';
    newSession.hidden=scope==='other'||!showToolbar;
    newSession.dataset.hint=scope==='pynix'?'New Console Tab (⌘T)':'New Tab (⌘T)';
+   runActions.hidden=!(scope==='other'&&selectedTool==='TERMINAL');
    paintSessions();
    chevron.hidden=scope!=='system'||!showToolbar;
    renderOptions();
@@ -197,6 +234,11 @@ TERMINAL_DOCK_JS = r"""
   window.pynixTerminalDock={
    sync,select,state:()=>({scope,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
+   setRunState:running=>{
+    if(running)hadRun=true;
+    dockRerun.disabled=!!running;
+    dockRunStop.disabled=!running;
+   },
    show:()=>select('system'),hide:()=>setToolWindowVisible(false),
    toggle:()=>select('system')
   };
