@@ -62,7 +62,7 @@ class ProjectPackages:
             raise PackageError(output or f"pip exited with code {completed.returncode}")
         # JSON is emitted only to stdout. A harmless pip warning on stderr
         # must never break the Installed Packages panel.
-        if args == ["list", "--format=json"]:
+        if "list" in args and "--format=json" in args:
             return completed.stdout
         return output
 
@@ -83,6 +83,38 @@ class ProjectPackages:
                  and isinstance(item.get("version"), str)],
                 key=lambda item: item["name"].lower(),
             ),
+        }
+
+    def list_outdated(self) -> dict:
+        """Ask pip which installed distributions have a newer compatible release.
+
+        This is a separate, potentially network-bound operation. Failures must
+        not prevent the installed-packages list from remaining usable.
+        """
+        raw = self.pip(
+            ["list", "--outdated", "--format=json", "--disable-pip-version-check"],
+            timeout=60,
+        )
+        try:
+            results = json.loads(raw)
+        except (TypeError, ValueError) as exc:
+            raise PackageError("Unable to parse outdated package list") from exc
+        if not isinstance(results, list):
+            raise PackageError("Unexpected outdated package response")
+        return {
+            "updates": [
+                {
+                    "name": item["name"],
+                    "version": item["version"],
+                    "latestVersion": item["latest_version"],
+                }
+                for item in results
+                if isinstance(item, dict)
+                and isinstance(item.get("name"), str)
+                and isinstance(item.get("version"), str)
+                and isinstance(item.get("latest_version"), str)
+                and NAME.fullmatch(item["name"])
+            ],
         }
 
     def details(self, name: str) -> dict:
