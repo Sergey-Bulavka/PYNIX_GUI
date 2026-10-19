@@ -84,7 +84,7 @@ MORE_TOOL_WINDOWS = (
 # Existing native actions are invoked rather than copying event listeners.
 EXISTING_ACTIONS = {
     "Project": "rail:0", "Search": "rail:1",
-    "Version Control": "rail:2", "Run": "rail:3",
+    "Version Control": "rail:2", "Run": "run-window",
     "PYNIX Terminal": "terminal:pynix",
     "Terminal": "terminal:system", "Git": "rail:2",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
@@ -392,7 +392,11 @@ EDGE_PROFILE_SCRIPT = r"""<script>
  };
  const clickExisting=entry=>{
   const command=entry.action||'';
-  if(command.startsWith('rail:')){
+  if(command==='run-window'){
+   // Opening Run must not dispatch a click to the gallery rail:3,
+   // which is an unrelated demo selector that mutates Project.
+   window.pynixTerminalDock?.toggleRun?.();
+  }else if(command.startsWith('rail:')){
    const index=Number(command.slice(5));
    document.querySelectorAll('.workspace-mode .rail>.rail-item')[index]?.click();
   }else if(command.startsWith('terminal:')){
@@ -466,6 +470,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     };
     sync();
     if(target)new MutationObserver(sync).observe(target,{attributes:true,attributeFilter:['class']});
+   }
+   if(entry.action==='run-window'){
+    const sync=event=>{
+     const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
+     const active=Boolean(state.visible&&state.scope==='other'&&state.tool==='TERMINAL');
+     button.setAttribute('aria-pressed',String(active));
+     button.setAttribute('aria-expanded',String(active));
+    };
+    window.addEventListener('pynix:terminal-change',sync);
+    sync();
    }
    if(entry.action?.startsWith('terminal:')){
     const scope=entry.action.slice(9);
