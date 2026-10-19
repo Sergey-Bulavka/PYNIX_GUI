@@ -164,100 +164,68 @@ TERMINAL_DOCK_JS = r"""
   });
 
   const updateOverflow=()=>{
+   const showOverflow=visible=>{
+    overflow.style.visibility=visible?'visible':'hidden';
+    overflow.style.pointerEvents=visible?'auto':'none';
+    if(!visible)overflow.open=false;
+   };
    if(scope==='other'){
-    overflow.open=false;
-    overflow.style.visibility='hidden';
-    overflow.style.pointerEvents='none';
-    sessions.style.removeProperty('width');
-    sessions.style.removeProperty('flex');
-    sessions.style.removeProperty('max-width');
-    return;
-   }
-   const items=[...sessions.children];
-   // Undo previous constrained width BEFORE measuring the new natural sizes.
-   // Otherwise the old width leaks into all subsequent overflow decisions.
-   for(const name of ['width','max-width','flex'])sessions.style.removeProperty(name);
-   // Re-measure all sessions, including tabs hidden on the previous pass.
-   for(const item of items)item.hidden=false;
-   overflow.open=false;
-   overflow.style.visibility='hidden';
-   overflow.style.pointerEvents='none';
-   if(!items.length)return;
-   const widths=items.map(item=>item.getBoundingClientRect().width);
-   const gapBetweenTabs=parseFloat(getComputedStyle(sessions).columnGap)||0;
-   const natural=widths.reduce((sum,width)=>sum+width,0)+
-     Math.max(0,items.length-1)*gapBetweenTabs;
-   // The session strip's own clientWidth cannot tell us how much space is
-   // available: its width:max-content/flex sizing can mask overflow.
-   // Instead, reserve the width of every other header control explicitly.
-   const headerRoom=()=>{
-    const style=getComputedStyle(header);
-    const columnGap=parseFloat(style.columnGap)||0;
-    const padding=(parseFloat(style.paddingLeft)||0)+(parseFloat(style.paddingRight)||0);
-    const visible=[...header.children].filter(node=>
-      node!==sessions&&getComputedStyle(node).display!=='none');
-    // The elastic spacer expands into unused room. It is not reserved space.
-    const fixed=visible.reduce((sum,node)=>
-      sum+(node===gap?0:node.getBoundingClientRect().width),0);
-    // Count layout gaps using a separate name: gap is the DOM flex spacer.
-    return Math.max(0,header.clientWidth-padding-fixed-columnGap*visible.length);
-   };
-   let available=headerRoom();
-   const needsOverflow=natural>available+0.5;
-   // The arrow occupies a fixed slot throughout the measurement.
-   // Display is controlled by the actual count of hidden tabs below,
-   // never by a hidden attribute that competes with chrome styles.
-   const setStripWidth=width=>{
-    const safe=Math.max(0,Math.min(width,available));
-    sessions.style.setProperty('flex','0 0 '+safe+'px','important');
-    sessions.style.setProperty('width',safe+'px','important');
-    sessions.style.setProperty('max-width',safe+'px','important');
-   };
-   if(!needsOverflow){
-    setStripWidth(natural);
+    showOverflow(false);
     overflowPopup.replaceChildren();
     return;
    }
-   const tabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
-   const active=scope==='pynix'?pynixId:activeId;
-   const activeIndex=Math.max(0,tabs.findIndex(([id])=>id===active));
-   const shown=new Set();
-   let used=0;
-   const include=index=>{
-    if(index<0||index>=items.length||shown.has(index))return false;
-    const cost=widths[index]+(shown.size?gapBetweenTabs:0);
-    if(shown.size&&used+cost>available+0.5)return false;
-    shown.add(index);used+=cost;return true;
+   // Let the browser's flex layout determine the available space. Every tab
+   // keeps its natural width; overflow:hidden clips only the viewport.
+   // No inline widths, stale flex-basis or manual header-width arithmetic.
+   const items=[...sessions.children];
+   if(!items.length||sessions.clientWidth<=0){
+    showOverflow(false);
+    overflowPopup.replaceChildren();
+    return;
+   }
+   const activeItem=items.find(item=>item.classList.contains('active'));
+   // Reveal the active tab within the strip, including after a menu selection
+   // or after opening another tab. Do not scroll the page or whole dock.
+   if(activeItem){
+    const viewport=sessions.getBoundingClientRect();
+    const selected=activeItem.getBoundingClientRect();
+    if(selected.right>viewport.right+0.5)
+     sessions.scrollLeft+=selected.right-viewport.right+1;
+    else if(selected.left<viewport.left-0.5)
+     sessions.scrollLeft+=selected.left-viewport.left-1;
+   }
+   const viewport=sessions.getBoundingClientRect();
+   const clipped=(item)=>{
+    const rect=item.getBoundingClientRect();
+    return rect.left<viewport.left-0.5||rect.right>viewport.right+0.5;
    };
-   // Keep the selected session visible. Other sessions go in the menu.
-   include(activeIndex);
-   for(let i=activeIndex+1;i<items.length;i++)if(!include(i))break;
-   for(let i=activeIndex-1;i>=0;i--)if(!include(i))break;
+   const allTabs=[...(scope==='pynix'?pynixTabs:shellTabs).entries()];
    overflowPopup.replaceChildren();
-   for(let i=0;i<items.length;i++){
-    items[i].hidden=!shown.has(i);
-    if(shown.has(i))continue;
-    const [id,tab]=tabs[i];
-    if(!tab)continue;
+   items.forEach((item,index)=>{
+    if(!clipped(item))return;
+    const session=allTabs[index];
+    if(!session)return;
+    const [id,tab]=session;
     const entry=document.createElement('button');entry.type='button';
-    entry.className='pynix-overflow-entry';entry.setAttribute('role','menuitem');
-    entry.textContent=(id===active?'✓ ':'')+tab.label;
+    entry.className='pynix-overflow-entry';
+    entry.setAttribute('role','menuitem');
+    entry.textContent=tab.label;
     entry.addEventListener('click',()=>{
      overflow.open=false;
      if(scope==='pynix'){
-      if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
+      if(pynixTabs.has(pynixId))
+       pynixTabs.get(pynixId).draft=pynix.input.value;
       pynixId=id;paintSessions();paintPynix();
-     }else{activeId=id;paintSessions();paintShell();}
+     }else{
+      activeId=id;paintSessions();paintShell();
+     }
     });
     overflowPopup.appendChild(entry);
-   }
-   // A subset of tabs may fit. Put + immediately beside those tabs,
-   // leaving the remaining header width to the elastic right spacer.
-   setStripWidth(used);
-   // A menu is warranted precisely when at least one tab did not fit.
-   const hasHiddenTabs=overflowPopup.children.length>0;
-   overflow.style.visibility=hasHiddenTabs?'visible':'hidden';
-   overflow.style.pointerEvents=hasHiddenTabs?'auto':'none';
+   });
+   // scrollWidth reflects actual clipping, not an estimated header budget.
+   // The list itself is authoritative: no hidden tabs, no chevron.
+   showOverflow(overflowPopup.childElementCount>0&&
+     sessions.scrollWidth>sessions.clientWidth+0.5);
   };
   const paintSessions=()=>{
    sessions.replaceChildren();
