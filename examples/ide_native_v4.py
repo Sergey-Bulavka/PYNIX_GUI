@@ -971,12 +971,70 @@ def main() -> None:
                     "error": str(exc),
                 })
 
+    from pynix_gui.ide_project_packages import ProjectPackages, PackageError
+    packages_manager = ProjectPackages(session.root)
+    packages_lock = run_threading.Lock()
+
+    def publish_packages_result(result):
+        serialized = run_json.dumps(result, ensure_ascii=False).replace(
+            "<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+        script = "window.pynixPackagesResult?.(" + serialized + ");"
+        NSOperationQueue.mainQueue().addOperationWithBlock_(
+            lambda: view.evaluateJavaScript_completionHandler_(script, None))
+
+    class PackagesHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            try:
+                request = dict(message.body())
+                action = request.get("action")
+                if action not in {"list", "details", "install", "upgrade", "uninstall"}:
+                    raise PackageError("Unsupported package action")
+                name = request.get("name", "")
+                version = request.get("version", "")
+                request_id = int(request.get("requestId", 0))
+                if action != "list":
+                    name = packages_manager.name(name)
+                if action == "install" and version:
+                    version = packages_manager.version(version)
+                modifying = action in {"install", "upgrade", "uninstall"}
+                if modifying and not packages_lock.acquire(blocking=False):
+                    raise PackageError("Another pip operation is running")
+
+                def perform():
+                    try:
+                        if action == "list":
+                            result = packages_manager.list_installed()
+                        elif action == "details":
+                            result = {"details": packages_manager.details(name)}
+                        else:
+                            result = packages_manager.change(action, name, version or None)
+                        publish_packages_result(
+                            {"action": action, "name": name,
+                             "requestId": request_id, **result})
+                    except (PackageError, OSError, ValueError) as exc:
+                        publish_packages_result(
+                            {"action": action, "name": name,
+                             "requestId": request_id, "error": str(exc)[:1000]})
+                    finally:
+                        if modifying:
+                            packages_lock.release()
+
+                run_threading.Thread(target=perform, daemon=True).start()
+            except (PackageError, ValueError, TypeError) as exc:
+                publish_packages_result(
+                    {"action": request.get("action", "") if "request" in locals() else "",
+                     "name": request.get("name", "") if "request" in locals() else "",
+                     "requestId": request.get("requestId", 0) if "request" in locals() else 0,
+                     "error": str(exc)[:1000]})
+
+    packages_handler = PackagesHandler.alloc().init()
     terminal_session_handler = TerminalSessionHandler.alloc().init()
     toolbar_drag_handler = ToolbarDragRegionHandler.alloc().init()
     controller = view.configuration().userContentController()
     controller.addScriptMessageHandler_name_(
         toolbar_drag_handler, "pynixToolbarDragRegion")
     controller.addScriptMessageHandler_name_(terminal_session_handler, "pynixTerminalSession")
+    controller.addScriptMessageHandler_name_(packages_handler, "pynixPackages")
     controller.addScriptMessageHandler_name_(semantic_rename_handler, "pynixSemanticRename")
     controller.addScriptMessageHandler_name_(debug_command_handler, "pynixDebugCommand")
     controller.addScriptMessageHandler_name_(project_run_handler, "pynixProjectRun")
