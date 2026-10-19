@@ -43,7 +43,10 @@ def test_top_toolbar_moves_existing_run_debug_and_tools_controls():
     assert "center.appendChild(el)" in CHROME_SCRIPT
     assert "items.prepend(save);" in CHROME_SCRIPT
     assert "window.pynixOpenSearchEverywhere?.();" in CHROME_SCRIPT
-    assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();" in CHROME_SCRIPT
+    # Settings is a separate native macOS window, not the former sidebar pane.
+    assert "document.querySelectorAll('.workspace-mode .rail>.rail-item')[5]?.click();" not in CHROME_SCRIPT
+    assert "gearItem('Settings…',()=>openSettings('Editor')" in CHROME_SCRIPT
+    assert "bridge.postMessage({action:'open-settings',page});" in CHROME_SCRIPT
     assert ".workspace-mode .workspace-toolbar .pynix-pycharm-center" in CHROME_STYLE
     assert ".workspace-mode .workspace-toolbar .pynix-pycharm-right" in CHROME_STYLE
     assert "@media(max-width:930px)" in CHROME_STYLE
@@ -145,7 +148,8 @@ def test_current_file_selector_is_one_button_with_real_mode_options():
         "name.className='pynix-current-config-label';",
         "const arrow=makeIcon('general/chevronDown');",
         "popup.className='pynix-config-options';popup.hidden=true;",
-        "['run','Current File']",
+        "['file','Current File']",
+        "['run','Run Project']",
         "['check','Check Project']",
         "select.value=value;",
         "select.dispatchEvent(new Event('change',{bubbles:true}));",
