@@ -71,7 +71,9 @@ class SettingsStore:
                 prefix=".pynix-settings-", suffix=".tmp", delete=False
             ) as stream:
                 temporary = Path(stream.name)
-                os.fchmod(stream.fileno(), 0o600)
+                # POSIX file mode is not available on Windows (NTFS uses ACLs).
+                if os.name == "posix":
+                    os.fchmod(stream.fileno(), 0o600)
                 json.dump(validated, stream, indent=2)
                 stream.flush()
                 os.fsync(stream.fileno())
