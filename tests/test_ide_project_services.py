@@ -328,3 +328,41 @@ def test_services_option_submenus_can_float_outside_dock():
     assert "overflow:visible!important" in css
     assert ".pynix-services-option-wrap.has-submenu:hover>.pynix-services-submenu" in css
     assert ".pynix-services-options-menu .pynix-services-option-mark>svg" in iconless
+
+
+def test_services_options_are_compact_with_larger_jetbrains_icons():
+    root = Path(__file__).resolve().parents[1]
+    chrome = (root / "pynix_gui/ide_pycharm_chrome.py").read_text(encoding="utf-8")
+    iconless = (root / "pynix_gui/ide_iconless_mode.py").read_text(encoding="utf-8")
+    menu = chrome.split("/* JetBrains Services Options is portaled")[1].split(
+        "/* Header actions are contextual")[0]
+
+    # Keep labels at 13 px but bring the row spacing closer to PyCharm.
+    assert "height:27px!important" in menu
+    assert "min-height:27px!important" in menu
+    assert "height:31px!important" not in menu
+    assert "font:400 13px/18px" in menu
+    assert "padding:4px!important;display:flex!important" in menu
+    assert "background:#45474e!important;margin:3px 5px!important" in menu
+
+    # Checkmarks, JetBrains settings/help icons and submenu arrows are larger.
+    mark = menu.split(".workspace-mode .pynix-services-option-mark{")[1].split("}")[0]
+    assert "width:20px!important;height:20px!important" in mark
+    assert "font-size:18px!important" in mark
+    icon = menu.split(".workspace-mode .pynix-services-option-mark svg{")[1].split("}")[0]
+    assert "width:20px!important;height:20px!important" in icon
+    arrow = menu.split(".workspace-mode .pynix-services-option-arrow{")[1].split("}")[0]
+    assert "width:18px!important;height:18px!important" in arrow
+
+    # Native iconless mode normally forces SVG sizes to 16 px, so keep
+    # the scoped menu overrides without enlarging Services toolbar icons.
+    for selector, dimension in (
+        (".pynix-services-option-mark>svg", "20px"),
+        (".pynix-services-option-arrow", "18px"),
+    ):
+        block = iconless.split(
+            ".workspace-mode.pynix-iconless .pynix-services-options-menu " + selector
+            + "{"
+        )[1].split("}")[0]
+        assert f"width:{dimension}!important;height:{dimension}!important" in block
+    assert ".pynix-services-pane .pynix-services-header button>svg" in iconless
