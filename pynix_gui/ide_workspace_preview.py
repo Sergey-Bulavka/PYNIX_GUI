@@ -1067,7 +1067,8 @@ __PYNIX_DISPLAY_LEXER__
    for(const line of String(output||'').split('\\n').slice(0,4000)){
      const row=document.createElement('div');
      row.className='pynix-run-output-line';
-     const match=line.match(/([^\\s:()]+\\.pnx):(\\d+)(?::(\\d+))?/);
+     const match=line.match(/([^\\s:()]+\\.(?:pnx|py)):(\\d+)(?::(\\d+))?/) ||
+       line.match(/File ["']([^"']+\\.py)["'], line (\\d+)/);
      const source=match&&(known.includes(match[1])?match[1]:
        known.find(item=>match[1].endsWith('/'+item)));
      if(source){
