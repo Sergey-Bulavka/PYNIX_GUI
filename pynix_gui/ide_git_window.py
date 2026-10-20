@@ -182,8 +182,9 @@ GIT_WINDOW_SCRIPT = r"""
  if(!host||!panel||window.pynixGitWindow)return;
  let log=null,chosen=null,details=null,selectedFile='',loading=false,error='',requestId=0;
  let activeTab='Log',showWorktrees=true,logSerial=1;
+ let hideBranches=false,showTags=true,groupByDirectory=true,showDetails=true;
  const logTabs=['Log'];
- const filters={branch:'',text:'',user:'',since:'',until:'',path:''};
+ const filters={branch:'',text:'',user:'',since:'',until:'',path:'',regex:false,matchCase:false};
  const savedTabFilters=new Map([['Log',{...filters}]]);
  const lastRequests={};
  const root=document.createElement('section');root.className='pynix-git-window';
@@ -262,26 +263,63 @@ GIT_WINDOW_SCRIPT = r"""
   bridge.postMessage({action,requestId:id,...payload});
  };
  const refresh=()=>{loading=true;error='';render();post('log',{filters:{...filters}});};
- const railAction=(label,iconName,callback)=>{
-  const b=button(label,callback);
-  b.title=label;
+ const railAction=(label,iconName,callback,{disabled=false}={})=>{
+  const b=button(label,callback||(()=>{}));
+  b.title=disabled?label+' (not yet available)':label;
+  b.setAttribute('aria-label',label);
   const icon=vector(iconName);
   if(icon)b.replaceChildren(icon);
+  else b.textContent=label;
+  b.disabled=disabled;
   sideRail.appendChild(b);return b;
  };
- railAction('Focus branch search','vcs/arrowLeft',()=>branchesSearch.focus());
+ const toggleBranches=()=>{
+  hideBranches=!hideBranches;
+  branchPane.hidden=hideBranches;
+  const arrow=sideRail.querySelector('[data-git-branch-visibility]');
+  if(arrow){
+   const label=hideBranches?'Show Git Branches':'Hide Git Branches';
+   arrow.title=label;arrow.setAttribute('aria-label',label);
+   const svg=vector(hideBranches?'general/chevronRight':'general/chevronLeft');
+   if(svg)arrow.replaceChildren(svg);
+  }
+ };
+ railAction('Hide Git Branches','general/chevronLeft',toggleBranches)
+   .dataset.gitBranchVisibility='true';
  const separator=document.createElement('div');separator.className='pynix-git-rail-divider';
  sideRail.appendChild(separator);
- railAction('New Log tab','general/add',()=>{
-  logSerial+=1;const name='Log '+logSerial;logTabs.push(name);
-  savedTabFilters.set(name,{...filters});selectTab(name);
+ // Match the *actual* JetBrains action semantics. Unsupported mutating
+ // actions remain visible, with disabled controls, never wrong commands.
+ railAction('New Branch','general/add',null,{disabled:true});
+ railAction('Update Selected','vcs/update',null,{disabled:true});
+ railAction('Delete Branch','general/delete',null,{disabled:true});
+ railAction('Compare with Current','vcs/diff',null,{disabled:true});
+ railAction('Show My Branches','general/search',null,{disabled:true});
+ railAction('Fetch All Remotes','vcs/fetch',null,{disabled:true});
+ const favorite=railAction('Mark / Unmark as Favorite','nodes/star',null,{disabled:true});
+ favorite.classList.add('pynix-git-favorite-action');
+ railAction('Navigate Log to Selected Branch Head','general/locate',()=>{
+  list.scrollTop=0;
+  if(log?.commits?.length)choose(log.commits[0]);
  });
- railAction('Clear branch filter','vcs/arrowRight',()=>{
-  filters.branch='';refresh();
+ const settings=railAction('Branches Pane Settings','general/settings',()=>{
+  clearPopover();
+  const item=(title,get,set)=>{
+   const btn=button((get()?'✓ ':'  ')+title,()=>{
+    set(!get());clearPopover();renderBranches();
+   });
+   popover.appendChild(btn);
+  };
+  item('Group By Directory',()=>groupByDirectory,v=>groupByDirectory=v);
+  item('Show Tags',()=>showTags,v=>showTags=v);
+  positionPopover(settings);
  });
- railAction('Refresh Git Log','general/refresh',refresh);
- railAction('Search commits','general/search',()=>query.focus());
- railAction('Collapse branch groups','general/collapseAll',()=>{
+ const lastSeparator=document.createElement('div');
+ lastSeparator.className='pynix-git-rail-divider';sideRail.appendChild(lastSeparator);
+ railAction('Expand All','general/expandAll',()=>{
+  closedGroups.clear();renderBranches();
+ });
+ railAction('Collapse All','general/collapseAll',()=>{
   closedGroups=new Set(['local','remote','tag']);
   for(const ref of log?.refs||[]){
    const parts=ref.name.split('/');
@@ -289,9 +327,6 @@ GIT_WINDOW_SCRIPT = r"""
     closedGroups.add(ref.kind+'/'+parts.slice(0,i).join('/'));
   }
   renderBranches();
- });
- railAction('Expand branch groups','general/expandAll',()=>{
-  closedGroups.clear();renderBranches();
  });
  const filterButton=(label,field)=>{
   const b=button(label,()=>openFilter(field,b),'pynix-git-filter');
@@ -429,12 +464,13 @@ GIT_WINDOW_SCRIPT = r"""
  let closedGroups=new Set();
  const renderBranches=()=>{
   branchTree.replaceChildren();
+  branchPane.hidden=hideBranches;
   if(!log?.available){makeEmpty(branchTree,loading?'Reading Git refs…':'No Git repository at project root');return;}
   const filter=branchesSearch.value.trim().toLowerCase();
   treeRow(branchTree,'HEAD (Current Branch)','⌁',()=>{
    filters.branch='';refresh();
   },!filters.branch);
-  const sections=[['Local','local'],['Remote','remote'],['Tags','tag']];
+  const sections=[['Local','local'],['Remote','remote'],['Tags','tag']].filter(x=>showTags||x[1]!=='tag');
   for(const [title,kind] of sections){
    const refs=log.refs.filter(x=>x.kind===kind&&(!filter||x.name.toLowerCase().includes(filter)));
    const collapsed=closedGroups.has(kind)&&!filter;
@@ -448,7 +484,7 @@ GIT_WINDOW_SCRIPT = r"""
    // as JetBrains Local > feature > branch, instead of one long flat list.
    const refTree={refs:[],dirs:new Map()};
    for(const ref of refs){
-    const parts=ref.name.split('/');
+    const parts=groupByDirectory?ref.name.split('/'): [ref.name];
     let node=refTree;
     for(const segment of parts.slice(0,-1)){
      if(!node.dirs.has(segment))node.dirs.set(segment,{refs:[],dirs:new Map()});
