@@ -686,6 +686,8 @@ def main() -> None:
                             user=filters.get("user", ""),
                             since=filters.get("since", ""), until=filters.get("until", ""),
                             path=filters.get("path", ""),
+                            regex=filters.get("regex", False),
+                            match_case=filters.get("matchCase", False),
                         )
                     elif action == "commit":
                         result = read_git_commit(session.root, request.get("sha"))
