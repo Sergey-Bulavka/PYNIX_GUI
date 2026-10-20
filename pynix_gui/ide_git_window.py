@@ -62,12 +62,10 @@ GIT_WINDOW_STYLE = r"""
  color:#cfd1d5;border:0;cursor:pointer;white-space:nowrap}
 .pynix-git-commit-row:hover{background:#30343b}
 .pynix-git-commit-row[aria-selected="true"]{background:#303d57}
-.pynix-git-graph{width:37px;flex:0 0 37px;display:flex;justify-content:center;
- align-items:center;position:relative;height:28px}
-.pynix-git-graph::before{content:"";position:absolute;top:0;bottom:0;left:50%;
- width:2px;background:#6853b3}
-.pynix-git-graph-dot{position:relative;width:9px;height:9px;background:#292c34;
- border:2px solid #9177e2;border-radius:50%;z-index:1}
+.pynix-git-graph{width:78px;flex:0 0 78px;display:flex;align-items:center;height:28px}
+.pynix-git-graph svg{width:78px;height:28px;display:block}
+.workspace-mode.pynix-iconless .pynix-git-graph svg{display:block!important;
+ visibility:visible!important;opacity:1!important}
 .pynix-git-subject{flex:1;overflow:hidden;text-overflow:ellipsis}
 .pynix-git-badges{font-size:10px;color:#9ac1ea;max-width:135px;
  overflow:hidden;text-overflow:ellipsis}
@@ -322,11 +320,69 @@ GIT_WINDOW_SCRIPT = r"""
    branchTree.appendChild(children);
   }
  };
- const renderGraph=(commit)=>{
+ // True parent-based lane drawing for the ordered local Git DAG.
+ // Unlike a decorative vertical stripe, merges/forks connect actual SHAs.
+ const graphLayouts=commits=>{
+  let lanes=[];
+  const layouts=new Map();
+  for(const commit of commits){
+   let column=lanes.indexOf(commit.sha);
+   if(column<0){column=0;lanes.splice(0,0,commit.sha);}
+   const before=lanes.slice();
+   const after=lanes.slice();
+   const parents=commit.parents||[];
+   if(parents.length){
+    if(after.includes(parents[0])&&after.indexOf(parents[0])!==column)
+     after.splice(column,1);
+    else after[column]=parents[0];
+    for(const parent of parents.slice(1)){
+     if(!after.includes(parent))after.splice(Math.min(column+1,after.length),0,parent);
+    }
+   }else after.splice(column,1);
+   const links=[];
+   for(let i=0;i<before.length;i++){
+    if(i===column)continue;
+    const j=after.indexOf(before[i]);
+    if(j>=0)links.push([i,j,false]);
+   }
+   for(const parent of parents){
+    const j=after.indexOf(parent);
+    if(j>=0)links.push([column,j,true]);
+   }
+   layouts.set(commit.sha,{column,links});
+   lanes=after;
+  }
+  return layouts;
+ };
+ const renderGraph=(commit,layout)=>{
   const graph=document.createElement('span');graph.className='pynix-git-graph';
-  const node=document.createElement('span');node.className='pynix-git-graph-dot';
-  graph.appendChild(node);graph.title=commit.parents.length>1?
-   'Merge commit · '+commit.parents.length+' parents':'Commit '+commit.sha.slice(0,8);
+  const ns='http://www.w3.org/2000/svg';
+  const svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 78 28');
+  svg.setAttribute('aria-hidden','true');
+  const x=n=>Math.min(72,9+Math.max(0,n)*13);
+  const palette=['#8872d2','#4b99bf','#d08a61','#6cab92','#c16fac'];
+  const line=(x1,y1,x2,y2,color)=>{
+   const el=document.createElementNS(ns,'line');
+   for(const [k,v] of [['x1',x1],['y1',y1],['x2',x2],['y2',y2]])
+    el.setAttribute(k,String(v));
+   el.setAttribute('stroke',color);el.setAttribute('stroke-width','2');
+   svg.appendChild(el);
+  };
+  const col=layout?.column||0;
+  line(x(col),0,x(col),14,palette[col%palette.length]);
+  for(const [from,to,isParent] of layout?.links||[]){
+   const color=palette[from%palette.length];
+   if(isParent)line(x(from),14,x(to),28,color);
+   else line(x(from),0,x(to),28,color);
+  }
+  const dot=document.createElementNS(ns,'circle');
+  dot.setAttribute('cx',String(x(col)));dot.setAttribute('cy','14');
+  dot.setAttribute('r','4');dot.setAttribute('fill','#23262c');
+  dot.setAttribute('stroke',palette[col%palette.length]);dot.setAttribute('stroke-width','2');
+  svg.appendChild(dot);graph.appendChild(svg);
+  graph.title=commit.parents.length>1?'Merge · '+commit.parents.length+' parents':
+   'Commit '+commit.sha.slice(0,8);
   return graph;
  };
  const visibleCommits=()=>{
@@ -344,10 +400,11 @@ GIT_WINDOW_SCRIPT = r"""
   if(!log){makeEmpty(list,'Open Git to load repository history');return;}
   const commits=visibleCommits();
   if(!commits.length){makeEmpty(list,'No commits match the current filters');return;}
+  const layouts=graphLayouts(commits);
   for(const commit of commits){
    const row=button('',()=>choose(commit),'pynix-git-commit-row');
    row.setAttribute('role','option');row.setAttribute('aria-selected',String(chosen?.sha===commit.sha));
-   row.appendChild(renderGraph(commit));
+   row.appendChild(renderGraph(commit,layouts.get(commit.sha)));
    const subject=document.createElement('span');subject.className='pynix-git-subject';
    subject.textContent=commit.subject;subject.title=commit.subject;
    row.appendChild(subject);
