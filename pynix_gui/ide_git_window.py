@@ -215,7 +215,21 @@ GIT_WINDOW_SCRIPT = r"""
  const commitToolbar=document.createElement('div');commitToolbar.className='pynix-git-commit-toolbar';
  const query=document.createElement('input');query.className='pynix-git-input pynix-git-query';
  query.type='search';query.placeholder='Text or hash';query.setAttribute('aria-label','Text or hash');
- commitToolbar.appendChild(searchBox(query));
+ const commitSearch=searchBox(query);commitToolbar.appendChild(commitSearch);
+ const matchToggle=(label,key)=>{
+  const b=document.createElement('button');
+  b.className='pynix-git-search-toggle';b.type='button';
+  b.textContent=label;b.title=key==='regex'?'Regex search':'Match case';
+  b.setAttribute('aria-label',b.title);
+  b.setAttribute('aria-pressed',String(filters[key]));
+  b.addEventListener('click',()=>{
+   filters[key]=!filters[key];
+   b.setAttribute('aria-pressed',String(filters[key]));refresh();
+  });
+  commitSearch.appendChild(b);return b;
+ };
+ const regexButton=matchToggle('.*','regex');
+ const caseButton=matchToggle('Cc','matchCase');
  const list=document.createElement('div');list.className='pynix-git-commit-list';list.setAttribute('role','listbox');
  list.setAttribute('aria-label','Git commits');
  commitPane.append(commitToolbar,list);
@@ -340,8 +354,53 @@ GIT_WINDOW_SCRIPT = r"""
  const authorFilter=filterButton('User','user');
  const dateFilter=filterButton('Date','date');
  const pathFilter=filterButton('Paths','path');
- const reloadButton=button('↻',refresh);reloadButton.title='Refresh Git Log';
- commitToolbar.appendChild(reloadButton);
+ const gitToolbarIcon=(name,iconKey,callback,{disabled=false}={})=>{
+  const b=button(name,callback||(()=>{}));
+  b.classList.add('pynix-git-icon-action');
+  const icon=vector(iconKey);
+  if(icon)b.replaceChildren(icon);
+  b.title=disabled?name+' (unavailable)':name;
+  b.disabled=disabled;
+  commitToolbar.appendChild(b);return b;
+ };
+ gitToolbarIcon('Graph Options','general/sortBy',()=>{
+  clearPopover();
+  popover.appendChild(button('Sort by commit date (current)',()=>clearPopover()));
+  popover.appendChild(button('Refresh graph',()=>{clearPopover();refresh();}));
+  positionPopover(graphButton);
+ });
+ const graphButton=commitToolbar.lastElementChild;
+ gitToolbarIcon('Enable Git Log Indexing','progress/resume',null,{disabled:true});
+ gitToolbarIcon('Refresh Git Log','general/refresh',refresh);
+ gitToolbarIcon('Cherry-Pick','vcs/cherryPick',null,{disabled:true});
+ const eyeButton=gitToolbarIcon('Presentation Settings','general/show',()=>{
+  clearPopover();
+  popover.appendChild(button((showDetails?'✓ ':'')+'Show Commit Details',()=>{
+   showDetails=!showDetails;clearPopover();render();
+  }));
+  popover.appendChild(button('Refresh view',()=>{clearPopover();refresh();}));
+  positionPopover(eyeButton);
+ });
+ gitToolbarIcon('Go to Hash/Branch/Tag','general/search',()=>{
+  clearPopover();
+  const input=document.createElement('input');
+  input.type='search';input.className='pynix-git-input';
+  input.placeholder='Full hash or branch name';
+  const navigate=()=>{
+   const value=input.value.trim();
+   clearPopover();
+   if(!value)return;
+   const ref=log?.refs.find(x=>x.name===value||x.full===value);
+   if(ref){filters.branch=ref.full;refresh();return;}
+   query.value=value;filters.text=value;refresh();
+  };
+  input.addEventListener('keydown',e=>{if(e.key==='Enter')navigate();});
+  popover.append(input,button('Find commit',navigate));
+  positionPopover(commitToolbar.lastElementChild);input.focus();
+ });
+ // These toolbar actions are not bundled in tooling V1. Their exact
+ // original JetBrains assets are resolved independently in the catalog.
+
  let searchTimer=0;
  query.addEventListener('input',()=>{
   filters.text=query.value;
@@ -725,6 +784,9 @@ GIT_WINDOW_SCRIPT = r"""
   if(!panel.contains(root))panel.replaceChildren(root);
   host.classList.add('pynix-git-active');
   renderHeader();
+  regexButton.setAttribute('aria-pressed',String(filters.regex));
+  caseButton.setAttribute('aria-pressed',String(filters.matchCase));
+  right.classList.toggle('pynix-git-no-details',!showDetails);
   if(activeTab==='Worktrees'){renderWorktrees();}
   else{
    main.replaceChildren(sideRail,branchPane,commitPane,right);
