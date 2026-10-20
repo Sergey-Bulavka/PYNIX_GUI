@@ -25,6 +25,7 @@ PROBLEMS_CSS = r"""
 .pynix-problems-spacer{flex:1}
 .pynix-problems-header-action,.pynix-problems-rail-button{border:0;background:transparent;color:#b3b7bc;border-radius:5px;font:inherit;cursor:pointer;display:grid;place-items:center}
 .pynix-problems-header-action{width:27px;height:27px;font-size:18px}
+.pynix-problems-header-action svg,.pynix-problems-rail-button svg{width:16px;height:16px;flex-shrink:0;pointer-events:none}
 .pynix-problems-header-action:hover,.pynix-problems-rail-button:hover{background:#3b3e42;color:#f3f3f3}
 .pynix-problems-main{display:flex;flex:1;min-width:0;min-height:0}
 .pynix-problems-rail{flex:0 0 36px;display:flex;flex-direction:column;gap:4px;padding:8px 4px;align-items:center}
@@ -62,6 +63,16 @@ PROBLEMS_JS = r"""
 <script id="pynix-problems-controller">
 (() => {
  'use strict';
+ const icons=__PYNIX_PROBLEMS_ICONS__;
+ const nativeIcon=key=>{
+  const xml=icons[key];
+  if(!xml)return null;
+  const parsed=new DOMParser().parseFromString(xml,'image/svg+xml');
+  if(parsed.documentElement.localName!=='svg'||parsed.querySelector('parsererror'))return null;
+  const svg=document.importNode(parsed.documentElement,true);
+  svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
+  return svg;
+ };
  const host=document.querySelector('.workspace-mode .integrated-terminal');
  const panel=host?.querySelector('.terminal-console');
  if(!host||!panel||window.pynixProblems)return;
@@ -78,7 +89,16 @@ PROBLEMS_JS = r"""
  let sortBySeverity=false,collapsed=new Set(),currentRows=[];
  const toolButton=(label,symbol,callback,cls='pynix-problems-header-action')=>{
   const b=document.createElement('button');b.type='button';b.className=cls;
-  b.textContent=symbol;b.title=label;b.setAttribute('aria-label',label);
+  const iconName={
+   'Refresh saved-project diagnostics':'general/refresh',
+   'View Options':'general/inspections/inspectionsEye',
+   'Hide Problems':'general/hide',
+   'Quick fixes unavailable: compiler tooling V1 does not supply fix actions':'codeInsight/intentionBulbGrey',
+   'Open Editor Preview':'general/editorPreview'
+  }[label];
+  const glyph=nativeIcon(iconName);
+  if(glyph)b.appendChild(glyph);else b.textContent=symbol;
+  b.title=label;b.setAttribute('aria-label',label);
   b.addEventListener('click',callback);return b;
  };
  const hideMenu=()=>{menu.hidden=true;};
@@ -332,9 +352,23 @@ PROBLEMS_JS = r"""
 
 
 def apply_problems_window(html_source: str) -> str:
-    """Install a single Problems pane after workspace and dock initialization."""
+    """Install Problems with verified licensed JetBrains toolbar artwork."""
     if "</body>" not in html_source:
         raise ValueError("Missing HTML body")
     if 'id="pynix-problems-controller"' in html_source:
         return html_source
-    return html_source.replace("</body>", PROBLEMS_CSS + PROBLEMS_JS + "</body>", 1)
+    import json
+    from .ide_icon_parity import BUNDLED_ICONS
+    from .ide_jetbrains_icons import JetBrainsIconCatalog
+
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    icons = {
+        name: icon for name in (
+            "general/refresh", "general/moreVertical", "general/hide",
+            "general/inspections/inspectionsEye", "codeInsight/intentionBulbGrey",
+            "general/editorPreview",
+        ) if (icon := catalog.svg(name, dark=True)) is not None
+    }
+    payload = json.dumps(icons, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    script = PROBLEMS_JS.replace("__PYNIX_PROBLEMS_ICONS__", payload)
+    return html_source.replace("</body>", PROBLEMS_CSS + script + "</body>", 1)
