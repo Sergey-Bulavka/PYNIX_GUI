@@ -193,18 +193,28 @@ GIT_WINDOW_SCRIPT = r"""
  const main=document.createElement('div');main.className='pynix-git-content';
  const status=document.createElement('div');status.className='pynix-git-status';
  root.append(head,main,status);
+ const searchBox=input=>{
+  const wrap=document.createElement('div');wrap.className='pynix-git-search-wrap';
+  const glyph=document.createElement('span');glyph.className='pynix-git-search-icon';
+  const icon=vector('general/search');
+  if(icon)glyph.appendChild(icon);
+  wrap.append(glyph,input);return wrap;
+ };
+ const sideRail=document.createElement('div');
+ sideRail.className='pynix-git-side-actions';sideRail.setAttribute('role','toolbar');
+ sideRail.setAttribute('aria-label','Git Log actions');
  const branchPane=document.createElement('div');branchPane.className='pynix-git-branch-pane';
  const branchesSearch=document.createElement('input');branchesSearch.className='pynix-git-input pynix-git-branch-search';
  branchesSearch.type='search';branchesSearch.placeholder='Branch or tag';branchesSearch.setAttribute('aria-label','Branch or tag');
  const branchToolbar=document.createElement('div');branchToolbar.className='pynix-git-toolbar';
- branchToolbar.appendChild(branchesSearch);branchPane.appendChild(branchToolbar);
+ branchToolbar.appendChild(searchBox(branchesSearch));branchPane.appendChild(branchToolbar);
  const branchTree=document.createElement('div');branchTree.className='pynix-git-branch-tree';
  branchPane.appendChild(branchTree);
  const commitPane=document.createElement('div');commitPane.className='pynix-git-commit-pane';
  const commitToolbar=document.createElement('div');commitToolbar.className='pynix-git-commit-toolbar';
  const query=document.createElement('input');query.className='pynix-git-input pynix-git-query';
  query.type='search';query.placeholder='Text or hash';query.setAttribute('aria-label','Text or hash');
- commitToolbar.appendChild(query);
+ commitToolbar.appendChild(searchBox(query));
  const list=document.createElement('div');list.className='pynix-git-commit-list';list.setAttribute('role','listbox');
  list.setAttribute('aria-label','Git commits');
  commitPane.append(commitToolbar,list);
@@ -217,7 +227,7 @@ GIT_WINDOW_SCRIPT = r"""
  detailsTitle.textContent='Commit details';
  const detailsText=document.createElement('div');detailsText.className='pynix-git-details-content';
  detailsPane.append(detailsTitle,detailsText);right.append(filesTitle,files,detailsPane);
- main.append(branchPane,commitPane,right);
+ main.append(sideRail,branchPane,commitPane,right);
  const worktreesPane=document.createElement('div');worktreesPane.className='pynix-git-worktrees';
  const popover=document.createElement('div');popover.className='pynix-git-popover';
  popover.hidden=true;document.body.appendChild(popover);
@@ -231,6 +241,7 @@ GIT_WINDOW_SCRIPT = r"""
   }[label];
   const icon=key?vector(key):null;
   if(icon)b.appendChild(icon);else b.textContent=label;
+  b.setAttribute('aria-label',label);
   b.addEventListener('click',cb);return b;
  };
  const clearPopover=()=>{popover.hidden=true;popover.replaceChildren();};
@@ -251,8 +262,43 @@ GIT_WINDOW_SCRIPT = r"""
   bridge.postMessage({action,requestId:id,...payload});
  };
  const refresh=()=>{loading=true;error='';render();post('log',{filters:{...filters}});};
+ const railAction=(label,iconName,callback)=>{
+  const b=button(label,callback);
+  b.title=label;
+  const icon=vector(iconName);
+  if(icon)b.replaceChildren(icon);
+  sideRail.appendChild(b);return b;
+ };
+ railAction('Focus branch search','vcs/arrowLeft',()=>branchesSearch.focus());
+ const separator=document.createElement('div');separator.className='pynix-git-rail-divider';
+ sideRail.appendChild(separator);
+ railAction('New Log tab','general/add',()=>{
+  logSerial+=1;const name='Log '+logSerial;logTabs.push(name);
+  savedTabFilters.set(name,{...filters});selectTab(name);
+ });
+ railAction('Clear branch filter','vcs/arrowRight',()=>{
+  filters.branch='';refresh();
+ });
+ railAction('Refresh Git Log','general/refresh',refresh);
+ railAction('Search commits','general/search',()=>query.focus());
+ railAction('Collapse branch groups','general/collapseAll',()=>{
+  closedGroups=new Set(['local','remote','tag']);
+  for(const ref of log?.refs||[]){
+   const parts=ref.name.split('/');
+   for(let i=1;i<parts.length;i++)
+    closedGroups.add(ref.kind+'/'+parts.slice(0,i).join('/'));
+  }
+  renderBranches();
+ });
+ railAction('Expand branch groups','general/expandAll',()=>{
+  closedGroups.clear();renderBranches();
+ });
  const filterButton=(label,field)=>{
-  const b=button(label+' ⌄',()=>openFilter(field,b),'pynix-git-filter');commitToolbar.appendChild(b);
+  const b=button(label,()=>openFilter(field,b),'pynix-git-filter');
+  const chevron=vector('general/chevronDown');
+  if(chevron)b.appendChild(chevron);
+  b.title='Filter by '+label.toLowerCase();
+  commitToolbar.appendChild(b);
   return b;
  };
  const branchFilter=filterButton('Branch','branch');
@@ -364,10 +410,19 @@ GIT_WINDOW_SCRIPT = r"""
  };
  const treeRow=(parent,name,marker,click,selected=false,caption=false)=>{
   const row=button('',click,'pynix-git-tree-row');
+  row.setAttribute('aria-label',name);
   const icon=document.createElement('span');icon.className='pynix-git-tree-mark';
-  icon.textContent=marker;
+  if(marker==='◇'||marker==='◆'){
+   const svg=vector('nodes/tag');
+   if(svg)icon.appendChild(svg);else icon.textContent=marker;
+  }else icon.textContent=marker;
+  if(caption&&name!=='Local'&&name!=='Remote'&&name!=='Tags'){
+   const folder=vector('nodes/folder');
+   if(folder)row.appendChild(folder);
+  }
   const text=document.createElement('span');text.textContent=name;
-  if(caption)text.className='pynix-git-tree-caption';
+  text.className='pynix-git-ref-name';
+  if(caption)text.className+=' pynix-git-tree-caption';
   row.append(icon,text);row.setAttribute('aria-selected',String(selected));
   parent.appendChild(row);return row;
  };
@@ -549,6 +604,9 @@ GIT_WINDOW_SCRIPT = r"""
  const renderDetail=()=>{
   files.replaceChildren();
   detailsText.replaceChildren();detailsTitle.textContent='Commit details';
+  filesTitle.hidden=!chosen;
+  detailsTitle.hidden=!chosen;
+  filesTitle.textContent='Changed files';
   if(!chosen){makeEmpty(files,'Select commit to view changes');
    makeEmpty(detailsText,'Commit details');return;}
   if(!details||details.sha!==chosen.sha){
@@ -633,7 +691,7 @@ GIT_WINDOW_SCRIPT = r"""
   renderHeader();
   if(activeTab==='Worktrees'){renderWorktrees();}
   else{
-   main.replaceChildren(branchPane,commitPane,right);
+   main.replaceChildren(sideRail,branchPane,commitPane,right);
    for(const [field,b] of [['branch',branchFilter],['user',authorFilter],['path',pathFilter]]){
     b.setAttribute('aria-pressed',String(!!filters[field]));
    }
