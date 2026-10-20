@@ -118,6 +118,13 @@ def test_new_git_tool_is_independent_of_legacy_project_rail():
     assert "const graphLayouts=commits=>" in GIT_WINDOW_SCRIPT
     assert "const savedTabFilters=new Map" in GIT_WINDOW_SCRIPT
     assert "const lastRequests={};" in GIT_WINDOW_SCRIPT
+    assert "const searchBox=input=>" in GIT_WINDOW_SCRIPT
+    assert "main.replaceChildren(sideRail,branchPane,commitPane,right)" in GIT_WINDOW_SCRIPT
+    assert "filesTitle.hidden=!chosen;" in GIT_WINDOW_SCRIPT
+    assert "detailsTitle.hidden=!chosen;" in GIT_WINDOW_SCRIPT
+    assert "const railAction=(label,iconName,callback)=>" in GIT_WINDOW_SCRIPT
+    assert ".pynix-git-right-title[hidden]{display:none!important}" in GIT_WINDOW_STYLE
+    assert ".pynix-git-search-wrap:focus-within" in GIT_WINDOW_STYLE
     assert "window.pynixGitLogResult=receive;" in GIT_WINDOW_SCRIPT
     assert "new CustomEvent('pynix:terminal-change'" in TERMINAL_DOCK_JS
 
@@ -129,6 +136,12 @@ def test_log_ui_actions_operate_on_native_snapshots_and_escape_git_text(tmp_path
     assert apply_git_window(output)==output
     assert "__PYNIX_GIT_ICONS__" not in output
     assert "general/moreVertical" in output
+    # The catalog must embed real licensed SVGs, not merely reference their keys.
+    assert r"\\u003csvg" in output
+    for name in ("general/search","general/add","general/refresh",
+                 "nodes/folder","nodes/tag","general/chevronDown",
+                 "general/collapseAll","general/expandAll"):
+        assert '"'+name+'"' in output
     with pytest.raises(ValueError):
         apply_git_window("<html></html>")
     markers=[
