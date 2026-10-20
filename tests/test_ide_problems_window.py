@@ -110,3 +110,22 @@ def test_diagnostic_severity_from_tooling_is_preserved(monkeypatch,tmp_path):
         Problem("main.pnx",3,4,"W101","Unused name","warning"),
         Problem("main.pnx",7,8,"E102","Unknown name","error"),
     )
+
+
+def test_diagnostics_normalizes_absolute_sources_but_ignores_escape(monkeypatch,tmp_path):
+    (tmp_path/"pynix.toml").write_text("[project]\n",encoding="utf-8")
+    compiler=tmp_path/"python"
+    compiler.write_text("",encoding="utf-8")
+    inner=tmp_path/"src"/"main.pnx"
+    inner.parent.mkdir()
+    inner.write_text("function main()\n",encoding="utf-8")
+    payload={"protocol":"pynix-tooling","version":1,"kind":"diagnostics",
+             "diagnostics":[
+                 {"source":str(inner),"code":"E1","message":"Valid"},
+                 {"source":str(tmp_path.parent/"outside.pnx"),"code":"E2","message":"Outside"},
+                 {"source":"../outside.pnx","code":"E3","message":"Traversal"}]}
+    monkeypatch.setattr("pynix_gui.ide_tooling_diagnostics.subprocess.run",
+                        lambda *args,**kwargs: SimpleNamespace(
+                            returncode=0,stdout=json.dumps(payload)))
+    result=read_diagnostics(tmp_path,compiler)
+    assert result.problems==(Problem("src/main.pnx",1,1,"E1","Valid"),)
