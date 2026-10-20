@@ -27,6 +27,7 @@ def test_problems_is_a_separate_dock_tool_and_not_terminal_buffer():
     assert "scope='other';" in TERMINAL_DOCK_JS
     assert "showProblems,toggleProblems" in TERMINAL_DOCK_JS
     assert "pynix-problems-active" in PROBLEMS_CSS
+    assert ".workspace-mode.pynix-iconless .pynix-problems-rail-button>svg" in PROBLEMS_CSS
     assert "window.pynixLiveDiagnosticsResult=receiveDiagnostics;" in PROBLEMS_JS
 
 
@@ -35,6 +36,8 @@ def test_problems_installs_only_once_and_handles_missing_body():
     result=apply_problems_window(base)
     assert 'id="pynix-problems-controller"' in result
     assert apply_problems_window(result)==result
+    assert "__PYNIX_PROBLEMS_ICONS__" not in result
+    assert "general/inspections/inspectionsEye" in result
     with pytest.raises(ValueError, match="HTML body"):
         apply_problems_window("<html><head></head></html>")
 
@@ -74,7 +77,8 @@ def test_workspace_connects_file_switch_save_and_preview(tmp_path):
     assert "window.pynixGetProblemPreview=source=>" in markup
     assert "new CustomEvent('pynix:file-opened'" in markup
     assert "window.pynixProblems?.receiveDiagnostics?.({" in markup
-    assert "window.pynixTerminalDock?.state()?.tool!=='PROBLEMS'" in markup
+    assert "Saved diagnostics belong exclusively to Problems" in markup
+    assert "panel.replaceChildren();" not in markup.split("window.pynixSaveResult=payload=>",1)[1].split("const expanded =",1)[0]
 
 
 def test_native_installs_problems_after_chrome_and_runs_diagnostics_async():
