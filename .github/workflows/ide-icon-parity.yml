@@ -43,6 +43,8 @@ jobs:
             tests/test_ide_workspace_preview.py \
             tests/test_ide_settings_window.py \
             tests/test_ide_problems_window.py \
+            tests/test_ide_git_window.py \
+            tests/test_ide_git_snapshot.py \
             tests/test_ide_tooling_diagnostics.py \
             tests/test_ide_search_everywhere.py \
             tests/test_ide_native_menu.py \
