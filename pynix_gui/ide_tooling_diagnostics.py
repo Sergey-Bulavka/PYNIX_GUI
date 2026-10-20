@@ -17,6 +17,7 @@ class Problem:
     column: int
     code: str
     message: str
+    severity: str = "error"
 
 
 @dataclass(frozen=True)
@@ -59,6 +60,10 @@ def read_diagnostics(project_root: Path, compiler_python: Path, *,
                 column=max(1, int(start.get("column") or 1)),
                 code=str(item.get("code") or ""),
                 message=str(item.get("message") or ""),
+                severity=("warning" if str(item.get("severity") or "").lower() in
+                          ("warning", "weak_warning", "weak warning") or
+                          (not item.get("severity") and str(item.get("code") or "").startswith("W"))
+                          else "error"),
             ))
         return DiagnosticSnapshot(tuple(problems))
     except (OSError, ValueError, subprocess.TimeoutExpired):
