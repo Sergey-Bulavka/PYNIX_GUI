@@ -29,7 +29,8 @@ PROBLEMS_CSS = r"""
 /* Default native V4 suppresses legacy SVG globally. These original, licensed
    JetBrains Problems actions are explicitly exempt, like Packages/Services. */
 .workspace-mode.pynix-iconless .pynix-problems-header-action>svg,
-.workspace-mode.pynix-iconless .pynix-problems-rail-button>svg{
+.workspace-mode.pynix-iconless .pynix-problems-rail-button>svg,
+.workspace-mode.pynix-iconless .pynix-problems-severity>svg{
  display:block!important;visibility:visible!important;opacity:1!important;
  width:16px!important;height:16px!important;min-width:16px!important;
  min-height:16px!important;max-width:16px!important;max-height:16px!important
@@ -49,6 +50,7 @@ PROBLEMS_CSS = r"""
 .pynix-problems-row[aria-selected="true"]{background:#33415b}
 .pynix-problems-severity{font-size:12px;color:#e98a7c;flex:0 0 14px}
 .pynix-problems-severity[data-level="warning"]{color:#d7af68}
+.pynix-problems-severity svg{width:14px;height:14px;vertical-align:middle}
 .pynix-problems-location{color:#8f9eb7;font-variant-numeric:tabular-nums;min-width:48px}
 .pynix-problems-message{flex:1;overflow-wrap:anywhere}
 .pynix-problems-code{color:#898c93;font-size:11px}
@@ -218,7 +220,11 @@ PROBLEMS_JS = r"""
   row.className='pynix-problems-row';row.setAttribute('role','option');
   row.setAttribute('aria-selected',String(selected!==null&&problemKey(selected)===problemKey(item)));
   const level=document.createElement('span');level.className='pynix-problems-severity';
-  level.dataset.level=item.severity;level.textContent=item.severity==='warning'?'▲':'●';
+  level.dataset.level=item.severity;
+  const levelIcon=nativeIcon(item.severity==='warning'?
+   'general/inspections/inspectionsWarning':'general/inspections/inspectionsError');
+  if(levelIcon)level.appendChild(levelIcon);
+  else level.textContent=item.severity==='warning'?'▲':'●';
   const place=document.createElement('span');place.className='pynix-problems-location';
   place.textContent=item.line+':'+item.column;
   const message=document.createElement('span');message.className='pynix-problems-message';message.textContent=item.message;
@@ -382,7 +388,8 @@ def apply_problems_window(html_source: str) -> str:
         name: icon for name in (
             "general/refresh", "general/moreVertical", "general/hide",
             "general/inspections/inspectionsEye", "codeInsight/intentionBulbGrey",
-            "general/editorPreview",
+            "general/editorPreview", "general/inspections/inspectionsError",
+            "general/inspections/inspectionsWarning",
         ) if (icon := catalog.svg(name, dark=True)) is not None
     }
     payload = json.dumps(icons, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
