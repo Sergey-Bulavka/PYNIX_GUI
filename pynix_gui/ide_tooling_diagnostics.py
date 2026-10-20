@@ -54,8 +54,21 @@ def read_diagnostics(project_root: Path, compiler_python: Path, *,
             start = item.get("start") or {}
             if not isinstance(start, dict):
                 start = {}
+            source=str(item.get("source") or "")
+            source_path=Path(source)
+            if source_path.is_absolute():
+                # Tooling may return absolute paths. Only expose project files
+                # so editor navigation stays within the indexed workspace.
+                try:
+                    source=source_path.resolve().relative_to(root).as_posix()
+                except ValueError:
+                    continue
+            else:
+                source=source_path.as_posix()
+                if not source or source=="." or ".." in source_path.parts:
+                    continue
             problems.append(Problem(
-                source=str(item.get("source") or ""),
+                source=source,
                 line=max(1, int(start.get("line") or 1)),
                 column=max(1, int(start.get("column") or 1)),
                 code=str(item.get("code") or ""),
