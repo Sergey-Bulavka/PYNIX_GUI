@@ -55,6 +55,8 @@ def test_real_branches_commits_worktrees_and_filtering(tmp_path):
     assert len(read_git_log(root,branch=ref)["commits"])==2
     assert len(read_git_log(root,path="main.pnx")["commits"])==2
     assert not read_git_log(root,path="unknown.pnx")["commits"]
+    full_sha=git(root,"rev-parse","HEAD")
+    assert [c["sha"] for c in read_git_log(root,text=full_sha)["commits"]]==[full_sha]
 
 
 def test_selected_commit_files_and_safe_unified_diff(tmp_path):
@@ -112,6 +114,10 @@ def test_new_git_tool_is_independent_of_legacy_project_rail():
     assert "activateToolView('GIT');" in TERMINAL_DOCK_JS
     assert "showGit,toggleGit" in TERMINAL_DOCK_JS
     assert "pynix-git-active" in GIT_WINDOW_STYLE
+    assert ".workspace-mode.pynix-iconless .pynix-git-graph svg" in GIT_WINDOW_STYLE
+    assert "const graphLayouts=commits=>" in GIT_WINDOW_SCRIPT
+    assert "const savedTabFilters=new Map" in GIT_WINDOW_SCRIPT
+    assert "const lastRequests={};" in GIT_WINDOW_SCRIPT
     assert "window.pynixGitLogResult=receive;" in GIT_WINDOW_SCRIPT
     assert "new CustomEvent('pynix:terminal-change'" in TERMINAL_DOCK_JS
 
@@ -121,6 +127,8 @@ def test_log_ui_actions_operate_on_native_snapshots_and_escape_git_text(tmp_path
     output=apply_git_window(source)
     assert 'id="pynix-git-window-controller"' in output
     assert apply_git_window(output)==output
+    assert "__PYNIX_GIT_ICONS__" not in output
+    assert "general/moreVertical" in output
     with pytest.raises(ValueError):
         apply_git_window("<html></html>")
     markers=[
