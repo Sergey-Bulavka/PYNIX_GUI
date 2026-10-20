@@ -89,7 +89,7 @@ EXISTING_ACTIONS = {
     "PYNIX Terminal": "terminal:pynix",
     "PYNIX Packages": "packages-window",
     "Services": "services-window",
-    "Terminal": "terminal:system", "Git": "rail:2",
+    "Terminal": "terminal:system", "Git": "git-window",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
 }
 
@@ -400,6 +400,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    window.pynixTerminalDock?.toggleServices?.();
   }else if(command==='packages-window'){
    window.pynixTerminalDock?.togglePackages?.();
+  }else if(command==='git-window'){
+   window.pynixTerminalDock?.toggleGit?.();
   }else if(command==='dock:PROBLEMS'){
    window.pynixTerminalDock?.toggleProblems?.();
   }else if(command==='run-window'){
@@ -505,6 +507,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     const sync=event=>{
      const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
      const active=Boolean(state.visible&&state.scope==='packages');
+     button.setAttribute('aria-pressed',String(active));
+     button.setAttribute('aria-expanded',String(active));
+    };
+    window.addEventListener('pynix:terminal-change',sync);
+    sync();
+   }
+   if(entry.action==='git-window'){
+    const sync=event=>{
+     const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
+     const active=Boolean(state.visible&&state.scope==='other'&&state.tool==='GIT');
      button.setAttribute('aria-pressed',String(active));
      button.setAttribute('aria-expanded',String(active));
     };
