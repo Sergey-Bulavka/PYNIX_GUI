@@ -80,6 +80,12 @@ __PYNIX_DISPLAY_LEXER__
  window.pynixIndexedSources=files.map(file=>file.name);
  const openTabs = [];
  let current = null;
+ window.pynixGetActiveSource=()=>current;
+ window.pynixGetProblemPreview=source=>{
+  const file=byName.get(source);
+  if(!file||file.unloaded||file.nonText)return null;
+  return {text:file.text,dirty:!!file.dirty};
+ };
  let selectedPath = null;
  // Native editor uses a textarea for real caret, selection, IME and Undo/Redo.
  const editorInput=document.createElement('textarea');
@@ -840,7 +846,8 @@ __PYNIX_DISPLAY_LEXER__
    tab.classList.add('pynix-active-tab');
    if(['TERMINAL','PROBLEMS','OUTPUT','DEBUG CONSOLE'].includes(tab.textContent.trim())){
      activateToolView(tab.textContent.trim());
-     setToolWindowVisible(true);
+     if(tab.textContent.trim()==='PROBLEMS')window.pynixTerminalDock?.showProblems?.();
+     else setToolWindowVisible(true);
      for(const child of toolTabs.children){
        if(child.getAttribute('role')==='tab')
          child.setAttribute('aria-selected',String(child===tab));
@@ -1977,6 +1984,9 @@ editorInput.addEventListener('keydown',event=>{
      return;
    }
    if(payload.saved){
+     window.pynixProblems?.receiveDiagnostics?.({
+      error:payload.diagnostic_error||'',problems:payload.diagnostics||[]
+     });
      file.savedText=typeof payload.savedText==='string'?payload.savedText:pending.text;
      if(Number.isInteger(pending.revision)&&file.text===pending.text
          &&(coreRevisions.get(source)||0)===pending.revision){
@@ -1996,7 +2006,7 @@ editorInput.addEventListener('keydown',event=>{
        const local=diagnostics.filter(item=>item.source===payload.source||item.source?.endsWith('/'+payload.source));
        diagnosticsStatus.textContent=payload.diagnostic_error||('Problems: '+local.length);
        const panel=document.querySelector('.terminal-console');
-       if(panel){
+       if(panel&&window.pynixTerminalDock?.state()?.tool!=='PROBLEMS'){
          panel.replaceChildren();
          for(const item of local){
            const entry=document.createElement('div');
