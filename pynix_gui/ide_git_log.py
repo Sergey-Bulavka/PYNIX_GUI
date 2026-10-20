@@ -143,10 +143,16 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
         args.remove("--all")
         args.insert(1, matches[0]["full"])
     if text:
-        if len(text) > 160:
+        if not isinstance(text, str) or len(text) > 160:
             raise GitLogError("Search text is too long")
-        # --fixed-strings means user text is never a regular expression.
-        args.extend(["--regexp-ignore-case", "--fixed-strings", "--grep=" + text])
+        if _SHA.fullmatch(text):
+            # A full hash may be older than the current 250-commit page.
+            # --no-walk reads only that precise object, never its ancestors.
+            args.remove("--all") if "--all" in args else None
+            args.extend(["--no-walk", text])
+        elif not re.fullmatch(r"[0-9a-fA-F]{5,39}", text):
+            # --fixed-strings means user text is never a regular expression.
+            args.extend(["--regexp-ignore-case", "--fixed-strings", "--grep=" + text])
     if user:
         if len(user) > 140:
             raise GitLogError("Author filter is too long")
