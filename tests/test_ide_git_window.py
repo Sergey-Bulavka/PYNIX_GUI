@@ -137,7 +137,7 @@ def test_log_ui_actions_operate_on_native_snapshots_and_escape_git_text(tmp_path
     assert "__PYNIX_GIT_ICONS__" not in output
     assert "general/moreVertical" in output
     # The catalog must embed real licensed SVGs, not merely reference their keys.
-    assert r"\\u003csvg" in output
+    assert r"\u003csvg" in output
     for name in ("general/search","general/add","general/refresh",
                  "nodes/folder","nodes/tag","general/chevronDown",
                  "general/collapseAll","general/expandAll"):
