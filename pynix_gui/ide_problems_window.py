@@ -26,6 +26,14 @@ PROBLEMS_CSS = r"""
 .pynix-problems-header-action,.pynix-problems-rail-button{border:0;background:transparent;color:#b3b7bc;border-radius:5px;font:inherit;cursor:pointer;display:grid;place-items:center}
 .pynix-problems-header-action{width:27px;height:27px;font-size:18px}
 .pynix-problems-header-action svg,.pynix-problems-rail-button svg{width:16px;height:16px;flex-shrink:0;pointer-events:none}
+/* Default native V4 suppresses legacy SVG globally. These original, licensed
+   JetBrains Problems actions are explicitly exempt, like Packages/Services. */
+.workspace-mode.pynix-iconless .pynix-problems-header-action>svg,
+.workspace-mode.pynix-iconless .pynix-problems-rail-button>svg{
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:16px!important;height:16px!important;min-width:16px!important;
+ min-height:16px!important;max-width:16px!important;max-height:16px!important
+}
 .pynix-problems-header-action:hover,.pynix-problems-rail-button:hover{background:#3b3e42;color:#f3f3f3}
 .pynix-problems-main{display:flex;flex:1;min-width:0;min-height:0}
 .pynix-problems-rail{flex:0 0 36px;display:flex;flex-direction:column;gap:4px;padding:8px 4px;align-items:center}
