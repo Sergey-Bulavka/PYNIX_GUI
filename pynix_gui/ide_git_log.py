@@ -170,7 +170,7 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
     for record in raw.split("\x1e"):
         if not record.strip():
             continue
-        parts = record.strip().split("\x1f")
+        parts = record.strip("\r\n ").split("\x1f")
         if len(parts) < 7 or not _SHA.fullmatch(parts[0]):
             continue
         sha, parents, author, email, date, subject, decorations = parts[:7]
