@@ -794,6 +794,7 @@ GIT_WINDOW_SCRIPT = r"""
  const chooseFile=file=>{
   if(!chosen||!details)return;
   selectedFile=file.path;
+  showDiff.disabled=false;
   for(const row of files.querySelectorAll('.pynix-git-file')){
    row.setAttribute('aria-selected',String(row.title===selectedFile));
   }
