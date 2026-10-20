@@ -306,10 +306,10 @@ GIT_WINDOW_SCRIPT = r"""
   const svg=vector(iconKey);if(svg)b.replaceChildren(svg);
   rightToolbar.appendChild(b);return b;
  };
- changedAction('Show Diff','vcs/diff',()=>{if(selectedFile&&chosen){
+ const showDiff=changedAction('Show Diff','vcs/diff',()=>{if(selectedFile&&chosen){
   const file=details?.files?.find(x=>x.path===selectedFile);
   if(file)chooseFile(file);
- }});
+ }});showDiff.disabled=true;
  changedAction('Revert Selected Changes','vcs/revert',null,{disabled:true});
  changedAction('History Up to Here','general/history',null,{disabled:true});
  const viewOptions=changedAction('View Options','general/show',()=>{
@@ -428,7 +428,7 @@ GIT_WINDOW_SCRIPT = r"""
   b.disabled=disabled;
   commitToolbar.appendChild(b);return b;
  };
- gitToolbarIcon('Graph Options','general/sortBy',()=>{
+ gitToolbarIcon('Graph Options','vcsLog/intelliSort',()=>{
   clearPopover();
   popover.appendChild(button('Sort by commit date (current)',()=>clearPopover()));
   popover.appendChild(button('Refresh graph',()=>{clearPopover();refresh();}));
@@ -777,7 +777,7 @@ GIT_WINDOW_SCRIPT = r"""
    details.author+' <'+details.email+'>\n'+fmtDate(details.date)+'\n'+details.sha;
   detailsText.append(title,meta);
   const changed=Array.isArray(details.files)?details.files:[];
-  rightToolbar.querySelector('[aria-label="Show Diff"]').disabled=!selectedFile;
+  showDiff.disabled=!selectedFile;
   filesTitle.textContent='Changed files ('+changed.length+')';
   if(!changed.length){makeEmpty(files,'No changed files');return;}
   for(const file of changed){
@@ -911,6 +911,19 @@ def apply_git_window(html_source: str) -> str:
             "vcs/arrowLeft", "vcs/arrowRight",
         ) if (svg := catalog.svg(name, dark=True)) is not None
     }
+    # Two icons are maintained in a different upstream JetBrains module and
+    # are absent from the generic expui manifest. Bundle only the original
+    # Apache-2.0 SVGs, with both dark and light variants and fixed paths.
+    from .ide_jetbrains_icons import APACHE_NOTICE
+    from pathlib import Path
+
+    extras = Path(__file__).parent / "assets" / "jetbrains_new_ui" / "git_log_extra"
+    for name in ("vcs/cherryPick", "vcsLog/intelliSort"):
+        file = extras / (name + "_dark.svg")
+        source = file.read_text(encoding="utf-8")
+        if not APACHE_NOTICE.search(source) or "<svg " not in source:
+            raise ValueError("Invalid bundled original JetBrains icon: " + name)
+        icons[name] = source
     payload = json.dumps(icons, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     script = GIT_WINDOW_SCRIPT.replace("__PYNIX_GIT_ICONS__", payload)
     return html_source.replace("</body>", GIT_WINDOW_STYLE + script + "</body>", 1)
