@@ -265,7 +265,7 @@ def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button()
     assert EXISTING_ACTIONS["PYNIX Terminal"] == "terminal:pynix"
     assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
-    assert EXISTING_ACTIONS["Git"] == "rail:2"
+    assert EXISTING_ACTIONS["Git"] == "git-window"
     assert EXISTING_ACTIONS["Services"] == "services-window"
     assert EXISTING_ACTIONS["PYNIX Packages"] == "packages-window"
     assert "if(edge==='left-bottom'||edge==='right-top'){" in EDGE_PROFILE_SCRIPT
