@@ -92,6 +92,7 @@ PROBLEMS_JS = r"""
   const iconName={
    'Refresh saved-project diagnostics':'general/refresh',
    'View Options':'general/inspections/inspectionsEye',
+   'More Options':'general/moreVertical',
    'Hide Problems':'general/hide',
    'Quick fixes unavailable: compiler tooling V1 does not supply fix actions':'codeInsight/intentionBulbGrey',
    'Open Editor Preview':'general/editorPreview'
@@ -118,7 +119,7 @@ PROBLEMS_JS = r"""
  header.appendChild(heading);headingTabs();
  const spacer=document.createElement('div');spacer.className='pynix-problems-spacer';header.appendChild(spacer);
  const refresh=toolButton('Refresh saved-project diagnostics','↻',()=>requestDiagnostics(true));
- const options=toolButton('View Options','⋮',()=>toggleMenu(options));
+ const options=toolButton('More Options','⋮',()=>toggleMenu(options));
  const hide=toolButton('Hide Problems','−',()=>window.pynixTerminalDock?.hide?.());
  header.append(refresh,options,hide);
  const main=document.createElement('div');main.className='pynix-problems-main';
@@ -216,7 +217,14 @@ PROBLEMS_JS = r"""
   const code=document.createElement('span');code.className='pynix-problems-code';code.textContent=item.code;
   row.append(level,place,message,code);
   row.title=item.source+':'+item.line+':'+item.column+' — '+item.message;
-  row.addEventListener('click',()=>{selected=item;render();});
+  row.addEventListener('click',()=>{
+   selected=item;
+   // Keep this row in the DOM: F4, Enter, arrows and Cmd+C need keyboard focus.
+   for(const button of results.querySelectorAll('.pynix-problems-row')){
+    button.setAttribute('aria-selected',String(button===row));
+   }
+   renderPreview();
+  });
   row.addEventListener('dblclick',()=>jump(item));
   row.addEventListener('keydown',e=>{
    if(e.key==='F4'||e.key==='Enter'){e.preventDefault();jump(item);}
