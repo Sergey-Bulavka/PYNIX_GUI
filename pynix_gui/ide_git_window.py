@@ -324,14 +324,43 @@ GIT_WINDOW_SCRIPT = r"""
    },false,true);headRow.setAttribute('aria-expanded',String(!collapsed));
    if(collapsed)continue;
    const children=document.createElement('div');children.className='pynix-git-tree-children';
-   // The actual Git refs are authoritative: arbitrary folders are visual only.
+   // Preserve the real ref names, but show slash-separated branch namespaces
+   // as JetBrains Local > feature > branch, instead of one long flat list.
+   const refTree={refs:[],dirs:new Map()};
    for(const ref of refs){
-    const marker=ref.kind==='tag'?'◇':ref.name===log.branch?'◆':'◇';
-    const row=treeRow(children,ref.name,marker,()=>{
-     filters.branch=ref.full;refresh();
-    },filters.branch===ref.full);
-    row.title=ref.full+' '+ref.sha.slice(0,8);
+    const parts=ref.name.split('/');
+    let node=refTree;
+    for(const segment of parts.slice(0,-1)){
+     if(!node.dirs.has(segment))node.dirs.set(segment,{refs:[],dirs:new Map()});
+     node=node.dirs.get(segment);
+    }
+    node.refs.push({...ref,shortName:parts.at(-1)});
    }
+   const emit=(node,parent,prefix)=>{
+    for(const ref of node.refs.sort((a,b)=>a.name.localeCompare(b.name))){
+     const marker=ref.kind==='tag'?'◇':ref.name===log.branch?'◆':'◇';
+     const row=treeRow(parent,ref.shortName,marker,()=>{
+      filters.branch=ref.full;refresh();
+     },filters.branch===ref.full);
+     row.title=ref.full+' '+ref.sha.slice(0,8);
+    }
+    for(const [segment,child] of [...node.dirs.entries()].sort((a,b)=>a[0].localeCompare(b[0]))){
+     const groupKey=kind+'/'+prefix+segment;
+     const hidden=closedGroups.has(groupKey)&&!filter;
+     const folder=treeRow(parent,segment,hidden?'▸':'▾',()=>{
+      if(closedGroups.has(groupKey))closedGroups.delete(groupKey);
+      else closedGroups.add(groupKey);
+      renderBranches();
+     },false,true);
+     folder.setAttribute('aria-expanded',String(!hidden));
+     if(!hidden){
+      const nested=document.createElement('div');nested.className='pynix-git-tree-children';
+      emit(child,nested,prefix+segment+'/');
+      parent.appendChild(nested);
+     }
+    }
+   };
+   emit(refTree,children,'');
    branchTree.appendChild(children);
   }
  };
