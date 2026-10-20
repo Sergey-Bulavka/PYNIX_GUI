@@ -633,20 +633,34 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixProjectSymbolsResult(" + serialized + ");", None)
 
+    diagnostics_generation = {"value": 0}
+
     class DiagnosticsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
-            import json
+            # Tooling can take up to 20 seconds. Keep WKWebView's UI thread live.
             from pynix_gui.ide_tooling_diagnostics import read_diagnostics
-            snapshot = read_diagnostics(session.root, compiler_python)
-            response = {
-                "error": snapshot.error,
-                "problems": [{"source": p.source, "line": p.line,
-                              "column": p.column, "code": p.code, "message": p.message}
-                             for p in snapshot.problems],
-            }
-            serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
-            view.evaluateJavaScript_completionHandler_(
-                "window.pynixLiveDiagnosticsResult(" + serialized + ");", None)
+            diagnostics_generation["value"] += 1
+            generation = diagnostics_generation["value"]
+
+            def worker():
+                snapshot = read_diagnostics(session.root, compiler_python)
+                response = {
+                    "error": snapshot.error,
+                    "problems": [{"source": p.source, "line": p.line,
+                                  "column": p.column, "code": p.code,
+                                  "message": p.message, "severity": p.severity}
+                                 for p in snapshot.problems],
+                }
+                serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+
+                def publish():
+                    if generation == diagnostics_generation["value"]:
+                        view.evaluateJavaScript_completionHandler_(
+                            "window.pynixLiveDiagnosticsResult(" + serialized + ");", None)
+
+                NSOperationQueue.mainQueue().addOperationWithBlock_(publish)
+
+            run_threading.Thread(target=worker, daemon=True).start()
 
     class NavigationHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
@@ -840,6 +854,7 @@ def main() -> None:
                 response["diagnostics"] = [
                     {"source": problem.source, "line": problem.line,
                      "column": problem.column, "code": problem.code,
+                     "severity": problem.severity,
                      "message": problem.message}
                     for problem in snapshot.problems
                 ]
