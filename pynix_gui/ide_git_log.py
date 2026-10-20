@@ -110,7 +110,7 @@ def _validated_path(value: str) -> str:
     if not isinstance(value, str) or not value or len(value) > 1000 or "\x00" in value:
         raise GitLogError("Invalid project-relative path")
     path = Path(value)
-    if path.is_absolute() or ".." in path.parts or value.startswith("-"):
+    if path.is_absolute() or ".." in path.parts or "\\" in value or value.startswith("-"):
         raise GitLogError("Git path must stay inside the project")
     return value
 
@@ -126,9 +126,7 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
     root = _root(root)
     limit = min(400, max(1, int(limit)))
     refs, valid_refs = _references(root)
-    current = _text(_read(root, "symbolic-ref", "-q", "--short", "HEAD")
-                    ) .strip() if False else ""
-    # Detached HEAD is not an error, unlike symbolic-ref without -q.
+    # Branch --show-current is empty in detached-HEAD mode.
     try:
         current = _text(_read(root, "branch", "--show-current")).strip()
     except GitLogError:
@@ -158,7 +156,7 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
         if value:
             if not _DATE.fullmatch(value):
                 raise GitLogError("Dates must use YYYY-MM-DD")
-            args.append(key + "=" + value)
+            args.append(key + "=" + (value + " 23:59:59" if key == "--until" else value))
     if path:
         args.extend(["--", _validated_path(path)])
     try:
