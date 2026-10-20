@@ -1131,6 +1131,10 @@ __PYNIX_DISPLAY_LEXER__
  document.querySelector('.workspace-toolbar')?.appendChild(diagnosticsButton);
  diagnosticsButton.addEventListener('click',()=>{
    window.pynixTerminalDock?.showProblems?.();
+   if(window.pynixProblems){
+    window.pynixProblems.refresh();
+    return;
+   }
    const bridge=window.webkit?.messageHandlers?.pynixDiagnostics;
    const status=document.querySelector('.pynix-diagnostics-status');
    if(status)status.textContent='Checking saved project…';
