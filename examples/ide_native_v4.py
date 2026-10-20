@@ -1189,6 +1189,9 @@ def main() -> None:
     document = apply_native_tooltips(document)
     from pynix_gui.ide_search_everywhere import apply_search_everywhere
     document = apply_search_everywhere(document)
+    # JetBrains Problems owns a separate diagnostic view; never overwrite Terminal.
+    from pynix_gui.ide_problems_window import apply_problems_window
+    document = apply_problems_window(document)
     # Final, editor-scoped theme layer: do not recolor toolbar, caret, selection.
     from pynix_gui.ide_editor_theme import apply_editor_darcula
     document = apply_editor_darcula(document)
