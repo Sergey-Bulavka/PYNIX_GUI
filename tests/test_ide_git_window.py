@@ -50,6 +50,11 @@ def test_real_branches_commits_worktrees_and_filtering(tmp_path):
     assert any(r["kind"]=="local" for r in result["refs"])
     assert result["worktrees"] and result["worktrees"][0]["path"]
     assert len(read_git_log(root,text="Update PYNIX")["commits"])==1
+    assert len(read_git_log(root,text="update pynix",match_case=False)["commits"])==1
+    assert len(read_git_log(root,text="update pynix",match_case=True)["commits"])==0
+    assert len(read_git_log(root,text=r"Update.*source",regex=True)["commits"])==1
+    with pytest.raises(GitLogError,match="regular expression"):
+        read_git_log(root,text="[invalid",regex=True)
     assert len(read_git_log(root,user="PYNIX Git Test")["commits"])==2
     ref="refs/heads/feature/read-only"
     assert len(read_git_log(root,branch=ref)["commits"])==2
@@ -122,7 +127,22 @@ def test_new_git_tool_is_independent_of_legacy_project_rail():
     assert "main.replaceChildren(sideRail,branchPane,commitPane,right)" in GIT_WINDOW_SCRIPT
     assert "filesTitle.hidden=!chosen;" in GIT_WINDOW_SCRIPT
     assert "detailsTitle.hidden=!chosen;" in GIT_WINDOW_SCRIPT
-    assert "const railAction=(label,iconName,callback)=>" in GIT_WINDOW_SCRIPT
+    assert "const railAction=(label,iconName,callback,{disabled=false}={})=>" in GIT_WINDOW_SCRIPT
+    assert "'Hide Git Branches','general/chevronLeft'" in GIT_WINDOW_SCRIPT
+    assert "'New Branch','general/add',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "'Update Selected','vcs/update',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "'Delete Branch','general/delete',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "'Compare with Current','vcs/diff',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "'Fetch All Remotes','vcs/fetch',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "'Navigate Log to Selected Branch Head','general/locate'" in GIT_WINDOW_SCRIPT
+    assert "'Branches Pane Settings','general/settings'" in GIT_WINDOW_SCRIPT
+    assert "'Graph Options','vcsLog/intelliSort'" in GIT_WINDOW_SCRIPT
+    assert "'Cherry-Pick','vcs/cherryPick',null,{disabled:true}" in GIT_WINDOW_SCRIPT
+    assert "const regexButton=matchToggle('.*','regex');" in GIT_WINDOW_SCRIPT
+    assert "const caseButton=matchToggle('Cc','matchCase');" in GIT_WINDOW_SCRIPT
+    assert "className='pynix-git-right-toolbar'" in GIT_WINDOW_SCRIPT
+    assert "'Show Diff','vcs/diff'" in GIT_WINDOW_SCRIPT
+    assert "'View Options','general/show'" in GIT_WINDOW_SCRIPT
     assert ".pynix-git-right-title[hidden]{display:none!important}" in GIT_WINDOW_STYLE
     assert ".pynix-git-search-wrap:focus-within" in GIT_WINDOW_STYLE
     assert "window.pynixGitLogResult=receive;" in GIT_WINDOW_SCRIPT
@@ -140,7 +160,9 @@ def test_log_ui_actions_operate_on_native_snapshots_and_escape_git_text(tmp_path
     assert r"\u003csvg" in output
     for name in ("general/search","general/add","general/refresh",
                  "nodes/folder","nodes/tag","general/chevronDown",
-                 "general/collapseAll","general/expandAll"):
+                 "general/collapseAll","general/expandAll",
+                 "vcs/cherryPick","vcsLog/intelliSort","vcs/update",
+                 "vcs/fetch","general/delete","general/show","general/settings"): 
         assert '"'+name+'"' in output
     with pytest.raises(ValueError):
         apply_git_window("<html></html>")
@@ -148,7 +170,7 @@ def test_log_ui_actions_operate_on_native_snapshots_and_escape_git_text(tmp_path
         "const logTabs=['Log']","'Worktrees'","'Branch'","'User'",
         "'Date'","'Paths'","'Text or hash'","Branch or tag",
         "New Git Log tab","Close Worktrees tab","refresh","read-only",
-        "pynixGitLog","button('↻',refresh)","renderBranches","renderCommits",
+        "pynixGitLog","gitToolbarIcon('Refresh Git Log','general/refresh',refresh)","renderBranches","renderCommits",
         "renderWorktrees","read-only","read_git",
         "pre.textContent=packet.data.error||packet.data.diff",
         "detailsText.textContent=String(packet.error)",
