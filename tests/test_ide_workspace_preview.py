@@ -113,8 +113,12 @@ def test_v4_generated_project_javascript_parses_with_node_if_available(tmp_path)
     source = workspace_bootstrap(WorkspaceSession(tmp_path))
     match = re.fullmatch(r"<script>\s*(.*?)\s*</script>", source, re.S)
     assert match is not None
-    proc = subprocess.run([node, "--check", "-"], input=match.group(1), encoding="utf-8",
-                          text=True, capture_output=True, timeout=10)
+    # Windows/macOS CI can hang Node --check when a very large script is
+    # streamed over stdin. A file-based syntax check has stable input boundaries.
+    script = tmp_path / "workspace-check.js"
+    script.write_text(match.group(1), encoding="utf-8")
+    proc = subprocess.run([node, "--check", str(script)],
+                          text=True, capture_output=True, timeout=40)
     assert proc.returncode == 0, proc.stderr
 
 
