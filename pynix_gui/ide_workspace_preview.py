@@ -1130,6 +1130,7 @@ __PYNIX_DISPLAY_LEXER__
  diagnosticsButton.title='Run saved-project compiler diagnostics';
  document.querySelector('.workspace-toolbar')?.appendChild(diagnosticsButton);
  diagnosticsButton.addEventListener('click',()=>{
+   window.pynixTerminalDock?.showProblems?.();
    const bridge=window.webkit?.messageHandlers?.pynixDiagnostics;
    const status=document.querySelector('.pynix-diagnostics-status');
    if(status)status.textContent='Checking saved project…';
