@@ -902,6 +902,12 @@ def apply_git_window(html_source: str) -> str:
             "general/hide", "general/chevronDown", "general/close",
             "general/search", "nodes/tag", "nodes/folder",
             "general/collapseAll", "general/expandAll",
+            "general/chevronLeft", "general/chevronRight",
+            "general/delete", "general/settings", "general/locate",
+            "general/sortBy", "general/show", "general/history",
+            "general/undo", "general/related",
+            "progress/resume", "vcs/update", "vcs/fetch",
+            "vcs/diff", "vcs/revert", "nodes/star",
             "vcs/arrowLeft", "vcs/arrowRight",
         ) if (svg := catalog.svg(name, dark=True)) is not None
     }
