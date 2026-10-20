@@ -511,6 +511,16 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     window.addEventListener('pynix:terminal-change',sync);
     sync();
    }
+   if(entry.action==='dock:PROBLEMS'){
+    const sync=event=>{
+     const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
+     const active=Boolean(state.visible&&state.scope==='other'&&state.tool==='PROBLEMS');
+     button.setAttribute('aria-pressed',String(active));
+     button.setAttribute('aria-expanded',String(active));
+    };
+    window.addEventListener('pynix:terminal-change',sync);
+    sync();
+   }
    if(entry.action==='run-window'){
     const sync=event=>{
      const state=event?.detail||window.pynixTerminalDock?.state?.()||{};
