@@ -2005,16 +2005,8 @@ editorInput.addEventListener('keydown',event=>{
        const diagnostics=payload.diagnostics||[];
        const local=diagnostics.filter(item=>item.source===payload.source||item.source?.endsWith('/'+payload.source));
        diagnosticsStatus.textContent=payload.diagnostic_error||('Problems: '+local.length);
-       const panel=document.querySelector('.terminal-console');
-       if(panel&&window.pynixTerminalDock?.state()?.tool!=='PROBLEMS'){
-         panel.replaceChildren();
-         for(const item of local){
-           const entry=document.createElement('div');
-           entry.className='navigation-result';
-           entry.textContent=(item.line||1)+':'+(item.column||1)+' '+(item.code||'')+' '+item.message;
-           panel.appendChild(entry);
-         }
-       }
+       // Saved diagnostics belong exclusively to Problems. Never replace
+       // Run/Debug/Terminal output when the user saves a source file.
      }
    }
  };
