@@ -117,7 +117,8 @@ def _validated_path(value: str) -> str:
 
 def read_git_log(root: Path, *, branch: str = "", text: str = "",
                  user: str = "", since: str = "", until: str = "",
-                 path: str = "", limit: int = 250) -> dict[str, Any]:
+                 path: str = "", limit: int = 250,
+                 regex: bool = False, match_case: bool = False) -> dict[str, Any]:
     """Return a bounded log plus local/remote refs and worktrees.
 
     Filtering is performed by Git on all history (not just the first page).
@@ -150,9 +151,20 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
             # --no-walk reads only that precise object, never its ancestors.
             args.remove("--all") if "--all" in args else None
             args.extend(["--no-walk", text])
-        elif not re.fullmatch(r"[0-9a-fA-F]{5,39}", text):
-            # --fixed-strings means user text is never a regular expression.
-            args.extend(["--regexp-ignore-case", "--fixed-strings", "--grep=" + text])
+        elif not re.fullmatch(r"[0-9a-fA-F]{5,39}", text) or regex:
+            # Text search stays read-only and uses Git's bounded grep options.
+            # Regex mode is explicit; the default is literal text.
+            if regex:
+                try:
+                    re.compile(text)
+                except re.error as exc:
+                    raise GitLogError("Invalid commit-search regular expression") from exc
+                args.append("--extended-regexp")
+            else:
+                args.append("--fixed-strings")
+            if not match_case:
+                args.append("--regexp-ignore-case")
+            args.append("--grep=" + text)
     if user:
         if len(user) > 140:
             raise GitLogError("Author filter is too long")
