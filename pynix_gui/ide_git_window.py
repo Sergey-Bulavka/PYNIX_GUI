@@ -29,6 +29,13 @@ GIT_WINDOW_STYLE = r"""
 .pynix-git-head button:disabled,.pynix-git-action:disabled{opacity:.42;cursor:default}
 .pynix-git-head .pynix-git-spacer{flex:1}
 .pynix-git-head .pynix-git-small{font-size:18px;padding:3px 8px}
+.pynix-git-head button>svg,.pynix-git-action>svg{width:16px;height:16px;display:block}
+.workspace-mode.pynix-iconless .pynix-git-head button>svg,
+.workspace-mode.pynix-iconless .pynix-git-action>svg{
+ display:block!important;visibility:visible!important;opacity:1!important;
+ width:16px!important;height:16px!important;
+ min-width:16px!important;min-height:16px!important
+}
 .pynix-git-content{display:flex;min-height:0;min-width:0;flex:1}
 .pynix-git-branch-pane{width:30%;min-width:150px;max-width:50%;
  border-right:1px solid #35373c;display:flex;flex-direction:column;resize:horizontal;
@@ -118,6 +125,15 @@ GIT_WINDOW_SCRIPT = r"""
 <script id="pynix-git-window-controller">
 (() => {
  'use strict';
+ const icons=__PYNIX_GIT_ICONS__;
+ const vector=name=>{
+  const raw=icons[name];if(!raw)return null;
+  const xml=new DOMParser().parseFromString(raw,'image/svg+xml');
+  if(xml.documentElement.localName!=='svg'||xml.querySelector('parsererror'))return null;
+  const svg=document.importNode(xml.documentElement,true);
+  svg.setAttribute('aria-hidden','true');svg.setAttribute('focusable','false');
+  return svg;
+ };
  const host=document.querySelector('.workspace-mode .integrated-terminal');
  const panel=host?.querySelector('.terminal-console');
  if(!host||!panel||window.pynixGitWindow)return;
@@ -166,7 +182,13 @@ GIT_WINDOW_SCRIPT = r"""
   return state?.visible&&state.scope==='other'&&state.tool==='GIT'};
  const button=(label,cb,cls='pynix-git-action')=>{
   const b=document.createElement('button');b.type='button';b.className=cls;
-  b.textContent=label;b.addEventListener('click',cb);return b;
+  const key={
+   '↻':'general/refresh','+':'general/add','⋮':'general/moreVertical',
+   '−':'general/hide','⌄':'general/chevronDown','×':'general/close'
+  }[label];
+  const icon=key?vector(key):null;
+  if(icon)b.appendChild(icon);else b.textContent=label;
+  b.addEventListener('click',cb);return b;
  };
  const clearPopover=()=>{popover.hidden=true;popover.replaceChildren();};
  const positionPopover=anchor=>{
@@ -599,8 +621,23 @@ GIT_WINDOW_SCRIPT = r"""
 
 
 def apply_git_window(html_source: str) -> str:
+    """Install verified original JetBrains Git chrome glyphs with a live log."""
     if "</body>" not in html_source:
         raise ValueError("Missing HTML body")
     if 'id="pynix-git-window-controller"' in html_source:
         return html_source
-    return html_source.replace("</body>", GIT_WINDOW_STYLE + GIT_WINDOW_SCRIPT + "</body>", 1)
+    import json
+    from .ide_icon_parity import BUNDLED_ICONS
+    from .ide_jetbrains_icons import JetBrainsIconCatalog
+
+    catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
+    icons = {
+        name: svg for name in (
+            "general/refresh", "general/add", "general/moreVertical",
+            "general/hide", "general/chevronDown", "general/close",
+            "general/search", "nodes/tag",
+        ) if (svg := catalog.svg(name, dark=True)) is not None
+    }
+    payload = json.dumps(icons, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+    script = GIT_WINDOW_SCRIPT.replace("__PYNIX_GIT_ICONS__", payload)
+    return html_source.replace("</body>", GIT_WINDOW_STYLE + script + "</body>", 1)
