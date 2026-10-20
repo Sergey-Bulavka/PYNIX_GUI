@@ -152,7 +152,8 @@ def test_native_registers_read_only_git_handler():
     native=(Path(__file__).parents[1]/"examples"/"ide_native_v4.py").read_text()
     assert "class GitLogHandler(NSObject):" in native
     assert 'pynixGitLog")' in native
-    assert "result = read_git_log(" in native\n    assert "session.root, branch=filters.get(" in native
+    assert "result = read_git_log(" in native
+    assert "session.root, branch=filters.get(" in native
     assert "read_git_diff(session.root" in native
     assert "run_threading.Thread(target=worker, daemon=True).start()" in native
     assert "document = apply_git_window(document)" in native
