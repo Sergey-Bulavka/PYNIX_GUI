@@ -662,6 +662,48 @@ def main() -> None:
 
             run_threading.Thread(target=worker, daemon=True).start()
 
+    class GitLogHandler(NSObject):
+        def userContentController_didReceiveScriptMessage_(self, controller, message):
+            from pynix_gui.ide_git_log import (
+                GitLogError, read_git_log, read_git_commit, read_git_diff,
+            )
+            try:
+                request = dict(message.body())
+            except (TypeError, ValueError):
+                request = {}
+            action = request.get("action")
+            ident = request.get("requestId")
+            if action not in ("log", "commit", "diff") or not isinstance(ident, int):
+                return
+
+            def worker():
+                try:
+                    if action == "log":
+                        filters = dict(request.get("filters") or {})
+                        result = read_git_log(
+                            session.root, branch=filters.get("branch", ""),
+                            text=filters.get("text", ""),
+                            user=filters.get("user", ""),
+                            since=filters.get("since", ""), until=filters.get("until", ""),
+                            path=filters.get("path", ""),
+                        )
+                    elif action == "commit":
+                        result = read_git_commit(session.root, request.get("sha"))
+                    else:
+                        result = read_git_diff(session.root, request.get("sha"),
+                                               request.get("path"))
+                    response = {"action": action, "requestId": ident, "data": result}
+                except (GitLogError, ValueError, OSError, TypeError) as exc:
+                    response = {"action": action, "requestId": ident,
+                                "error": str(exc)[:240]}
+                payload = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
+                NSOperationQueue.mainQueue().addOperationWithBlock_(
+                    lambda: view.evaluateJavaScript_completionHandler_(
+                        "window.pynixGitLogResult(" + payload + ");", None)
+                )
+
+            run_threading.Thread(target=worker, daemon=True).start()
+
     class NavigationHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             try:
@@ -1172,6 +1214,7 @@ def main() -> None:
     controller.addScriptMessageHandler_name_(project_create_handler, "pynixProjectCreate")
     controller.addScriptMessageHandler_name_(symbols_handler, "pynixProjectSymbols")
     controller.addScriptMessageHandler_name_(diagnostics_handler, "pynixDiagnostics")
+    controller.addScriptMessageHandler_name_(GitLogHandler.alloc().init(), "pynixGitLog")
     controller.addScriptMessageHandler_name_(navigation_handler, "pynixNavigation")
     controller.addScriptMessageHandler_name_(file_open_handler, "pynixFileOpen")
     controller.addScriptMessageHandler_name_(core_buffer_handler, "pynixCoreBuffer")
@@ -1207,6 +1250,8 @@ def main() -> None:
     # JetBrains Problems owns a separate diagnostic view; never overwrite Terminal.
     from pynix_gui.ide_problems_window import apply_problems_window
     document = apply_problems_window(document)
+    from pynix_gui.ide_git_window import apply_git_window
+    document = apply_git_window(document)
     # Final, editor-scoped theme layer: do not recolor toolbar, caret, selection.
     from pynix_gui.ide_editor_theme import apply_editor_darcula
     document = apply_editor_darcula(document)
