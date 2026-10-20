@@ -256,6 +256,25 @@ TERMINAL_DOCK_JS = r"""
    debugPanelBar.hidden=true;
    setToolWindowVisible(true);
   };
+  const showProblems=()=>{
+   // Problems is an independent tool view, not the system Terminal/Run buffer.
+   scope='other';
+   activateToolView('PROBLEMS');
+   if(toolTabs){
+    for(const tab of toolTabs.children){
+     if(tab.getAttribute('role')!=='tab')continue;
+     const active=tab.textContent.trim()==='PROBLEMS';
+     tab.classList.toggle('pynix-active-tab',active);
+     tab.setAttribute('aria-selected',String(active));
+    }
+   }
+   debugPanelBar.hidden=true;
+   setToolWindowVisible(true);
+  };
+  const toggleProblems=()=>{
+   if(scope==='other'&&selectedTool==='PROBLEMS'&&isVisible())setToolWindowVisible(false);
+   else showProblems();
+  };
   const toggleRun=()=>{
    if(scope==='other'&&selectedTool==='TERMINAL'&&isVisible())
     setToolWindowVisible(false);
@@ -264,7 +283,7 @@ TERMINAL_DOCK_JS = r"""
   const togglePackages=()=>select('packages');
   const toggleServices=()=>select('services');
   window.pynixTerminalDock={
-   sync,select,showRun,toggleRun,togglePackages,toggleServices,
+   sync,select,showRun,toggleRun,showProblems,toggleProblems,togglePackages,toggleServices,
    state:()=>({scope,tool:selectedTool,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
    setRunState:running=>{
