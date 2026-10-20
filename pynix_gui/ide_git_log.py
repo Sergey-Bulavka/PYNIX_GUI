@@ -140,8 +140,8 @@ def read_git_log(root: Path, *, branch: str = "", text: str = "",
                    ref["name"] == branch]
         if len(matches) != 1 or matches[0]["full"] not in valid_refs:
             raise GitLogError("Unknown or ambiguous Git branch/tag")
-        args[1] = matches[0]["full"]
         args.remove("--all")
+        args.insert(1, matches[0]["full"])
     if text:
         if len(text) > 160:
             raise GitLogError("Search text is too long")
