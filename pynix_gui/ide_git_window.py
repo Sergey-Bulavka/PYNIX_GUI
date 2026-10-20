@@ -125,6 +125,8 @@ GIT_WINDOW_SCRIPT = r"""
  let activeTab='Log',showWorktrees=true,logSerial=1;
  const logTabs=['Log'];
  const filters={branch:'',text:'',user:'',since:'',until:'',path:''};
+ const savedTabFilters=new Map([['Log',{...filters}]]);
+ const lastRequests={};
  const root=document.createElement('section');root.className='pynix-git-window';
  root.setAttribute('aria-label','Git');
  const head=document.createElement('div');head.className='pynix-git-head';
@@ -180,7 +182,8 @@ GIT_WINDOW_SCRIPT = r"""
  const post=(action,payload={})=>{
   const bridge=window.webkit?.messageHandlers?.pynixGitLog;
   if(!bridge){error='Git Log requires the native PYNIX IDE on macOS.';render();return;}
-  bridge.postMessage({action,requestId:++requestId,...payload});
+  const id=++requestId;lastRequests[action]=id;
+  bridge.postMessage({action,requestId:id,...payload});
  };
  const refresh=()=>{loading=true;error='';render();post('log',{filters:{...filters}});};
  const filterButton=(label,field)=>{
@@ -238,7 +241,18 @@ GIT_WINDOW_SCRIPT = r"""
   return Number.isNaN(d.getTime())?value:d.toLocaleString(undefined,
    {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
  };
- const selectTab=name=>{activeTab=name;render();if(!log&&!loading)refresh();};
+ const selectTab=name=>{
+  if(activeTab!=='Worktrees')savedTabFilters.set(activeTab,{...filters});
+  const changed=name!==activeTab;
+  activeTab=name;
+  if(name!=='Worktrees'){
+   Object.assign(filters,savedTabFilters.get(name)||{});
+   query.value=filters.text;
+   if(changed){log=null;chosen=null;details=null;selectedFile='';}
+  }
+  render();
+  if(changed||(!log&&!loading))refresh();
+ };
  const renderHeader=()=>{
   head.replaceChildren(title);
   const addTab=name=>{
@@ -254,7 +268,8 @@ GIT_WINDOW_SCRIPT = r"""
    close.title='Close Worktrees tab';head.appendChild(close);
   }
   const plus=button('+',()=>{
-   logSerial+=1;const name='Log '+logSerial;logTabs.push(name);selectTab(name);
+   logSerial+=1;const name='Log '+logSerial;logTabs.push(name);
+   savedTabFilters.set(name,{...filters});selectTab(name);
   },'pynix-git-small');
   plus.title='New Git Log tab';head.appendChild(plus);
   const menu=button('⌄',()=>{clearPopover();
@@ -403,7 +418,8 @@ GIT_WINDOW_SCRIPT = r"""
   const layouts=graphLayouts(commits);
   for(const commit of commits){
    const row=button('',()=>choose(commit),'pynix-git-commit-row');
-   row.setAttribute('role','option');row.setAttribute('aria-selected',String(chosen?.sha===commit.sha));
+   row.setAttribute('role','option');row.dataset.sha=commit.sha;
+   row.setAttribute('aria-selected',String(chosen?.sha===commit.sha));
    row.appendChild(renderGraph(commit,layouts.get(commit.sha)));
    const subject=document.createElement('span');subject.className='pynix-git-subject';
    subject.textContent=commit.subject;subject.title=commit.subject;
@@ -430,8 +446,11 @@ GIT_WINDOW_SCRIPT = r"""
   }
  };
  const choose=commit=>{
-  chosen=commit;details=null;selectedFile='';renderCommits();renderDetail();
-  post('commit',{sha:commit.sha});
+  chosen=commit;details=null;selectedFile='';
+  // Keep selected row mounted so ArrowDown/ArrowUp keyboard focus survives.
+  for(const row of list.querySelectorAll('.pynix-git-commit-row'))
+   row.setAttribute('aria-selected',String(row.dataset.sha===commit.sha));
+  renderDetail();post('commit',{sha:commit.sha});
  };
  const renderDetail=()=>{
   files.replaceChildren();
@@ -469,7 +488,7 @@ GIT_WINDOW_SCRIPT = r"""
   post('diff',{sha:chosen.sha,path:file.path});
  };
  const receive=packet=>{
-  if(packet?.requestId!==requestId)return;
+  if(!packet||packet.requestId!==lastRequests[packet.action])return;
   if(packet.action==='log'){
    loading=false;error=String(packet.error||'');
    if(!error){log=packet.data||null;
