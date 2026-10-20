@@ -271,6 +271,23 @@ TERMINAL_DOCK_JS = r"""
    debugPanelBar.hidden=true;
    setToolWindowVisible(true);
   };
+  const showGit=()=>{
+   scope='other';
+   activateToolView('GIT');
+   if(toolTabs){
+    for(const tab of toolTabs.children){
+     if(tab.getAttribute('role')!=='tab')continue;
+     tab.classList.remove('pynix-active-tab');
+     tab.setAttribute('aria-selected','false');
+    }
+   }
+   debugPanelBar.hidden=true;
+   setToolWindowVisible(true);
+  };
+  const toggleGit=()=>{
+   if(scope==='other'&&selectedTool==='GIT'&&isVisible())setToolWindowVisible(false);
+   else showGit();
+  };
   const toggleProblems=()=>{
    if(scope==='other'&&selectedTool==='PROBLEMS'&&isVisible())setToolWindowVisible(false);
    else showProblems();
@@ -283,7 +300,7 @@ TERMINAL_DOCK_JS = r"""
   const togglePackages=()=>select('packages');
   const toggleServices=()=>select('services');
   window.pynixTerminalDock={
-   sync,select,showRun,toggleRun,showProblems,toggleProblems,togglePackages,toggleServices,
+   sync,select,showRun,toggleRun,showProblems,toggleProblems,showGit,toggleGit,togglePackages,toggleServices,
    state:()=>({scope,tool:selectedTool,visible:isVisible()}),
    tabLayout:()=>({...tabOverflowDebug}),
    setRunState:running=>{
