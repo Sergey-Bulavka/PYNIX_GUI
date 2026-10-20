@@ -400,6 +400,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    window.pynixTerminalDock?.toggleServices?.();
   }else if(command==='packages-window'){
    window.pynixTerminalDock?.togglePackages?.();
+  }else if(command==='dock:PROBLEMS'){
+   window.pynixTerminalDock?.toggleProblems?.();
   }else if(command==='run-window'){
    // Opening Run must not dispatch a click to the gallery rail:3,
    // which is an unrelated demo selector that mutates Project.
