@@ -30,6 +30,41 @@ GIT_WINDOW_STYLE = r"""
 .pynix-git-head .pynix-git-spacer{flex:1}
 .pynix-git-head .pynix-git-small{font-size:18px;padding:3px 8px}
 .pynix-git-head button>svg,.pynix-git-action>svg{width:16px;height:16px;display:block}
+.pynix-git-branch-pane[hidden]{display:none!important}
+.pynix-git-side-actions .pynix-git-action:disabled,
+.pynix-git-icon-action:disabled,.pynix-git-right-toolbar button:disabled{
+ opacity:.38!important;cursor:default!important;pointer-events:auto
+}
+.pynix-git-side-actions .pynix-git-action:disabled:hover,
+.pynix-git-icon-action:disabled:hover,.pynix-git-right-toolbar button:disabled:hover{
+ background:transparent!important
+}
+.pynix-git-search-toggle{border:0;border-radius:4px;background:transparent;
+ color:#8e939d;font:12px -apple-system,BlinkMacSystemFont,sans-serif;
+ height:23px;min-width:23px;padding:2px 3px;cursor:pointer;flex:0 0 auto}
+.pynix-git-search-toggle[aria-pressed="true"]{background:#364c70;color:#e5edff}
+.pynix-git-search-toggle:hover{background:#343941}
+.pynix-git-commit-toolbar .pynix-git-search-wrap .pynix-git-input{padding-right:0!important}
+.pynix-git-icon-action{display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 26px;min-width:26px;width:26px;height:27px;padding:3px!important}
+.pynix-git-icon-action>svg{width:16px!important;height:16px!important}
+.pynix-git-commit-toolbar .pynix-git-filter{flex:0 0 auto}
+.pynix-git-toolbar-break{height:21px;width:1px;background:#3a3d44;margin:0 1px;
+ flex:0 0 1px}
+.pynix-git-right-toolbar{display:flex;align-items:center;gap:4px;height:46px;
+ min-height:46px;box-sizing:border-box;padding:5px 9px;
+ border-bottom:1px solid #34373b}
+.pynix-git-right-toolbar button{display:flex;align-items:center;justify-content:center;
+ width:26px;height:27px;padding:3px;border:0;border-radius:4px;
+ color:#c8cbd0;background:transparent;cursor:pointer}
+.pynix-git-right-toolbar button:not(:disabled):hover{background:#343941}
+.pynix-git-right-toolbar button svg{width:16px;height:16px}
+.pynix-git-right-spacer{flex:1}
+.pynix-git-right:not(.pynix-git-no-details) .pynix-git-details{display:flex}
+.pynix-git-right.pynix-git-no-details .pynix-git-details{display:none!important}
+.workspace-mode.pynix-iconless .pynix-git-right-toolbar button svg{
+ display:block!important;visibility:visible!important;opacity:1!important
+}
 .workspace-mode.pynix-iconless .pynix-git-head button>svg,
 .workspace-mode.pynix-iconless .pynix-git-action>svg{
  display:block!important;visibility:visible!important;opacity:1!important;
@@ -234,6 +269,10 @@ GIT_WINDOW_SCRIPT = r"""
  list.setAttribute('aria-label','Git commits');
  commitPane.append(commitToolbar,list);
  const right=document.createElement('div');right.className='pynix-git-right';
+ const rightToolbar=document.createElement('div');
+ rightToolbar.className='pynix-git-right-toolbar';
+ rightToolbar.setAttribute('role','toolbar');
+ rightToolbar.setAttribute('aria-label','Changed files toolbar');
  const filesTitle=document.createElement('div');filesTitle.className='pynix-git-right-title';
  filesTitle.textContent='Changed files';
  const files=document.createElement('div');files.className='pynix-git-files';
@@ -241,7 +280,7 @@ GIT_WINDOW_SCRIPT = r"""
  const detailsTitle=document.createElement('div');detailsTitle.className='pynix-git-right-title';
  detailsTitle.textContent='Commit details';
  const detailsText=document.createElement('div');detailsText.className='pynix-git-details-content';
- detailsPane.append(detailsTitle,detailsText);right.append(filesTitle,files,detailsPane);
+ detailsPane.append(detailsTitle,detailsText);right.append(rightToolbar,filesTitle,files,detailsPane);
  main.append(sideRail,branchPane,commitPane,right);
  const worktreesPane=document.createElement('div');worktreesPane.className='pynix-git-worktrees';
  const popover=document.createElement('div');popover.className='pynix-git-popover';
@@ -259,6 +298,32 @@ GIT_WINDOW_SCRIPT = r"""
   b.setAttribute('aria-label',label);
   b.addEventListener('click',cb);return b;
  };
+ const changedAction=(label,iconKey,callback,{disabled=false}={})=>{
+  const b=button(label,callback||(()=>{}));
+  b.className='pynix-git-changed-action';
+  b.title=disabled?label+' (not yet available)':label;
+  b.disabled=disabled;
+  const svg=vector(iconKey);if(svg)b.replaceChildren(svg);
+  rightToolbar.appendChild(b);return b;
+ };
+ changedAction('Show Diff','vcs/diff',()=>{if(selectedFile&&chosen){
+  const file=details?.files?.find(x=>x.path===selectedFile);
+  if(file)chooseFile(file);
+ }});
+ changedAction('Revert Selected Changes','vcs/revert',null,{disabled:true});
+ changedAction('History Up to Here','general/history',null,{disabled:true});
+ const viewOptions=changedAction('View Options','general/show',()=>{
+  clearPopover();
+  popover.appendChild(button((showDetails?'✓ ':'')+'Show Details',()=>{
+   showDetails=!showDetails;clearPopover();render();
+  }));
+  popover.appendChild(button('Show Diff Preview (current view)',()=>clearPopover()));
+  positionPopover(viewOptions);
+ });
+ const rightSpacer=document.createElement('span');rightSpacer.className='pynix-git-right-spacer';
+ rightToolbar.appendChild(rightSpacer);
+ changedAction('Expand All Files','general/expandAll',null,{disabled:true});
+ changedAction('Collapse All Files','general/collapseAll',null,{disabled:true});
  const clearPopover=()=>{popover.hidden=true;popover.replaceChildren();};
  const positionPopover=anchor=>{
   const r=anchor.getBoundingClientRect();
@@ -712,6 +777,7 @@ GIT_WINDOW_SCRIPT = r"""
    details.author+' <'+details.email+'>\n'+fmtDate(details.date)+'\n'+details.sha;
   detailsText.append(title,meta);
   const changed=Array.isArray(details.files)?details.files:[];
+  rightToolbar.querySelector('[aria-label="Show Diff"]').disabled=!selectedFile;
   filesTitle.textContent='Changed files ('+changed.length+')';
   if(!changed.length){makeEmpty(files,'No changed files');return;}
   for(const file of changed){
