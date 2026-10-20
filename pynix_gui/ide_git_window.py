@@ -37,11 +37,36 @@ GIT_WINDOW_STYLE = r"""
  min-width:16px!important;min-height:16px!important
 }
 .pynix-git-content{display:flex;min-height:0;min-width:0;flex:1}
+.pynix-git-side-actions{display:flex;flex-direction:column;align-items:center;
+ flex:0 0 40px;width:40px;gap:3px;padding:5px 3px;
+ box-sizing:border-box;border-right:1px solid #34373b;background:#1e2023}
+.pynix-git-side-actions .pynix-git-action{display:flex;align-items:center;
+ justify-content:center;min-width:29px;width:29px;height:29px;padding:0;
+ flex:0 0 29px;border-radius:4px}
+.pynix-git-side-actions .pynix-git-action>svg{width:16px;height:16px}
+.pynix-git-rail-divider{height:1px;background:#373a40;width:27px;margin:2px 0 4px}
+.pynix-git-search-wrap{position:relative;display:flex;align-items:center;
+ box-sizing:border-box;min-width:0;min-height:32px;height:32px;flex:1;
+ border:1px solid #44484f;border-radius:5px;background:#202225}
+.pynix-git-search-wrap:focus-within{border-color:#5e84c4}
+.pynix-git-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);
+ display:flex;align-items:center;justify-content:center;width:16px;height:16px;
+ pointer-events:none}
+.pynix-git-search-icon>svg{width:16px;height:16px}
+.pynix-git-search-wrap .pynix-git-input{padding:0 8px 0 34px!important;
+ height:30px;min-height:30px;flex:1;max-width:none;width:100%;box-sizing:border-box;
+ border:0!important;background:transparent!important;outline:0!important}
+.workspace-mode.pynix-iconless .pynix-git-window svg{
+ display:block!important;visibility:visible!important;opacity:1!important
+}
+.workspace-mode.pynix-iconless .pynix-git-search-icon>svg{
+ width:16px!important;height:16px!important
+}
 .pynix-git-branch-pane{width:30%;min-width:150px;max-width:50%;
  border-right:1px solid #35373c;display:flex;flex-direction:column;resize:horizontal;
- overflow:auto;flex-shrink:0;background:#1e2023}
-.pynix-git-toolbar{min-height:42px;display:flex;align-items:center;gap:7px;
- padding:4px 7px;border-bottom:1px solid #323439;min-width:0}
+ overflow:hidden;flex-shrink:0;background:#1e2023}
+.pynix-git-toolbar{height:46px;min-height:46px;box-sizing:border-box;display:flex;
+ align-items:center;gap:7px;padding:5px 8px;border-bottom:1px solid #323439;min-width:0}
 .pynix-git-input{background:#202225;border:1px solid #454950;border-radius:4px;
  color:#d9dade;min-width:0;padding:7px 9px;font:12px -apple-system,BlinkMacSystemFont,sans-serif;
  outline:none}
@@ -54,13 +79,22 @@ GIT_WINDOW_STYLE = r"""
 .pynix-git-tree-row:hover{background:#30343a}
 .pynix-git-tree-row[aria-selected="true"]{background:#31476e;color:#f0f3fa}
 .pynix-git-tree-caption{font-weight:600;font-size:12px;color:#dee0e4}
-.pynix-git-tree-mark{width:16px;text-align:center;color:#a4b8db}
+.pynix-git-tree-mark{width:16px;flex:0 0 16px;text-align:center;color:#a4b8db;
+ display:inline-flex;align-items:center;justify-content:center}
+.pynix-git-tree-mark svg{width:16px;height:16px}
+.pynix-git-tree-row .pynix-git-ref-name{overflow:hidden;text-overflow:ellipsis}
+.pynix-git-tree-arrow{font:11px -apple-system,sans-serif;color:#adb1bb}
 .pynix-git-tree-children{padding-left:16px}
 .pynix-git-commit-pane{flex:1;min-width:200px;display:flex;flex-direction:column;overflow:hidden}
-.pynix-git-commit-toolbar{display:flex;align-items:center;gap:6px;
- border-bottom:1px solid #34373b;padding:5px 8px;min-height:42px;flex-shrink:0}
-.pynix-git-query{width:150px;flex:1;max-width:250px}
-.pynix-git-filter{padding:6px 5px;white-space:nowrap}
+.pynix-git-commit-toolbar{display:flex;align-items:center;gap:7px;
+ border-bottom:1px solid #34373b;padding:5px 8px;height:46px;min-height:46px;
+ box-sizing:border-box;flex-shrink:0;white-space:nowrap}
+.pynix-git-commit-toolbar .pynix-git-search-wrap{flex:1 1 230px;max-width:300px;
+ min-width:118px}
+.pynix-git-query{width:100%;flex:1;max-width:none}
+.pynix-git-filter{display:inline-flex;align-items:center;gap:4px;
+ padding:6px 3px;white-space:nowrap;min-width:0}
+.pynix-git-filter svg{width:12px;height:12px;flex:none}
 .pynix-git-filter[aria-pressed="true"]{background:#344866;color:#e6eefc}
 .pynix-git-action{min-width:24px;min-height:24px;padding:4px 6px}
 .pynix-git-commit-list{flex:1;min-height:0;overflow:auto}
@@ -79,9 +113,13 @@ GIT_WINDOW_STYLE = r"""
 .pynix-git-author{width:98px;flex:0 0 98px;overflow:hidden;text-overflow:ellipsis}
 .pynix-git-date{width:118px;flex:0 0 118px;text-align:right;color:#a4a8af;font-variant-numeric:tabular-nums}
 .pynix-git-right{width:24%;min-width:180px;max-width:47%;flex-shrink:0;resize:horizontal;
- display:flex;flex-direction:column;border-left:1px solid #383a3e;overflow:auto}
-.pynix-git-files{flex:1;min-height:0;overflow:auto}
-.pynix-git-right-title{border-bottom:1px solid #34373b;padding:8px 10px;font-weight:600;min-height:34px;box-sizing:border-box}
+ display:flex;flex-direction:column;border-left:1px solid #383a3e;overflow:hidden;
+ background:#1c1e21}
+.pynix-git-files{flex:0 0 65%;box-sizing:border-box;min-height:0;overflow:auto;
+ display:flex;flex-direction:column}
+.pynix-git-right-title{border-bottom:1px solid #34373b;padding:8px 11px;
+ font-weight:600;min-height:34px;box-sizing:border-box}
+.pynix-git-right-title[hidden]{display:none!important}
 .pynix-git-file{display:flex;gap:8px;align-items:center;width:100%;font:inherit;
  border:0;text-align:left;color:#c5cad2;background:transparent;cursor:pointer;
  padding:6px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -90,12 +128,16 @@ GIT_WINDOW_STYLE = r"""
 .pynix-git-file-status{color:#81b68c;font-weight:bold;width:12px}
 .pynix-git-file-status[data-type="D"]{color:#cf7979}
 .pynix-git-file-status[data-type="M"]{color:#8facdc}
-.pynix-git-details{flex:1;min-height:150px;border-top:1px solid #34373b;overflow:auto}
-.pynix-git-details-content{padding:9px 12px;white-space:pre-wrap;word-break:break-word;line-height:1.5}
+.pynix-git-details{flex:1;min-height:0;border-top:1px solid #34373b;
+ display:flex;flex-direction:column;overflow:auto}
+.pynix-git-details-content{padding:9px 12px;white-space:pre-wrap;word-break:break-word;
+ line-height:1.5;flex:1;min-height:0}
+.pynix-git-details-content:has(>.pynix-git-empty){display:flex;align-items:center;
+ justify-content:center}
 .pynix-git-diff{font:11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;
  white-space:pre;overflow:auto;margin:0;padding:8px}
 .pynix-git-empty{color:#8c9097;font-size:13px;flex:1;display:flex;align-items:center;
- justify-content:center;text-align:center;padding:18px}
+ justify-content:center;text-align:center;padding:18px;min-height:0}
 .pynix-git-status{font-size:11px;color:#8d949d;white-space:nowrap;
  text-overflow:ellipsis;overflow:hidden;padding:4px 10px;border-top:1px solid #34373b}
 .pynix-git-worktrees{flex:1;min-height:0;overflow:auto;padding:12px 20px}
@@ -116,7 +158,8 @@ GIT_WINDOW_STYLE = r"""
  .pynix-git-right{width:27%;min-width:160px}
  .pynix-git-author{width:68px;flex-basis:68px}
  .pynix-git-date{width:78px;flex-basis:78px}
- .pynix-git-commit-toolbar{flex-wrap:wrap}
+ .pynix-git-commit-toolbar{overflow-x:auto;scrollbar-width:thin}
+ .pynix-git-side-actions{flex-basis:36px;width:36px}
 }
 </style>
 """
