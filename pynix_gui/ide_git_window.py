@@ -736,7 +736,9 @@ def apply_git_window(html_source: str) -> str:
         name: svg for name in (
             "general/refresh", "general/add", "general/moreVertical",
             "general/hide", "general/chevronDown", "general/close",
-            "general/search", "nodes/tag",
+            "general/search", "nodes/tag", "nodes/folder",
+            "general/collapseAll", "general/expandAll",
+            "vcs/arrowLeft", "vcs/arrowRight",
         ) if (svg := catalog.svg(name, dark=True)) is not None
     }
     payload = json.dumps(icons, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
