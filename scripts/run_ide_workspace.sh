@@ -32,6 +32,7 @@ for arg in "$@"; do
   fi
 done
 if [[ "$EXPLICIT_CORE" == false && "$CORE" != off && -f "$CORE/src/workspace_read_host.uny" ]]; then
+  CORE="$(cd "$CORE" && pwd -P)"
   echo "Connecting Zunyite IDE Core: $CORE"
   cd "$ROOT"
   exec "$PYTHON" -m examples.ide_native_v4 --project "$PROJECT" --ide-core "$CORE" "$@"
