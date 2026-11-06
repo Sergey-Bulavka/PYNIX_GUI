@@ -52,7 +52,7 @@ def test_corrupt_settings_fall_back_safely_without_overwrite(tmp_path):
 
 def test_settings_page_navigation_reuses_real_sections_without_fake_switches():
     html = settings_html(DEFAULTS)
-    assert "<title>Settings — PYNIX</title>" in html
+    assert "<title>Settings — Zunyite</title>" in html
     assert 'class="shell"' in html
     assert 'id="filter"' in html
     assert 'id="content"' in html
@@ -72,7 +72,7 @@ def test_settings_page_navigation_reuses_real_sections_without_fake_switches():
     assert "Intentions" in html
     assert "Minimap" in html
     assert "TODO" in html
-    assert "Settings — PYNIX" in html
+    assert "Settings — Zunyite" in html
     assert any(group == "Editor" for group, _ in CATEGORIES)
 
 
@@ -162,3 +162,24 @@ def test_settings_store_atomic_write_keeps_valid_config_on_failed_input(tmp_path
     with pytest.raises(ValueError):
         store.write({"editor.font_size": -10, "editor.line_height": 1.2})
     assert store.read() == previous
+
+
+def test_default_settings_path_uses_zunyite_and_migrates_legacy_read(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        "pynix_gui.ide_settings_window.Path.home", lambda: tmp_path
+    )
+    support = tmp_path / "Library" / "Application Support"
+    old = support / "PYNIX" / "ide-settings-v1.json"
+    old.parent.mkdir(parents=True)
+    previous = {"editor.font_size": 16.0, "editor.line_height": 1.4}
+    old.write_text(json.dumps(previous), encoding="utf-8")
+
+    store = SettingsStore()
+    assert store.path == support / "Zunyite" / "ide-settings-v1.json"
+    assert store.read() == previous
+    assert not store.path.exists()
+
+    updated = {"editor.font_size": 17.0, "editor.line_height": 1.3}
+    assert store.write(updated) == updated
+    assert store.read() == updated
+    assert json.loads(old.read_text(encoding="utf-8")) == previous
