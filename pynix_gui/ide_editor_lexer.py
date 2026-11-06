@@ -63,7 +63,7 @@ EDITOR_LEXER_JS = r"""(() => {
  const tokenize=(value,filename)=>{
   if(typeof value!=='string')return [];
   const isPython=/\.pyi?$/i.test(filename||'');
-  const isPynix=/\.pnx$/i.test(filename||'');
+  const isPynix=/\.(?:uny|pnx)$/i.test(filename||'');
   if(!isPython&&!isPynix)return [];
   const result=[];
   const push=(start,end,kind)=>{
