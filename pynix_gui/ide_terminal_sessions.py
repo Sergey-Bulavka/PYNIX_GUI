@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Real native V4 terminal sessions: PTYs and a separate PYNIX command console.
+"""Real native V4 terminal sessions: PTYs and a separate Zunyite command console.
 
 All subprocesses run as the current local user. No shell is started until the
 user explicitly creates a tab. The UI never treats process output as HTML.
@@ -152,24 +152,24 @@ class PynixCommandConsole:
         if not tokens:
             return ""
         if tokens[0] == "help":
-            return ("PYNIX Console\n"
+            return ("Zunyite Console\n"
                     "  help                  Available commands\n"
                     "  pwd                   Current project\n"
                     "  files                 Project .uny/.pnx files\n"
-                    "  run path/to/file.uny  Compile and run a PYNIX program\n"
-                    "Commands execute in the PYNIX project; this is not a Python shell.")
+                    "  run path/to/file.uny  Compile and run a Zunyite program\n"
+                    "Commands execute in the Zunyite project; this is not a Python shell.")
         if tokens == ["pwd"]:
             return str(self.root)
         if tokens == ["files"]:
             return "\n".join(str(p.relative_to(self.root)) for p in
                              [p for p in self.root.rglob("*") if p.is_file() and p.suffix in (".uny", ".pnx")][:100])
         if len(tokens) != 2 or tokens[0] != "run":
-            return "Unknown PYNIX command. Type help."
+            return "Unknown Zunyite command. Type help."
         path = (self.root / tokens[1]).resolve()
         if not path.is_relative_to(self.root) or path.suffix not in (".uny", ".pnx") or not path.is_file():
             return "Only existing .uny or .pnx files inside the project can be run."
         if not self._lock.acquire(blocking=False):
-            return "Another PYNIX command is still running."
+            return "Another Zunyite command is still running."
         try:
             result = subprocess.run(
                 [str(self.python), "-m", "compiler", "run",
