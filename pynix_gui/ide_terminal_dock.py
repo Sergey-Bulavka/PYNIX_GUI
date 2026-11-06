@@ -57,7 +57,7 @@ TERMINAL_DOCK_JS = r"""
   });
   overflow.append(overflowToggle,overflowPopup);
   const gap=document.createElement('span');gap.className='pynix-terminal-dock-gap';
-  // Run uses the same bottom dock without becoming a shell or PYNIX console.
+  // Run uses the same bottom dock without becoming a shell or Zunyite console.
   const runActions=document.createElement('div');
   runActions.className='pynix-run-dock-actions';
   runActions.hidden=true;
@@ -312,7 +312,7 @@ TERMINAL_DOCK_JS = r"""
    toggle:()=>select('system')
   };
   // One legacy sidebar proxy is kept for keyboard compatibility; its
-  // PYNIX-branded neighbor uses the separate direct edge action.
+  // Zunyite-branded neighbor uses the separate direct edge action.
   const legacy=document.querySelectorAll('.workspace-mode .rail>.rail-item')[4];
   legacy?.addEventListener('click',()=>select('system'));
   legacy?.addEventListener('keydown',event=>{
