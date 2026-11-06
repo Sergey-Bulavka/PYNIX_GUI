@@ -32,9 +32,10 @@ class PersistentCoreReader:
     def start(self) -> dict:
         if self._process is not None:
             raise CoreSnapshotError("IDE Core is already running")
-        if not (self.ide_repo / "src" / "workspace_read_host.pnx").is_file():
+        source_suffix = ".uny" if (self.ide_repo / "src" / "workspace_read_host.uny").is_file() else ".pnx"
+        if not (self.ide_repo / "src" / f"workspace_read_host{source_suffix}").is_file():
             raise CoreSnapshotError("Persistent IDE Core host is missing; update PYNIX_IDE")
-        if not (self.project / "pynix.toml").is_file():
+        if not any((self.project / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
             raise CoreSnapshotError("Project manifest missing")
         if not self.compiler_python.is_file():
             raise CoreSnapshotError("Compiler interpreter missing")
@@ -46,14 +47,14 @@ class PersistentCoreReader:
             root = Path(self._temporary.name)
             source_dir = root / "src"
             source_dir.mkdir()
-            for filename in ("workspace_read_host.pnx", "ide_session.pnx", "project.pnx", "tooling.pnx"):
+            for filename in (f"workspace_read_host{source_suffix}", f"ide_session{source_suffix}", f"project{source_suffix}", f"tooling{source_suffix}"):
                 shutil.copy2(self.ide_repo / "src" / filename, source_dir / filename)
-            (root / "pynix.toml").write_text(
+            (root / ("zunyite.toml" if source_suffix == ".uny" else "pynix.toml")).write_text(
                 '[project]\nname = "pynix-ide-core"\nsource = "src"\nentry = "workspace_read_host.pnx"\n',
                 encoding="utf-8",
             )
             env = os.environ.copy()
-            env.setdefault("PYTHONPATH", str(self.ide_repo.parent / "PYNIX"))
+            env.setdefault("PYTHONPATH", str(next((p for p in (self.ide_repo.parent / "Zunyite", self.ide_repo.parent / "PYNIX") if p.is_dir()), self.ide_repo.parent / "Zunyite")))
             self._process = subprocess.Popen(
                 [str(self.compiler_python), "-u", "-m", "compiler", "run", str(root)],
                 cwd=root, env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -106,7 +107,7 @@ class PersistentCoreReader:
         return result["value"]
 
     def open_source(self, source: str) -> dict:
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()):
             raise CoreSnapshotError("Invalid project source")
@@ -117,7 +118,7 @@ class PersistentCoreReader:
 
     def read_source(self, source: str) -> dict:
         """Read the authoritative, in-memory Core buffer without touching disk."""
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()):
             raise CoreSnapshotError("Invalid project source")
@@ -135,7 +136,7 @@ class PersistentCoreReader:
     def update_source(self, source: str, content: str, revision: int = 1) -> dict:
         if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
             raise CoreSnapshotError("Invalid source content")
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()):
             raise CoreSnapshotError("Invalid project source")
@@ -150,7 +151,7 @@ class PersistentCoreReader:
         return snapshot
 
     def acknowledge_saved_source(self, source: str, content: str) -> dict:
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()
                 or not isinstance(content, str)):
@@ -165,7 +166,7 @@ class PersistentCoreReader:
 
     def close_source(self, source: str) -> bool:
         """Close a clean Core document; dirty documents are refused by Core."""
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()):
             raise CoreSnapshotError("Invalid source close")
@@ -177,7 +178,7 @@ class PersistentCoreReader:
         return value["closed"]
 
     def discard_source(self, source: str) -> dict:
-        if (not isinstance(source, str) or not source.endswith(".pnx")
+        if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                 or not (self.project / source).resolve().is_relative_to(self.project)
                 or not (self.project / source).is_file()):
             raise CoreSnapshotError("Invalid source discard")
@@ -206,7 +207,7 @@ class PersistentCoreReader:
             content = item.get("content")
             revision = item.get("revision")
             if (not isinstance(source, str) or source in seen
-                    or not source.endswith(".pnx")
+                    or not source.endswith((".uny", ".pnx"))
                     or not (self.project / source).resolve().is_relative_to(self.project)
                     or not (self.project / source).is_file()
                     or not isinstance(content, str)
