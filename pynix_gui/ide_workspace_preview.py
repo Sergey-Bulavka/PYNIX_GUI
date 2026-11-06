@@ -2107,7 +2107,7 @@ editorInput.addEventListener('keydown',event=>{
      glyph.dataset.fileName=entry.name.toLowerCase();
      // JetBrains icon bridge is the single visible painter for standard
      // Project rows. Do not paint the legacy Lucide/file-type icons first.
-     // The Python and native PYNIX identities remain intentional exceptions:
+     // The Python and native Zunyite identities remain intentional exceptions:
      // neither appears in the eligible licensed JetBrains SVG catalog.
      glyph.dataset.pynixSemantic=entry.folder?'folder':
        (fileType==='python'?'python':fileType==='pynix'?'pynix':'generic');
@@ -2385,7 +2385,7 @@ editorInput.addEventListener('keydown',event=>{
      label.type='button';
      label.className='pynix-editor-tab-label';
      label.textContent=fileName.split('/').pop()+(file?.dirty?' *':'');
-     // Preserve the native PYNIX/Python/file-type icon in editor tabs; the
+     // Preserve the native Zunyite/Python/file-type icon in editor tabs; the
      // licensed New UI bridge substitutes known generic file glyphs in place.
      const tabGlyph=document.createElement('span');
      const tabFileType=file?.icon||'file';
@@ -2774,8 +2774,8 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
         raise ValueError("Missing HTML body")
     # The project caption is data, not HTML; escape before inserting.
     escaped_name = html.escape(session.root.name)
-    html_source = html_source.replace("PYNIX</b> / Icon System",
-                                      "PYNIX</b> / " + escaped_name, 1)
+    html_source = html_source.replace("Zunyite</b> / Icon System",
+                                      "Zunyite</b> / " + escaped_name, 1)
     project_chevron = (
         '<span class="pynix-project-dropdown-chevron" aria-hidden="true">'
         '<svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">'
@@ -2788,7 +2788,7 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
     html_source = html_source.replace("⑂ main · 1 modified", escaped_name, 1)
     # The live cursor status is populated by the workspace editor. Drop the
     # gallery's static sample "Ln 7" rather than duplicating line indicators.
-    html_source = html_source.replace("PYNIX · UTF-8 · Ln 7", "UTF-8 · LF", 1)
+    html_source = html_source.replace("Zunyite · UTF-8 · Ln 7", "UTF-8 · LF", 1)
     return html_source.replace("</body>", workspace_bootstrap(session) + "</body>", 1)
 
 
@@ -2913,7 +2913,7 @@ def attach_navigation(html_source: str, result: dict, command: str) -> str:
    };
    const result=payload.result;
    if(result.error){print(result.error);return;}
-   print('PYNIX tooling · '+payload.command);
+   print('Zunyite tooling · '+payload.command);
    if(payload.command==='definition'){
      const d=result.definition;
      print(d?((d.qualifiedName||d.name||'')+' · '+d.source+':'+(d.start?.line||1)):'No definition at this position');
