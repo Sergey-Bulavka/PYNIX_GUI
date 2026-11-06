@@ -24,14 +24,15 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
     ide_repo = Path(ide_repo).resolve()
     project = Path(project).resolve()
     compiler_python = Path(compiler_python).resolve()
-    if not (ide_repo / "src" / "ide_session.pnx").is_file():
+    source_suffix = ".uny" if (ide_repo / "src" / "ide_session.uny").is_file() else ".pnx"
+    if not (ide_repo / "src" / f"ide_session{source_suffix}").is_file():
         raise CoreSnapshotError("Official IDE Core repository is unavailable")
-    if not (project / "pynix.toml").is_file():
+    if not any((project / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
         raise CoreSnapshotError("Snapshot project must have a pynix.toml")
     if not compiler_python.is_file():
         raise CoreSnapshotError("PYNIX compiler interpreter is unavailable")
     if source is not None:
-        if (not source or not source.endswith(".pnx")
+        if (not source or not source.endswith((".uny", ".pnx"))
                 or not (project / source).resolve().is_relative_to(project)
                 or not (project / source).is_file()):
             raise CoreSnapshotError("Source must be a PYNIX file inside project")
@@ -39,10 +40,10 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
         root = Path(work)
         dest = root / "src"
         dest.mkdir()
-        for filename in ("ide_session.pnx", "project.pnx", "tooling.pnx"):
+        for filename in (f"ide_session{source_suffix}", f"project{source_suffix}", f"tooling{source_suffix}"):
             shutil.copy2(ide_repo / "src" / filename, dest / filename)
-        (root / "pynix.toml").write_text(
-            '[project]\nname = "pynix-ide-read"\nsource = "src"\nentry = "main.pnx"\n',
+        (root / ("zunyite.toml" if source_suffix == ".uny" else "pynix.toml")).write_text(
+            f'[project]\nname = "zunyite-ide-read"\nsource = "src"\nentry = "main{source_suffix}"\n',
             encoding="utf-8",
         )
         program = [
@@ -54,10 +55,10 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
         if source is not None:
             program.append("    ide.openSource(" + _string_literal(source) + ")")
         program += ["    print(Json.write(ide.workspaceReadSnapshot()))", ""]
-        (dest / "main.pnx").write_text("\n".join(program), encoding="utf-8")
+        (dest / f"main{source_suffix}").write_text("\n".join(program), encoding="utf-8")
         env = os.environ.copy()
         # Compiler discovery follows the same configurable PYTHONPATH used in IDE tests.
-        env.setdefault("PYTHONPATH", str(ide_repo.parent / "PYNIX"))
+        env.setdefault("PYTHONPATH", str(next((p for p in (ide_repo.parent / "Zunyite", ide_repo.parent / "PYNIX") if p.is_dir()), ide_repo.parent / "Zunyite")))
         try:
             result = subprocess.run(
                 [str(compiler_python), "-m", "compiler", "run", str(root)],
