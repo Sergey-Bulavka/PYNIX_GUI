@@ -15,7 +15,7 @@ class RunError(ValueError):
 class ProjectRunner:
     def __init__(self, root: Path, compiler_python: Path):
         self.root = Path(root).resolve()
-        self.python = Path(compiler_python).resolve()
+        self.python = Path(compiler_python).expanduser().absolute()
         self.process: subprocess.Popen | None = None
         self._lock = threading.Lock()
 
@@ -24,12 +24,12 @@ class ProjectRunner:
             raise RunError("Unsupported run configuration")
         with self._lock:
             if self.process is not None and self.process.poll() is None:
-                raise RunError("A PYNIX process is already running")
+                raise RunError("A Zunyite process is already running")
             if source is None:
-                if not (self.root / "pynix.toml").is_file():
-                    raise RunError("A pynix.toml project manifest is required")
+                if not any((self.root / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
+                    raise RunError("A zunyite.toml or pynix.toml project manifest is required")
                 if not self.python.is_file():
-                    raise RunError("PYNIX compiler interpreter is unavailable")
+                    raise RunError("Zunyite compiler interpreter is unavailable")
                 command = [str(self.python), "-u", "-m", "compiler", mode, str(self.root)]
             else:
                 if not isinstance(source, str) or not source or "\\x00" in source:
@@ -39,9 +39,9 @@ class ProjectRunner:
                 relative = Path(source)
                 resolved = (self.root / relative).resolve()
                 if (relative.is_absolute() or not resolved.is_relative_to(self.root)
-                        or not resolved.is_file() or resolved.suffix not in {".pnx", ".py"}):
-                    raise RunError("Run requires a saved .pnx or .py file inside the project")
-                if resolved.suffix == ".pnx":
+                        or not resolved.is_file() or resolved.suffix not in {".uny", ".pnx", ".py"}):
+                    raise RunError("Run requires a saved .uny, .pnx or .py file inside the project")
+                if resolved.suffix in {".uny", ".pnx"}:
                     if not self.python.is_file():
                         raise RunError("PYNIX compiler interpreter is unavailable")
                     command = [str(self.python), "-u", "-m", "compiler", "run",
@@ -67,7 +67,7 @@ class ProjectRunner:
         with self._lock:
             proc = self.process
         if proc is None:
-            raise RunError("No PYNIX process running")
+            raise RunError("No Zunyite process running")
         if proc.stdout is None:
             raise RunError("Runner has no output pipe")
         collected: list[str] = []

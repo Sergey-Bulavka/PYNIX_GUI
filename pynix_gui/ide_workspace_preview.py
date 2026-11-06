@@ -54,7 +54,7 @@ def workspace_bootstrap(session: WorkspaceSession, *, max_files: int = 120,
         except (OSError, ValueError):
             continue
         records.append({"name": name, "text": doc.text,
-                        "tokens": highlight_document(doc.text) if name.endswith(".pnx") else None,
+                        "tokens": highlight_document(doc.text) if name.endswith((".uny", ".pnx")) else None,
                         "icon": file_icon_type(name)})
     session.documents.clear()
     session.active = None
@@ -92,7 +92,7 @@ __PYNIX_DISPLAY_LEXER__
  editorInput.className='pynix-source-input';
  editorInput.spellcheck=false;
  editorInput.wrap='off';
- editorInput.setAttribute('aria-label','PYNIX source editor');
+ editorInput.setAttribute('aria-label','Zunyite source editor');
  editorInput.hidden=true;
  const editLayer=document.createElement('div');
  editLayer.className='pynix-edit-layer';
@@ -650,7 +650,7 @@ __PYNIX_DISPLAY_LEXER__
  debugInfoButton.type='button';debugInfoButton.className='nav-action pynix-debug-status';
  debugInfoButton.title='Experimental PYNIX interpreter debugger; stepping is not release-verified';
  debugInfoButton.addEventListener('click',()=>{
-   window.alert('Experimental PYNIX debugger. Run/Check are independent. Interactive stepping and source mapping have not passed release acceptance.');
+   window.alert('Experimental Zunyite debugger. Run/Check are independent. Interactive stepping and source mapping have not passed release acceptance.');
  });
  const refreshDebugControls=()=>{
    const paused=debugState==='paused';
@@ -672,7 +672,7 @@ __PYNIX_DISPLAY_LEXER__
    control.addEventListener('click',()=>{
      if(control.disabled)return;
      const bridge=window.webkit?.messageHandlers?.pynixDebugCommand;
-     if(!bridge){window.alert('Native PYNIX debugger unavailable');return;}
+     if(!bridge){window.alert('Native Zunyite debugger unavailable');return;}
      if(action==='launch'){
        persistBuffer();
        if([...byName.values()].some(file=>file.dirty)){
@@ -687,11 +687,11 @@ __PYNIX_DISPLAY_LEXER__
      debugInspectPhase=null;
      if(action==='launch'){
        debugOutput=[];
-       debugInfoButton.title='Starting PYNIX debugger for '+String(current||'no selected file');
+       debugInfoButton.title='Starting Zunyite debugger for '+String(current||'no selected file');
        const consolePanel=document.querySelector('.terminal-console');
        if(consolePanel){
          const notification=document.createElement('div');
-         notification.textContent='Starting PYNIX debugger · '+String(current||'no file selected');
+         notification.textContent='Starting Zunyite debugger · '+String(current||'no file selected');
          consolePanel.replaceChildren(notification);
        }
      }
@@ -703,7 +703,7 @@ __PYNIX_DISPLAY_LEXER__
      catch(error){
        debugBusy=false;debugState='error';
        const panel=document.querySelector('.terminal-console');
-       if(panel)panel.textContent='PYNIX debugger failed: '+String(error);
+       if(panel)panel.textContent='Zunyite debugger failed: '+String(error);
        refreshDebugControls();window.alert(String(error));
      }
    });
@@ -956,7 +956,7 @@ __PYNIX_DISPLAY_LEXER__
      location:packet?.location||null};
    panel.replaceChildren();
    const header=document.createElement('div');
-   header.textContent='PYNIX Debug (experimental) · '+(state||event||'unknown');
+   header.textContent='Zunyite Debug (experimental) · '+(state||event||'unknown');
    panel.appendChild(header);
    const inspector=document.createElement('div');
    inspector.className='pynix-debug-inspector pynix-debug-inspector-docked';
@@ -1016,7 +1016,7 @@ __PYNIX_DISPLAY_LEXER__
  document.querySelector('.workspace-toolbar')?.append(runButton,stopButton);
  const runModeSelect=document.createElement('select');
  runModeSelect.className='pynix-run-mode';
- runModeSelect.setAttribute('aria-label','PYNIX run configuration');
+ runModeSelect.setAttribute('aria-label','Zunyite run configuration');
  for(const [value,label] of [['file','Current File'],['run','Run project'],['check','Check project']]){
    const option=document.createElement('option');
    option.value=value;option.textContent=label;
@@ -1027,7 +1027,7 @@ __PYNIX_DISPLAY_LEXER__
  let lastRunRequest=null;
  function runProjectAction(action){
    const bridge=window.webkit?.messageHandlers?.pynixProjectRun;
-   if(!bridge){window.alert('Run/Stop requires native PYNIX IDE');return;}
+   if(!bridge){window.alert('Run/Stop requires native Zunyite IDE');return;}
    if(action==='stop'){
      bridge.postMessage({action:'stop'});
      return;
@@ -1041,11 +1041,11 @@ __PYNIX_DISPLAY_LEXER__
    const mode=prior?.mode||(runModeSelect.value==='file'?'run':runModeSelect.value);
    const isFile=!!source;
    if(runModeSelect.value==='file'&&!prior&&!source){
-     window.alert('Open a .pnx or .py file before running.');return;
+     window.alert('Open a .uny, .pnx or .py file before running.');return;
    }
    if(isFile){
      if(!/\\.(pnx|py)$/i.test(source)||!byName.has(source)){
-       window.alert('Run supports saved .pnx and .py project files.');return;
+       window.alert('Run supports saved .uny, .pnx and .py project files.');return;
      }
      if(byName.get(source).dirty){
        window.alert('Save '+source+' before running.');return;
@@ -1055,7 +1055,7 @@ __PYNIX_DISPLAY_LEXER__
      bridge.postMessage(request);
    }else{
      if([...byName.values()].some(file=>file.dirty)){
-       window.alert('Save all changes before running the PYNIX project.');return;
+       window.alert('Save all changes before running the Zunyite project.');return;
      }
      lastRunRequest={mode};
      // Existing project and check configurations remain supported.
@@ -1109,7 +1109,7 @@ __PYNIX_DISPLAY_LEXER__
    const consolePanel=document.querySelector('.terminal-console');
    if(!consolePanel)return;
    if(state==='running')consolePanel.textContent=
-     'Running '+(lastRunRequest?.source||'PYNIX project')+'…';
+     'Running '+(lastRunRequest?.source||'Zunyite project')+'…';
    else if(state==='output'){
      const chunk=typeof packet.chunk==='string'?packet.chunk:'';
      consolePanel.textContent=(consolePanel.textContent||'')+chunk;
@@ -1404,7 +1404,7 @@ editorInput.addEventListener('keydown',event=>{
  function renameLocalIdentifier(){
    if(!current||!editing||editorInput.hidden)return;
    const old=selectedIdentifier();
-   if(!old){window.alert('Select a PYNIX identifier to rename');return;}
+   if(!old){window.alert('Select a Zunyite identifier to rename');return;}
    const replacement=window.prompt('Rename occurrences in CURRENT file (textual, not semantic):',old);
    if(replacement===null||replacement===old)return;
    if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(replacement)){
@@ -1434,7 +1434,7 @@ editorInput.addEventListener('keydown',event=>{
  semanticRenameButton.title='Compiler-verified cross-file rename (F2); review unsaved buffers before saving';
  document.querySelector('.workspace-toolbar')?.appendChild(semanticRenameButton);
  function requestSemanticRename(){
-   if(!current||!current.endsWith('.pnx')||!editing||editorInput.hidden)return;
+   if(!current||!current.match(/\\.(?:uny|pnx)$/)||!editing||editorInput.hidden)return;
    persistBuffer();
    if([...byName.values()].some(file=>file.dirty)){
      window.alert('Save all modified files before semantic rename.');return;
@@ -1443,11 +1443,11 @@ editorInput.addEventListener('keydown',event=>{
      window.alert('Restore IDE Core before semantic rename.');return;
    }
    const symbol=selectedIdentifier();
-   if(!symbol){window.alert('Place the caret on a PYNIX symbol');return;}
+   if(!symbol){window.alert('Place the caret on a Zunyite symbol');return;}
    const newName=window.prompt('Rename resolved symbol throughout the project:',symbol);
    if(newName===null||newName===symbol)return;
    if(!/^[A-Za-z_][A-Za-z_0-9]*$/.test(newName)){
-     window.alert('New name must be a PYNIX identifier');return;
+     window.alert('New name must be a Zunyite identifier');return;
    }
    const bridge=window.webkit?.messageHandlers?.pynixSemanticRename;
    if(!bridge){window.alert('Compiler rename requires the native IDE');return;}
@@ -1844,7 +1844,7 @@ editorInput.addEventListener('keydown',event=>{
    const buffers=[];
    for(const source of openTabs){
      const file=byName.get(source);
-     if(!source.endsWith('.pnx')||!file||file.unloaded)continue;
+     if(!source.match(/\\.(?:uny|pnx)$/)||!file||file.unloaded)continue;
      cancelCoreBufferSync(source);
      const revision=(coreRevisions.get(source)||0)+1;
      coreRevisions.set(source,revision);
@@ -1896,7 +1896,7 @@ editorInput.addEventListener('keydown',event=>{
    if(event.target?.closest?.('.pynix-core-bridge-indicator'))recoverCoreBuffers();
  });
  function scheduleCoreBufferSync(){
-   if(!current||!current.endsWith('.pnx'))return;
+   if(!current||!current.match(/\\.(?:uny|pnx)$/))return;
    const source=current;
    const content=editorInput.value;
    const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
@@ -1927,7 +1927,7 @@ editorInput.addEventListener('keydown',event=>{
    // and allocate a newer revision for the exact bytes being saved.
    cancelCoreBufferSync(source);
    let revision=null;
-   if(source.endsWith('.pnx')){
+   if(source.match(/\\.(?:uny|pnx)$/)){
      revision=(coreRevisions.get(source)||0)+1;
      coreRevisions.set(source,revision);
    }
@@ -2290,7 +2290,7 @@ editorInput.addEventListener('keydown',event=>{
    if(!openTabs.includes(name)||pendingCoreClose.has(name))return;
    cancelCoreBufferSync(name);
    const bridge=window.webkit?.messageHandlers?.pynixCoreClose;
-   if(name.endsWith('.pnx')&&bridge){
+   if(name.match(/\\.(?:uny|pnx)$/)&&bridge){
      const file=byName.get(name);
      pendingCoreClose.set(name,{discard,revision:coreRevisions.get(name)||0,text:file?.text});
      bridge.postMessage({source:name,discard});
@@ -2434,7 +2434,7 @@ editorInput.addEventListener('keydown',event=>{
  function show(name) {
    if (!byName.has(name)) return;
    persistBuffer();
-   if(current && current!==name && byName.get(current)?.dirty && current.endsWith('.pnx')){
+   if(current && current!==name && byName.get(current)?.dirty && current.match(/\\.(?:uny|pnx)$/)){
      // Flush the previous tab's pending buffer before opening another Core source.
      const source=current;
      if(coreSyncTimers.has(source)){
@@ -2536,16 +2536,16 @@ editorInput.addEventListener('keydown',event=>{
  const newSourceButton=document.createElement('button');
  newSourceButton.type='button';
  newSourceButton.className='nav-action pynix-new-source';
- newSourceButton.textContent='New .pnx';
- newSourceButton.title='Create a new PYNIX file inside the current project';
+ newSourceButton.textContent='New .uny';
+ newSourceButton.title='Create a new Zunyite file inside the current project';
  document.querySelector('.workspace-toolbar')?.appendChild(newSourceButton);
  newSourceButton.addEventListener('click',()=>{
    const selected=selectedPath||current||'';
    const base=selected.includes('/')?selected.slice(0,selected.lastIndexOf('/')+1):'';
-   const proposed=window.prompt('New PYNIX file (project-relative path):',base+'new_file.pnx');
+   const proposed=window.prompt('New Zunyite file (project-relative path):',base+'new_file.uny');
    if(proposed===null)return;
-   if(!/^[A-Za-z0-9_./-]+\\.pnx$/.test(proposed)){
-     window.alert('Use a project-relative .pnx path without spaces');return;
+   if(!/^[A-Za-z0-9_./-]+\\.(?:uny|pnx)$/.test(proposed)){
+     window.alert('Use a project-relative .uny or .pnx path without spaces');return;
    }
    const bridge=window.webkit?.messageHandlers?.pynixProjectCreate;
    if(!bridge){window.alert('File creation requires native macOS workspace');return;}
@@ -2587,7 +2587,7 @@ editorInput.addEventListener('keydown',event=>{
      selected.includes('/')?selected.slice(0,selected.lastIndexOf('/')+1):'';
    const proposed=window.prompt(
      kind==='directory'?'New directory (project-relative):':'New file (project-relative):',
-     base+(kind==='directory'?'new_directory':'new_file.pnx'));
+     base+(kind==='directory'?'new_directory':'new_file.uny'));
    if(proposed===null)return;
    if(!proposed||proposed.startsWith('/')||proposed.split('/').some(
      part=>!part||part==='.'||part==='..')){
@@ -2661,7 +2661,7 @@ editorInput.addEventListener('keydown',event=>{
  function requestProjectFileAction(action){
    persistBuffer();
    const source=selectedPath||current;
-   if(!source||!byName.has(source)||!source.endsWith('.pnx'))return;
+   if(!source||!byName.has(source)||!source.match(/\\.(?:uny|pnx)$/))return;
    if(openTabs.includes(source)){
      window.alert('Close the file tab before renaming or deleting it. Save any changes first.');
      return;
@@ -2675,8 +2675,8 @@ editorInput.addEventListener('keydown',event=>{
    if(action==='rename'){
      const destination=window.prompt('Rename project file:',source);
      if(destination===null||destination===source)return;
-     if(!/^[A-Za-z0-9_./-]+\\.pnx$/.test(destination)){
-       window.alert('Use a safe project-relative .pnx filename');return;
+     if(!/^[A-Za-z0-9_./-]+\\.(?:uny|pnx)$/.test(destination)){
+       window.alert('Use a safe project-relative .uny or .pnx filename');return;
      }
      bridge.postMessage({action,source,destination});
    } else {
@@ -2762,7 +2762,7 @@ editorInput.addEventListener('keydown',event=>{
    return true;
  };
  // Do not open an image/archive as the initial editor tab.
- const initial=files.find(file=>file.name.endsWith('.pnx')&&!file.unloaded)||
+ const initial=files.find(file=>file.name.match(/\\.(?:uny|pnx)$/)&&!file.unloaded)||
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();

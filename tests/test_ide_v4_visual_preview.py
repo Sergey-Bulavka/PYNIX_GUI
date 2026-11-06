@@ -6,7 +6,7 @@ PREVIEW = Path(__file__).resolve().parents[1] / "examples" / "icon_direction_pre
 def test_preview_exposes_complete_workspace():
     html = PREVIEW.read_text(encoding="utf-8")
     for label in ("EXPLORER", "SOURCE CONTROL", "COMMIT MESSAGE",
-                  "CHANGES", "BRANCHES", "HISTORY", "main.pnx"):
+                  "CHANGES", "BRANCHES", "HISTORY", "main.uny"):
         assert label in html
 
 def test_git_panel_is_explicitly_visual_only():

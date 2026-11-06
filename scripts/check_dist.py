@@ -17,14 +17,17 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 REQUIRED = {"pynix_gui/__init__.py", "pynix_gui/core.py",
-            "pynix_gui/runtime.py", "pynix_gui/py.typed"}
+            "pynix_gui/runtime.py", "pynix_gui/py.typed",
+            "zunyite_gui/__init__.py", "zunyite_gui/core.py",
+            "zunyite_gui/runtime.py", "zunyite_gui/py.typed",
+            "pynix_gui/assets/jetbrains_new_ui/manifest.json"}
 
 
 def main():
-    wheels = list(DIST.glob("pynix_gui-*.whl"))
-    sdists = list(DIST.glob("pynix_gui-*.tar.gz"))
+    wheels = list(DIST.glob("zunyite_gui-*.whl"))
+    sdists = list(DIST.glob("zunyite_gui-*.tar.gz"))
     if len(wheels) != 1 or len(sdists) != 1:
-        raise SystemExit("Expected exactly one PYNIX GUI wheel and one sdist")
+        raise SystemExit("Expected exactly one Zunyite GUI wheel and one sdist")
     with zipfile.ZipFile(wheels[0]) as archive:
         missing = REQUIRED - set(archive.namelist())
         if missing:
@@ -45,8 +48,9 @@ def main():
         )
         subprocess.run(
             [str(python), "-c",
-             "import pynix_gui; from pynix_gui import GUIRuntime, GUIEvent; "
-             "assert pynix_gui.__version__"],
+             "import pynix_gui, zunyite_gui; "
+             "assert zunyite_gui.GUIRuntime is pynix_gui.GUIRuntime; "
+             "assert zunyite_gui.__version__ == pynix_gui.__version__"],
             check=True,
         )
     print("Distribution structure and wheel import: PASS")

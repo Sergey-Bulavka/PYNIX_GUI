@@ -17,7 +17,7 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
     root = Path(root).resolve()
     python = Path(python).resolve()
     requested = (root / source).resolve()
-    if not requested.is_relative_to(root) or requested.suffix != ".pnx" or not requested.is_file():
+    if not requested.is_relative_to(root) or requested.suffix not in (".uny", ".pnx") or not requested.is_file():
         raise ValueError("Select a PYNIX source inside the project")
     if line < 1 or column < 1:
         raise ValueError("Line and column are one-based")
@@ -35,7 +35,7 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
                 detail = detail[-1200:]
             if "source does not belong to the compiled project" in detail:
                 return {"error": ("Selected file is outside the compiled module graph. "
-                                  "The project entry is defined by pynix.toml; "
+                                  "The project entry is defined by zunyite.toml or pynix.toml; "
                                   "open a module imported by that entry or use a "
                                   "separate PYNIX project manifest for this example.")}
             return {"error": ("Compiler tooling failed: " + detail) if detail

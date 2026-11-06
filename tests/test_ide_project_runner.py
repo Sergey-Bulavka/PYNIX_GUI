@@ -116,7 +116,7 @@ def test_run_configuration_is_restricted_at_native_and_ui_boundaries():
     preview = (root / "pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
     assert 'if mode not in ("run", "check"):' in native
     assert 'start_project_run(mode, source)' in native
-    assert "runModeSelect.setAttribute('aria-label','PYNIX run configuration')" in preview
+    assert "runModeSelect.setAttribute('aria-label','Zunyite run configuration')" in preview
     assert "['run','Run project']" in preview
     assert "['check','Check project']" in preview
     assert "bridge.postMessage({action,mode})" in preview

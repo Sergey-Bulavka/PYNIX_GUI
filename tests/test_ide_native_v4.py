@@ -97,7 +97,7 @@ def test_v41_workspace_has_professional_panels_and_resizers():
     for expected in ("workspace-toolbar", "editor-tabs", "right-tools",
                      "tree-resizer", "terminal-resizer", "--explorer-width",
                      "--terminal-height", "setPointerCapture",
-                     "data-file=\"gui.pnx\"", "data-file=\"tooling.pnx\""):
+                     "data-file=\"gui.uny\"", "data-file=\"tooling.uny\""):
         assert expected in html
 
 
@@ -161,7 +161,9 @@ def test_workspace_controls_use_single_click_events():
 
 def test_default_launch_never_silently_uses_demo_tree():
     source = Path(app.__file__).read_text(encoding="utf-8")
-    assert 'candidate = PREVIEW_PATH.resolve().parents[2] / "PYNIX"' in source
+    assert 'candidate_root = PREVIEW_PATH.resolve().parents[2]' in source
+    assert 'candidate_root / "Zunyite"' in source
+    assert 'candidate_root / "PYNIX"' in source
     assert 'project_path = args.project' in source
     assert 'raise SystemExit("No project selected.' in source
     assert 'session = WorkspaceSession(project_path)' in source

@@ -63,3 +63,25 @@ def test_tooling_target_is_project_not_manifest(tmp_path, monkeypatch):
     result = read_diagnostics(tmp_path, executable)
     assert not result.error
     assert called[0][-1] == str(tmp_path.resolve())
+
+
+def test_zunyite_diagnostics_preserves_virtualenv_python_symlink(tmp_path, monkeypatch):
+    """Resolving venv/bin/python to the global binary loses the venv packages."""
+    (tmp_path / "zunyite.toml").write_text('[project]\nname="demo"\n', encoding="utf-8")
+    interpreter = tmp_path / ".venv" / "bin" / "python"
+    interpreter.parent.mkdir(parents=True)
+    base = tmp_path / "base-python"
+    base.write_text("", encoding="utf-8")
+    interpreter.symlink_to(base)
+    invoked = []
+    def fake_run(command, **kwargs):
+        invoked.append(command)
+        return SimpleNamespace(returncode=0, stdout=json.dumps({
+            "protocol": "pynix-tooling", "version": 1,
+            "kind": "diagnostics", "diagnostics": [],
+        }))
+    monkeypatch.setattr("pynix_gui.ide_tooling_diagnostics.subprocess.run", fake_run)
+    result = read_diagnostics(tmp_path, interpreter)
+    assert not result.error
+    assert invoked[0][0] == str(interpreter)
+    assert invoked[0][0] != str(base)

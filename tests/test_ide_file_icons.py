@@ -75,4 +75,4 @@ def test_binary_resource_files_are_listed_as_nontext_not_dispatched_to_editor(tm
     assert '"icon": "archive"' in bootstrap
     assert 'if(!file.nonText){' in bootstrap
     assert "if(bridge)bridge.postMessage({source:name});" in bootstrap
-    assert "file.name.endsWith('.pnx')" in bootstrap
+    assert "file.name.match(" in bootstrap

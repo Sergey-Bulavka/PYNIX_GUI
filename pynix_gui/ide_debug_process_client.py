@@ -37,7 +37,7 @@ class DebugProcessClient:
         with self._lock:
             if self._worker is not None:
                 raise DebugClientError("Debugger already running")
-            if not isinstance(source, str) or not source.endswith(".pnx"):
+            if not isinstance(source, str) or not source.endswith((".uny", ".pnx")):
                 raise DebugClientError("Choose a PYNIX source file")
             target = (self.root / source).resolve()
             if not target.is_relative_to(self.root) or not target.is_file():
@@ -93,7 +93,7 @@ class DebugProcessClient:
             if not isinstance(entry, dict):
                 raise DebugClientError("Invalid breakpoint")
             source, line = entry.get("source"), entry.get("line")
-            if (not isinstance(source, str) or not source.endswith(".pnx")
+            if (not isinstance(source, str) or not source.endswith((".uny", ".pnx"))
                     or type(line) is not int or line < 1):
                 raise DebugClientError("Invalid breakpoint location")
             target = self.root / source

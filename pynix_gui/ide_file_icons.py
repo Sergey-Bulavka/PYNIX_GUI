@@ -5,6 +5,7 @@ Mapping is centralized so Explorer and editor tabs identify files consistently.
 from pathlib import PurePath
 
 ICON_BY_EXTENSION = {
+    ".uny": "pynix",
     ".pnx": "pynix",
     ".py": "python",
     ".pyi": "python",

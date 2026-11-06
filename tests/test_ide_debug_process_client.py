@@ -722,7 +722,7 @@ def test_pycharm_reference_shell_visual_density_and_project_context():
     root=Path(__file__).resolve().parents[1]
     css=(root/"examples/icon_direction_preview.html").read_text(encoding="utf-8")
     source=(root/"pynix_gui/ide_workspace_preview.py").read_text(encoding="utf-8")
-    assert "PYNIX V5 / PyCharm 2026 New UI reference" in css
+    assert "Zunyite V5 / PyCharm 2026 New UI reference" in css
     assert ".workspace-mode .rail{background:#2b2d30!important;width:40px!important" in css
     assert ".workspace-mode .editor-tabs button.active{background:#2b2d30!important" in css
     assert ".workspace-mode .integrated-terminal{background:#1e1f22!important" in css
