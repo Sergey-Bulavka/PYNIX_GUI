@@ -1434,7 +1434,7 @@ editorInput.addEventListener('keydown',event=>{
  semanticRenameButton.title='Compiler-verified cross-file rename (F2); review unsaved buffers before saving';
  document.querySelector('.workspace-toolbar')?.appendChild(semanticRenameButton);
  function requestSemanticRename(){
-   if(!current||!current.match(/\.(?:uny|pnx)$/)||!editing||editorInput.hidden)return;
+   if(!current||!current.match(/\\.(?:uny|pnx)$/)||!editing||editorInput.hidden)return;
    persistBuffer();
    if([...byName.values()].some(file=>file.dirty)){
      window.alert('Save all modified files before semantic rename.');return;
@@ -1844,7 +1844,7 @@ editorInput.addEventListener('keydown',event=>{
    const buffers=[];
    for(const source of openTabs){
      const file=byName.get(source);
-     if(!source.match(/\.(?:uny|pnx)$/)||!file||file.unloaded)continue;
+     if(!source.match(/\\.(?:uny|pnx)$/)||!file||file.unloaded)continue;
      cancelCoreBufferSync(source);
      const revision=(coreRevisions.get(source)||0)+1;
      coreRevisions.set(source,revision);
@@ -1896,7 +1896,7 @@ editorInput.addEventListener('keydown',event=>{
    if(event.target?.closest?.('.pynix-core-bridge-indicator'))recoverCoreBuffers();
  });
  function scheduleCoreBufferSync(){
-   if(!current||!current.match(/\.(?:uny|pnx)$/))return;
+   if(!current||!current.match(/\\.(?:uny|pnx)$/))return;
    const source=current;
    const content=editorInput.value;
    const bridge=window.webkit?.messageHandlers?.pynixCoreBuffer;
@@ -1927,7 +1927,7 @@ editorInput.addEventListener('keydown',event=>{
    // and allocate a newer revision for the exact bytes being saved.
    cancelCoreBufferSync(source);
    let revision=null;
-   if(source.match(/\.(?:uny|pnx)$/)){
+   if(source.match(/\\.(?:uny|pnx)$/)){
      revision=(coreRevisions.get(source)||0)+1;
      coreRevisions.set(source,revision);
    }
@@ -2290,7 +2290,7 @@ editorInput.addEventListener('keydown',event=>{
    if(!openTabs.includes(name)||pendingCoreClose.has(name))return;
    cancelCoreBufferSync(name);
    const bridge=window.webkit?.messageHandlers?.pynixCoreClose;
-   if(name.match(/\.(?:uny|pnx)$/)&&bridge){
+   if(name.match(/\\.(?:uny|pnx)$/)&&bridge){
      const file=byName.get(name);
      pendingCoreClose.set(name,{discard,revision:coreRevisions.get(name)||0,text:file?.text});
      bridge.postMessage({source:name,discard});
@@ -2434,7 +2434,7 @@ editorInput.addEventListener('keydown',event=>{
  function show(name) {
    if (!byName.has(name)) return;
    persistBuffer();
-   if(current && current!==name && byName.get(current)?.dirty && current.match(/\.(?:uny|pnx)$/)){
+   if(current && current!==name && byName.get(current)?.dirty && current.match(/\\.(?:uny|pnx)$/)){
      // Flush the previous tab's pending buffer before opening another Core source.
      const source=current;
      if(coreSyncTimers.has(source)){
@@ -2661,7 +2661,7 @@ editorInput.addEventListener('keydown',event=>{
  function requestProjectFileAction(action){
    persistBuffer();
    const source=selectedPath||current;
-   if(!source||!byName.has(source)||!source.match(/\.(?:uny|pnx)$/))return;
+   if(!source||!byName.has(source)||!source.match(/\\.(?:uny|pnx)$/))return;
    if(openTabs.includes(source)){
      window.alert('Close the file tab before renaming or deleting it. Save any changes first.');
      return;
@@ -2762,7 +2762,7 @@ editorInput.addEventListener('keydown',event=>{
    return true;
  };
  // Do not open an image/archive as the initial editor tab.
- const initial=files.find(file=>file.name.match(/\.(?:uny|pnx)$/)&&!file.unloaded)||
+ const initial=files.find(file=>file.name.match(/\\.(?:uny|pnx)$/)&&!file.unloaded)||
    files.find(file=>!file.nonText)||files[0];
  show(initial.name);
 })();
