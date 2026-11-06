@@ -2,7 +2,7 @@
 
 Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 
-> **Status:** macOS reference backend and PYNIX language integration are accepted through
+> **Status:** macOS reference backend and Zunyite language integration are accepted through
 > 0.1.6-dev. Text Layout V1–V4, Product Gallery, Responsive Workspace V2,
 > Responsive Content V1 and Advanced Components Quality V1 are implemented and
 > have macOS user acceptance. Automated CI runs on macOS, Windows and Ubuntu;
@@ -10,22 +10,22 @@ Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 >
 > Component version: **0.1.6-dev**
 
-PYNIX GUI is a first-class product of the PYNIX ecosystem. It owns the platform-independent
-GUI model, deterministic layout engine, PYNIX Standard design system, advanced desktop
+Zunyite GUI is a first-class product of the Zunyite ecosystem. It owns the platform-independent
+GUI model, deterministic layout engine, Zunyite Standard design system, advanced desktop
 controls, platform backends, examples/showcase, documentation, and GUI-specific tests.
 
-The PYNIX language continues to expose the simple public surface:
+The Zunyite language continues to expose the simple public surface:
 
-```pynix
+```zunyite
 GUI.button(...)
 GUI.table(...)
 GUI.canvas(...)
 ```
 
-Repository separation is an internal engineering boundary. It must not make PYNIX source
+Repository separation is an internal engineering boundary. It must not make Zunyite source
 code more complicated.
 
-**Naming migration:** The public brand is Zunyite GUI. The Python distribution is now staged as `zunyite-gui`. New code can import `zunyite_gui`; existing `pynix_gui` imports remain supported by compatibility forwarding modules. Migration has not yet passed tests. The `.uny` source convention is being integrated with the compiler and IDE; the Workspace V4 feature branch and file-icon assets still need reconciliation.
+**Naming migration complete (2026-11-06):** Distribution `zunyite-gui` and `zunyite_gui` imports are merged into `main`; `pynix_gui` remains supported for compatibility. The active Workspace V4 branch also contains `.uny` support and Zunyite branding. Full IDE functional acceptance is a separate ongoing development task.
 
 ## Product principles
 
@@ -68,12 +68,12 @@ Advanced desktop capabilities are built on top of that foundation:
 ## Repository extraction
 
 The accepted GUI implementation is being migrated from
-`Sergey-Bulavka/PYNIX` without a rewrite. During extraction both repositories retain
-compatibility coverage until PYNIX can consume this package through a narrow adapter.
+`Sergey-Bulavka/Zunyite` without a rewrite. During extraction both repositories retain
+compatibility coverage until Zunyite can consume this package through a narrow adapter.
 
 The accepted macOS reference-backend component version is **0.1.6-dev**:
 ADV-04 Canvas 2D, ADV-05 Rich Editor, logical resources, macOS product polish and real
-PYNIX-language integration are accepted. The active Commercial Product Pass adds Design
+Zunyite-language integration are accepted. The active Commercial Product Pass adds Design
 System 2, a high-level composition layer and the Product Gallery before the final Windows
 native parity gate.
 
