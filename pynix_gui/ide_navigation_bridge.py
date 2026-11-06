@@ -92,14 +92,14 @@ def navigation_controls() -> str:
    button.title='Query compiler at selected file and code position';
    button.addEventListener('click',()=>{
      const live=window.pynixActiveSource||source;
-     if(editor&&!editor.hidden&&live&&live.match(/\.(?:uny|pnx)$/)){
+     if(editor&&!editor.hidden&&live&&live.match(/\\.(?:uny|pnx)$/)){
        source=live;
        const before=editor.value.slice(0,editor.selectionStart);
        line=before.split('\\n').length;
        column=before.length-before.lastIndexOf('\\n');
        ready=true;
      }
-     if(!source || !source.match(/\.(?:uny|pnx)$/)) {
+     if(!source || !source.match(/\\.(?:uny|pnx)$/)) {
        window.pynixNavigationResult({command,result:{error:'Open a PYNIX source file first'}});
        return;
      }
