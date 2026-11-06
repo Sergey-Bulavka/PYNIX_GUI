@@ -62,9 +62,16 @@ class ProjectServices:
 
     def __init__(self, root: Path, config_dir: Path | None = None):
         self.root = Path(root).resolve()
-        base = config_dir or (Path.home() / ".config" / "pynix" / "ide-services")
         digest = hashlib.sha256(os.fsencode(self.root)).hexdigest()[:24]
-        self.path = Path(base) / f"{digest}.json"
+        if config_dir is not None:
+            self.path = Path(config_dir) / f"{digest}.json"
+        else:
+            config_root = Path.home() / ".config"
+            modern = config_root / "zunyite" / "ide-services" / f"{digest}.json"
+            legacy = config_root / "pynix" / "ide-services" / f"{digest}.json"
+            # Keep an existing profile in its original location. New profiles
+            # use Zunyite; no automatic move or conflicting duplicate writes.
+            self.path = modern if modern.exists() or not legacy.exists() else legacy
         self._lock = threading.RLock()
         self._connections: dict[str, dict] = {}
         self._profiles = self._read()
@@ -161,7 +168,7 @@ class ProjectServices:
                      "stop": threading.Event(), "response": None}
             self._connections[id_] = state
         thread = threading.Thread(target=self._listen, args=(id_, dict(profile), state),
-                                  daemon=True, name="pynix-mcp-sse")
+                                  daemon=True, name="zunyite-mcp-sse")
         thread.start()
 
     def disconnect(self, id_: str):
