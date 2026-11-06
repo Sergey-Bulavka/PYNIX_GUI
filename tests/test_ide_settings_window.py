@@ -103,7 +103,7 @@ def test_native_settings_window_and_topbar_menu_are_connected():
     assert "class SettingsWindowHandler(NSObject):" in native
     assert 'settings_handler, "pynixIDEWindow"' in native
     assert 'self, "pynixSettings"' in native
-    assert 'settings_window.setTitle_("Settings — PYNIX")' in native
+    assert 'settings_window.setTitle_("Settings — Zunyite")' in native
     assert "settings_html(settings_store.read(), page)" in native
     assert "settings_store.write(dict(request.get(" in native
     assert "editor_font_script(settings_store.read())" in native
