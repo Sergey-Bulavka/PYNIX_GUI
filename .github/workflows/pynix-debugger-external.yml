@@ -1,4 +1,4 @@
-name: PYNIX debugger cross-repository verification
+name: Zunyite debugger cross-repository verification
 
 on:
   push:
@@ -16,16 +16,16 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout PYNIX_GUI bridge tests
+      - name: Checkout Zunyite_GUI bridge tests
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Checkout PYNIX compiler
+      - name: Checkout Zunyite compiler
         uses: actions/checkout@v4
         with:
-          repository: Sergey-Bulavka/PYNIX
-          # PYNIX is private: GITHUB_TOKEN from PYNIX_GUI cannot read it.
-          # Configure a fine-grained token with PYNIX Contents: read.
+          repository: Sergey-Bulavka/Zunyite
+          # Zunyite is private: GITHUB_TOKEN from Zunyite_GUI cannot read it.
+          # Configure a fine-grained token with Zunyite Contents: read.
           token: ${{ secrets.PYNIX_CI_READ_TOKEN }}
           ref: main
           path: pynix-compiler
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install PYNIX test dependencies
+      - name: Install Zunyite test dependencies
         run: python -m pip install -e ./pynix-compiler pytest
       - name: Compile compiler sources
         run: python -m compileall -q pynix-compiler/compiler
