@@ -283,7 +283,7 @@ def main() -> None:
         AppKit.NSBackingStoreBuffered,
         False,
     )
-    window.setTitle_("PYNIX IDE")
+    window.setTitle_("Zunyite IDE")
     window.setTitleVisibility_(AppKit.NSWindowTitleHidden)
     window.setTitlebarAppearsTransparent_(True)
     window.setMovableByWindowBackground_(False)
@@ -346,7 +346,7 @@ def main() -> None:
     url = NSURL.fileURLWithPath_(str(PREVIEW_PATH.resolve()))
     # Reuse the same approved vector artwork, but display a full-size IDE workspace
     # instead of a miniature IDE embedded inside the icon gallery.
-    parser = argparse.ArgumentParser(description="PYNIX IDE V4 preview")
+    parser = argparse.ArgumentParser(description="Zunyite IDE V4 preview")
     parser.add_argument("--project", type=Path, help="Source project to explore")
     parser.add_argument("--ide-core", type=Path, help="Official PYNIX_IDE checkout for read-only Core snapshot")
     parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
@@ -354,7 +354,7 @@ def main() -> None:
                         help="Opt in to icon rendering (native IDE defaults to no icons)")
     parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
     parser.add_argument("--nav-command", choices=("definition", "references", "type-at"))
-    parser.add_argument("--nav-source", help="Relative .pnx path for navigation")
+    parser.add_argument("--nav-source", help="Relative .uny or .pnx path for navigation")
     parser.add_argument("--nav-line", type=int, default=1)
     parser.add_argument("--nav-column", type=int, default=1)
     args = parser.parse_args()
@@ -362,11 +362,12 @@ def main() -> None:
     document = document.replace("<body>", '<body class="workspace-mode">', 1)
     project_path = args.project
     if project_path is None:
-        candidate = PREVIEW_PATH.resolve().parents[2] / "PYNIX"
+        candidate_root = PREVIEW_PATH.resolve().parents[2]
+        candidate = next((p for p in (candidate_root / "Zunyite", candidate_root / "PYNIX") if p.is_dir()), candidate_root / "Zunyite")
         if candidate.is_dir():
             project_path = candidate
         else:
-            raise SystemExit("No project selected. Run with --project /path/to/PYNIX")
+            raise SystemExit("No project selected. Run with --project /path/to/Zunyite")
     if project_path is not None:
         from pynix_gui.ide_workspace_session import WorkspaceSession
         from pynix_gui.ide_workspace_preview import attach_workspace, attach_git_snapshot
@@ -515,7 +516,7 @@ def main() -> None:
                     raise RunError("Unsupported run configuration")
                 if source is not None and (
                     not isinstance(source, str) or source not in available_sources
-                    or not source.endswith((".pnx", ".py"))
+                    or not source.endswith((".uny", ".pnx", ".py"))
                 ):
                     raise RunError("Unknown or unsupported file for Run")
                 if action == "run":
@@ -551,10 +552,10 @@ def main() -> None:
                 if action not in {"rename", "delete"} or not isinstance(source, str) or source not in available_sources:
                     raise WorkspaceError("Unknown project file action")
                 if action == "rename" and (not isinstance(destination, str) or
-                                           not destination.endswith(".pnx") or
+                                           not destination.endswith((".uny", ".pnx")) or
                                            destination in available_sources):
                     raise WorkspaceError("Invalid destination for PYNIX source rename")
-                if not source.endswith(".pnx"):
+                if not source.endswith((".uny", ".pnx")):
                     raise WorkspaceError("Only PYNIX source files can be modified")
                 if core_reader is not None:
                     core_reader.open_source(source)
@@ -736,7 +737,7 @@ def main() -> None:
                 file_path = session.resolve_file(source)
                 if file_path.stat().st_size > 1_000_000:
                     raise ValueError("File is too large for this preview")
-                if core_reader is not None and source.endswith(".pnx"):
+                if core_reader is not None and source.endswith((".uny", ".pnx")):
                     core_reader.open_source(source)
                     state = core_reader.read_source(source)
                     text = state["content"]
@@ -747,7 +748,7 @@ def main() -> None:
                 else:
                     text = file_path.read_text(encoding="utf-8")
                 response["text"] = text
-                response["tokens"] = highlight_document(text) if source.endswith(".pnx") else None
+                response["tokens"] = highlight_document(text) if source.endswith((".uny", ".pnx")) else None
             except (OSError, UnicodeError, ValueError, CoreSnapshotError) as error:
                 response["error"] = str(error)
             serialized = json.dumps(response, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
@@ -829,7 +830,7 @@ def main() -> None:
             try:
                 if not isinstance(source, str) or source not in available_sources:
                     raise ValueError("Unindexed source")
-                if core_reader is not None and source.endswith(".pnx"):
+                if core_reader is not None and source.endswith((".uny", ".pnx")):
                     if discard:
                         core_reader.discard_source(source)
                     if not core_reader.close_source(source):
@@ -866,11 +867,11 @@ def main() -> None:
                     raise ValueError("Source is outside the indexed project")
                 if not isinstance(content, str) or len(content.encode("utf-8")) > 1_000_000:
                     raise ValueError("Source content exceeds the editor limit")
-                if args.ide_core is not None and source.endswith(".pnx") and core_reader is None:
+                if args.ide_core is not None and source.endswith((".uny", ".pnx")) and core_reader is None:
                     raise CoreSnapshotError("IDE Core is unavailable; cannot save .pnx. Preserve editor text and restore Core.")
                 # Core is the authoritative in-memory buffer for .pnx saves.
                 # Reconcile this exact revision before the V4 atomic disk write.
-                if core_reader is not None and source.endswith(".pnx"):
+                if core_reader is not None and source.endswith((".uny", ".pnx")):
                     revision = request.get("revision")
                     if not isinstance(revision, bool) and hasattr(revision, "integerValue"):
                         whole = int(revision.integerValue())
@@ -888,7 +889,7 @@ def main() -> None:
                 session.save(source)
                 response["saved"] = True
                 response["savedText"] = content
-                if core_reader is not None and source.endswith(".pnx"):
+                if core_reader is not None and source.endswith((".uny", ".pnx")):
                     try:
                         core_reader.acknowledge_saved_source(source, content)
                     except CoreSnapshotError as exc:
@@ -922,7 +923,7 @@ def main() -> None:
                 for source in sorted(available_sources):
                     if len(matches) >= 300:
                         break
-                    if not source.endswith((".pnx", ".py", ".html", ".css", ".js", ".json", ".md")):
+                    if not source.endswith((".uny", ".pnx", ".py", ".html", ".css", ".js", ".json", ".md")):
                         continue
                     file_path = session.resolve_file(source)
                     if file_path.stat().st_size > 512_000:
@@ -1140,7 +1141,7 @@ def main() -> None:
                     AppKit.NSBackingStoreBuffered,
                     False,
                 )
-                settings_window.setTitle_("Settings — PYNIX")
+                settings_window.setTitle_("Settings — Zunyite")
                 settings_window.setMinSize_(AppKit.NSMakeSize(760, 520))
                 settings_window.setReleasedWhenClosed_(False)
                 settings_view = WebKit.WKWebView.alloc().initWithFrame_(
