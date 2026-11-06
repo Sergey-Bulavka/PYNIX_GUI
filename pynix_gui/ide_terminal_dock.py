@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Independent system-shell sessions and PYNIX Console in native IDE V4.
+"""Independent system-shell sessions and Zunyite Console in native IDE V4.
 
 The dock host is shared for layout only. The two tools have distinct icons,
 commands, buffers, inputs and lifecycle; stdout from run/debug stays separate.
@@ -175,8 +175,8 @@ TERMINAL_DOCK_JS = r"""
    return {panel,log,input};
   };
   const system=makePanel('pynix-system-terminal','System Terminal');
-  const pynix=makePanel('pynix-language-terminal','PYNIX Console');
-  pynix.log.textContent='PYNIX Console — type help for supported commands.\n';
+  const pynix=makePanel('pynix-language-terminal','Zunyite Console');
+  pynix.log.textContent='Zunyite Console — type help for supported commands.\n';
   const shellTabs=new Map();
   let activeId=null,scope='other',serial=0,pynixBusy=false;
   const pynixTabs=new Map();let pynixId=null,pynixSerial=0,pynixPending=null,shellCreating=false;
@@ -187,7 +187,7 @@ TERMINAL_DOCK_JS = r"""
    const handler=window.webkit?.messageHandlers?.pynixTerminalSession;
    if(!handler){
     if(message.scope==='shell')system.log.textContent+='Native macOS terminal unavailable.\n';
-    else pynix.log.textContent+='PYNIX compiler bridge unavailable.\n';
+    else pynix.log.textContent+='Zunyite compiler bridge unavailable.\n';
     return;
    }
    handler.postMessage(message);
@@ -217,7 +217,7 @@ TERMINAL_DOCK_JS = r"""
    const legacy=document.querySelectorAll('.workspace-mode .rail>.rail-item')[4];
    legacy?.classList.toggle('active',visible&&scope==='system');
    legacy?.setAttribute('aria-pressed',String(visible&&scope==='system'));
-   title.textContent=scope==='pynix'?'PYNIX Console':scope==='system'?'Terminal':(
+   title.textContent=scope==='pynix'?'Zunyite Console':scope==='system'?'Terminal':(
     selectedTool==='TERMINAL'?'Run':selectedTool[0]+selectedTool.slice(1).toLowerCase());
    sessions.hidden=scope==='other';
    newSession.hidden=scope==='other'||!showToolbar;
@@ -477,7 +477,7 @@ TERMINAL_DOCK_JS = r"""
     item.className='pynix-terminal-session-tab'+(id===active?' active':'');
     const button=document.createElement('button');button.type='button';
     button.className='pynix-terminal-session-select';button.textContent=tab.label;
-    button.title=isPynix?'PYNIX Console':tab.shell;
+    button.title=isPynix?'Zunyite Console':tab.shell;
     button.setAttribute('aria-selected',String(id===active));
     button.addEventListener('click',()=>{
      if(isPynix){if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;pynixId=id;paintSessions();paintPynix();}
@@ -514,7 +514,7 @@ TERMINAL_DOCK_JS = r"""
    if(pynixTabs.has(pynixId))pynixTabs.get(pynixId).draft=pynix.input.value;
    const id='pynix-'+(++pynixSerial);
    pynixTabs.set(id,{label:pynixTabs.size===0?'Local':'Local '+pynixSerial,
-    buffer:'PYNIX Console — type help for supported commands.\n',draft:''});
+    buffer:'Zunyite Console — type help for supported commands.\n',draft:''});
    pynixId=id;paintSessions();paintPynix();pynix.input.focus();
   }
   function createShell(shell){
@@ -667,7 +667,7 @@ TERMINAL_DOCK_JS = r"""
    if(!command||pynixBusy)return;
    pynix.input.value='';
    const tab=pynixTabs.get(pynixId);if(!tab)return;
-   tab.draft='';tab.buffer+='pynix> '+command+'\n';paintPynix();
+   tab.draft='';tab.buffer+='zuny> '+command+'\n';paintPynix();
    pynixPending=pynixId;pynixBusy=true;
    native({scope:'pynix',action:'execute',command});
   });
