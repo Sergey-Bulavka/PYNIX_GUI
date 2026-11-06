@@ -1,9 +1,9 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Native PYNIX IDE chrome geometry modeled after the supplied PyCharm screenshot.
+"""Native Zunyite IDE chrome geometry modeled after the supplied PyCharm screenshot.
 
 Move existing DOM controls, retaining their listeners. New affordances dispatch
-real PYNIX actions; unavailable ones remain explicitly disabled.
+real Zunyite actions; unavailable ones remain explicitly disabled.
 """
 from __future__ import annotations
 import json
@@ -124,7 +124,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  outline:2px solid #80b8f4;outline-offset:-2px
 }
 .workspace-mode .pynix-pycharm-icon-button svg{width:19px;height:19px}
-/* Keep the original PYNIX run-mode <select> in the DOM for its existing
+/* Keep the original Zunyite run-mode <select> in the DOM for its existing
    backend listeners, but use a real compact JetBrains-style configuration
    button as its visible control. */
 .workspace-mode .workspace-toolbar .pynix-pycharm-center>.pynix-run-mode{
@@ -904,7 +904,7 @@ CHROME_STYLE = """<style id="pynix-pycharm-chrome">
  .workspace-mode .pynix-terminal-dock-agents{display:none}
 }
 
-/* Separate live system PTYs and PYNIX compiler console. */
+/* Separate live system PTYs and Zunyite compiler console. */
 .workspace-mode .integrated-terminal .terminal-console[hidden],
 .workspace-mode .integrated-terminal .pynix-system-terminal[hidden],
 .workspace-mode .integrated-terminal .pynix-language-terminal[hidden],
@@ -1515,9 +1515,9 @@ CHROME_SCRIPT = r"""<script>
   // attach_workspace provides the real project directory name. The arrow
   // was previously a separate DOM child inside .current-branch.
   const projectName=(legacyProject?.textContent||'').trim()||
-                    (title?.textContent||'PYNIX').trim();
+                    (title?.textContent||'Zunyite').trim();
   const projectLabel=projectName.startsWith('⑂')?
-                     (title?.textContent||'PYNIX').trim():projectName;
+                     (title?.textContent||'Zunyite').trim():projectName;
   const left=document.createElement('div');
   left.className='pynix-toolbar-identity';
   const build=(className,label,aria,action)=>{
@@ -1573,7 +1573,7 @@ CHROME_SCRIPT = r"""<script>
   left.append(project,branch);
   toolbar.insertBefore(left,title||legacyProject||toolbar.firstChild);
   // Delete the obsolete disconnected text and arrow: one button replaces
-  // the old PYNIX label, and a different button represents the Git branch.
+  // the old Zunyite label, and a different button represents the Git branch.
   title?.remove();
   legacyProject?.remove();
  };
@@ -1664,7 +1664,7 @@ CHROME_SCRIPT = r"""<script>
   const actions=[[run,'Run','⌃R'],[debug,'Debug','⌃D']];
   for(const [control,verb,shortcut] of actions){
    if(!control)continue;
-   // Labels follow PyCharm, but the real PYNIX run handler still launches
+   // Labels follow PyCharm, but the real Zunyite run handler still launches
    // the workspace project. Never replace it with a fake file runner.
    const text=name?verb+" '"+name+"'":verb+' project';
    control.dataset.pynixTooltip=text;
@@ -1718,7 +1718,7 @@ CHROME_SCRIPT = r"""<script>
     if(edit)params.prepend(edit);
     params.setAttribute('aria-disabled','true');
     params.setAttribute('aria-label','Run with Parameters (not yet supported)');
-    params.dataset.pynixTooltip='Run with Parameters (not yet supported by PYNIX)';
+    params.dataset.pynixTooltip='Run with Parameters (not yet supported by Zunyite)';
     params.setAttribute('tabindex','0');
     // Do not use HTML disabled: allow hover and keyboard focus for the
     // explanatory tooltip. No click listener means no fake run command.
@@ -1748,7 +1748,7 @@ CHROME_SCRIPT = r"""<script>
   const openSettings=(page='Editor')=>{
    const bridge=window.webkit?.messageHandlers?.pynixIDEWindow;
    if(bridge){bridge.postMessage({action:'open-settings',page});}
-   else window.alert('Settings window requires the native PYNIX IDE on macOS.');
+   else window.alert('Settings window requires the native Zunyite IDE on macOS.');
   };
   window.pynixOpenSettingsWindow=openSettings;
   const gearItem=(label,callback,{icon,shortcut,disabled}={})=>{
@@ -1777,7 +1777,7 @@ CHROME_SCRIPT = r"""<script>
    const item=document.createElement('div');item.className='pynix-ide-gear-divider';
    item.setAttribute('role','separator');gearMenu.appendChild(item);
   };
-  gearItem('PYNIX IDE · __IDE_VERSION__',null,{disabled:true});
+  gearItem('Zunyite IDE · __IDE_VERSION__',null,{disabled:true});
   gearDivider();
   gearItem('Run Anything…',()=>window.pynixOpenSearchEverywhere?.());
   gearDivider();
@@ -1850,7 +1850,7 @@ CHROME_SCRIPT = r"""<script>
   beta.className='pynix-ide-beta';
   beta.textContent='Beta Version · __IDE_VERSION__';
   beta.dataset.compact='β · __IDE_VERSION__';
-  beta.setAttribute('aria-label','PYNIX IDE beta version __IDE_VERSION__');
+  beta.setAttribute('aria-label','Zunyite IDE beta version __IDE_VERSION__');
   right.append(search,settings,beta);
   // Two equally flexible empty regions center Run/Debug between the
   // identity and status clusters without absolute coordinates. Both may

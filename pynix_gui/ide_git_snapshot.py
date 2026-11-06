@@ -1,4 +1,4 @@
-"""Read-only Git snapshot for the PYNIX IDE workspace preview.
+"""Read-only Git snapshot for the Zunyite IDE workspace preview.
 
 Git data is read from an explicit project root. No mutating Git commands.
 """

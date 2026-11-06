@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Licensed JetBrains New UI SVG catalog for PYNIX IDE.
+"""Licensed JetBrains New UI SVG catalog for Zunyite IDE.
 
 The catalog deliberately does not assume that every PyCharm/IntelliJ asset is
 freely reusable. Only files with their own Apache-2.0 notices are importable.
@@ -178,7 +178,7 @@ class JetBrainsIconCatalog:
                 raise ValueError("Unsupported icon manifest version")
             self.icons: dict[str, dict] = manifest["icons"]
         else:
-            # The small PYNIX bundled pack can be used immediately without a
+            # The small Zunyite bundled pack can be used immediately without a
             # generated manifest. Imported full packs use the indexed manifest
             # and avoid this (more expensive) one-time directory walk.
             self.icons = {}
@@ -247,7 +247,7 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Import licensed JetBrains New UI SVGs")
     parser.add_argument("source", type=Path, help="Local expui directory from an IntelliJ checkout")
-    parser.add_argument("destination", type=Path, help="PYNIX icon assets directory")
+    parser.add_argument("destination", type=Path, help="Zunyite icon assets directory")
     parser.add_argument("--dry-run", action="store_true", help="Only count eligible icons")
     args = parser.parse_args(argv)
     manifest = build_catalog(args.source, args.destination, dry_run=args.dry_run)

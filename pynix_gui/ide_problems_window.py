@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""JetBrains-style Problems tool window bound to real PYNIX compiler diagnostics.
+"""JetBrains-style Problems tool window bound to real Zunyite compiler diagnostics.
 
 The compiler tooling V1 analyzes the saved project; this view never pretends
 to provide unsaved-buffer inspections, quick fixes or AI reviews.
@@ -328,7 +328,7 @@ PROBLEMS_JS = r"""
   if(loaded&&!force)return;
   const bridge=window.webkit?.messageHandlers?.pynixDiagnostics;
   if(!bridge){
-   error='Compiler diagnostics require the native PYNIX IDE on macOS.';
+   error='Compiler diagnostics require the native Zunyite IDE on macOS.';
    loaded=true;render();return;
   }
   loading=true;error='';render();

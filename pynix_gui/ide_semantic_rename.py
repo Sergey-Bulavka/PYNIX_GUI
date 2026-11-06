@@ -33,7 +33,7 @@ def _relative_project_path(root: Path, value: object) -> tuple[str, Path]:
         path = root / path
     path = path.resolve()
     if not path.is_relative_to(root) or path.suffix not in (".uny", ".pnx") or not path.is_file():
-        raise RenamePlanError("Symbol spans outside indexed PYNIX sources")
+        raise RenamePlanError("Symbol spans outside indexed Zunyite sources")
     return path.relative_to(root).as_posix(), path
 
 
@@ -58,7 +58,7 @@ def plan_semantic_rename(root: Path, compiler_python: Path,
     """Build conservative cross-file edits from real compiler reference spans."""
     root = Path(root).resolve()
     if not isinstance(new_name, str) or not _NAME.fullmatch(new_name) or new_name in _RESERVED:
-        raise RenamePlanError("New symbol name must be a non-keyword PYNIX identifier")
+        raise RenamePlanError("New symbol name must be a non-keyword Zunyite identifier")
     payload = query_navigation(root, compiler_python, "references", source, line, column)
     if payload.get("error"):
         raise RenamePlanError(str(payload["error"]))

@@ -40,7 +40,7 @@ EDITOR_THEME_STYLE = """<style id="pynix-v4-editor-darcula">
 .workspace-mode .pynix-edit-python-class{color:#56a8f5!important}
 .workspace-mode .pynix-edit-python-call{color:#a8bde1!important}
 .workspace-mode .pynix-edit-python-builtin{color:#c6a8d6!important}
-/* PYNIX has its own syntax, with the same reduced-intensity visual hierarchy.
+/* Zunyite has its own syntax, with the same reduced-intensity visual hierarchy.
    Language identity and highlighting categories are separate from Python. */
 .workspace-mode .pynix-edit-keyword{color:#cf8e6d!important}
 .workspace-mode .pynix-edit-definition{color:#56a8f5!important}
@@ -50,7 +50,7 @@ EDITOR_THEME_STYLE = """<style id="pynix-v4-editor-darcula">
 .workspace-mode .pynix-edit-type{color:#a8c1da!important}
 .workspace-mode .pynix-edit-call{color:#a8bde1!important}
 .workspace-mode .pynix-edit-builtin{color:#c6a8d6!important}
-/* The read-only PYNIX preview uses Python-produced tokens, not the live
+/* The read-only Zunyite preview uses Python-produced tokens, not the live
    textarea layer. Keep both views visually consistent. */
 .workspace-mode .pnx-token.pnx-plain{color:#bcbec4!important}
 .workspace-mode .pnx-token.pnx-keyword{color:#cf8e6d!important}

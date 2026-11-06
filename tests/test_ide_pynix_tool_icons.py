@@ -89,15 +89,15 @@ def test_pynix_packages_replaces_only_python_with_exact_approved_pynix_mark():
 def test_icon_profile_loads_our_two_monochrome_svgs_not_png_or_python():
     assert PYNIX_BRANDED_TOOLS == frozenset(PYNIX_BRAND_ICON_FILES)
     assert PYNIX_BRAND_ICON_FILES == {
-        "PYNIX Terminal": "pynix-terminal.svg",
-        "PYNIX Packages": "pynix-packages.svg",
+        "Zunyite Terminal": "pynix-terminal.svg",
+        "Zunyite Packages": "pynix-packages.svg",
     }
     label_icon = {label: icon for label, icon, _, _ in TOOL_WINDOW_PROFILE}
-    assert label_icon["PYNIX Terminal"] == "pynix/pynix-terminal"
-    assert label_icon["PYNIX Packages"] == "pynix/pynix-packages"
+    assert label_icon["Zunyite Terminal"] == "pynix/pynix-terminal"
+    assert label_icon["Zunyite Packages"] == "pynix/pynix-packages"
     html = apply_edge_profile(
         "<html><body class='workspace-mode'></body></html>", iconless=True)
-    for word in ("PYNIX Terminal", "PYNIX Packages"):
+    for word in ("Zunyite Terminal", "Zunyite Packages"):
         assert '"label": "' + word + '"' in html
     assert r"\u003csvg" in html
     assert '"isPynixBrand": true' in html

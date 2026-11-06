@@ -1,10 +1,10 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""PyCharm New UI tool-window placement profile for the native PYNIX shell.
+"""PyCharm New UI tool-window placement profile for the native Zunyite shell.
 
 JetBrains tools are contextual, not all 787 icons simultaneously visible.
 The roster below describes their canonical edge and an explicit readiness
-state. Disabled entries never impersonate supported PYNIX functionality.
+state. Disabled entries never impersonate supported Zunyite functionality.
 """
 from __future__ import annotations
 
@@ -27,10 +27,10 @@ TOOL_WINDOW_PROFILE = (
     ("Search", "toolwindows/find", "left-top", "existing"),
     ("Version Control", "toolwindows/vcs", "left-top", "existing"),
     ("Bookmarks", "toolwindows/bookmarks", "left-top", "unavailable"),
-    # Screenshot-matched lower-left PYNIX tool stripe.
+    # Screenshot-matched lower-left Zunyite tool stripe.
     ("Run", "toolwindows/run", "left-bottom", "existing"),
-    ("PYNIX Terminal", "pynix/pynix-terminal", "left-bottom", "existing"),
-    ("PYNIX Packages", "pynix/pynix-packages", "left-bottom", "existing"),
+    ("Zunyite Terminal", "pynix/pynix-terminal", "left-bottom", "existing"),
+    ("Zunyite Packages", "pynix/pynix-packages", "left-bottom", "existing"),
     ("Services", "toolwindows/services", "left-bottom", "existing"),
     ("Terminal", "terminal/terminal", "left-bottom", "existing"),
     ("Problems", "toolwindows/problems", "left-bottom", "existing"),
@@ -48,21 +48,21 @@ TOOL_WINDOW_PROFILE = (
 # More Tool Windows, where unavailable capabilities are clearly marked.
 PINNED_TOOLS = frozenset({
     "Project", "Commit", "Pull Requests", "Structure",
-    "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+    "Run", "Zunyite Terminal", "Zunyite Packages", "Services",
     "Terminal", "Problems", "Git", "Notifications", "AI Chat",
 })
 
 # The only requested iconographic stripes in otherwise text-only native IDE.
 TOP_LEFT_ICONS = frozenset({"Project", "Commit", "Pull Requests", "Structure"})
 BOTTOM_LEFT_ICONS = (
-    "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+    "Run", "Zunyite Terminal", "Zunyite Packages", "Services",
     "Terminal", "Problems", "Git",
 )
 RIGHT_TOP_ICONS = ("Notifications", "AI Chat")
-PYNIX_BRANDED_TOOLS = frozenset({"PYNIX Terminal", "PYNIX Packages"})
+PYNIX_BRANDED_TOOLS = frozenset({"Zunyite Terminal", "Zunyite Packages"})
 PYNIX_BRAND_ICON_FILES = {
-    "PYNIX Terminal": "pynix-terminal.svg",
-    "PYNIX Packages": "pynix-packages.svg",
+    "Zunyite Terminal": "pynix-terminal.svg",
+    "Zunyite Packages": "pynix-packages.svg",
 }
 
 # The left-top More Tool Windows menu follows the supplied PyCharm screenshot.
@@ -86,8 +86,8 @@ MORE_TOOL_WINDOWS = (
 EXISTING_ACTIONS = {
     "Project": "rail:0", "Search": "rail:1",
     "Version Control": "rail:2", "Run": "run-window",
-    "PYNIX Terminal": "terminal:pynix",
-    "PYNIX Packages": "packages-window",
+    "Zunyite Terminal": "terminal:pynix",
+    "Zunyite Packages": "packages-window",
     "Services": "services-window",
     "Terminal": "terminal:system", "Git": "git-window",
     "Debug": "dock:DEBUG CONSOLE", "Problems": "dock:PROBLEMS",
@@ -168,7 +168,7 @@ EDGE_PROFILE_STYLE = """<style id="pynix-edge-profile-style">
  width:20px!important;height:20px!important;flex:0 0 20px!important;
 }
 /* Screenshot-matched lower-left rail: seven original JetBrains icons.
-   The two PYNIX actions additionally use our OWN existing PNX brand image;
+   The two Zunyite actions additionally use our OWN existing PNX brand image;
    all upstream JetBrains SVG artwork stays unchanged. */
 .workspace-mode.pynix-iconless .pynix-extra-tools[data-edge="left-bottom"]{
  gap:7px!important;padding-bottom:7px!important;
@@ -389,8 +389,8 @@ EDGE_PROFILE_SCRIPT = r"""<script>
 
  const shortNames={
   'Project':'Proj','Search':'Find','Version Control':'Git',
-  'Structure':'Struct','Run':'Run','PYNIX Terminal':'PNX',
-  'PYNIX Packages':'Pkg','Services':'Srv','Debug':'Debug','Terminal':'Term',
+  'Structure':'Struct','Run':'Run','Zunyite Terminal':'PNX',
+  'Zunyite Packages':'Pkg','Services':'Srv','Debug':'Debug','Terminal':'Term',
   'Problems':'Err','Notifications':'Alerts','AI Chat':'AI',
   'Commit':'Commit','Bookmarks':'Marks','Git':'Git'
  };
@@ -444,7 +444,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    // aria-disabled preserves disabled semantics while allowing hover/focus.
    const unavailable=entry.state==='unavailable';
    button.setAttribute('aria-disabled',String(unavailable));
-   button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');
+   button.title=entry.label+(unavailable?' — not implemented in Zunyite IDE':'');
    // Preserve a candid status in the single delegated tooltip. The icon can
    // highlight on hover while still having NO command when unavailable.
    button.dataset.pynixTooltip=entry.label+
@@ -452,12 +452,12 @@ EDGE_PROFILE_SCRIPT = r"""<script>
    button.setAttribute('aria-label',button.title);
    button.dataset.toolWindow=entry.label;
    // The blue notification dot matches the PyCharm visual reference.
-   // It is purely decorative until PYNIX has unread-notification state.
+   // It is purely decorative until Zunyite has unread-notification state.
    if(entry.label==='Notifications')button.dataset.previewBadge='true';
    // Only the screenshot-matched left and top-right strips use pictograms.
    const pictogram=iconless&&(edge==='left-top'||edge==='left-bottom'||edge==='right-top');
    if(iconless&&!pictogram)button.textContent=shortNames[entry.label]||entry.label;
-   // Both PYNIX pictograms are their own monochrome 20px SVG vectors.
+   // Both Zunyite pictograms are their own monochrome 20px SVG vectors.
    // Neither the old document PNG nor any Python snake is painted.
    if(entry.isPynixBrand)button.dataset.pynixBrand=entry.label;
    const visual=(iconless&&!pictogram)?null:entry.svg;
@@ -603,7 +603,7 @@ EDGE_PROFILE_SCRIPT = r"""<script>
     row.type='button';
     row.className='pynix-more-item';
     row.disabled=!entry.action;
-    if(row.disabled)row.title=entry.label+' — not implemented in PYNIX IDE';
+    if(row.disabled)row.title=entry.label+' — not implemented in Zunyite IDE';
     row.setAttribute('aria-label',entry.label+(entry.shortcut?' '+entry.shortcut:''));
     if(entry.label==='Bookmarks')row.classList.add('is-highlighted');
     const icon=document.createElement('span');
@@ -689,11 +689,11 @@ def apply_edge_profile(document: str, directory: Path = BUNDLED_ICONS, *,
             ):
                 return None
             if label in PYNIX_BRAND_ICON_FILES:
-                # Native PYNIX artwork, not a substituted JetBrains/Python logo.
+                # Native Zunyite artwork, not a substituted JetBrains/Python logo.
                 return (branded_icons_dir / PYNIX_BRAND_ICON_FILES[label]).read_text(
                     encoding="utf-8"
                 )
-            # All non-PYNIX tools stay the original JetBrains SVG.
+            # All non-Zunyite tools stay the original JetBrains SVG.
             return catalog.svg(key, dark=dark, tool_window=True) if catalog else None
 
         entries = [{

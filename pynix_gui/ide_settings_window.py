@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""First native PyCharm-style Settings window for PYNIX V4.
+"""First native PyCharm-style Settings window for Zunyite V4.
 
 Only editor font settings are editable until the corresponding runtime
 consumers exist. Settings are global; project defaults are not conflated.
@@ -49,14 +49,19 @@ def validate_editor_settings(payload: object) -> dict[str, float]:
 
 class SettingsStore:
     def __init__(self, path: Path | None = None):
-        self.path = path or (
-            Path.home() / "Library" / "Application Support" /
-            "PYNIX" / "ide-settings-v1.json"
+        support = Path.home() / "Library" / "Application Support"
+        self.path = path if path is not None else support / "Zunyite" / "ide-settings-v1.json"
+        self._legacy_path = (
+            support / "PYNIX" / "ide-settings-v1.json"
+            if path is None else None
         )
 
     def read(self) -> dict[str, float]:
         try:
-            raw = json.loads(self.path.read_text(encoding="utf-8"))
+            source = self.path
+            if not source.exists() and self._legacy_path is not None:
+                source = self._legacy_path
+            raw = json.loads(source.read_text(encoding="utf-8"))
             return validate_editor_settings(raw)
         except (OSError, UnicodeError, ValueError, TypeError):
             return dict(DEFAULTS)
@@ -68,7 +73,7 @@ class SettingsStore:
         try:
             with tempfile.NamedTemporaryFile(
                 mode="w", encoding="utf-8", dir=self.path.parent,
-                prefix=".pynix-settings-", suffix=".tmp", delete=False
+                prefix=".zunyite-settings-", suffix=".tmp", delete=False
             ) as stream:
                 temporary = Path(stream.name)
                 # POSIX file mode is not available on Windows (NTFS uses ACLs).
@@ -224,12 +229,12 @@ SETTINGS_JS = r"""
    setting('Size (px)', 'editor.font_size', 0.5, 8, 36);
    setting('Line height', 'editor.line_height', 0.1, 1, 2.5);
    const preview=document.createElement('pre');preview.className='preview';
-   preview.textContent='def hello_world():\n    print("PYNIX IDE")\n\n# Editor font preview';
+   preview.textContent='def hello_world():\n    print("Zunyite IDE")\n\n# Editor font preview';
    body.appendChild(preview);
    const sync=()=>{preview.style.fontSize=String(draft['editor.font_size'])+'px';preview.style.lineHeight=String(draft['editor.line_height']);};
    body.querySelectorAll('input').forEach(x=>x.addEventListener('input',sync));sync();
   }else if(name==='File Encodings'){
-   paragraph('UTF-8 without BOM is the current PYNIX default.');
+   paragraph('UTF-8 without BOM is the current Zunyite default.');
    paragraph('Per-file encoding conversion requires filesystem and unsaved-buffer safeguards and is not yet available.', 'note');
   }else if(name==='Appearance'){
    paragraph('Appearance: dark native IDE theme. Global UI font, menu scaling and theme selection will be connected in the next Settings batch.');
@@ -239,7 +244,7 @@ SETTINGS_JS = r"""
    paragraph('Editable TODO filters will be available once the comment-token index is connected.', 'note');
   }else{
    paragraph('This section follows the PyCharm Settings structure.');
-   paragraph('No editable controls are shown until the corresponding PYNIX runtime feature is implemented.', 'note');
+   paragraph('No editable controls are shown until the corresponding Zunyite runtime feature is implemented.', 'note');
   }
  };
  document.getElementById('filter').addEventListener('input',drawTree);
@@ -290,7 +295,7 @@ def settings_html(values: dict[str, float], page: str = "Editor") -> str:
     return (
         '<!doctype html><html lang="en"><head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
-        '<title>Settings — PYNIX</title><style>' + SETTINGS_CSS +
+        '<title>Settings — Zunyite</title><style>' + SETTINGS_CSS +
         '</style></head><body><div class="shell">'
         '<aside class="nav"><input id="filter" class="search"'
         ' aria-label="Search settings" placeholder="Search settings…">'

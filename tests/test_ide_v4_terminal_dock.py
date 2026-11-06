@@ -14,7 +14,7 @@ from pynix_gui.ide_workspace_session import WorkspaceSession
 
 def test_two_real_tool_window_actions_never_alias():
     assert EXISTING_ACTIONS["Terminal"]=="terminal:system"
-    assert EXISTING_ACTIONS["PYNIX Terminal"]=="terminal:pynix"
+    assert EXISTING_ACTIONS["Zunyite Terminal"]=="terminal:pynix"
     assert "window.pynixTerminalDock={" in TERMINAL_DOCK_JS
     assert "state:()=>({scope,tool:selectedTool,visible:isVisible()})" in TERMINAL_DOCK_JS
     assert "window.dispatchEvent(new CustomEvent('pynix:terminal-change',{detail}))" in TERMINAL_DOCK_JS

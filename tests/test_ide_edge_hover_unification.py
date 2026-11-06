@@ -14,7 +14,7 @@ def test_all_four_edge_groups_share_one_hover_rule():
                 if label in PINNED_TOOLS and edge in {
                     "left-top", "left-bottom", "right-top", "right-bottom"
                 }]
-    assert {"Commit", "Pull Requests", "Structure", "PYNIX Packages",
+    assert {"Commit", "Pull Requests", "Structure", "Zunyite Packages",
             "Notifications", "AI Chat", "Project", "Run"} <= set(expected)
     # The dynamic DOM factory gives every pinned tool the same button class.
     assert "button.className='pynix-extra-tool';" in EDGE_PROFILE_SCRIPT

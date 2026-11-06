@@ -117,8 +117,8 @@ def test_packages_ui_is_isolated_from_project_tree_and_run():
     package_ui = (root / "pynix_gui/ide_packages_dock.py").read_text(encoding="utf-8")
     native = (root / "examples/ide_native_v4.py").read_text(encoding="utf-8")
 
-    assert '"PYNIX Packages": "packages-window"' in edge
-    assert '("PYNIX Packages", "pynix/pynix-packages", "left-bottom", "existing")' in edge
+    assert '"Zunyite Packages": "packages-window"' in edge
+    assert '("Zunyite Packages", "pynix/pynix-packages", "left-bottom", "existing")' in edge
     assert "window.pynixTerminalDock?.togglePackages?.()" in edge
     assert "const togglePackages=()=>select('packages');" in dock
     assert "packagesPane.hidden=!(visible&&scope==='packages');" in dock

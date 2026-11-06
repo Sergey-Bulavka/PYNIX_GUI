@@ -1,4 +1,4 @@
-"""File type icon registry for PYNIX IDE V4.
+"""File type icon registry for Zunyite IDE V4.
 
 Mapping is centralized so Explorer and editor tabs identify files consistently.
 """

@@ -1,4 +1,4 @@
-"""Small deterministic PYNIX source highlighter for the read-only IDE preview.
+"""Small deterministic Zunyite source highlighter for the read-only IDE preview.
 
 Presentation only: this is not a compiler parser or semantic analyzer.
 """
