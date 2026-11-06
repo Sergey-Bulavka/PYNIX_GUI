@@ -96,3 +96,42 @@ def test_safe_metadata_dotfiles_visible_but_secret_files_still_hidden(tmp_path):
     assert ".editorconfig" in visible
     assert "main.pnx" in visible
     assert ".env" not in visible
+
+
+def test_creating_canonical_uny_file_is_indexed_and_never_overwrites(tmp_path):
+    from pynix_gui.ide_file_icons import file_icon_type
+
+    (tmp_path / "src").mkdir()
+    session = WorkspaceSession(tmp_path)
+    document = session.create_file("src/new_file.uny", content="function main()\n    pass\n")
+
+    assert document.path == "src/new_file.uny"
+    assert document.text == "function main()\n    pass\n"
+    assert (tmp_path / "src" / "new_file.uny").read_text(encoding="utf-8") == document.text
+    assert "src/new_file.uny" in session.list_files()
+    assert file_icon_type("src/new_file.uny") == file_icon_type("src/legacy.pnx")
+
+    with pytest.raises(WorkspaceError, match="already exists"):
+        session.create_file("src/new_file.uny", content="overwrite")
+    assert (tmp_path / "src" / "new_file.uny").read_text(encoding="utf-8") == document.text
+
+
+def test_legacy_pnx_can_still_be_created_without_affecting_uny(tmp_path):
+    session = WorkspaceSession(tmp_path)
+    session.create_file("modern.uny", content="pass\n")
+    session.create_file("legacy.pnx", content="pass\n")
+    assert session.list_files() == ["legacy.pnx", "modern.uny"]
+
+
+def test_workspace_new_file_defaults_to_uny_and_native_bridge_accepts_it():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+
+    assert "newSourceButton.textContent='New .uny';" in preview
+    assert "base+'new_file.uny'" in preview
+    assert "base+(kind==='directory'?'new_directory':'new_file.uny')" in preview
+    assert "session.create_file(relative)" in native
+    assert "available_sources.add(relative)" in native
