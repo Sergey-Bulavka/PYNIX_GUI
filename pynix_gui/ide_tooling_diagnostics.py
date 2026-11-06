@@ -29,7 +29,7 @@ class DiagnosticSnapshot:
 def read_diagnostics(project_root: Path, compiler_python: Path, *,
                      timeout: float = 20, limit: int = 200) -> DiagnosticSnapshot:
     root = Path(project_root).resolve()
-    executable = Path(compiler_python).resolve()
+    executable = Path(compiler_python).expanduser().absolute()
     manifest = next((root / name for name in ("zunyite.toml", "pynix.toml") if (root / name).is_file()), root / "zunyite.toml")
     if not manifest.is_file():
         return DiagnosticSnapshot((), "No zunyite.toml or pynix.toml project manifest")
