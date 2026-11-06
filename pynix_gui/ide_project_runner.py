@@ -1,4 +1,4 @@
-"""Bounded PYNIX project execution controller for the native IDE.
+"""Bounded Zunyite project execution controller for the native IDE.
 
 No shell, no arbitrary executable selected by web content. One process per
 workspace; output is captured and bounded, with explicit stop and cleanup.
@@ -43,12 +43,12 @@ class ProjectRunner:
                     raise RunError("Run requires a saved .uny, .pnx or .py file inside the project")
                 if resolved.suffix in {".uny", ".pnx"}:
                     if not self.python.is_file():
-                        raise RunError("PYNIX compiler interpreter is unavailable")
+                        raise RunError("Zunyite compiler interpreter is unavailable")
                     command = [str(self.python), "-u", "-m", "compiler", "run",
                                str(resolved), "--single-file"]
                 else:
                     # Python files use the selected project's interpreter when
-                    # available; they must not be sent to the PYNIX compiler.
+                    # available; they must not be sent to the Zunyite compiler.
                     import sys
                     project_python = self.root / ".venv" / "bin" / "python"
                     interpreter = project_python if project_python.is_file() else Path(sys.executable)
