@@ -1,4 +1,4 @@
-# Zunyite GUI (formerly PYNIX GUI)
+# Zunyite GUI
 
 Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 
