@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Reusable IDE-focused compositions built from public PYNIX GUI primitives.
+"""Reusable IDE-focused compositions built from public Zunyite GUI primitives.
 
 This module is intentionally independent of compiler, filesystem and IDE state.
 Native backend styling and editor-specific decoration are separate acceptance gates.
@@ -25,7 +25,7 @@ METRICS = IDEChromeMetrics()
 
 def ide_command_bar(project: str, *, run_target="shell-run"):
     return toolbar(row([
-        text("PYNIX", "titleSmall"),
+        text("Zunyite", "titleSmall"),
         text("IDE", "caption"),
         fill(text(project, "caption")),
         button("shell-project", "Open", "quiet"),
@@ -61,6 +61,6 @@ def ide_tool_window_header(active, labels=("Problems", "Output", "Terminal", "De
 def ide_status_strip(message: str, filename: str):
     return status_bar(row([
         text("● " + message, "caption"),
-        fill(text("PYNIX  ·  " + filename, "caption")),
+        fill(text("Zunyite  ·  " + filename, "caption")),
         text("UTF-8  ·  Spaces: 4  ·  Ln 1, Col 1", "caption"),
     ], 8))

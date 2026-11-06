@@ -1,14 +1,14 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Python Packages style tool window for the PYNIX IDE."""
+"""Python Packages style tool window for the Zunyite IDE."""
 
 PACKAGES_DOCK_JS = r"""
   const packagesPane=document.createElement('section');
   packagesPane.className='pynix-packages-pane';
   packagesPane.hidden=true;
-  packagesPane.setAttribute('aria-label','PYNIX Packages');
+  packagesPane.setAttribute('aria-label','Zunyite Packages');
   packagesPane.innerHTML=[
-    '<div class="pynix-packages-header"><strong>PYNIX Packages</strong>',
+    '<div class="pynix-packages-header"><strong>Zunyite Packages</strong>',
     '<span class="pynix-packages-interpreter" title="Current interpreter"></span>',
     '<button class="pynix-packages-refresh" type="button" aria-label="Refresh packages" title="Refresh packages">↻</button>',
     '<button class="pynix-packages-hide" type="button" aria-label="Hide packages" title="Hide packages">−</button></div>',
@@ -50,7 +50,7 @@ PACKAGES_DOCK_JS = r"""
   const packageSend=(action,name,version)=>{
     const native=window.webkit?.messageHandlers?.pynixPackages;
     if(!native){
-      packageStatus.textContent='Package management requires native PYNIX IDE.';
+      packageStatus.textContent='Package management requires native Zunyite IDE.';
       return false;
     }
     native.postMessage({action,name:name||'',version:version||'',requestId:++packageSerial});

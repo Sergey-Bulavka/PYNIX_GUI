@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""PYNIX IDE original 20×20 vector icon vocabulary, scaled for 16/20 px use.
+"""Zunyite IDE original 20×20 vector icon vocabulary, scaled for 16/20 px use.
 
 Paths follow one stroke system and are not copies of third-party product icons.
 All coordinates are in logical icon pixels. The renderer is backend-independent.

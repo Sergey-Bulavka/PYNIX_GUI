@@ -1,4 +1,4 @@
-"""PyCharm screenshot chrome: retain real PYNIX actions and native layout."""
+"""PyCharm screenshot chrome: retain real Zunyite actions and native layout."""
 from pathlib import Path
 
 from pynix_gui.ide_pycharm_chrome import (
@@ -140,7 +140,7 @@ def test_iconless_native_identity_keeps_only_real_git_and_chevron_icons():
 
 
 def test_current_file_selector_is_one_button_with_real_mode_options():
-    # The original select still drives PYNIX project's runner, while its
+    # The original select still drives Zunyite project's runner, while its
     # compact presentation is one accessible PyCharm-style button.
     for value in (
         "const createRunConfig=(center,select)=>{",
@@ -212,7 +212,7 @@ def test_more_actions_is_native_icon_menu_and_preserves_existing_buttons():
         "params.textContent='Run with Parameters...';",
         "const edit=makeIcon('general/edit');",
         "params.setAttribute('aria-disabled','true');",
-        "params.dataset.pynixTooltip='Run with Parameters (not yet supported by PYNIX)';",
+        "params.dataset.pynixTooltip='Run with Parameters (not yet supported by Zunyite)';",
         "items.prepend(params);",
         "if(items&&debugStatus)items.appendChild(debugStatus);",
     ):

@@ -122,7 +122,7 @@ class ProjectPackages:
         # PyPI offers an official, exact-name JSON API, not fuzzy search.
         url = "https://pypi.org/pypi/" + urllib.parse.quote(name) + "/json"
         request = urllib.request.Request(
-            url, headers={"User-Agent": "PYNIX-IDE/1.0 (package metadata)"})
+            url, headers={"User-Agent": "Zunyite-IDE/1.0 (package metadata)"})
         try:
             with urllib.request.urlopen(request, timeout=7) as response:
                 if response.status != 200:

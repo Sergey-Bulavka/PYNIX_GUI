@@ -1,4 +1,4 @@
-# Copyright 2026 PYNIX contributors
+# Copyright 2026 Zunyite contributors
 # SPDX-License-Identifier: Apache-2.0
 """Project Services: configured MCP SSE connections and observable sessions.
 
@@ -110,7 +110,7 @@ class ProjectServices:
                     **profile,
                     "state": runtime.get("state", "disconnected"),
                     "since": runtime.get("since"),
-                    "client": "PYNIX IDE",
+                    "client": "Zunyite IDE",
                     "version": "0.1.0",
                     "transport": "SSE",
                     "tools": list(runtime.get("tools", [])),
@@ -243,7 +243,7 @@ class ProjectServices:
                                 "jsonrpc": "2.0", "id": 1, "method": "initialize",
                                 "params": {"protocolVersion": "2024-11-05",
                                            "capabilities": {},
-                                           "clientInfo": {"name": "PYNIX IDE", "version": "0.1.0"}}})
+                                           "clientInfo": {"name": "Zunyite IDE", "version": "0.1.0"}}})
                         elif event == "message" and data:
                             try:
                                 msg = json.loads(data)

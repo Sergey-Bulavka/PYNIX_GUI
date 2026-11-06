@@ -147,7 +147,7 @@ SERVICES_DOCK_JS = r"""
   };
   const svSend=(action,extra={})=>{
    const bridge=window.webkit?.messageHandlers?.pynixServices;
-   if(!bridge){sv('empty').textContent='Services requires native PYNIX IDE.';return false;}
+   if(!bridge){sv('empty').textContent='Services requires native Zunyite IDE.';return false;}
    bridge.postMessage({action,...extra});return true;
   };
   const svRefresh=()=>svSend('list');
@@ -213,7 +213,7 @@ SERVICES_DOCK_JS = r"""
     calls.textContent='Run configurations do not expose MCP tool calls.';
     return;
    }
-   svField(session,'Client',item.client||'PYNIX IDE');
+   svField(session,'Client',item.client||'Zunyite IDE');
    svField(session,'Version',item.version||'—');
    svField(session,'Transport',item.transport||'SSE');
    svField(session,'Status',item.state||'disconnected');
@@ -334,7 +334,7 @@ SERVICES_DOCK_JS = r"""
    button.setAttribute('role',config.key?'menuitemcheckbox':'menuitem');
    button.disabled=!!config.disabled;
    if(config.disabled){
-    button.title=config.reason||'Not supported in this version of PYNIX IDE';
+    button.title=config.reason||'Not supported in this version of Zunyite IDE';
     button.setAttribute('aria-disabled','true');
    }
    const mark=document.createElement('span');mark.className='pynix-services-option-mark';

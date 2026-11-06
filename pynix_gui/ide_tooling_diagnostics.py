@@ -1,4 +1,4 @@
-"""Read-only adapter for PYNIX's public tooling diagnostics protocol V1.
+"""Read-only adapter for Zunyite's public tooling diagnostics protocol V1.
 
 Never imports compiler internals; invokes public CLI with an explicit interpreter.
 """

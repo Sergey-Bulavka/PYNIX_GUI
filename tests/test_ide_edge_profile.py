@@ -17,7 +17,7 @@ def test_profile_has_four_edges_unique_labels_and_real_licensed_assets():
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
     for label, icon, edge, state in TOOL_WINDOW_PROFILE:
         assert state in {"existing", "unavailable"}
-        if label not in {"PYNIX Terminal", "PYNIX Packages"}:
+        if label not in {"Zunyite Terminal", "Zunyite Packages"}:
             assert catalog.resolve(icon, dark=True, tool_window=True) is not None, label
         else:
             assert icon.startswith("pynix/")
@@ -30,7 +30,7 @@ def test_profile_is_idempotent_and_never_pretends_disabled_tools_work():
     assert result != source
     assert apply_edge_profile(result) == result
     assert "button.setAttribute('aria-disabled',String(unavailable));" in EDGE_PROFILE_SCRIPT
-    assert "not implemented in PYNIX IDE" in EDGE_PROFILE_SCRIPT
+    assert "not implemented in Zunyite IDE" in EDGE_PROFILE_SCRIPT
     assert "More tool windows" in EDGE_PROFILE_SCRIPT
     assert "place('left-top'" in EDGE_PROFILE_SCRIPT
     assert "place('right-bottom'" in EDGE_PROFILE_SCRIPT
@@ -68,7 +68,7 @@ def test_new_ui_rail_placement_keeps_existing_buttons_and_bottom_anchors():
 def test_screenshot_pins_only_reference_icons_and_keeps_extra_tools_in_menu():
     from pynix_gui.ide_edge_profile import PINNED_TOOLS, EXISTING_ACTIONS
     assert {"Project", "Commit", "Pull Requests", "Structure",
-            "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+            "Run", "Zunyite Terminal", "Zunyite Packages", "Services",
             "Terminal", "Problems", "Git",
             "Notifications", "AI Chat"} <= PINNED_TOOLS
     assert "Debug" not in PINNED_TOOLS
@@ -258,16 +258,16 @@ def test_bottom_left_matches_seven_pycharm_reference_tools_without_more_button()
     visible = tuple(label for label, _, edge, _ in TOOL_WINDOW_PROFILE
                     if edge == "left-bottom" and label in PINNED_TOOLS)
     assert visible == BOTTOM_LEFT_ICONS == (
-        "Run", "PYNIX Terminal", "PYNIX Packages", "Services",
+        "Run", "Zunyite Terminal", "Zunyite Packages", "Services",
         "Terminal", "Problems", "Git",
     )
     assert EXISTING_ACTIONS["Run"] == "run-window"
-    assert EXISTING_ACTIONS["PYNIX Terminal"] == "terminal:pynix"
+    assert EXISTING_ACTIONS["Zunyite Terminal"] == "terminal:pynix"
     assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
     assert EXISTING_ACTIONS["Problems"] == "dock:PROBLEMS"
     assert EXISTING_ACTIONS["Git"] == "git-window"
     assert EXISTING_ACTIONS["Services"] == "services-window"
-    assert EXISTING_ACTIONS["PYNIX Packages"] == "packages-window"
+    assert EXISTING_ACTIONS["Zunyite Packages"] == "packages-window"
     assert "if(edge==='left-bottom'||edge==='right-top'){" in EDGE_PROFILE_SCRIPT
     assert "host.appendChild(container);" in EDGE_PROFILE_SCRIPT
 
@@ -277,13 +277,13 @@ def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_bran
         BOTTOM_LEFT_ICONS, PYNIX_BRANDED_TOOLS,
     )
     catalog = JetBrainsIconCatalog(BUNDLED_ICONS)
-    assert PYNIX_BRANDED_TOOLS == {"PYNIX Terminal", "PYNIX Packages"}
+    assert PYNIX_BRANDED_TOOLS == {"Zunyite Terminal", "Zunyite Packages"}
     names = {label: icon for label, icon, edge, _ in TOOL_WINDOW_PROFILE
              if edge == "left-bottom" and label in BOTTOM_LEFT_ICONS}
     assert names == {
         "Run": "toolwindows/run",
-        "PYNIX Terminal": "pynix/pynix-terminal",
-        "PYNIX Packages": "pynix/pynix-packages",
+        "Zunyite Terminal": "pynix/pynix-terminal",
+        "Zunyite Packages": "pynix/pynix-packages",
         "Services": "toolwindows/services",
         "Terminal": "terminal/terminal",
         "Problems": "toolwindows/problems",
@@ -291,7 +291,7 @@ def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_bran
     }
     for name, icon in names.items():
         if name in PYNIX_BRANDED_TOOLS:
-            continue  # Our own PYNIX marks are not in the JetBrains catalog.
+            continue  # Our own Zunyite marks are not in the JetBrains catalog.
         for dark in (True, False):
             resolved = catalog.resolve(icon, dark=dark, tool_window=True)
             assert resolved is not None, (name, dark)
@@ -303,8 +303,8 @@ def test_lower_left_icons_are_exact_upstream_jetbrains_art_and_native_pynix_bran
     html = apply_edge_profile("<html><body class='workspace-mode'></body></html>",
                               iconless=True)
     assert "data:image/png;base64" not in html
-    assert '"label": "PYNIX Terminal"' in html
-    assert '"label": "PYNIX Packages"' in html
+    assert '"label": "Zunyite Terminal"' in html
+    assert '"label": "Zunyite Packages"' in html
     assert '"isPynixBrand": true' in html
     assert "entry.brand" not in EDGE_PROFILE_SCRIPT
     assert "const visual=(iconless&&!pictogram)?null:entry.svg;" in EDGE_PROFILE_SCRIPT
@@ -381,4 +381,4 @@ def test_right_top_no_more_menu_and_no_fake_ready_status():
     assert "Notifications" not in EXISTING_ACTIONS
     assert "AI Chat" not in EXISTING_ACTIONS
     assert "entry.state==='unavailable'" in EDGE_PROFILE_SCRIPT
-    assert "button.title=entry.label+(unavailable?' — not implemented in PYNIX IDE':'');" in EDGE_PROFILE_SCRIPT
+    assert "button.title=entry.label+(unavailable?' — not implemented in Zunyite IDE':'');" in EDGE_PROFILE_SCRIPT

@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Bounded, read-only Git Log / branches / worktrees for the native PYNIX IDE.
+"""Bounded, read-only Git Log / branches / worktrees for the native Zunyite IDE.
 
 No shell, checkouts, fetches, mutation, pager or Git hooks. Every request is
 anchored to the explicitly opened project root. SHA and path operations are

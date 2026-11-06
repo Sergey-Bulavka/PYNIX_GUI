@@ -1,4 +1,4 @@
-"""Explicit capability gate for the PYNIX interactive debugger.
+"""Explicit capability gate for the Zunyite interactive debugger.
 
 The current compiler backend exposes execute()/Interpreter.run(), but not
 a public pausable debugger protocol. Keep IDE controls honest and disabled
@@ -21,7 +21,7 @@ class DebugCapabilities:
     stack_frames: bool = False
     variables: bool = False
     reason: str = (
-        "PYNIX compiler has no verified public pause/step/stack debugger "
+        "Zunyite compiler has no verified public pause/step/stack debugger "
         "protocol. Run/Check are available; interactive Debug is not."
     )
 

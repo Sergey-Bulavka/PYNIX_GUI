@@ -1,4 +1,4 @@
-"""Safe host-side adapter for experimental PYNIX debugger worker.
+"""Safe host-side adapter for experimental Zunyite debugger worker.
 
 Only the native host chooses interpreter, project and source. Browser code
 cannot inject commands or arbitrary paths into the subprocess.
@@ -26,7 +26,7 @@ class DebugProcessClient:
     def __init__(self, root: Path, python: Path):
         self.root = Path(root).resolve()
         # Keep the venv path: resolve() can follow its executable symlink
-        # outside the PYNIX checkout, losing the compiler package root.
+        # outside the Zunyite checkout, losing the compiler package root.
         self.python = Path(python).absolute()
         self._lock = RLock()
         self._worker = None
@@ -38,7 +38,7 @@ class DebugProcessClient:
             if self._worker is not None:
                 raise DebugClientError("Debugger already running")
             if not isinstance(source, str) or not source.endswith((".uny", ".pnx")):
-                raise DebugClientError("Choose a PYNIX source file")
+                raise DebugClientError("Choose a Zunyite source file")
             target = (self.root / source).resolve()
             if not target.is_relative_to(self.root) or not target.is_file():
                 raise DebugClientError("Source outside project")
@@ -134,7 +134,7 @@ class _Worker:
 
     def start(self):
         if not self.python.is_file():
-            raise DebugClientError("PYNIX compiler interpreter unavailable")
+            raise DebugClientError("Zunyite compiler interpreter unavailable")
         import tempfile
         env = os.environ.copy()
         # A project is not the compiler checkout: the native IDE runs from

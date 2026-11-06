@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Shared PyCharm-style hover/focus tooltips for native PYNIX IDE controls.
+"""Shared PyCharm-style hover/focus tooltips for native Zunyite IDE controls.
 
 WKWebView native title tooltips are unreliable. Install one delegated overlay
 instead; it survives DOM replacement, preserved event handlers and resizing.
@@ -119,7 +119,7 @@ TOOLTIP_SCRIPT = r"""<script id="pynix-native-tooltips-script">
   if(!button)return '';
   let text=button.dataset.pynixTooltip||button.dataset.toolWindow||
    button.getAttribute('title')||button.getAttribute('aria-label')||'';
-  text=text.replace(/\s*— not implemented in PYNIX IDE\s*$/,'').trim();
+  text=text.replace(/\s*— not implemented in Zunyite IDE\s*$/,'').trim();
   if(!text)text=(button.textContent||'').trim();
   return text;
  };

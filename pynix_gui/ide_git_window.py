@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Native PYNIX IDE Git tool window: real Log, branches, worktrees, commit diff.
+"""Native Zunyite IDE Git tool window: real Log, branches, worktrees, commit diff.
 
 The same resizable host is reused only for layout. No mock history, no hidden
 mutating Git operations, and no Git content is rendered as HTML.
@@ -337,7 +337,7 @@ GIT_WINDOW_SCRIPT = r"""
  window.addEventListener('resize',clearPopover);
  const post=(action,payload={})=>{
   const bridge=window.webkit?.messageHandlers?.pynixGitLog;
-  if(!bridge){error='Git Log requires the native PYNIX IDE on macOS.';render();return;}
+  if(!bridge){error='Git Log requires the native Zunyite IDE on macOS.';render();return;}
   const id=++requestId;lastRequests[action]=id;
   bridge.postMessage({action,requestId:id,...payload});
  };
