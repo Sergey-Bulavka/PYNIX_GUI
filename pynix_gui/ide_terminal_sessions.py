@@ -155,19 +155,19 @@ class PynixCommandConsole:
             return ("PYNIX Console\n"
                     "  help                  Available commands\n"
                     "  pwd                   Current project\n"
-                    "  files                 Project .pnx files\n"
-                    "  run path/to/file.pnx  Compile and run a PYNIX program\n"
+                    "  files                 Project .uny/.pnx files\n"
+                    "  run path/to/file.uny  Compile and run a PYNIX program\n"
                     "Commands execute in the PYNIX project; this is not a Python shell.")
         if tokens == ["pwd"]:
             return str(self.root)
         if tokens == ["files"]:
             return "\n".join(str(p.relative_to(self.root)) for p in
-                             list(self.root.rglob("*.pnx"))[:100])
+                             [p for p in self.root.rglob("*") if p.is_file() and p.suffix in (".uny", ".pnx")][:100])
         if len(tokens) != 2 or tokens[0] != "run":
             return "Unknown PYNIX command. Type help."
         path = (self.root / tokens[1]).resolve()
-        if not path.is_relative_to(self.root) or path.suffix != ".pnx" or not path.is_file():
-            return "Only existing .pnx files inside the project can be run."
+        if not path.is_relative_to(self.root) or path.suffix not in (".uny", ".pnx") or not path.is_file():
+            return "Only existing .uny or .pnx files inside the project can be run."
         if not self._lock.acquire(blocking=False):
             return "Another PYNIX command is still running."
         try:
