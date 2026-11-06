@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Native menu adapter for the V4 WKWebView acceptance workspace.
 
-The public PYNIX_GUI MenuBar belongs to GUIRuntime windows. V4 currently uses
+The public Zunyite_GUI MenuBar belongs to GUIRuntime windows. V4 currently uses
 a raw WKWebView, so this narrow adapter forwards native selections to existing
 browser actions instead of introducing a second IDE command implementation.
 """
