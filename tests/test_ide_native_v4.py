@@ -97,7 +97,7 @@ def test_v41_workspace_has_professional_panels_and_resizers():
     for expected in ("workspace-toolbar", "editor-tabs", "right-tools",
                      "tree-resizer", "terminal-resizer", "--explorer-width",
                      "--terminal-height", "setPointerCapture",
-                     "data-file=\"gui.pnx\"", "data-file=\"tooling.pnx\""):
+                     "data-file=\"gui.uny\"", "data-file=\"tooling.uny\""):
         assert expected in html
 
 
