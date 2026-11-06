@@ -130,7 +130,7 @@ class LocalTerminalSessions:
 
 
 class PynixCommandConsole:
-    """Independent PYNIX CLI console, intentionally NOT a Python REPL.
+    """Independent Zunyite CLI console, intentionally NOT a Python REPL.
 
     A proper inline expression REPL needs a separate language Design Gate.
     Here the supported commands execute the actual language/compiler safely
@@ -181,6 +181,6 @@ class PynixCommandConsole:
             output = result.stdout + result.stderr
             return (output[-100_000:] or f"Process exited {result.returncode}.")
         except (OSError, subprocess.TimeoutExpired) as exc:
-            return "PYNIX execution failed: " + str(exc)
+            return "Zunyite execution failed: " + str(exc)
         finally:
             self._lock.release()
