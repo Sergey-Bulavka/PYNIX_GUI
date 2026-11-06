@@ -50,7 +50,7 @@ class PersistentCoreReader:
             for filename in (f"workspace_read_host{source_suffix}", f"ide_session{source_suffix}", f"project{source_suffix}", f"tooling{source_suffix}"):
                 shutil.copy2(self.ide_repo / "src" / filename, source_dir / filename)
             (root / ("zunyite.toml" if source_suffix == ".uny" else "pynix.toml")).write_text(
-                '[project]\nname = "pynix-ide-core"\nsource = "src"\nentry = "workspace_read_host.pnx"\n',
+                f'[project]\nname = "zunyite-ide-core"\nsource = "src"\nentry = "workspace_read_host{source_suffix}"\n',
                 encoding="utf-8",
             )
             env = os.environ.copy()
