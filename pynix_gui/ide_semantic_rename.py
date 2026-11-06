@@ -32,7 +32,7 @@ def _relative_project_path(root: Path, value: object) -> tuple[str, Path]:
     if not path.is_absolute():
         path = root / path
     path = path.resolve()
-    if not path.is_relative_to(root) or path.suffix != ".pnx" or not path.is_file():
+    if not path.is_relative_to(root) or path.suffix not in (".uny", ".pnx") or not path.is_file():
         raise RenamePlanError("Symbol spans outside indexed PYNIX sources")
     return path.relative_to(root).as_posix(), path
 
