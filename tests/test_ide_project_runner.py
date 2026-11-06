@@ -223,7 +223,7 @@ def test_run_output_links_support_python_tracebacks_and_pynix_locations():
         Path(__file__).resolve().parents[1] /
         "pynix_gui" / "ide_workspace_preview.py"
     ).read_text(encoding="utf-8")
-    assert r"\\.(?:pnx|py)" in preview
+    assert r"\\.(?:uny|pnx|py)" in preview
     assert 'line.match(/File ["\']' in preview
     assert "new CustomEvent('pynix:navigate'" in preview
 
@@ -259,5 +259,13 @@ def test_current_file_regex_has_valid_python_string_escape():
     preview_file = root / "pynix_gui/ide_workspace_preview.py"
     source = preview_file.read_text(encoding="utf-8")
     ast.parse(source)
-    assert r"if(!/\\.(pnx|py)$/i.test(source)" in source
-    assert r"if(!/\.(pnx|py)$/i.test(source)" not in source
+    assert r"if(!/\\.(uny|pnx|py)$/i.test(source)" in source
+    assert r"if(!/\.(uny|pnx|py)$/i.test(source)" not in source
+
+
+def test_run_current_file_and_error_navigation_include_canonical_uny():
+    root = Path(__file__).resolve().parents[1]
+    preview = (root / "pynix_gui" / "ide_workspace_preview.py").read_text(encoding="utf-8")
+    assert r"if(!/\\.(uny|pnx|py)$/i.test(source)" in preview
+    assert r"\\.(?:uny|pnx|py)):(\\d+)" in preview
+    assert "Run supports saved .uny, .pnx and .py project files." in preview
