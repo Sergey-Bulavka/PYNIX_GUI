@@ -545,7 +545,7 @@ def test_configured_core_never_silently_falls_back_to_disk_only_save():
     native = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
     save = native.split("class FileSaveHandler(NSObject):", 1)[1].split(
         "class ProjectSearchHandler(NSObject):", 1)[0]
-    assert 'if args.ide_core is not None and source.endswith(".pnx") and core_reader is None:' in save
+    assert 'if args.ide_core is not None and source.endswith((".uny", ".pnx")) and core_reader is None:' in save
     assert "IDE Core is unavailable; cannot save .pnx" in save
     assert save.index("IDE Core is unavailable; cannot save .pnx") < save.index("session.save(source)")
 
