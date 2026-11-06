@@ -1044,7 +1044,7 @@ __PYNIX_DISPLAY_LEXER__
      window.alert('Open a .uny, .pnx or .py file before running.');return;
    }
    if(isFile){
-     if(!/\\.(pnx|py)$/i.test(source)||!byName.has(source)){
+     if(!/\\.(uny|pnx|py)$/i.test(source)||!byName.has(source)){
        window.alert('Run supports saved .uny, .pnx and .py project files.');return;
      }
      if(byName.get(source).dirty){
@@ -1076,7 +1076,7 @@ __PYNIX_DISPLAY_LEXER__
    for(const line of String(output||'').split('\\n').slice(0,4000)){
      const row=document.createElement('div');
      row.className='pynix-run-output-line';
-     const match=line.match(/([^\\s:()]+\\.(?:pnx|py)):(\\d+)(?::(\\d+))?/) ||
+     const match=line.match(/([^\\s:()]+\\.(?:uny|pnx|py)):(\\d+)(?::(\\d+))?/) ||
        line.match(/File ["']([^"']+\\.py)["'], line (\\d+)/);
      const source=match&&(known.includes(match[1])?match[1]:
        known.find(item=>match[1].endsWith('/'+item)));
