@@ -30,3 +30,6 @@ addopts = "-q"
 
 [tool.setuptools.package-data]
 pynix_gui = ["py.typed", "assets/icons/*.png"]
+
+[tool.setuptools.packages.find]
+include = ["pynix_gui*", "zunyite_gui*"]
