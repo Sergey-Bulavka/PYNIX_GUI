@@ -100,7 +100,7 @@ def navigation_controls() -> str:
        ready=true;
      }
      if(!source || !source.match(/\\.(?:uny|pnx)$/)) {
-       window.pynixNavigationResult({command,result:{error:'Open a PYNIX source file first'}});
+       window.pynixNavigationResult({command,result:{error:'Open a Zunyite source file first'}});
        return;
      }
      if(!ready){window.pynixNavigationResult({command,result:{error:'Wait for the source file to finish loading, then click a symbol.'}});return;}
@@ -129,7 +129,7 @@ def navigation_controls() -> str:
      row.className='navigation-result';row.textContent=text;output.appendChild(row);
    };
    if(result.error){add(result.error);return;}
-   add('PYNIX · '+packet.command+' · '+source+':'+line+':'+column);
+   add('Zunyite · '+packet.command+' · '+source+':'+line+':'+column);
    if(packet.command==='definition'){
      const d=result.definition;
      if(!d){add('No definition at this position');return;}
