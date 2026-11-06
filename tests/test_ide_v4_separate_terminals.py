@@ -1,4 +1,4 @@
-"""Separate Terminal / PYNIX Terminal semantics and real local sessions."""
+"""Separate Terminal / Zunyite Terminal semantics and real local sessions."""
 import os
 from pathlib import Path
 import shutil
@@ -19,7 +19,7 @@ from pynix_gui.ide_workspace_session import WorkspaceSession
 
 def test_pynix_and_system_terminal_have_distinct_commands_and_selection():
     assert EXISTING_ACTIONS["Terminal"] == "terminal:system"
-    assert EXISTING_ACTIONS["PYNIX Terminal"] == "terminal:pynix"
+    assert EXISTING_ACTIONS["Zunyite Terminal"] == "terminal:pynix"
     assert "window.pynixTerminalDock?.select(command.slice(9))" in EDGE_PROFILE_SCRIPT
     assert "window.addEventListener('pynix:terminal-change',sync)" in EDGE_PROFILE_SCRIPT
     assert "state.visible&&state.scope===scope" in EDGE_PROFILE_SCRIPT
