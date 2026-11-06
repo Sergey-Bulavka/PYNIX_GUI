@@ -74,7 +74,7 @@ def test_v43_header_escapes_project_title(tmp_path):
     project.mkdir()
     (project / "main.pnx").write_text("ok", encoding="utf-8")
     output = attach_workspace(
-        "<body><b>PYNIX</b> / Icon System</body>",
+        "<body><b>Zunyite</b> / Icon System</body>",
         WorkspaceSession(project))
     assert "Example &amp; Project" in output
     assert "PROJECT_NAME_PAYLOAD" not in output
@@ -474,13 +474,13 @@ def test_workspace_status_strip_does_not_duplicate_sample_line_number(tmp_path):
     template = (
         '<html><body><div class="bottom">'
         '<span>⑂ main · 1 modified</span>'
-        '<span>PYNIX · UTF-8 · Ln 7</span>'
+        '<span>Zunyite · UTF-8 · Ln 7</span>'
         '</div></body></html>'
     )
     html = attach_workspace(template, WorkspaceSession(tmp_path))
     assert "<span>UTF-8 · LF</span>" in html
     assert "<span>main · UTF-8" not in html
-    assert "PYNIX · UTF-8 · Ln 7" not in html
+    assert "Zunyite · UTF-8 · Ln 7" not in html
     assert "pynix-cursor-status" in html
 
 
