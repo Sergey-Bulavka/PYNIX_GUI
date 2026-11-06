@@ -26,8 +26,8 @@ class ProjectRunner:
             if self.process is not None and self.process.poll() is None:
                 raise RunError("A PYNIX process is already running")
             if source is None:
-                if not (self.root / "pynix.toml").is_file():
-                    raise RunError("A pynix.toml project manifest is required")
+                if not any((self.root / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
+                    raise RunError("A zunyite.toml or pynix.toml project manifest is required")
                 if not self.python.is_file():
                     raise RunError("PYNIX compiler interpreter is unavailable")
                 command = [str(self.python), "-u", "-m", "compiler", mode, str(self.root)]
@@ -39,9 +39,9 @@ class ProjectRunner:
                 relative = Path(source)
                 resolved = (self.root / relative).resolve()
                 if (relative.is_absolute() or not resolved.is_relative_to(self.root)
-                        or not resolved.is_file() or resolved.suffix not in {".pnx", ".py"}):
-                    raise RunError("Run requires a saved .pnx or .py file inside the project")
-                if resolved.suffix == ".pnx":
+                        or not resolved.is_file() or resolved.suffix not in {".uny", ".pnx", ".py"}):
+                    raise RunError("Run requires a saved .uny, .pnx or .py file inside the project")
+                if resolved.suffix in {".uny", ".pnx"}:
                     if not self.python.is_file():
                         raise RunError("PYNIX compiler interpreter is unavailable")
                     command = [str(self.python), "-u", "-m", "compiler", "run",
