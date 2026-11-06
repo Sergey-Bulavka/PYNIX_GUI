@@ -10,6 +10,9 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import tempfile
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pynix_gui.ide_core_persistent import PersistentCoreReader
 from pynix_gui.ide_project_runner import ProjectRunner
