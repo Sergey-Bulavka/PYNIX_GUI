@@ -34,8 +34,6 @@ if [[ ! -x "$IDE_PY" ]]; then
   IDE_PY="$COMPILER_PY"
 fi
 
-export ZUNYITE_TEST_ROOT="$COMPILER"
-export ZUNYITE_TEST_PYTHON="$COMPILER_PY"
 export PYTHONPATH="$COMPILER:$GUI:$IDE/tests${PYTHONPATH:+:$PYTHONPATH}"
 
 step() {
@@ -55,8 +53,8 @@ if [[ "$MODE" == "full" ]]; then
   step "Compiler: full suite"
   (cd "$COMPILER" && "$COMPILER_PY" -m pytest -q)
 
-  step "Official IDE Core: full suite"
-  (cd "$IDE" && "$IDE_PY" -m pytest -q)
+  step "Official IDE Core: full suite (isolated test-path overrides)"
+  (cd "$IDE" && unset ZUNYITE_TEST_ROOT ZUNYITE_TEST_PYTHON PYNIX_TEST_ROOT PYNIX_TEST_PYTHON && "$IDE_PY" -m pytest -q)
 
   step "Workspace V4 GUI: full suite"
   (cd "$GUI" && "$GUI_PY" -m pytest -q)
