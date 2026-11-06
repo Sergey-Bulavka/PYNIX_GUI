@@ -1,8 +1,8 @@
-# Zunyite GUI (previously PYNIX GUI)
+# Zunyite GUI
 
 Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 
-> **Status:** macOS reference backend and PYNIX language integration are accepted through
+> **Status:** macOS reference backend and Zunyite language integration are accepted through
 > 0.1.6-dev. Text Layout V1–V4, Product Gallery, Responsive Workspace V2,
 > Responsive Content V1 and Advanced Components Quality V1 are implemented and
 > have macOS user acceptance. Automated CI runs on macOS, Windows and Ubuntu;
@@ -10,19 +10,19 @@ Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 >
 > Component version: **0.1.6-dev**
 
-PYNIX GUI is a first-class product of the PYNIX ecosystem. It owns the platform-independent
-GUI model, deterministic layout engine, PYNIX Standard design system, advanced desktop
+Zunyite GUI is a first-class product of the Zunyite ecosystem. It owns the platform-independent
+GUI model, deterministic layout engine, Zunyite Standard design system, advanced desktop
 controls, platform backends, examples/showcase, documentation, and GUI-specific tests.
 
-The PYNIX language continues to expose the simple public surface:
+The Zunyite language continues to expose the simple public surface:
 
-```pynix
+```zunyite
 GUI.button(...)
 GUI.table(...)
 GUI.canvas(...)
 ```
 
-Repository separation is an internal engineering boundary. It must not make PYNIX source
+Repository separation is an internal engineering boundary. It must not make Zunyite source
 code more complicated.
 
 > **Migration note:** This branch integrates the Zunyite GUI package and native Workspace V4. Install distribution `zunyite-gui`; public Python imports may use `zunyite_gui` while the existing internal `pynix_gui` remains supported for compatibility. Zunyite source uses `.uny`, with `.pnx` supported for existing projects. The migration is in draft until CI and cross-repository smoke tests pass.
@@ -68,12 +68,12 @@ Advanced desktop capabilities are built on top of that foundation:
 ## Repository extraction
 
 The accepted GUI implementation is being migrated from
-`Sergey-Bulavka/PYNIX` without a rewrite. During extraction both repositories retain
-compatibility coverage until PYNIX can consume this package through a narrow adapter.
+`Sergey-Bulavka/Zunyite` without a rewrite. During extraction both repositories retain
+compatibility coverage until Zunyite can consume this package through a narrow adapter.
 
 The accepted macOS reference-backend component version is **0.1.6-dev**:
 ADV-04 Canvas 2D, ADV-05 Rich Editor, logical resources, macOS product polish and real
-PYNIX-language integration are accepted. The active Commercial Product Pass adds Design
+Zunyite-language integration are accepted. The active Commercial Product Pass adds Design
 System 2, a high-level composition layer and the Product Gallery before the final Windows
 native parity gate.
 
@@ -81,7 +81,7 @@ native parity gate.
 
 The interactive **Workspace V4** currently lives on
 `feature/icon-system-v4`, in `examples/ide_native_v4.py`. It is a macOS
-WKWebView-based **integration/acceptance prototype**, not the shipped PYNIX_IDE
+WKWebView-based **integration/acceptance prototype**, not the shipped Zunyite_IDE
 application or the public cross-platform GUI widget API. It uses
 `examples/icon_direction_preview.html`, `pynix_gui/ide_workspace_session.py`,
 `pynix_gui/ide_workspace_preview.py`, and the existing navigation/diagnostics
@@ -96,16 +96,16 @@ GUI toolkit contract and must not be replaced by an IDE-specific version.
 Launch from this branch on macOS using the canonical script:
 
 ```bash
-bash scripts/run_ide_workspace.sh /Users/morphey/PycharmProjects/PYNIX \
-  --compiler-python /Users/morphey/PycharmProjects/PYNIX/.venv/bin/python
+bash scripts/run_ide_workspace.sh /Users/morphey/PycharmProjects/Zunyite \
+  --compiler-python /Users/morphey/PycharmProjects/Zunyite/.venv/bin/python
 ```
 
 This script is the **active workspace preview launcher**; it does not replace
-PYNIX_IDE's official application entry point.
+Zunyite_IDE's official application entry point.
 
 The old `examples/ide_native_visual_shell.py` is a historical visual
 prototype; `examples/adv_01_commands_smoke.py` is an essential menu regression
-smoke, **not** an IDE window. `PYNIX_IDE/src/gui.pnx` is an older standalone
+smoke, **not** an IDE window. `Zunyite_IDE/src/gui.uny` is an older standalone
 Desktop frontend retained for compatibility and tests.
 
 **Next engineering work:** verify the new V4 menu on macOS; preserve its
