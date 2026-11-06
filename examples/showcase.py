@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""PYNIX GUI Product Gallery — commercial showcase and capability browser."""
+"""Zunyite GUI Product Gallery — commercial showcase and capability browser."""
 
 from pynix_gui import (
     GUIRuntime,
@@ -79,12 +79,12 @@ TREE = [
         "src",
         "src",
         [
-            tree_node("main", "main.pnx"),
+            tree_node("main", "main.uny"),
             tree_node(
                 "ui",
                 "ui",
                 [
-                    tree_node("components", "components.pnx"),
+                    tree_node("components", "components.uny"),
                 ],
             ),
         ],
@@ -178,7 +178,7 @@ def product_scene():
 
 
 # These are real gallery routes, not decorative buttons. Each target opens
-# a working page powered by the same public PYNIX GUI component API.
+# a working page powered by the same public Zunyite GUI component API.
 DISCOVERY_ROUTES = {
     "discover-start": "start",
     "discover-controls": "controls",
@@ -326,7 +326,7 @@ def getting_started_page(state=None):
         ),
         alert(
             "Complex inside. Simple outside.",
-            "PYNIX GUI provides semantic interface primitives; native "
+            "Zunyite GUI provides semantic interface primitives; native "
             "implementation details remain inside the platform backends.",
             "info",
         ),
@@ -380,7 +380,7 @@ def overview_page(state=None):
     return column([
         hero(
             "Build polished desktop software with less ceremony.",
-            "PYNIX GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
+            "Zunyite GUI combines semantic design, deterministic layout and native backends behind a compact declarative API.",
             [
                 button("discover-start", "Get started", "primary"),
                 button("discover-dashboard", "See application examples"),
@@ -416,7 +416,7 @@ def overview_page(state=None):
         ], 16),
         alert(
             "Complex inside. Simple outside.",
-            "Application code works with semantic PYNIX values while AppKit and Qt remain private implementation details.",
+            "Application code works with semantic Zunyite values while AppKit and Qt remain private implementation details.",
             "info",
         ),
     ], 20)
@@ -669,12 +669,12 @@ def dashboard_page(state=None):
     return column([
         responsive_section_header(state, 
             "Application example",
-            "A realistic operations dashboard assembled entirely from PYNIX GUI primitives and commercial components.",
+            "A realistic operations dashboard assembled entirely from Zunyite GUI primitives and commercial components.",
             badge("Reference UI", "success"),
         ),
         hero(
             "Operations Console",
-            "Monitor workspaces, inspect health and act on the same semantic event model used by every other PYNIX GUI application.",
+            "Monitor workspaces, inspect health and act on the same semantic event model used by every other Zunyite GUI application.",
             [
                 button("new-workspace", "New workspace", "primary"),
                 button("open-dialog", "Share"),
@@ -695,7 +695,7 @@ def dashboard_page(state=None):
                 "Environment",
                 column([
                     property_row("Region", "EU Central"),
-                    property_row("Runtime", "PYNIX 1.x"),
+                    property_row("Runtime", "Zunyite 1.x"),
                     property_row("GUI", "0.1.6-dev"),
                     alert("Healthy", "All core services are operational.", "success"),
                 ], 12),
@@ -731,7 +731,7 @@ def ide_app_page(state):
             badge("Reference UI", "success"),
         ),
         hero(
-            "PYNIX Studio",
+            "Zunyite IDE",
             "Project navigation, source editing and diagnostics in one semantic desktop workspace.",
             [
                 button("ide-run", "Run", "primary"),
@@ -754,7 +754,7 @@ def ide_app_page(state):
                 "Keyboard-navigable project structure.",
             ), 320, 900),
             fill(card(
-                "main.pnx",
+                "main.uny",
                 advanced_viewport(
                     rich_editor(
                         "ide-editor",
@@ -780,8 +780,8 @@ def ide_app_page(state):
                         table_column("file", "File", 180),
                     ],
                     [
-                        table_row("p1", ["Info", "Workspace is ready", "main.pnx"]),
-                        table_row("p2", ["Hint", "Commercial Product Pass active", "gallery.pnx"]),
+                        table_row("p1", ["Info", "Workspace is ready", "main.uny"]),
+                        table_row("p2", ["Hint", "Commercial Product Pass active", "gallery.uny"]),
                     ],
                     selected_id="p1",
                 ),
@@ -853,11 +853,11 @@ FILE_MANAGER_FOLDER_CONTENTS = {
         ("f-tests", "tests", "Folder", "—"),
     ],
     "src": [
-        ("f-main", "main.pnx", "PYNIX", "4 KB"),
+        ("f-main", "main.uny", "Zunyite", "4 KB"),
         ("f-ui", "ui", "Folder", "—"),
     ],
     "ui": [
-        ("f-components", "components.pnx", "PYNIX", "8 KB"),
+        ("f-components", "components.uny", "Zunyite", "8 KB"),
     ],
     "assets": [],
     "tests": [],
@@ -989,7 +989,7 @@ def file_manager_page(state):
         row([
             badge(str(len(file_rows)) + " items", "neutral"),
             badge("Synced", "success"),
-            fill(text("PYNIX project", "caption")),
+            fill(text("Zunyite project", "caption")),
         ], 8),
     ], 18)
 
@@ -1029,7 +1029,7 @@ def build(page, state):
         )
     )
     sidebar = navigation_sidebar(
-        "PYNIX GUI",
+        "Zunyite GUI",
         [
             navigation_item("nav-" + key, label, page == key)
             for key, label in NAVIGATION
@@ -1059,7 +1059,7 @@ def build(page, state):
                     )),
                 ], WORKSPACE_METRICS["headerGap"]),
                 page_view(page, state),
-                text("PYNIX Standard · semantic by default", "caption"),
+                text("Zunyite Standard · semantic by default", "caption"),
             ], WORKSPACE_METRICS["sectionGap"]),
             WORKSPACE_METRICS["contentInset"],
         )
@@ -1075,13 +1075,13 @@ def build(page, state):
 def main():
     backend = default_backend()
     if backend is None:
-        raise SystemExit("No native PYNIX GUI backend is available on this platform.")
+        raise SystemExit("No native Zunyite GUI backend is available on this platform.")
 
     runtime = GUIRuntime(backend)
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI backend is unavailable.")
+        raise SystemExit("Zunyite GUI backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — Product Gallery", 1440, 900)
+    window = runtime.open("Zunyite GUI — Product Gallery", 1440, 900)
     window.set_menu_bar(
         menu_bar([
             menu(
@@ -1089,7 +1089,7 @@ def main():
                 [
                     menu_item("nav-overview", "Overview", shortcut("1", ["primary"])),
                     menu_item("nav-start", "Start Here", shortcut("2", ["primary"])),
-                    menu_item("open-dialog", "About PYNIX GUI", shortcut("d", ["primary"])),
+                    menu_item("open-dialog", "About Zunyite GUI", shortcut("d", ["primary"])),
                     menu_item("toggle-navigation", "Show / Hide Sidebar", shortcut("0", ["primary"])),
                 ],
             ),
@@ -1117,7 +1117,7 @@ def main():
 
     state = {
         "search": "",
-        "name": "PYNIX Developer",
+        "name": "Zunyite Developer",
         "notes": "Commercial defaults, semantic API, native backend.",
         "checked": True,
         "appearance": 0,
@@ -1183,7 +1183,7 @@ def main():
             window.present_dialog(
                 dialog(
                     "about-gallery",
-                    "PYNIX GUI",
+                    "Zunyite GUI",
                     column([
                         text("Commercial desktop UI with a compact semantic API.", "title"),
                         text(
@@ -1192,7 +1192,7 @@ def main():
                         ),
                         alert(
                             "Native where it matters",
-                            "AppKit and Qt stay behind the PYNIX GUI boundary.",
+                            "AppKit and Qt stay behind the Zunyite GUI boundary.",
                             "info",
                         ),
                     ], 12),
@@ -1267,7 +1267,7 @@ def main():
         window.render(build(page, state))
 
     window.close()
-    print("PYNIX GUI Product Gallery: PASS")
+    print("Zunyite GUI Product Gallery: PASS")
 
 
 if __name__ == "__main__":
