@@ -6,7 +6,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PYTHON="$ROOT/.venv/bin/python"
 if [[ ! -x "$PYTHON" ]]; then
-  echo "PYNIX GUI virtual environment not found: $PYTHON" >&2
+  echo "Zunyite GUI virtual environment not found: $PYTHON" >&2
   exit 2
 fi
 if [[ $# -lt 1 ]]; then
