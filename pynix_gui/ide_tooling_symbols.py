@@ -10,7 +10,7 @@ def read_symbols(project_root: Path, compiler_python: Path, *,
                  timeout: float = 20, limit: int = 1200) -> dict:
     root = Path(project_root).resolve()
     interpreter = Path(compiler_python).resolve()
-    if not (root / "pynix.toml").is_file() or not interpreter.is_file():
+    if not any((root / name).is_file() for name in ("zunyite.toml", "pynix.toml")) or not interpreter.is_file():
         return {"error": "Project manifest or compiler interpreter unavailable", "symbols": []}
     try:
         completed = subprocess.run(
