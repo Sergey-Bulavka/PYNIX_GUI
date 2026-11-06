@@ -39,8 +39,8 @@ def validate_request(value: object, available: set[str]) -> tuple[str, str, int,
         raise ValueError("Unknown navigation action or unopened source")
     if type(line) is not int or type(column) is not int or not (1 <= line <= 1_000_000 and 1 <= column <= 100_000):
         raise ValueError("Invalid source position")
-    if not source.lower().endswith(".pnx"):
-        raise ValueError("Language navigation requires a .pnx file")
+    if not source.lower().endswith((".uny", ".pnx")):
+        raise ValueError("Language navigation requires a .uny or .pnx file")
     return command, source, line, column
 
 
@@ -92,14 +92,14 @@ def navigation_controls() -> str:
    button.title='Query compiler at selected file and code position';
    button.addEventListener('click',()=>{
      const live=window.pynixActiveSource||source;
-     if(editor&&!editor.hidden&&live&&live.endsWith('.pnx')){
+     if(editor&&!editor.hidden&&live&&live.match(/\.(?:uny|pnx)$/)){
        source=live;
        const before=editor.value.slice(0,editor.selectionStart);
        line=before.split('\\n').length;
        column=before.length-before.lastIndexOf('\\n');
        ready=true;
      }
-     if(!source || !source.endsWith('.pnx')) {
+     if(!source || !source.match(/\.(?:uny|pnx)$/)) {
        window.pynixNavigationResult({command,result:{error:'Open a PYNIX source file first'}});
        return;
      }
