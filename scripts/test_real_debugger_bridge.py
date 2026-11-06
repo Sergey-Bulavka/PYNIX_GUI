@@ -1,6 +1,6 @@
-"""Cross-repository smoke check: native IDE client talking to the real PYNIX worker.
+"""Cross-repository smoke check: native IDE client talking to the real Zunyite worker.
 
-Run by the external debugger CI job with PYNIX compiler installed on PYTHONPATH.
+Run with the Zunyite compiler checkout on PYTHONPATH.
 """
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -12,10 +12,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from pynix_gui.ide_debug_process_client import DebugProcessClient
 
 
-def test_real_debugger():
-    with TemporaryDirectory(prefix="pynix-debug-smoke-") as directory:
+def test_real_debugger(suffix: str = '.pnx'):
+    with TemporaryDirectory(prefix="zunyite-debug-smoke-") as directory:
         root = Path(directory)
-        (root / "main.pnx").write_text(
+        (root / f"main{suffix}").write_text(
             "function main()\n"
             "    first = 3\n"
             "    second = first + 4\n"
@@ -24,13 +24,13 @@ def test_real_debugger():
         )
         client = DebugProcessClient(root, Path(sys.executable))
         try:
-            launched = client.launch("main.pnx")
+            launched = client.launch(f"main{suffix}")
             assert launched["event"] == "started", launched
             assert launched["state"] == "paused", launched
             initial_status = client.command("status")
             assert initial_status["state"] == "paused", initial_status
             assert initial_status.get("location"), initial_status
-            bp = client.set_breakpoints([{"source": "main.pnx", "line": 4}])
+            bp = client.set_breakpoints([{"source": f"main{suffix}", "line": 4}])
             assert bp["breakpoints"] == 1, bp
             continued = client.command("continue")
             assert continued["state"] == "paused", continued
@@ -51,5 +51,7 @@ def test_real_debugger():
 
 
 if __name__ == "__main__":
-    test_real_debugger()
-    print("Real PYNIX debugger IDE bridge smoke passed")
+    for suffix in (".uny", ".pnx"):
+        test_real_debugger(suffix)
+        print(f"PASS: real debugger bridge for {suffix}")
+    print("Real Zunyite debugger IDE bridge smoke passed")
