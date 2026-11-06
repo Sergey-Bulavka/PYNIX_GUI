@@ -49,10 +49,10 @@ def install_native_workspace_menu(app, webview, appkit):
             webview.evaluateJavaScript_completionHandler_(script, None)
 
     dispatcher = MenuDispatcher.alloc().init()
-    main_menu = appkit.NSMenu.alloc().initWithTitle_("PYNIX IDE")
-    app_menu = appkit.NSMenu.alloc().initWithTitle_("PYNIX IDE")
+    main_menu = appkit.NSMenu.alloc().initWithTitle_("Zunyite IDE")
+    app_menu = appkit.NSMenu.alloc().initWithTitle_("Zunyite IDE")
     quit_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
-        "Quit PYNIX IDE", "terminate:", "q")
+        "Quit Zunyite IDE", "terminate:", "q")
     settings_item = appkit.NSMenuItem.alloc().initWithTitle_action_keyEquivalent_(
         "Settings…", "activate:", ",")
     settings_item.setTarget_(dispatcher)
