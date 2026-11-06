@@ -5,16 +5,18 @@ MODE="${1:-all}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
-if [[ ! -d .venv ]]; then
-  echo "Missing .venv. Create the project virtual environment first." >&2
+PYTHON="$ROOT/.venv/bin/python"
+if [[ ! -x "$PYTHON" ]]; then
+  echo "Missing executable virtualenv Python: $PYTHON" >&2
+  echo "Create the project virtual environment first." >&2
   exit 2
 fi
 
-source .venv/bin/activate
+echo "Using Python: $("$PYTHON" -c 'import sys; print(sys.executable)')"
 
 run_tests() {
-  python -m pip install -e .
-  python -m pytest -q
+  "$PYTHON" -m pip install -e . pytest
+  "$PYTHON" -m pytest -q
 }
 
 run_gallery() {
@@ -23,7 +25,7 @@ run_gallery() {
   echo "Product Gallery: examples/showcase.py"
   echo "Explore all Gallery sections, then close the window."
   echo "============================================================"
-  python examples/showcase.py
+  "$PYTHON" examples/showcase.py
 }
 
 run_smokes() {
@@ -42,7 +44,7 @@ run_smokes() {
     echo "Native smoke: $script"
     echo "Close the window after checking it to continue."
     echo "============================================================"
-    python "$script"
+    "$PYTHON" "$script"
   done
 }
 
