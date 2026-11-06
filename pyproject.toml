@@ -3,9 +3,9 @@ requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pynix-gui"
+name = "zunyite-gui"
 version = "0.1.6.dev0"
-description = "Commercial-grade desktop GUI toolkit for the PYNIX programming language"
+description = "Commercial-grade desktop GUI toolkit for the Zunyite programming language"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "Apache-2.0"}
@@ -30,3 +30,7 @@ addopts = "-q"
 
 [tool.setuptools.package-data]
 pynix_gui = ["py.typed", "assets/icons/*.png"]
+zunyite_gui = ["py.typed"]
+
+[tool.setuptools.packages.find]
+include = ["pynix_gui*", "zunyite_gui*"]

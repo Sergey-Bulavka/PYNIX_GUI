@@ -1,6 +1,6 @@
-# PYNIX GUI
+# Zunyite GUI (formerly PYNIX GUI)
 
-Commercial-grade desktop GUI toolkit for the PYNIX programming language.
+Commercial-grade desktop GUI toolkit for the Zunyite programming language.
 
 > **Status:** macOS reference backend and PYNIX language integration are accepted through
 > 0.1.6-dev. Text Layout V1–V4, Product Gallery, Responsive Workspace V2,
@@ -24,6 +24,8 @@ GUI.canvas(...)
 
 Repository separation is an internal engineering boundary. It must not make PYNIX source
 code more complicated.
+
+**Naming migration:** The public brand is Zunyite GUI. The Python distribution is now staged as `zunyite-gui`. New code can import `zunyite_gui`; existing `pynix_gui` imports remain supported by compatibility forwarding modules. Migration has not yet passed tests. The `.uny` source convention is being integrated with the compiler and IDE; the Workspace V4 feature branch and file-icon assets still need reconciliation.
 
 ## Product principles
 
