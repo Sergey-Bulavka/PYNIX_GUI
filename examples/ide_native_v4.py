@@ -348,11 +348,11 @@ def main() -> None:
     # instead of a miniature IDE embedded inside the icon gallery.
     parser = argparse.ArgumentParser(description="Zunyite IDE V4 preview")
     parser.add_argument("--project", type=Path, help="Source project to explore")
-    parser.add_argument("--ide-core", type=Path, help="Official PYNIX_IDE checkout for read-only Core snapshot")
-    parser.add_argument("--diagnostics", action="store_true", help="Read PYNIX compiler diagnostics on startup")
+    parser.add_argument("--ide-core", type=Path, help="Official Zunyite_IDE checkout for read-only Core snapshot")
+    parser.add_argument("--diagnostics", action="store_true", help="Read Zunyite compiler diagnostics on startup")
     parser.add_argument("--with-icons", action="store_true",
                         help="Opt in to icon rendering (native IDE defaults to no icons)")
-    parser.add_argument("--compiler-python", type=Path, help="Interpreter with the PYNIX compiler installed")
+    parser.add_argument("--compiler-python", type=Path, help="Interpreter with the Zunyite compiler installed")
     parser.add_argument("--nav-command", choices=("definition", "references", "type-at"))
     parser.add_argument("--nav-source", help="Relative .uny or .pnx path for navigation")
     parser.add_argument("--nav-line", type=int, default=1)
@@ -554,9 +554,9 @@ def main() -> None:
                 if action == "rename" and (not isinstance(destination, str) or
                                            not destination.endswith((".uny", ".pnx")) or
                                            destination in available_sources):
-                    raise WorkspaceError("Invalid destination for PYNIX source rename")
+                    raise WorkspaceError("Invalid destination for Zunyite source rename")
                 if not source.endswith((".uny", ".pnx")):
-                    raise WorkspaceError("Only PYNIX source files can be modified")
+                    raise WorkspaceError("Only Zunyite source files can be modified")
                 if core_reader is not None:
                     core_reader.open_source(source)
                     state = core_reader.read_source(source)
@@ -970,7 +970,7 @@ def main() -> None:
             drag_geometry["areas"] = normalize_toolbar_drag_areas(payload)
             refresh_native_drag_areas()
 
-    # System Terminal and PYNIX Console deliberately have independent native
+    # System Terminal and Zunyite Console deliberately have independent native
     # backends. The frontend does not launch a real shell until + or Terminal.
     import atexit
     from pynix_gui.ide_terminal_sessions import (
@@ -1019,7 +1019,7 @@ def main() -> None:
                 elif scope == "pynix" and action == "execute":
                     command = request.get("command", "")
                     if not isinstance(command, str):
-                        raise TerminalSessionError("PYNIX command must be text")
+                        raise TerminalSessionError("Zunyite command must be text")
                     def worker():
                         result = pynix_commands.execute(command)
                         publish_terminal_event({"scope": "pynix", "data": result})
