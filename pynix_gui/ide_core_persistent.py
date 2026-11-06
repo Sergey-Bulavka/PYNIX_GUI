@@ -34,7 +34,7 @@ class PersistentCoreReader:
             raise CoreSnapshotError("IDE Core is already running")
         source_suffix = ".uny" if (self.ide_repo / "src" / "workspace_read_host.uny").is_file() else ".pnx"
         if not (self.ide_repo / "src" / f"workspace_read_host{source_suffix}").is_file():
-            raise CoreSnapshotError("Persistent IDE Core host is missing; update PYNIX_IDE")
+            raise CoreSnapshotError("Persistent IDE Core host is missing; update Zunyite_IDE")
         if not any((self.project / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
             raise CoreSnapshotError("Project manifest missing")
         if not self.compiler_python.is_file():
