@@ -451,3 +451,43 @@ def test_services_tree_shortcut_uses_mac_key_glyphs_not_one_font_fallback_run():
         assert f"width:{width}px!important" in block
         assert f"font-size:{size}px!important" in block
     assert "font:400 13px/18px" in menu  # Main menu typography is unchanged.
+
+
+def test_default_services_store_is_zunyite_for_new_profiles(monkeypatch, tmp_path):
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    services = ProjectServices(tmp_path / "project")
+    expected = tmp_path / ".config" / "zunyite" / "ide-services"
+    assert services.path.parent == expected
+    profile = services.add("Local", "http://localhost:8765/sse")
+    assert services.path.is_file()
+    assert profile["name"] == "Local"
+
+
+def test_services_read_legacy_profiles_without_relocating(monkeypatch, tmp_path):
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    project = tmp_path / "project"
+    legacy_dir = tmp_path / ".config" / "pynix" / "ide-services"
+    original = ProjectServices(project, config_dir=legacy_dir)
+    original.add("Previous", "http://localhost:8765/sse")
+    old_path = original.path
+
+    reopened = ProjectServices(project)
+    assert reopened.path == old_path
+    assert reopened.list()["services"][0]["name"] == "Previous"
+    reopened.add("New", "https://example.org/sse")
+    assert len(ProjectServices(project).list()["services"]) == 2
+    assert not (tmp_path / ".config" / "zunyite" / "ide-services" / old_path.name).exists()
+
+
+def test_modern_services_store_wins_when_both_profiles_exist(monkeypatch, tmp_path):
+    monkeypatch.setattr(Path, "home", lambda: tmp_path)
+    project = tmp_path / "project"
+    root = tmp_path / ".config"
+    old = ProjectServices(project, config_dir=root / "pynix" / "ide-services")
+    new = ProjectServices(project, config_dir=root / "zunyite" / "ide-services")
+    old.add("Previous", "http://localhost:8765/sse")
+    new.add("Modern", "http://localhost:8765/sse")
+
+    reopened = ProjectServices(project)
+    assert reopened.path == new.path
+    assert [entry["name"] for entry in reopened.list()["services"]] == ["Modern"]
