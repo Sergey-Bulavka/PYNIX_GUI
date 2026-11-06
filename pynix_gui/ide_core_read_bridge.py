@@ -1,6 +1,6 @@
-"""Read-only snapshot transport from the official PYNIX_IDE Core.
+"""Read-only snapshot transport from the official Zunyite_IDE Core.
 
-A fresh isolated PYNIX process has no knowledge of unsaved V4 buffers.
+A fresh isolated Zunyite process has no knowledge of unsaved V4 buffers.
 Never use this snapshot as the V4 editor's authoritative buffer until a
 persistent shared IDE session is implemented in the next milestone.
 """
@@ -30,12 +30,12 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
     if not any((project / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
         raise CoreSnapshotError("Snapshot project must have a pynix.toml")
     if not compiler_python.is_file():
-        raise CoreSnapshotError("PYNIX compiler interpreter is unavailable")
+        raise CoreSnapshotError("Zunyite compiler interpreter is unavailable")
     if source is not None:
         if (not source or not source.endswith((".uny", ".pnx"))
                 or not (project / source).resolve().is_relative_to(project)
                 or not (project / source).is_file()):
-            raise CoreSnapshotError("Source must be a PYNIX file inside project")
+            raise CoreSnapshotError("Source must be a Zunyite file inside project")
     with tempfile.TemporaryDirectory(prefix="pynix-ide-read-") as work:
         root = Path(work)
         dest = root / "src"
