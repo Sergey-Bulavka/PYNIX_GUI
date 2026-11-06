@@ -24,7 +24,6 @@ fi
 # Explicit --ide-core takes precedence; ZUNYITE_IDE_CORE=off disables discovery.
 # The workspace remains usable in standalone GUI mode when no Core is installed.
 CORE="${ZUNYITE_IDE_CORE:-$ROOT/../Zunyite_IDE}"
-CORE_ARGS=()
 EXPLICIT_CORE=false
 for arg in "$@"; do
   if [[ "$arg" == "--ide-core" || "$arg" == --ide-core=* ]]; then
@@ -33,9 +32,10 @@ for arg in "$@"; do
   fi
 done
 if [[ "$EXPLICIT_CORE" == false && "$CORE" != off && -f "$CORE/src/workspace_read_host.uny" ]]; then
-  CORE_ARGS=(--ide-core "$CORE")
   echo "Connecting Zunyite IDE Core: $CORE"
+  cd "$ROOT"
+  exec "$PYTHON" -m examples.ide_native_v4 --project "$PROJECT" --ide-core "$CORE" "$@"
 fi
 
 cd "$ROOT"
-exec "$PYTHON" -m examples.ide_native_v4 --project "$PROJECT" "${CORE_ARGS[@]}" "$@"
+exec "$PYTHON" -m examples.ide_native_v4 --project "$PROJECT" "$@"
