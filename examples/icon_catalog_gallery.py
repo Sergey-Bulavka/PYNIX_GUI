@@ -38,7 +38,7 @@ def render_gallery(catalog: JetBrainsIconCatalog) -> str:
         )
     count = len(cards)
     return """<!doctype html><html lang="en"><head><meta charset="utf-8">
-<title>PYNIX – Icon Catalog</title>
+<title>Zunyite – Icon Catalog</title>
 <style>
 :root{font:13px system-ui,sans-serif;background:#222326;color:#dedfe4}
 *{box-sizing:border-box}body{margin:0}
@@ -58,7 +58,7 @@ main{padding:24px;display:grid;gap:10px;
 .name{color:#c3c6d0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .icon[hidden]{display:none}
 </style></head><body>
-<header><strong>PYNIX icon catalog</strong>
+<header><strong>Zunyite icon catalog</strong>
 <small id="count">__COUNT__ licensed icons</small>
 <input id="query" type="search" placeholder="Search name or category…"
  aria-label="Search imported icons"></header>
@@ -79,7 +79,7 @@ query.addEventListener('input',()=>{
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="View every imported PYNIX/JetBrains icon")
+    parser = argparse.ArgumentParser(description="View every imported Zunyite/JetBrains icon")
     parser.add_argument("directory", type=Path, help="Directory with icon manifest.json")
     parser.add_argument("--output", type=Path, help="HTML output inside icon catalog directory")
     args = parser.parse_args(argv)
