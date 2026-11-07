@@ -64,6 +64,7 @@ else
     tests/test_repository_contract.py tests/test_zunyite_examples_migration.py)
   step "GUI: relevant Run/Core/Debug tests"
   (cd "$GUI" && "$GUI_PY" -m pytest -q \
+    tests/test_zunyite_naming_scripts.py \
     tests/test_ide_workspace_launcher.py \
     tests/test_ide_project_runner.py \
     tests/test_ide_workspace_session.py \
