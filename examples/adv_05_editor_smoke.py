@@ -16,7 +16,7 @@ from pynix_gui.backends import MacOSGUIBackend
 
 INITIAL = """fn main() {
     let answer = 42
-    print("PYNIX GUI")
+    print("Zunyite GUI")
 }
 """
 
@@ -28,7 +28,7 @@ def make_spans(value):
         ("main", "function"),
         ("let", "keyword"),
         ("42", "number"),
-        ('"PYNIX GUI"', "string"),
+        ('"Zunyite GUI"', "string"),
     ):
         start = value.find(token)
         if start >= 0:
@@ -59,9 +59,9 @@ def build(value, start, end):
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable.")
+        raise SystemExit("Zunyite GUI macOS backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — ADV-05 Rich Editor", 1000, 720)
+    window = runtime.open("Zunyite GUI — ADV-05 Rich Editor", 1000, 720)
 
     value = INITIAL
     selection_start = 0
@@ -92,7 +92,7 @@ def main():
             # fighting native caret motion. The next controlled render restores it.
 
     window.close()
-    print("PYNIX GUI ADV-05 macOS smoke: PASS")
+    print("Zunyite GUI ADV-05 macOS smoke: PASS")
 
 
 if __name__ == "__main__":
