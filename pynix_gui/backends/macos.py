@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""macOS host realization for the PYNIX GUI layout engine."""
+"""macOS host realization for the Zunyite GUI layout engine."""
 
 import json
 import sys
@@ -306,7 +306,7 @@ def _objc_gui_event_bridge_type():
 
 
 class MacOSGUIBackend(MacOSHostBackend):
-    """Cocoa realization of the platform-independent PYNIX GUI geometry contract."""
+    """Cocoa realization of the platform-independent Zunyite GUI geometry contract."""
 
     __slots__ = (
         "_gui_views_by_window",
