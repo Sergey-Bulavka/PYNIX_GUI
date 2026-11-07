@@ -3,7 +3,7 @@
 
 """Native macOS smoke for GUI-ADV-02 Tree and Table."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     column,
     group,
@@ -16,7 +16,7 @@ from pynix_gui import (
     tree,
     tree_node,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 TREE_NODES = [
