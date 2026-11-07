@@ -77,7 +77,7 @@ def hero(
         raise GUIError("PYNIX-GUI-014", "GUI hero title/subtitle must be String.")
     action_views = _views(actions, "GUI hero actions")
     body = [
-        text("PYNIX GUI", "overline"),
+        text("Zunyite GUI", "overline"),
         text(title, "display", overflow="wrap"),
         text(subtitle, "body", overflow="wrap"),
     ]
