@@ -14,9 +14,9 @@ import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from pynix_gui.ide_core_persistent import PersistentCoreReader
-from pynix_gui.ide_project_runner import ProjectRunner
-from pynix_gui.ide_workspace_session import WorkspaceSession
+from zunyite_gui.ide_core_persistent import PersistentCoreReader
+from zunyite_gui.ide_project_runner import ProjectRunner
+from zunyite_gui.ide_workspace_session import WorkspaceSession
 
 
 def main() -> None:
