@@ -27,7 +27,7 @@ from pynix_gui import (
 
 def test_commercial_components_compose_valid_core_views():
     root = navigation_sidebar(
-        "PYNIX GUI",
+        "Zunyite GUI",
         [
             navigation_item("overview", "Overview", True),
             navigation_item("controls", "Controls"),
