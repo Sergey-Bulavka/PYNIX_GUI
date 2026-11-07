@@ -88,7 +88,7 @@ def build(explorer, state):
     rows = [
         table_row(entry.path, [
             entry.name,
-            "Folder" if entry.is_directory else ("PYNIX" if entry.name.lower().endswith(".pnx") else "File"),
+            "Folder" if entry.is_directory else ("Zunyite" if entry.name.lower().endswith((".uny", ".pnx")) else "File"),
             "—" if entry.size is None else str(entry.size) + " B",
         ])
         for entry in entries
@@ -137,7 +137,7 @@ def build(explorer, state):
             ),
             column([
                 text(state["message"], "caption"),
-                text("PYNIX source preview (read-only)", "subheading"),
+                text("Zunyite source preview (read-only)", "subheading"),
                 fill(editor),
             ], 8),
         )),
@@ -195,26 +195,26 @@ def _open(explorer, state, item_id):
     if path is None:
         state["message"] = "Folder: " + (explorer.folder or explorer.root.name)
         return
-    if not path.lower().endswith(".pnx"):
-        state["message"] = "Only .pnx files can be previewed."
+    if not path.lower().endswith((".uny", ".pnx")):
+        state["message"] = "Only .uny or legacy .pnx files can be previewed."
         return
-    state["preview"] = explorer.read_pnx(path)
+    state["preview"] = explorer.read_source(path)
     state["message"] = "Preview: " + path + " (read-only)"
 
 
 def main():
-    parser = argparse.ArgumentParser(description="PYNIX real project explorer")
+    parser = argparse.ArgumentParser(description="Zunyite real project explorer")
     parser.add_argument("root", type=Path, help="Local project directory")
     args = parser.parse_args()
     explorer = ProjectExplorer(args.root)
     backend = default_backend()
     if backend is None:
-        raise SystemExit("No native PYNIX GUI backend is available.")
+        raise SystemExit("No native Zunyite GUI backend is available.")
     runtime = GUIRuntime(backend)
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI backend is unavailable.")
+        raise SystemExit("Zunyite GUI backend is unavailable.")
     state = {"expanded": ["__project_root__"], "preview": "", "message": "Ready", "show_hidden": False}
-    window = runtime.open("PYNIX GUI — Real Project Explorer", 1160, 760)
+    window = runtime.open("Zunyite GUI — Real Project Explorer", 1160, 760)
     try:
         window.render(build(explorer, state))
         while True:
