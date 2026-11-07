@@ -27,7 +27,7 @@ def make_scene():
         500,
         [
             canvas_rect(20, 20, 860, 460, stroke="borderStrong", fill="surface"),
-            canvas_text(50, 60, "PYNIX retained Canvas 2D", role="titleLarge"),
+            canvas_text(50, 60, "Zunyite retained Canvas 2D", role="titleLarge"),
             canvas_line(50, 105, 850, 105, stroke="separator"),
             canvas_rect(
                 70,
@@ -79,9 +79,9 @@ def make_scene():
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable.")
+        raise SystemExit("Zunyite GUI macOS backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — ADV-04 Canvas 2D", 1000, 680)
+    window = runtime.open("Zunyite GUI — ADV-04 Canvas 2D", 1000, 680)
     root = theme(
         column([
             text("ADV-04 Canvas 2D", "title"),
@@ -101,7 +101,7 @@ def main():
             print("canvas hit:", event.target)
 
     window.close()
-    print("PYNIX GUI ADV-04 macOS smoke: PASS")
+    print("Zunyite GUI ADV-04 macOS smoke: PASS")
 
 
 if __name__ == "__main__":
