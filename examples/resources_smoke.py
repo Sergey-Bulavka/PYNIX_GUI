@@ -3,7 +3,7 @@
 
 """Native resource/vector acceptance smoke."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     canvas_rect,
     canvas_scene,
@@ -14,7 +14,7 @@ from pynix_gui import (
     vector_icon,
     vector_resource,
 )
-from pynix_gui.backends import default_backend
+from zunyite_gui.backends import default_backend
 
 
 def main():
