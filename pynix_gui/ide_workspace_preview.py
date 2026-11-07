@@ -2784,7 +2784,8 @@ def attach_workspace(html_source: str, session: WorkspaceSession) -> str:
     )
     html_source = html_source.replace("⑂ feature/icon-system-v4",
                                       project_chevron + escaped_name, 1)
-    html_source = html_source.replace("▾ main.pnx", "▾ Current File", 1)
+    html_source = html_source.replace("▾ main.uny", "▾ Current File", 1)
+    html_source = html_source.replace("▾ main.pnx", "▾ Current File", 1)  # legacy gallery
     html_source = html_source.replace("⑂ main · 1 modified", escaped_name, 1)
     # The live cursor status is populated by the workspace editor. Drop the
     # gallery's static sample "Ln 7" rather than duplicating line indicators.
