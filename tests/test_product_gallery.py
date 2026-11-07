@@ -21,7 +21,7 @@ def _gallery_module():
 def _state(module):
     return {
         "search": "",
-        "name": "PYNIX Developer",
+        "name": "Zunyite Developer",
         "notes": "Commercial defaults.",
         "checked": True,
         "appearance": 0,
@@ -328,8 +328,8 @@ def test_file_manager_root_and_folders_control_right_hand_listing():
     gallery.file_manager_select_tree_node(state, "root")
     assert _file_manager_visible_names(gallery, state) == ("src", "assets", "tests")
     for selected, expected in (
-        ("src", ("main.pnx", "ui")),
-        ("ui", ("components.pnx",)),
+        ("src", ("main.uny", "ui")),
+        ("ui", ("components.uny",)),
         ("assets", ()),
         ("tests", ()),
     ):
@@ -345,14 +345,14 @@ def test_file_manager_file_selection_keeps_parent_directory_contents():
     gallery.file_manager_select_tree_node(state, "main")
     assert state["tree_selected"] == "main"
     assert state["files_folder"] == "src"
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
 
     gallery.file_manager_select_tree_node(state, "ui")
     gallery.file_manager_select_tree_node(state, "components")
     assert state["tree_selected"] == "components"
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
-        "components.pnx",
+        "components.uny",
     )
 
 
@@ -389,12 +389,12 @@ def test_file_manager_single_click_selects_and_double_open_navigates():
     assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "src"
     assert state["tree_selected"] == "src"
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
     assert gallery.file_manager_select_table_row(state, "f-ui")
     assert state["files_folder"] == "src"
     assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "ui"
-    assert _file_manager_visible_names(gallery, state) == ("components.pnx",)
+    assert _file_manager_visible_names(gallery, state) == ("components.uny",)
 
 
 def test_file_manager_table_file_selection_does_not_navigate():
@@ -404,23 +404,23 @@ def test_file_manager_table_file_selection_does_not_navigate():
     gallery.file_manager_select_table_row(state, "f-main")
     assert state["files_folder"] == "src"
     assert state["files_table_selected"] == "f-main"
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
 
 
 def test_file_manager_folder_navigation_replaces_list_instead_of_merging():
     gallery = _gallery_module()
     state = _state(gallery)
     gallery.file_manager_open_selected(state, "f-src")
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
     gallery.file_manager_open_selected(state, "f-ui")
     assert _file_manager_visible_names(gallery, state) == (
-        "components.pnx",
+        "components.uny",
     )
-    assert "main.pnx" not in _file_manager_visible_names(gallery, state)
+    assert "main.uny" not in _file_manager_visible_names(gallery, state)
     assert "ui" not in _file_manager_visible_names(gallery, state)
     gallery.file_manager_go_up(state)
     assert state["files_folder"] == "src"
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
     gallery.file_manager_go_up(state)
     assert _file_manager_visible_names(gallery, state) == (
         "src", "assets", "tests",
@@ -435,7 +435,7 @@ def test_file_manager_ignores_stale_selection_from_previous_directory():
     assert not gallery.file_manager_open_selected(state, "f-src")
     assert state["files_folder"] == "ui"
     assert _file_manager_visible_names(gallery, state) == (
-        "components.pnx",
+        "components.uny",
     )
 
 
@@ -447,4 +447,4 @@ def test_file_manager_open_file_does_not_change_current_directory():
     assert gallery.file_manager_open_selected(state)
     assert state["files_folder"] == "src"
     assert state["files_last_opened"] == "f-main"
-    assert _file_manager_visible_names(gallery, state) == ("main.pnx", "ui")
+    assert _file_manager_visible_names(gallery, state) == ("main.uny", "ui")
