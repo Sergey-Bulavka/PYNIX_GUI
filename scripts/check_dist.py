@@ -20,6 +20,11 @@ REQUIRED = {"pynix_gui/__init__.py", "pynix_gui/core.py",
             "pynix_gui/runtime.py", "pynix_gui/py.typed",
             "zunyite_gui/__init__.py", "zunyite_gui/core.py",
             "zunyite_gui/runtime.py", "zunyite_gui/py.typed",
+            "zunyite_gui/wrap_engine.py", "zunyite_gui/text_metrics.py",
+            "zunyite_gui/ide_core_persistent.py",
+            "zunyite_gui/ide_workspace_session.py",
+            "zunyite_gui/ide_project_runner.py",
+            "zunyite_gui/ide_debug_process_client.py",
             "pynix_gui/assets/jetbrains_new_ui/manifest.json"}
 
 
@@ -50,7 +55,13 @@ def main():
             [str(python), "-c",
              "import pynix_gui, zunyite_gui; "
              "assert zunyite_gui.GUIRuntime is pynix_gui.GUIRuntime; "
-             "assert zunyite_gui.__version__ == pynix_gui.__version__"],
+             "assert zunyite_gui.__version__ == pynix_gui.__version__; "
+             "from zunyite_gui.wrap_engine import GUIWrappedText; "
+             "from pynix_gui.wrap_engine import GUIWrappedText as OldWrappedText; "
+             "assert GUIWrappedText is OldWrappedText; "
+             "from zunyite_gui.ide_workspace_session import WorkspaceSession; "
+             "from pynix_gui.ide_workspace_session import WorkspaceSession as OldWorkspace; "
+             "assert WorkspaceSession is OldWorkspace"],
             check=True,
         )
     print("Distribution structure and wheel import: PASS")
