@@ -46,14 +46,14 @@ def test_shell_panel_visibility_and_activity_are_controlled():
 
 def test_shell_has_multiple_working_editor_tabs():
     state = initial_state()
-    dispatch(state, event("SELECTION", "shell-tree", item_id="gui.pnx"))
-    assert state["active"] == "gui.pnx"
-    assert state["tabs"] == ["main.pnx", "gui.pnx"]
-    dispatch(state, event("ACTIVATE", "shell-file-main.pnx"))
-    assert state["active"] == "main.pnx"
+    dispatch(state, event("SELECTION", "shell-tree", item_id="gui.uny"))
+    assert state["active"] == "gui.uny"
+    assert state["tabs"] == ["main.uny", "gui.uny"]
+    dispatch(state, event("ACTIVATE", "shell-file-main.uny"))
+    assert state["active"] == "main.uny"
     dispatch(state, event("ACTIVATE", "shell-close-tab"))
-    assert state["active"] == "gui.pnx"
-    assert state["tabs"] == ["gui.pnx"]
+    assert state["active"] == "gui.uny"
+    assert state["tabs"] == ["gui.uny"]
     assert state["source"] != SOURCE
     assert_shell_valid(build(state))
 
