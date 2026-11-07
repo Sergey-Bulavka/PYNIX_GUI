@@ -98,9 +98,9 @@ def build(regions):
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable.")
+        raise SystemExit("Zunyite GUI macOS backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — ADV-03 Drag & Dock", 1100, 760)
+    window = runtime.open("Zunyite GUI — ADV-03 Drag & Dock", 1100, 760)
 
     regions = {
         "project": "left",
@@ -138,7 +138,7 @@ def main():
             window.render(build(regions))
 
     window.close()
-    print("PYNIX GUI ADV-03 macOS smoke: PASS")
+    print("Zunyite GUI ADV-03 macOS smoke: PASS")
 
 
 if __name__ == "__main__":
