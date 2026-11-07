@@ -96,3 +96,14 @@ def test_missing_project_is_controlled(tmp_path):
 def test_invalid_depth(tmp_path):
     with pytest.raises(ValueError):
         ProjectExplorer(tmp_path, max_depth=0)
+
+
+def test_canonical_uny_source_and_legacy_alias_are_both_readable(project):
+    modern = project.root / "src" / "modern.uny"
+    modern.write_text('function main()\n    print("Zunyite")\n', encoding="utf-8")
+    expected = modern.read_text(encoding="utf-8")
+    assert project.read_source("src/modern.uny") == expected
+    assert project.read_pnx("src/modern.uny") == expected
+    assert project.read_source("src/main.pnx") == "print(1)\n"
+    with pytest.raises(ProjectExplorerError, match=".uny or legacy .pnx"):
+        project.read_source("README.md")
