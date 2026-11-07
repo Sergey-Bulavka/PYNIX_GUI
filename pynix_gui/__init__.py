@@ -1,7 +1,11 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""PYNIX GUI public Python runtime package."""
+"""Legacy import namespace for the Zunyite GUI runtime.
+
+New integrations should import ``zunyite_gui``; this namespace remains for
+older applications and internal modules until a separately verified refactor.
+"""
 
 __version__ = "0.1.6-dev"
 
