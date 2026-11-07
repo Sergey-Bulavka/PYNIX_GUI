@@ -34,7 +34,8 @@ def test_disclosure_chevron_scales_with_tree_row_and_font():
 
 
 def test_file_icons_choose_pnx_and_fallback_consistently():
-    assert tree_file_icon_kind("main.pnx", False) == "pnx"
+    assert tree_file_icon_kind("main.uny", False) == "pnx"
+    assert tree_file_icon_kind("MAIN.UNY", False) == "pnx"\n    assert tree_file_icon_kind("main.pnx", False) == "pnx"
     assert tree_file_icon_kind("MAIN.PNX", False) == "pnx"
     assert tree_file_icon_kind("notes.txt", False) == "file"
     assert tree_file_icon_kind("src", True) == "folder"
