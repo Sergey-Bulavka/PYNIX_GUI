@@ -94,3 +94,15 @@ def test_first_party_public_examples_use_canonical_gui_imports():
         code = (examples / filename).read_text(encoding="utf-8")
         assert "from zunyite_gui import" in code, filename
         assert "from pynix_gui import" not in code, filename
+
+
+def test_native_workspace_entrypoint_routes_core_run_debug_through_canonical_paths():
+    root = Path(__file__).resolve().parents[1]
+    source = (root / "examples" / "ide_native_v4.py").read_text(encoding="utf-8")
+    for name in (
+        "ide_workspace_session", "ide_workspace_preview", "ide_core_persistent",
+        "ide_core_read_bridge", "ide_project_runner", "ide_debug_process_client",
+        "ide_tooling_navigation", "ide_tooling_diagnostics", "ide_tooling_symbols",
+    ):
+        assert f"from zunyite_gui.{name} import" in source, name
+        assert f"from pynix_gui.{name} import" not in source, name
