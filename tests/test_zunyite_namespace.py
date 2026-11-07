@@ -56,3 +56,41 @@ def test_zunyite_owns_pure_text_implementation_without_class_duplication():
     )
     assert isinstance(wrapped, canonical_wrap.GUIWrappedText)
     assert wrapped.lines == ("Zunyite GUI",)
+
+
+def test_canonical_ide_bridges_reuse_existing_service_types_and_functions():
+    from zunyite_gui.ide_workspace_session import WorkspaceSession as CanonicalSession
+    from pynix_gui.ide_workspace_session import WorkspaceSession as LegacySession
+    from zunyite_gui.ide_core_persistent import PersistentCoreReader as CanonicalCore
+    from pynix_gui.ide_core_persistent import PersistentCoreReader as LegacyCore
+    from zunyite_gui.ide_project_runner import ProjectRunner as CanonicalRunner
+    from pynix_gui.ide_project_runner import ProjectRunner as LegacyRunner
+    from zunyite_gui.ide_debug_process_client import DebugProcessClient as CanonicalDebug
+    from pynix_gui.ide_debug_process_client import DebugProcessClient as LegacyDebug
+    from zunyite_gui.ide_workspace_preview import attach_workspace as canonical_attach
+    from pynix_gui.ide_workspace_preview import attach_workspace as legacy_attach
+
+    assert CanonicalSession is LegacySession
+    assert CanonicalCore is LegacyCore
+    assert CanonicalRunner is LegacyRunner
+    assert CanonicalDebug is LegacyDebug
+    assert canonical_attach is legacy_attach
+
+
+def test_first_party_public_examples_use_canonical_gui_imports():
+    examples = Path(__file__).resolve().parents[1] / "examples"
+    for filename in (
+        "adv_01_commands_smoke.py",
+        "adv_02_tree_table_smoke.py",
+        "adv_03_drag_dock_smoke.py",
+        "adv_04_canvas_smoke.py",
+        "adv_05_editor_smoke.py",
+        "macos_smoke.py",
+        "resources_smoke.py",
+        "text_wrap_smoke.py",
+        "showcase.py",
+        "real_project_app.py",
+    ):
+        code = (examples / filename).read_text(encoding="utf-8")
+        assert "from zunyite_gui import" in code, filename
+        assert "from pynix_gui import" not in code, filename
