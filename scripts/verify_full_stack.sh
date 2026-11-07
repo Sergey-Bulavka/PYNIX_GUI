@@ -79,7 +79,7 @@ step "Isolated live Core buffer/recovery + Run Current File"
 (cd "$GUI" && "$GUI_PY" scripts/smoke_full_stack.py \
   --ide-core "$IDE" --compiler-python "$COMPILER_PY")
 
-step "Live debugger protocol bridge (legacy .pnx compatibility)"
+step "Live debugger protocol bridge (.uny and legacy .pnx)"
 (cd "$GUI" && "$COMPILER_PY" scripts/test_real_debugger_bridge.py)
 
 step "AUTOMATED CHECKS PASSED"
