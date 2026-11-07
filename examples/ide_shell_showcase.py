@@ -14,20 +14,20 @@ from pynix_gui.ide_components import ide_command_bar, ide_editor_tab_strip, ide_
 from pynix_gui.backends import default_backend
 
 SOURCES = {
-    "main.pnx": 'function main()\n    message = "Hello from PYNIX"\n    count = 3\n    print(message)\n',
-    "gui.pnx": 'import ui\n\nfunction render()\n    return ui.column([])\n',
-    "tooling.pnx": 'function inspect(source: String)\n    return source.len\n',
-    "test_main.pnx": 'function test_main()\n    assert 1 + 1 == 2\n',
+    "main.uny": 'function main()\n    message = "Hello from Zunyite"\n    count = 3\n    print(message)\n',
+    "gui.uny": 'import ui\n\nfunction render()\n    return ui.column([])\n',
+    "tooling.uny": 'function inspect(source: String)\n    return source.len\n',
+    "test_main.uny": 'function test_main()\n    assert 1 + 1 == 2\n',
 }
-SOURCE = SOURCES["main.pnx"]
+SOURCE = SOURCES["main.uny"]
 FILES = [
     tree_node("src", "src", [
-        tree_node("main.pnx", "main.pnx"),
-        tree_node("gui.pnx", "gui.pnx"),
-        tree_node("tooling.pnx", "tooling.pnx"),
+        tree_node("main.uny", "main.uny"),
+        tree_node("gui.uny", "gui.uny"),
+        tree_node("tooling.uny", "tooling.uny"),
     ], kind="folder"),
     tree_node("tests", "tests", [
-        tree_node("test_main.pnx", "test_main.pnx"),
+        tree_node("test_main.uny", "test_main.uny"),
     ], kind="folder"),
 ]
 
@@ -35,8 +35,8 @@ FILES = [
 def initial_state():
     return {
         "sidebar": True, "bottom": True, "editor": True, "inspector": False,
-        "expanded": ["src"], "selected": "main.pnx", "active": "main.pnx",
-        "tabs": ["main.pnx"], "source": SOURCE,
+        "expanded": ["src"], "selected": "main.uny", "active": "main.uny",
+        "tabs": ["main.uny"], "source": SOURCE,
         "tool_tab": "Terminal",
         "tool_message": "pynix$  Ready — visual preview, no live subprocess",
         "search": "", "activity": "Explorer", "message": "Ready",
@@ -47,7 +47,7 @@ def source_spans(source):
     spans = []
     for token, role in (("function", "keyword"), ("import", "keyword"),
                         ("return", "keyword"), ("String", "type"),
-                        ('"Hello from PYNIX"', "string")):
+                        ('"Hello from Zunyite"', "string")):
         start = source.find(token)
         if start >= 0:
             spans.append(text_span(start, start + len(token), role))
@@ -72,7 +72,7 @@ def _sidebar(state):
             fill(text("Type a query to preview search", "caption")),
         ], 8)
     return column([
-        row([text("EXPLORER", "overline"), fill(text("PYNIX", "caption"))], 8),
+        row([text("EXPLORER", "overline"), fill(text("Zunyite", "caption"))], 8),
         separator("horizontal"),
         fill(tree("shell-tree", FILES, expanded_ids=state["expanded"],
                   selected_id=state["selected"])),
@@ -92,7 +92,7 @@ def _editor(state):
     gutter = column([text(str(i), "caption") for i in range(1, source.count("\n") + 1)], 4)
     return column([
         ide_editor_tab_strip(state["tabs"], name),
-        row([text("PYNIX", "caption"), text("/", "caption"),
+        row([text("Zunyite", "caption"), text("/", "caption"),
              text("src", "caption"), text("/", "caption"), text(name, "caption"),
              fill(text("UTF-8", "caption"))], 7),
         fill(row([
@@ -111,7 +111,7 @@ def _bottom(state):
 
 
 def build(state):
-    top = ide_command_bar("PYNIX / Visual workspace")
+    top = ide_command_bar("Zunyite / Visual workspace")
     rail = _activity_rail(state)
     center = _editor(state)
     if state["bottom"]:
@@ -131,7 +131,7 @@ def build(state):
             separator("horizontal"),
             text("Properties", "subheading"),
             text("File: " + state["active"], "caption"),
-            text("Language: PYNIX", "caption"),
+            text("Language: Zunyite", "caption"),
             text("Encoding: UTF-8", "caption"),
             fill(text("Preview metadata", "caption")),
         ], 8)
@@ -143,7 +143,7 @@ def build(state):
         padding(row([
             button("shell-toggle-sidebar", "☰", "quiet"),
             text("PROJECT", "overline"),
-            fill(text("PYNIX / " + state["active"], "caption")),
+            fill(text("Zunyite / " + state["active"], "caption")),
             button("shell-tab", "Open Editor", "quiet"),
         ], 8), 8),
         fill(padding(workspace, 8)),
@@ -235,7 +235,7 @@ def main():
     if not runtime.is_available():
         raise SystemExit("GUI backend unavailable")
     state = initial_state()
-    window = runtime.open("PYNIX IDE — Complete Visual Shell Preview", 1440, 900)
+    window = runtime.open("Zunyite IDE — Complete Visual Shell Preview", 1440, 900)
     try:
         window.set_menu_bar(shell_menus())
         window.render(build(state))
