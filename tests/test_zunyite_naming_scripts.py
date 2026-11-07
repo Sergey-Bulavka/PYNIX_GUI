@@ -61,3 +61,17 @@ def test_active_debugger_workflow_uses_canonical_checkout_path():
     assert "pynix-compiler" not in workflow
     # The secret is a GitHub setting, not an in-repo filename; leave it stable.
     assert "secrets.PYNIX_CI_READ_TOKEN" in workflow
+
+
+def test_user_facing_navigation_errors_name_zunyite():
+    navigation = (ROOT / "pynix_gui" / "ide_tooling_navigation.py").read_text(
+        encoding="utf-8"
+    )
+    snapshot = (ROOT / "pynix_gui" / "ide_core_read_bridge.py").read_text(
+        encoding="utf-8"
+    )
+    assert "Select a Zunyite source (.uny or legacy .pnx)" in navigation
+    assert "separate Zunyite project manifest" in navigation
+    assert "Snapshot project must have a zunyite.toml or legacy pynix.toml" in snapshot
+    # Do not rewrite the versioned compiler tooling protocol identifier.
+    assert '"pynix-tooling"' in navigation
