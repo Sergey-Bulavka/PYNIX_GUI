@@ -93,7 +93,8 @@ def test_block3_test_runner_isolated_and_has_cross_file_rename(tmp_path):
     runner = ROOT / "scripts" / "test_editor_block3.sh"
     source = runner.read_text(encoding="utf-8")
     assert "mktemp -d" in source
-    assert 'cat > "$PROJECT/src/util.pnx"' in source
+    assert 'cat > "$PROJECT/src/util.uny"' in source
+    assert 'cat > "$PROJECT/zunyite.toml"' in source
     assert "press F2" in source
     assert 'bash scripts/run_ide_workspace.sh "$PROJECT"' in source
     assert "rm -rf" not in source
