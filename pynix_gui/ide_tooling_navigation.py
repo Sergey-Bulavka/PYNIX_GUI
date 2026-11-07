@@ -1,4 +1,4 @@
-"""Read-only public PYNIX tooling navigation adapter.
+"""Read-only public Zunyite tooling navigation adapter.
 
 Queries are explicit user actions, never implicit compilation on each click.
 """
@@ -18,7 +18,7 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
     python = Path(python).resolve()
     requested = (root / source).resolve()
     if not requested.is_relative_to(root) or requested.suffix not in (".uny", ".pnx") or not requested.is_file():
-        raise ValueError("Select a PYNIX source inside the project")
+        raise ValueError("Select a Zunyite source (.uny or legacy .pnx) inside the project")
     if line < 1 or column < 1:
         raise ValueError("Line and column are one-based")
     if not python.is_file():
@@ -37,7 +37,7 @@ def query_navigation(root: Path, python: Path, command: str, source: str,
                 return {"error": ("Selected file is outside the compiled module graph. "
                                   "The project entry is defined by zunyite.toml or pynix.toml; "
                                   "open a module imported by that entry or use a "
-                                  "separate PYNIX project manifest for this example.")}
+                                  "separate Zunyite project manifest for this example.")}
             return {"error": ("Compiler tooling failed: " + detail) if detail
                     else f"Compiler tooling exited with code {result.returncode}"}
         data = json.loads(result.stdout)
