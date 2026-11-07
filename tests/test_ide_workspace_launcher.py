@@ -41,10 +41,15 @@ def _launch(tmp_path, *, with_core=False, extra=(), env=None):
 def test_launcher_discovers_official_core_and_passes_project(tmp_path):
     output, project, core = _launch(tmp_path, with_core=True)
     assert "Connecting Zunyite IDE Core:" in output[0]
-    assert output[1:] == [
+    assert output[1:6] == [
         "-m", "examples.ide_native_v4", "--project", str(project),
-        "--ide-core", str(core),
+        "--ide-core",
     ]
+    if os.name == "nt":
+        # Git Bash reports the path as /c/... while pathlib uses C:\\....
+        assert output[6].replace("\\\\", "/").endswith("/Zunyite_IDE")
+    else:
+        assert Path(output[6]).resolve() == core.resolve()
 
 
 def test_launcher_does_not_invent_core_when_absent(tmp_path):
