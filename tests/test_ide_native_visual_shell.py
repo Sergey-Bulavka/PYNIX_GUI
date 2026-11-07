@@ -17,7 +17,7 @@ def test_native_visual_shell_source_parses():
 def test_native_visual_palette_and_project_tree():
     assert {"canvas", "editor", "sidebar", "toolbar", "status", "accent"} <= scene.PALETTE.keys()
     assert len(scene.PROJECT_TREE) >= 8
-    assert any(row[1] == "main.pnx" and row[3] for row in scene.PROJECT_TREE)
+    assert any(row[1] == "main.uny" and row[3] for row in scene.PROJECT_TREE)
 
 
 def test_native_shell_contains_colored_pynix_sample():
@@ -56,7 +56,7 @@ def test_native_preview_terminates_after_last_window_closes():
 
 def test_source_control_preview_structure():
     assert len(scene.GIT_CHANGES) >= 3
-    assert ("M", "src/main.pnx") in scene.GIT_CHANGES
+    assert ("M", "src/main.uny") in scene.GIT_CHANGES
     source = Path(scene.__file__).read_text(encoding="utf-8")
     assert 'GIT_PREVIEW = "--git" in sys.argv' in source
     for label in ("SOURCE CONTROL", "COMMIT MESSAGE", "CHANGES  (3)",
