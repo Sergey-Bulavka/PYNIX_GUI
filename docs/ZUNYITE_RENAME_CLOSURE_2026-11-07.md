@@ -39,9 +39,11 @@
   retain PYNIX terminology. The compiler still has **227 tracked `.pnx` test
   fixtures**; not all have been classified as compatibility-only. Migrating
   ordinary conformance fixtures to `.uny` remains an open, separate test-corpus
-  task and must not be called complete. A candidate migration of 173 standalone
-  `tests/conformance/programs` fixtures is under draft PR #45 in Zunyite;
-  it is not part of `main` until the compiler regression gate passes.
+  task and must not be called complete. The 173 standalone
+  `tests/conformance/programs` fixtures were migrated via merged Zunyite PR #45
+  after full compiler CI passed. A second migration of 49 source files and
+  20 canonical manifests for conformance project fixtures is staged in PR #46;
+  four malformed legacy manifest cases remain intentionally unchanged.
 - Existing GitHub Actions secret `PYNIX_CI_READ_TOKEN` is preserved.
   Changing it requires creating/migrating the secret in the repository
   settings first, then updating the workflow in a separate coordinated change.
