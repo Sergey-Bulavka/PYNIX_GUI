@@ -1,10 +1,10 @@
 # Copyright 2026 Sergii V. Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""Activate licensed JetBrains New UI icons for existing PYNIX IDE controls.
+"""Activate licensed JetBrains New UI icons for existing Zunyite IDE controls.
 
 This bridge replaces glyphs in place. It never changes buttons, handlers,
 hit areas, focus semantics or window dragging. Missing icons retain the
-previous PYNIX SVG so partial/full icon catalogs are both supported.
+previous Zunyite SVG so partial/full icon catalogs are both supported.
 """
 from __future__ import annotations
 
@@ -85,16 +85,16 @@ EXTENSION_ICON_NAMES = (
 )
 
 # Project Explorer is rebuilt on expansion/search; these icons require live binding.
-# The native PYNIX and Python marks are kept; only standard file types use JB.
+# The native Zunyite and Python marks are kept; only standard file types use JB.
 # Project semantic glyph slots deliberately have no legacy SVG fallback.
-# Python and PYNIX marks stay dedicated: neither is in licensed JetBrains pack.
+# Python and Zunyite marks stay dedicated: neither is in licensed JetBrains pack.
 TREE_ICON_BINDINGS = (
     (".workspace-mode .project-chevron.folder-disclosure", "general/chevronDown", True),
     (".workspace-mode .project-glyph[data-pynix-semantic='folder']", "nodes/folder", True),
     (".workspace-mode .project-glyph[data-pynix-semantic='generic']", "fileTypes/text", True),
 )
 # Extension-specific icons are painted in both the Project tree and tabs.
-# Do not replace PYNIX (.pnx) or Python (.py/.pyi) identity marks.
+# Do not replace Zunyite (.uny and legacy .pnx) or Python (.py/.pyi) identity marks.
 # Bind generic fallback before specific extensions, and do not overwrite a
 # previously matched specific glyph on the next MutationObserver pass.
 TREE_EXTENSION_BINDINGS = tuple(
