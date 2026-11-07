@@ -106,3 +106,26 @@ def test_native_workspace_entrypoint_routes_core_run_debug_through_canonical_pat
     ):
         assert f"from zunyite_gui.{name} import" in source, name
         assert f"from pynix_gui.{name} import" not in source, name
+
+
+def test_canonical_imports_work_in_fresh_interpreter_before_legacy_import():
+    import subprocess
+    import sys
+
+    code = (
+        "import zunyite_gui.wrap_engine as canonical_wrap; "
+        "import zunyite_gui.text_metrics as canonical_metrics; "
+        "from zunyite_gui.ide_project_runner import ProjectRunner; "
+        "from zunyite_gui.ide_debug_process_client import DebugProcessClient; "
+        "import pynix_gui.wrap_engine as old_wrap; "
+        "import pynix_gui.text_metrics as old_metrics; "
+        "assert canonical_wrap.GUIWrappedText is old_wrap.GUIWrappedText; "
+        "assert canonical_metrics.GUITextMetrics is old_metrics.GUITextMetrics; "
+        "assert canonical_wrap.GUIWrappedText.__module__ == 'zunyite_gui.wrap_engine'"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True, text=True, check=False,
+    )
+    assert completed.returncode == 0, completed.stderr
