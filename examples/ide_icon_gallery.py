@@ -40,7 +40,7 @@ def main():
         AppKit.NSMakeRect(100,100,760,680),
         AppKit.NSWindowStyleMaskTitled|AppKit.NSWindowStyleMaskClosable|
         AppKit.NSWindowStyleMaskResizable, AppKit.NSBackingStoreBuffered,False)
-    window.setTitle_("PYNIX IDE — Icon Gallery V4")
+    window.setTitle_("Zunyite IDE — Icon Gallery V4")
     view=Gallery.alloc().initWithFrame_(window.contentView().bounds())
     view.setAutoresizingMask_(AppKit.NSViewWidthSizable|AppKit.NSViewHeightSizable)
     window.setContentView_(view)
