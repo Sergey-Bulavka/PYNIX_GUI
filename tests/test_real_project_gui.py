@@ -113,3 +113,15 @@ def test_explorer_sidebar_is_present_in_workspace_layout(tmp_path):
     assert len(tree_nodes) == 1
     assert any(node.kind == "row" and len(node.children) == 2 for node in walk(view))
     assert any(node.kind == "table" for node in walk(view))
+
+
+def test_real_project_gui_previews_canonical_uny(tmp_path):
+    explorer, state = _setup(tmp_path)
+    (tmp_path / "src" / "modern.uny").write_text(
+        'function main()\n    print("Zunyite")\n', encoding="utf-8"
+    )
+    dispatch(explorer, state, GUIEvent("OPEN", target="real-project-files", item_id="src"))
+    dispatch(explorer, state, GUIEvent("OPEN", target="real-project-files", item_id="src/modern.uny"))
+    assert "Zunyite" in state["preview"]
+    assert state["message"] == "Preview: src/modern.uny (read-only)"
+    validate_view(build(explorer, state))
