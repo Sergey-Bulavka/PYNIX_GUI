@@ -3,7 +3,7 @@
 
 """Native macOS smoke for GUI-ADV-05 Rich Editor."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     column,
     rich_editor,
@@ -11,7 +11,7 @@ from pynix_gui import (
     text_span,
     theme,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 INITIAL = """fn main() {
