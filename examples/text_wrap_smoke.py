@@ -50,15 +50,15 @@ def build_root():
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend unavailable")
-    window = runtime.open("PYNIX GUI · Text Wrap V4", 780, 680)
+        raise SystemExit("Zunyite GUI macOS backend unavailable")
+    window = runtime.open("Zunyite GUI · Text Wrap V4", 780, 680)
     window.render(build_root())
     while True:
         event = window.next_event()
         if event.kind == "CLOSE":
             break
     window.close()
-    print("PYNIX GUI V4 native wrap smoke: PASS")
+    print("Zunyite GUI V4 native wrap smoke: PASS")
 
 
 if __name__ == "__main__":
