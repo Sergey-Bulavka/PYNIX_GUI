@@ -36,23 +36,30 @@
   unchanged so compiler, IDE Core, and GUI agree. A new wire name requires
   version/capability negotiation and integration tests first.
 - Historical design notes and explicit compatibility regression cases may
-  retain PYNIX terminology. The compiler still has **227 tracked `.pnx` test
-  fixtures**; not all have been classified as compatibility-only. Migrating
-  ordinary conformance fixtures to `.uny` remains an open, separate test-corpus
-  task and must not be called complete. The 173 standalone
-  `tests/conformance/programs` fixtures were migrated via merged Zunyite PR #45
-  after full compiler CI passed. A second migration of 49 source files and
-  20 canonical manifests for conformance project fixtures is staged in PR #46;
-  four malformed legacy manifest cases remain intentionally unchanged.
+  retain PYNIX terminology. Compiler `main` now contains **270 tracked `.uny`**
+  files and only **5 tracked `.pnx`** files alongside **4 `pynix.toml`**
+  manifests, all confined to `tests/conformance/projects/manifest_missing*`.
+  The ordinary conformance corpus was migrated in merged PR #45 (173 programs),
+  PR #46 (49 project sources, 20 manifests), and PR #47 (temporary source
+  generation). All three PRs passed the full compiler GitHub Actions gate.
+- GUI native widgets, Hero, file-tree icons, project explorer, current smoke
+  examples and Product Gallery now display Zunyite and handle `.uny`; `.pnx`
+  remains a supported legacy input. The canonical source-read API is
+  `ProjectExplorer.read_source`, with `read_pnx` retained as an alias.
+- `Zunyite_GUI` Workspace V4 is still developed on
+  `feature/icon-system-v4` rather than released on `main`: as of this audit,
+  that branch is **1532 commits ahead and 35 behind** `main`. Its integration
+  and consolidation must be reviewed separately; do not claim the branch has
+  already been merged or that the native IDE is shipped.
 - Existing GitHub Actions secret `PYNIX_CI_READ_TOKEN` is preserved.
   Changing it requires creating/migrating the secret in the repository
   settings first, then updating the workflow in a separate coordinated change.
 
 ## Verification and limitations
 
-Automated macOS compiler, IDE Core, GUI and real cross-repository bridge
-checks passed before the current active-script naming cleanup. The new
-changes require a fresh run:
+Compiler PRs #45–#47 passed GitHub Actions including full pytest and CLI smoke.
+The GUI's CI passed on Windows, Linux and macOS through commit `392089f3`.
+For acceptance on the local macOS installation, rerun:
 
 ```bash
 cd ~/PycharmProjects/Zunyite_GUI
@@ -63,7 +70,8 @@ bash scripts/verify_full_stack.sh quick
 
 Completion should be measured by public user-visible names, working
 compatibility, and tests, not by blind elimination of the substring `pynix`.
-**Status: public naming substantially migrated; internal namespace and test
-corpus migration not 100% complete.**
+**Status: compiler source/test-corpus naming is canonical with deliberate
+legacy fixtures; GUI internal package, wire identifiers, CI secret and
+Workspace V4 release consolidation are still open.**
 Native GUI visual acceptance and the transfer of internal implementation
 ownership into the canonical namespace remain separate release gates.
