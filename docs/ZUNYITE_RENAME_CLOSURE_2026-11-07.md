@@ -30,8 +30,10 @@
   legacy shims, preventing duplicate runtime types.
 - Canonical `zunyite_gui.ide_*` imports now expose Workspace Session,
   Core Reader, Run, Debug and tooling as compatibility-preserving adapters.
-  These IDE service implementations are **still housed in** `pynix_gui`;
-  exposing canonical imports is not the same as completing their relocation.
+  Native Workspace V4 and the live debugger/IDE Core smoke scripts now consume
+  these canonical imports. The real Debug Worker integration passed GitHub
+  Actions with this routing. IDE service implementations are **still housed in**
+  `pynix_gui`; exposing canonical imports is not the same as relocating them.
 
 ## Explicitly preserved compatibility / history
 
