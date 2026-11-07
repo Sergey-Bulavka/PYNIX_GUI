@@ -25,7 +25,7 @@ GUI.canvas(...)
 Repository separation is an internal engineering boundary. It must not make Zunyite source
 code more complicated.
 
-> **Migration note:** This branch integrates the Zunyite GUI package and native Workspace V4. Install distribution `zunyite-gui`; public Python imports may use `zunyite_gui` while the existing internal `pynix_gui` remains supported for compatibility. Zunyite source uses `.uny`, with `.pnx` supported for existing projects. The migration is in draft until CI and cross-repository smoke tests pass.
+> **Naming migration status (2026-11-07):** Distribution `zunyite-gui` and public Python namespace `zunyite_gui` are canonical. Zunyite source uses `.uny` and `zunyite.toml`; `.pnx` and `pynix.toml` remain supported for legacy projects. Native Workspace V4 and real compiler/IDE Core integration have passed local macOS regression and live bridge checks. The internal `pynix_gui` namespace, WebView bridge identifiers, and versioned `pynix-*` protocol IDs are retained as compatibility contracts; internal-module renaming and shipped-product consolidation are **not complete**. Cross-platform GUI visual parity is not yet verified.
 
 ## Product principles
 
@@ -96,8 +96,8 @@ GUI toolkit contract and must not be replaced by an IDE-specific version.
 Launch from this branch on macOS using the canonical script:
 
 ```bash
-bash scripts/run_ide_workspace.sh /Users/morphey/PycharmProjects/Zunyite \
-  --compiler-python /Users/morphey/PycharmProjects/Zunyite/.venv/bin/python
+bash scripts/run_ide_workspace.sh "$HOME/PycharmProjects/Zunyite" \
+  --compiler-python "$HOME/PycharmProjects/Zunyite/.venv/bin/python"
 ```
 
 This script is the **active workspace preview launcher**; it does not replace
