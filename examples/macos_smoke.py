@@ -8,7 +8,7 @@ Run from the Zunyite_GUI repository:
     python examples/macos_smoke.py
 """
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     button,
     column,
@@ -20,7 +20,7 @@ from pynix_gui import (
     text_field,
     theme,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 def build_root():
