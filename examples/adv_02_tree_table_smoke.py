@@ -24,13 +24,13 @@ TREE_NODES = [
         "src",
         "src",
         [
-            tree_node("main", "main.pnx"),
+            tree_node("main", "main.uny"),
             tree_node(
                 "ui",
                 "ui",
                 [
-                    tree_node("window", "window.pnx"),
-                    tree_node("controls", "controls.pnx"),
+                    tree_node("window", "window.uny"),
+                    tree_node("controls", "controls.uny"),
                 ],
             ),
         ],
@@ -39,8 +39,8 @@ TREE_NODES = [
         "tests",
         "tests",
         [
-            tree_node("test-main", "test_main.pnx"),
-            tree_node("test-ui", "test_ui.pnx"),
+            tree_node("test-main", "test_main.uny"),
+            tree_node("test-ui", "test_ui.uny"),
         ],
     ),
     tree_node("readme", "README.md"),
@@ -53,9 +53,9 @@ TABLE_COLUMNS = [
 ]
 
 TABLE_ROWS = [
-    table_row("file-main", ["main.pnx", "PYNIX", "Modified"]),
-    table_row("file-window", ["window.pnx", "PYNIX", "Clean"]),
-    table_row("file-controls", ["controls.pnx", "PYNIX", "Clean"]),
+    table_row("file-main", ["main.uny", "Zunyite", "Modified"]),
+    table_row("file-window", ["window.uny", "Zunyite", "Clean"]),
+    table_row("file-controls", ["controls.uny", "Zunyite", "Clean"]),
     table_row("file-readme", ["README.md", "Markdown", "Clean"]),
 ]
 
@@ -102,9 +102,9 @@ def build_root(expanded, tree_selected, table_selected):
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable.")
+        raise SystemExit("Zunyite GUI macOS backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — ADV-02 Tree & Table", 980, 620)
+    window = runtime.open("Zunyite GUI — ADV-02 Tree & Table", 980, 620)
 
     expanded = {"src", "ui"}
     tree_selected = "main"
@@ -137,7 +137,7 @@ def main():
             window.render(build_root(expanded, tree_selected, table_selected))
 
     window.close()
-    print("PYNIX GUI ADV-02 macOS smoke: PASS")
+    print("Zunyite GUI ADV-02 macOS smoke: PASS")
 
 
 if __name__ == "__main__":
