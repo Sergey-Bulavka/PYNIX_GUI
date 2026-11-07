@@ -3,7 +3,7 @@
 
 """Zunyite GUI Product Gallery — commercial showcase and capability browser."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     alert,
     badge,
@@ -55,9 +55,9 @@ from pynix_gui import (
     tree,
     tree_node,
 )
-from pynix_gui import dialog, dialog_action
-from pynix_gui.backends import default_backend
-from pynix_gui.design import WORKSPACE_METRICS
+from zunyite_gui import dialog, dialog_action
+from zunyite_gui.backends import default_backend
+from zunyite_gui.design import WORKSPACE_METRICS
 
 
 NAVIGATION = (
