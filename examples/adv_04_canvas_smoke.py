@@ -3,7 +3,7 @@
 
 """Native macOS smoke for GUI-ADV-04 Canvas 2D."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     canvas,
     canvas_clip,
@@ -18,7 +18,7 @@ from pynix_gui import (
     text,
     theme,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 def make_scene():
