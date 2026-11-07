@@ -35,8 +35,11 @@
 - Versioned protocol identifiers `pynix-debug` and `pynix-tooling` remain
   unchanged so compiler, IDE Core, and GUI agree. A new wire name requires
   version/capability negotiation and integration tests first.
-- Historical design notes, test fixture `.pnx` files, and compatibility
-  regression cases may retain PYNIX terminology.
+- Historical design notes and explicit compatibility regression cases may
+  retain PYNIX terminology. The compiler still has **227 tracked `.pnx` test
+  fixtures**; not all have been classified as compatibility-only. Migrating
+  ordinary conformance fixtures to `.uny` remains an open, separate test-corpus
+  task and must not be called complete.
 - Existing GitHub Actions secret `PYNIX_CI_READ_TOKEN` is preserved.
   Changing it requires creating/migrating the secret in the repository
   settings first, then updating the workflow in a separate coordinated change.
@@ -56,5 +59,7 @@ bash scripts/verify_full_stack.sh quick
 
 Completion should be measured by public user-visible names, working
 compatibility, and tests, not by blind elimination of the substring `pynix`.
+**Status: public naming substantially migrated; internal namespace and test
+corpus migration not 100% complete.**
 Native GUI visual acceptance and the transfer of internal implementation
 ownership into the canonical namespace remain separate release gates.
