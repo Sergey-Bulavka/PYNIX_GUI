@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""Platform backends for PYNIX GUI."""
+"""Platform backends for Zunyite GUI."""
 
 import sys
 
