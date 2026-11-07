@@ -119,9 +119,9 @@ def build_root(expanded):
 def main():
     runtime = GUIRuntime(MacOSGUIBackend())
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI macOS backend is unavailable.")
+        raise SystemExit("Zunyite GUI macOS backend is unavailable.")
 
-    window = runtime.open("PYNIX GUI — ADV-01 Smoke", 760, 520)
+    window = runtime.open("Zunyite GUI — ADV-01 Smoke", 760, 520)
     window.set_menu_bar(app_menu_bar())
 
     expanded = True
@@ -154,7 +154,7 @@ def main():
             window.present_dialog(
                 dialog(
                     "sample-dialog",
-                    "PYNIX GUI Dialog",
+                    "Zunyite GUI Dialog",
                     column([
                         text("Native modal dialog", "titleSmall"),
                         text(
@@ -183,7 +183,7 @@ def main():
             print("dialog result:", event.target)
 
     window.close()
-    print("PYNIX GUI ADV-01 macOS smoke: PASS")
+    print("Zunyite GUI ADV-01 macOS smoke: PASS")
 
 
 if __name__ == "__main__":
