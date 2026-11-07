@@ -3,7 +3,7 @@
 
 """Native macOS smoke for GUI-ADV-03 Drag/Drop and Docking."""
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     column,
     dock_panel,
@@ -18,7 +18,7 @@ from pynix_gui import (
     text,
     theme,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 PANELS = [
