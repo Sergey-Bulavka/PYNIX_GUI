@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""Windows realization of PYNIX GUI using a private Qt/PySide6 host boundary."""
+"""Windows realization of Zunyite GUI using a private Qt/PySide6 host boundary."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from ..layout import layout
 
 
 class WindowsGUIBackend:
-    """Windows desktop backend preserving the backend-neutral PYNIX GUI contract."""
+    """Windows desktop backend preserving the backend-neutral Zunyite GUI contract."""
 
     def __init__(self, *, platform_name=None, qt=None):
         self.platform_name = sys.platform if platform_name is None else platform_name
