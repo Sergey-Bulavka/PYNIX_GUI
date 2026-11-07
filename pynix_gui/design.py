@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""PYNIX Standard design-system tokens."""
+"""Zunyite Standard design-system tokens."""
 
 from dataclasses import dataclass
 
@@ -81,7 +81,7 @@ TYPOGRAPHY = {
     "code": (13.0, "monospace"),
 }
 
-# Canonical PYNIX Standard palettes. Values are sRGB hex strings.
+# Canonical Zunyite Standard palettes. Values are sRGB hex strings.
 LIGHT = {
     "background": "#F5F6F8",
     "surface": "#FFFFFF",
