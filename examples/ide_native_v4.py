@@ -369,30 +369,30 @@ def main() -> None:
         else:
             raise SystemExit("No project selected. Run with --project /path/to/Zunyite")
     if project_path is not None:
-        from pynix_gui.ide_workspace_session import WorkspaceSession
-        from pynix_gui.ide_workspace_preview import attach_workspace, attach_git_snapshot
+        from zunyite_gui.ide_workspace_session import WorkspaceSession
+        from zunyite_gui.ide_workspace_preview import attach_workspace, attach_git_snapshot
         from pynix_gui.ide_git_snapshot import read_git_snapshot
         session = WorkspaceSession(project_path)
         document = attach_workspace(document, session)
         document = attach_git_snapshot(document, read_git_snapshot(session.root))
         if args.diagnostics:
-            from pynix_gui.ide_tooling_diagnostics import read_diagnostics
-            from pynix_gui.ide_workspace_preview import attach_diagnostics
+            from zunyite_gui.ide_tooling_diagnostics import read_diagnostics
+            from zunyite_gui.ide_workspace_preview import attach_diagnostics
             compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
             document = attach_diagnostics(document, read_diagnostics(session.root, compiler_python))
         if args.nav_command:
             if not args.nav_source:
                 parser.error("--nav-command requires --nav-source")
-            from pynix_gui.ide_tooling_navigation import query_navigation
-            from pynix_gui.ide_workspace_preview import attach_navigation
+            from zunyite_gui.ide_tooling_navigation import query_navigation
+            from zunyite_gui.ide_workspace_preview import attach_navigation
             compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
             result = query_navigation(session.root, compiler_python, args.nav_command,
                                       args.nav_source, args.nav_line, args.nav_column)
             document = attach_navigation(document, result, args.nav_command)
-    from pynix_gui.ide_core_read_bridge import CoreSnapshotError
+    from zunyite_gui.ide_core_read_bridge import CoreSnapshotError
     core_reader = None
     if args.ide_core:
-        from pynix_gui.ide_core_persistent import PersistentCoreReader
+        from zunyite_gui.ide_core_persistent import PersistentCoreReader
         from html import escape
         compiler_for_core = args.compiler_python or (session.root / ".venv" / "bin" / "python")
         try:
@@ -404,13 +404,13 @@ def main() -> None:
             core_status = "IDE Core: " + str(exc)[:180]
         indicator = '<div class="pynix-core-bridge-indicator" role="status" style="position:fixed;right:16px;bottom:30px;z-index:9000;background:#1c2939;color:#e5effc;border:1px solid #496782;padding:5px 10px;border-radius:6px;font:12px system-ui">' + escape(core_status) + '</div>'
         document = document.replace("</body>", indicator + "</body>", 1)
-    from pynix_gui.ide_tooling_navigation import query_navigation
+    from zunyite_gui.ide_tooling_navigation import query_navigation
     compiler_python = args.compiler_python or (session.root / ".venv" / "bin" / "python")
     available_sources = set(session.list_files(limit=5000))
     class SemanticRenameHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
-            from pynix_gui.ide_semantic_rename import plan_semantic_rename, RenamePlanError
+            from zunyite_gui.ide_semantic_rename import plan_semantic_rename, RenamePlanError
             try:
                 request = normalize_webkit_request(message.body())
                 _, source, line, column = validate_request(
@@ -432,7 +432,7 @@ def main() -> None:
             view.evaluateJavaScript_completionHandler_(
                 "window.pynixSemanticRenamePlan(" + serialized + ");", None)
 
-    from pynix_gui.ide_project_runner import ProjectRunner, RunError
+    from zunyite_gui.ide_project_runner import ProjectRunner, RunError
     import json as run_json
     import threading as run_threading
     from Foundation import NSOperationQueue
@@ -464,7 +464,7 @@ def main() -> None:
                     publish_run_result({"state": "error", "error": str(exc)[:300]})
         run_threading.Thread(target=worker, daemon=True).start()
 
-    from pynix_gui.ide_debug_process_client import DebugProcessClient
+    from zunyite_gui.ide_debug_process_client import DebugProcessClient
     debug_client = DebugProcessClient(session.root, compiler_python)
 
     class DebugCommandHandler(NSObject):
@@ -542,7 +542,7 @@ def main() -> None:
     class ProjectFileActionHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
-            from pynix_gui.ide_workspace_session import WorkspaceError
+            from zunyite_gui.ide_workspace_session import WorkspaceError
             response = {"ok": False}
             try:
                 request = dict(message.body())
@@ -583,7 +583,7 @@ def main() -> None:
     class ProjectCreateHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
-            from pynix_gui.ide_workspace_session import WorkspaceError
+            from zunyite_gui.ide_workspace_session import WorkspaceError
             response = {"ok": False}
             try:
                 request = dict(message.body())
@@ -628,7 +628,7 @@ def main() -> None:
     class SymbolsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             import json
-            from pynix_gui.ide_tooling_symbols import read_symbols
+            from zunyite_gui.ide_tooling_symbols import read_symbols
             result = read_symbols(session.root, compiler_python)
             serialized = json.dumps(result, ensure_ascii=False).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
             view.evaluateJavaScript_completionHandler_(
@@ -639,7 +639,7 @@ def main() -> None:
     class DiagnosticsHandler(NSObject):
         def userContentController_didReceiveScriptMessage_(self, controller, message):
             # Tooling can take up to 20 seconds. Keep WKWebView's UI thread live.
-            from pynix_gui.ide_tooling_diagnostics import read_diagnostics
+            from zunyite_gui.ide_tooling_diagnostics import read_diagnostics
             diagnostics_generation["value"] += 1
             generation = diagnostics_generation["value"]
 
@@ -894,7 +894,7 @@ def main() -> None:
                         core_reader.acknowledge_saved_source(source, content)
                     except CoreSnapshotError as exc:
                         print("IDE Core save baseline mirror:", exc, file=sys.stderr)
-                from pynix_gui.ide_tooling_diagnostics import read_diagnostics
+                from zunyite_gui.ide_tooling_diagnostics import read_diagnostics
                 snapshot = read_diagnostics(session.root, compiler_python)
                 response["diagnostics"] = [
                     {"source": problem.source, "line": problem.line,
