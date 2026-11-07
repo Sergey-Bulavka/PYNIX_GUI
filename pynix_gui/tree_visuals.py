@@ -43,7 +43,7 @@ def tree_file_icon_kind(label: str, is_folder: bool) -> str:
     """One consistent icon choice for macOS and Qt trees."""
     if is_folder:
         return "folder"
-    return "pnx" if label.casefold().endswith(".pnx") else "file"
+    return "pnx" if label.casefold().endswith((".uny", ".pnx")) else "file"
 
 
 def tree_disclosure_column_width(row_height: float) -> float:
