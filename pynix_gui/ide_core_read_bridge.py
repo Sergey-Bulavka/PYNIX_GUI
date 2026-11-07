@@ -28,7 +28,7 @@ def read_core_snapshot(ide_repo: Path, project: Path, compiler_python: Path,
     if not (ide_repo / "src" / f"ide_session{source_suffix}").is_file():
         raise CoreSnapshotError("Official IDE Core repository is unavailable")
     if not any((project / name).is_file() for name in ("zunyite.toml", "pynix.toml")):
-        raise CoreSnapshotError("Snapshot project must have a pynix.toml")
+        raise CoreSnapshotError("Snapshot project must have a zunyite.toml or legacy pynix.toml")
     if not compiler_python.is_file():
         raise CoreSnapshotError("Zunyite compiler interpreter is unavailable")
     if source is not None:
