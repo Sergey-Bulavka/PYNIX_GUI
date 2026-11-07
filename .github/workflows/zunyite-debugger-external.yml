@@ -4,7 +4,7 @@ on:
   push:
     branches: [feature/icon-system-v4]
     paths:
-      - '.github/workflows/pynix-debugger-external.yml'
+      - '.github/workflows/zunyite-debugger-external.yml'
       - 'scripts/test_real_debugger_bridge.py'
   workflow_dispatch:
 
@@ -28,19 +28,19 @@ jobs:
           # Configure a fine-grained token with Zunyite Contents: read.
           token: ${{ secrets.PYNIX_CI_READ_TOKEN }}
           ref: main
-          path: pynix-compiler
+          path: zunyite-compiler
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install Zunyite test dependencies
-        run: python -m pip install -e ./pynix-compiler pytest
+        run: python -m pip install -e ./zunyite-compiler pytest
       - name: Compile compiler sources
-        run: python -m compileall -q pynix-compiler/compiler
+        run: python -m compileall -q zunyite-compiler/compiler
       - name: Verify real IDE-to-compiler debugger bridge
         env:
-          PYTHONPATH: ${{ github.workspace }}/pynix-compiler
+          PYTHONPATH: ${{ github.workspace }}/zunyite-compiler
         run: python scripts/test_real_debugger_bridge.py
       - name: Run real debugger integration tests
-        working-directory: pynix-compiler
+        working-directory: zunyite-compiler
         run: python -m pytest -q tests/test_debug_protocol.py tests/test_debug_execution.py tests/test_debug_frames.py tests/test_debug_session.py tests/test_debug_dispatch.py tests/test_debug_worker.py
