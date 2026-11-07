@@ -104,9 +104,9 @@ def test_macos_backend_open_is_consumable_by_standalone_runtime():
     backend = MacOSGUIBackend(platform_name="darwin", appkit=fake_host_appkit())
     runtime = GUIRuntime(backend)
 
-    window = runtime.open("PYNIX GUI", 800, 600)
+    window = runtime.open("Zunyite GUI", 800, 600)
 
-    assert window._handle.title == "PYNIX GUI"
+    assert window._handle.title == "Zunyite GUI"
     assert window.closed is False
 
 
@@ -122,7 +122,7 @@ def test_macos_host_close_event_is_native_gui_event():
 def test_macos_runtime_close_uses_standalone_host_boundary():
     backend = MacOSGUIBackend(platform_name="darwin", appkit=fake_host_appkit())
     runtime = GUIRuntime(backend)
-    window = runtime.open("PYNIX GUI", 800, 600)
+    window = runtime.open("Zunyite GUI", 800, 600)
     native = window._handle
 
     window.close()
