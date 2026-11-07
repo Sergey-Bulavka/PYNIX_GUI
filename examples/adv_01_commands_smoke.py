@@ -8,7 +8,7 @@ Run:
     python examples/adv_01_commands_smoke.py
 """
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime,
     button,
     collapsible,
@@ -28,7 +28,7 @@ from pynix_gui import (
     theme,
     tooltip,
 )
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 def app_menu_bar():
