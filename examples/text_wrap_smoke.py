@@ -7,8 +7,8 @@ Run `python examples/text_wrap_smoke.py`, then resize the window
 horizontally while watching both the row and the grid.
 """
 
-from pynix_gui import GUIRuntime, column, grid, panel, row, text
-from pynix_gui.backends import MacOSGUIBackend
+from zunyite_gui import GUIRuntime, column, grid, panel, row, text
+from zunyite_gui.backends import MacOSGUIBackend
 
 
 def build_root():
