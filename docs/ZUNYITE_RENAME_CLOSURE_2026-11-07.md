@@ -23,8 +23,15 @@
   compiler worker.
 - The GitHub Action for cross-repository debugger integration is named
   `zunyite-debugger-external.yml`, and its checkout is `zunyite-compiler`.
-- The public GUI import `zunyite_gui` is available; the internal implementation
-  still imports `pynix_gui` by design.
+- Public GUI namespace `zunyite_gui` is available and used by the native
+  first-party smoke/gallery examples.
+- `zunyite_gui.wrap_engine` and `zunyite_gui.text_metrics` now own their
+  implementations; `pynix_gui` exports the same classes and functions through
+  legacy shims, preventing duplicate runtime types.
+- Canonical `zunyite_gui.ide_*` imports now expose Workspace Session,
+  Core Reader, Run, Debug and tooling as compatibility-preserving adapters.
+  These IDE service implementations are **still housed in** `pynix_gui`;
+  exposing canonical imports is not the same as completing their relocation.
 
 ## Explicitly preserved compatibility / history
 
@@ -71,7 +78,8 @@ bash scripts/verify_full_stack.sh quick
 Completion should be measured by public user-visible names, working
 compatibility, and tests, not by blind elimination of the substring `pynix`.
 **Status: compiler source/test-corpus naming is canonical with deliberate
-legacy fixtures; GUI internal package, wire identifiers, CI secret and
-Workspace V4 release consolidation are still open.**
+legacy fixtures. Canonical GUI API imports work and two pure support modules
+have been relocated; IDE service internals, wire identifiers, CI secret and
+Workspace V4 release consolidation remain open.**
 Native GUI visual acceptance and the transfer of internal implementation
 ownership into the canonical namespace remain separate release gates.
