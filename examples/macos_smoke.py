@@ -1,9 +1,9 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""Real-host standalone macOS smoke for PYNIX GUI.
+"""Real-host standalone macOS smoke for Zunyite GUI.
 
-Run from the PYNIX_GUI repository:
+Run from the Zunyite_GUI repository:
 
     python examples/macos_smoke.py
 """
@@ -26,9 +26,9 @@ from pynix_gui.backends import MacOSGUIBackend
 def build_root():
     content = column(
         [
-            text("PYNIX GUI", "titleLarge"),
+            text("Zunyite GUI", "titleLarge"),
             text("Standalone macOS backend smoke", "body"),
-            focused(text_field("name", "PYNIX", "Project name"), True),
+            focused(text_field("name", "Zunyite", "Project name"), True),
             row(
                 [
                     button("primary", "Primary", "primary"),
@@ -52,16 +52,16 @@ def main():
             import AppKit  # noqa: F401
         except Exception as error:
             raise SystemExit(
-                "PYNIX GUI macOS backend is unavailable because AppKit/PyObjC "
+                "Zunyite GUI macOS backend is unavailable because AppKit/PyObjC "
                 f"could not be imported: {error}"
             ) from error
 
         raise SystemExit(
-            "PYNIX GUI macOS backend is unavailable. "
+            "Zunyite GUI macOS backend is unavailable. "
             "AppKit is installed, but the host/runtime availability check failed."
         )
 
-    window = runtime.open("PYNIX GUI — Standalone Smoke", 720, 420)
+    window = runtime.open("Zunyite GUI — Standalone Smoke", 720, 420)
     window.render(build_root())
 
     while True:
@@ -80,7 +80,7 @@ def main():
             break
 
     window.close()
-    print("PYNIX GUI standalone macOS smoke: PASS")
+    print("Zunyite GUI standalone macOS smoke: PASS")
 
 
 if __name__ == "__main__":
