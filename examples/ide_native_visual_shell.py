@@ -1,6 +1,6 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
-"""PYNIX IDE native *visual-only* shell for macOS.
+"""Zunyite IDE native *visual-only* shell for macOS.
 
 Run: python -m examples.ide_native_visual_shell
 
@@ -15,7 +15,7 @@ import sys
 from pynix_gui.ide_iconography import draw_icon
 
 GIT_PREVIEW = "--git" in sys.argv
-GIT_CHANGES = (("M", "src/main.pnx"), ("M", "src/gui.pnx"), ("U", "docs/NOTES.md"))
+GIT_CHANGES = (("M", "src/main.uny"), ("M", "src/gui.uny"), ("U", "docs/NOTES.md"))
 
 
 PALETTE = {
@@ -40,20 +40,20 @@ PALETTE = {
     "red": "#EC8D9B",
 }
 PROJECT_TREE = (
-    (0, "PYNIX", "folder", False),
+    (0, "Zunyite", "folder", False),
     (1, "src", "folder", False),
-    (2, "main.pnx", "file", True),
-    (2, "gui.pnx", "file", False),
-    (2, "tooling.pnx", "file", False),
+    (2, "main.uny", "file", True),
+    (2, "gui.uny", "file", False),
+    (2, "tooling.uny", "file", False),
     (1, "tests", "folder", False),
-    (2, "test_main.pnx", "file", False),
+    (2, "test_main.uny", "file", False),
     (1, "assets", "folder", False),
-    (1, "pynix.toml", "file", False),
+    (1, "zunyite.toml", "file", False),
 )
 SAMPLE_LINES = (
     (("keyword", "function"), ("text", " main"), ("subtle", "()")),
     (),
-    (("text", "    message"), ("subtle", " = "), ("green", '"Hello PYNIX"')),
+    (("text", "    message"), ("subtle", " = "), ("green", '"Hello Zunyite"')),
     (("text", "    count"), ("subtle", " = "), ("yellow", "3")),
     (),
     (("keyword", "    for"), ("text", " item "), ("keyword", "in"), ("text", " 1..count")),
@@ -134,9 +134,9 @@ def native_shell_class(appkit):
 
             # Integrated window chrome and primary toolbar
             self._fill(0, 0, w, title_h, "title")
-            self._label(24, 13, "PYNIX", size=16, color="text", weight="bold")
+            self._label(24, 13, "Zunyite", size=16, color="text", weight="bold")
             self._label(89, 15, "IDE", size=12, color="accent", weight="bold")
-            self._label(max(220, w*0.46), 16, "PYNIX  /  src  /  main.pnx",
+            self._label(max(220, w*0.46), 16, "Zunyite  /  src  /  main.uny",
                         size=12, color="subtle")
             self._rule(0, title_h-1, w)
             self._fill(0, title_h, w, toolbar_h, "toolbar")
@@ -145,7 +145,7 @@ def native_shell_class(appkit):
                             title_h+13, name, color="subtle", size=12)
             self._fill(w-156, title_h+6, 118, 30, "selected", 6)
             self._icon(w-143, title_h+12, "run", "accent")
-            self._label(w-120, title_h+12, "Run main.pnx", size=12, weight="bold")
+            self._label(w-120, title_h+12, "Run main.uny", size=12, weight="bold")
             self._rule(0, body_top-1, w)
 
             # Left activity rail with actual vector icons
@@ -172,7 +172,7 @@ def native_shell_class(appkit):
                 if kind=="folder":
                     self._icon(xx-2, yy-1, "chevron-right" if name=="assets" else "chevron-down", "faint")
                     xx += 13
-                self._icon(xx, yy+1, ("folder-open" if name in ("PYNIX", "src", "tests") else "folder") if kind == "folder" else ("pnx" if name.endswith(".pnx") else "file"), "#D9BA80" if kind == "folder" else ("accent" if selected else "subtle"))
+                self._icon(xx, yy+1, ("folder-open" if name in ("Zunyite", "src", "tests") else "folder") if kind == "folder" else ("pnx" if name.endswith(".uny") else "file"), "#D9BA80" if kind == "folder" else ("accent" if selected else "subtle"))
                 self._label(xx+21, yy+1, name, size=12,
                             color="text" if selected else "subtle",
                             weight="bold" if selected else "regular")
@@ -196,7 +196,7 @@ def native_shell_class(appkit):
                             size=11, color="subtle", weight="bold")
                 for n, (state, filename) in enumerate(GIT_CHANGES):
                     ry = body_top + 300 + n*30
-                    self._icon(rail_w+17, ry, "pnx" if filename.endswith(".pnx") else "file", "subtle")
+                    self._icon(rail_w+17, ry, "pnx" if filename.endswith(".uny") else "file", "subtle")
                     self._label(rail_w+43, ry+2, filename, size=11)
                     self._label(content_x-30, ry+2, state, size=11,
                                 color="green" if state == "U" else "yellow")
@@ -219,14 +219,14 @@ def native_shell_class(appkit):
             self._fill(content_x, body_top, 158, 2, "accent")
             self._rule(content_x+158, body_top+7, 1, tabs_h-14)
             self._icon(content_x+15, body_top+11, "file", "accent")
-            self._label(content_x+37, body_top+12, "main.pnx", size=12, weight="bold")
+            self._label(content_x+37, body_top+12, "main.uny", size=12, weight="bold")
             self._icon(content_x+133, body_top+11, "close", "subtle")
             self._icon(content_x+177, body_top+11, "file", "faint")
-            self._label(content_x+199, body_top+12, "gui.pnx", size=12, color="faint")
+            self._label(content_x+199, body_top+12, "gui.uny", size=12, color="faint")
             self._rule(content_x, body_top+tabs_h, content_w)
             self._fill(content_x, body_top+tabs_h, content_w, crumb_h, "editor")
             self._label(content_x+22, body_top+tabs_h+7,
-                        "PYNIX  ›  src  ›  main.pnx", size=11, color="subtle")
+                        "Zunyite  ›  src  ›  main.uny", size=11, color="subtle")
             self._rule(content_x, body_top+tabs_h+crumb_h, content_w)
             code_top=body_top+tabs_h+crumb_h+15
             self._fill(content_x, code_top-15, 59, terminal_y-code_top+15, "canvas")
@@ -268,9 +268,9 @@ def native_shell_class(appkit):
             self._fill(0, body_bottom, w, status_h, "status")
             self._label(17, body_bottom+7, "●  Ready", color="green", size=11)
             self._icon(130, body_bottom+4, "branch", "subtle")
-            self._label(152, body_bottom+7, "main  ·  3 changes" if GIT_PREVIEW else "main.pnx", size=11)
+            self._label(152, body_bottom+7, "main  ·  3 changes" if GIT_PREVIEW else "main.uny", size=11)
             self._label(max(w-365, 310), body_bottom+7,
-                        "Ln 11, Col 1    UTF-8    Spaces: 4    PYNIX",
+                        "Ln 11, Col 1    UTF-8    Spaces: 4    Zunyite",
                         color="subtle", size=11)
 
     return PynixIDEShell
@@ -298,7 +298,7 @@ def main():
     window = AppKit.NSWindow.alloc().initWithContentRect_styleMask_backing_defer_(
         NSMakeRect(120, 100, 1440, 900),
         style, AppKit.NSBackingStoreBuffered, False)
-    window.setTitle_("PYNIX IDE — Native Visual Design V3")
+    window.setTitle_("Zunyite IDE — Native Visual Design V3")
     window.setMinSize_((1000, 640))
     shell = native_shell_class(AppKit).alloc().initWithFrame_(window.contentView().bounds())
     shell.setAutoresizingMask_(AppKit.NSViewWidthSizable | AppKit.NSViewHeightSizable)
