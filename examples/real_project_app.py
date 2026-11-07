@@ -11,12 +11,12 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from pynix_gui import (
+from zunyite_gui import (
     GUIRuntime, button, column, fill, max_size, padding, rich_editor, row,
     table, table_column, table_row, text, tree, tree_node, horizontal_split,
     vertical_split, min_size,
 )
-from pynix_gui.backends import default_backend
+from zunyite_gui.backends import default_backend
 
 from .project_explorer import ProjectExplorer, ProjectExplorerError
 
