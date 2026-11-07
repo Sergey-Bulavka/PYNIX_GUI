@@ -50,3 +50,14 @@ def test_public_package_name_remains_canonical():
     assert 'name = "zunyite-gui"' in config
     package = (ROOT / "zunyite_gui" / "__init__.py").read_text(encoding="utf-8")
     assert "from pynix_gui import *" in package  # deliberate old-module bridge
+
+
+def test_active_debugger_workflow_uses_canonical_checkout_path():
+    active = ROOT / ".github" / "workflows" / "zunyite-debugger-external.yml"
+    assert active.is_file()
+    assert not (active.parent / "pynix-debugger-external.yml").exists()
+    workflow = active.read_text(encoding="utf-8")
+    assert "path: zunyite-compiler" in workflow
+    assert "pynix-compiler" not in workflow
+    # The secret is a GitHub setting, not an in-repo filename; leave it stable.
+    assert "secrets.PYNIX_CI_READ_TOKEN" in workflow
