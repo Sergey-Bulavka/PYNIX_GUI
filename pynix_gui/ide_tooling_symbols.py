@@ -1,4 +1,4 @@
-"""Bounded, read-only PYNIX tooling symbols adapter for IDE completion."""
+"""Bounded, read-only Zunyite tooling symbols adapter for IDE completion."""
 from __future__ import annotations
 
 import json
