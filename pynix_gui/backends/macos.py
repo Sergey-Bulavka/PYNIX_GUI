@@ -831,14 +831,14 @@ class MacOSGUIBackend(MacOSHostBackend):
         root = appkit.NSMenu.alloc().initWithTitle_("")
 
         # macOS applications conventionally own an application menu. It is a
-        # backend responsibility rather than public PYNIX command ceremony.
+        # backend responsibility rather than public Zunyite command ceremony.
         try:
             import Foundation
             app_name = str(
                 Foundation.NSProcessInfo.processInfo().processName()
             )
         except Exception:
-            app_name = "PYNIX"
+            app_name = "Zunyite"
 
         app_item = (
             appkit.NSMenuItem.alloc()
