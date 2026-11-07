@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""High-level commercial components composed from stable PYNIX GUI primitives."""
+"""High-level commercial components composed from stable Zunyite GUI primitives."""
 
 from __future__ import annotations
 
