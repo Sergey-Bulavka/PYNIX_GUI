@@ -20,11 +20,11 @@ from pynix_gui.backends import default_backend
 def main():
     backend = default_backend()
     if backend is None:
-        raise SystemExit("No native PYNIX GUI backend is available.")
+        raise SystemExit("No native Zunyite GUI backend is available.")
 
     runtime = GUIRuntime(backend)
     if not runtime.is_available():
-        raise SystemExit("PYNIX GUI backend is unavailable.")
+        raise SystemExit("Zunyite GUI backend is unavailable.")
 
     icon_scene = canvas_scene(
         24,
@@ -45,7 +45,7 @@ def main():
         vector_resource("showcase.vector", icon_scene),
     ])
 
-    window = runtime.open("PYNIX GUI — Resources", 520, 320)
+    window = runtime.open("Zunyite GUI — Resources", 520, 320)
     window.set_resources(catalog)
     window.render(
         theme(
@@ -65,7 +65,7 @@ def main():
             break
 
     window.close()
-    print("PYNIX GUI resource smoke: PASS")
+    print("Zunyite GUI resource smoke: PASS")
 
 
 if __name__ == "__main__":
