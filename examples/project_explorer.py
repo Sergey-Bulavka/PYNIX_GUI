@@ -116,10 +116,10 @@ class ProjectExplorer:
         self.selected = None
         return True
 
-    def read_pnx(self, relative: str, *, max_bytes: int = 2_000_000) -> str:
-        """Read text for IDE handoff, rejecting non-PYNIX and oversized files."""
-        if not relative.lower().endswith(".pnx"):
-            raise ProjectExplorerError("Only .pnx source files can be opened in the IDE.")
+    def read_source(self, relative: str, *, max_bytes: int = 2_000_000) -> str:
+        """Read Zunyite source for IDE handoff, including legacy .pnx files."""
+        if not relative.lower().endswith((".uny", ".pnx")):
+            raise ProjectExplorerError("Only .uny or legacy .pnx source files can be opened in the IDE.")
         path = self._resolve(relative)
         if not path.is_file():
             raise ProjectExplorerError("Source path is not a file.")
@@ -130,4 +130,8 @@ class ProjectExplorer:
                 raise ProjectExplorerError("Source file is too large to open.")
             return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
         except (OSError, UnicodeError) as exc:
-            raise ProjectExplorerError(f"Cannot read PYNIX source: {exc}") from exc
+            raise ProjectExplorerError(f"Cannot read Zunyite source: {exc}") from exc
+
+    def read_pnx(self, relative: str, *, max_bytes: int = 2_000_000) -> str:
+        """Backward-compatible alias for existing PYNIX explorer callers."""
+        return self.read_source(relative, max_bytes=max_bytes)
