@@ -1,7 +1,7 @@
 # Copyright 2026 Sergii V.Bulavka
 # SPDX-License-Identifier: Apache-2.0
 
-"""Platform-independent geometry engine for PYNIX GUI."""
+"""Platform-independent geometry engine for Zunyite GUI."""
 
 from __future__ import annotations
 
